@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0d14" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="Spirit Contract Evo Idle - Contract spirits, train AFK, evolve through RNG, and battle corrupted beasts in the Madness Zone." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Spirit Contract Evo | Idle</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Sticky Header -->
+      <header class="app-header">
+        <div class="header-top">
+          <div class="game-title">
+            <span>⛩️ Spirit Contract Evo</span>
+          </div>
+          <div id="save-status" class="save-indicator">
+            <span class="save-dot">●</span> 💾 Saved
+          </div>
+        </div>
+
+        <div class="resources-bar">
+          <div class="resource-pill shards-pill">
+            <span class="resource-label">💎 Shards:</span>
+            <span id="res-shards" class="resource-val">0</span>
+          </div>
+          <div class="resource-pill essence-pill">
+            <span class="resource-label">🔮 Essence:</span>
+            <span id="res-essence" class="resource-val">0</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Active Screen View Content -->
+      <main id="view-container" class="view-content"></main>
+
+      <!-- Fixed Bottom Navigation (Min 60px touch height) -->
+      <nav class="bottom-nav">
+        <button id="nav-madness" class="nav-tab active" data-tab="madness">
+          <span class="tab-icon">⚔️</span>
+          <span class="tab-label">Madness</span>
+        </button>
+
+        <button id="nav-party" class="nav-tab" data-tab="party">
+          <span class="tab-icon">⛩️</span>
+          <span class="tab-label">Party (5)</span>
+          <span id="party-evolve-badge" class="nav-badge" style="display: none;">!</span>
+        </button>
+
+        <button id="nav-contract" class="nav-tab" data-tab="contract">
+          <span class="tab-icon">📜</span>
+          <span class="tab-label">Contract</span>
+        </button>
+
+        <button id="nav-vault" class="nav-tab" data-tab="vault">
+          <span class="tab-icon">🎒</span>
+          <span class="tab-label">Vault</span>
+        </button>
+
+        <button id="nav-stats" class="nav-tab" data-tab="stats">
+          <span class="tab-icon">⚙️</span>
+          <span class="tab-label">Stats</span>
+        </button>
+      </nav>
+
+      <!-- Modal Injection Layer -->
+      <div id="modal-root"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

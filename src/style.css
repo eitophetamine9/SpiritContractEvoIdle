@@ -1,0 +1,1259 @@
+/* ==========================================================================
+   SPIRIT CONTRACT EVO | IDLE - Mobile-First Stylesheet
+   Strict constraints: Mobile-first, No :hover states, Touch targets >= 44px
+   Brightly colored, distinct CSS placeholder boxes for Spirits & Enemies
+   ========================================================================== */
+
+:root {
+  --bg-deep: #0a0d14;
+  --bg-surface: #121824;
+  --bg-surface-elevated: #1a2234;
+  --bg-surface-glass: rgba(22, 30, 47, 0.85);
+  
+  --border-color: #26334d;
+  --border-bright: #3b4e75;
+  --border-pixel: 3px solid #000000;
+  
+  --text-main: #f0f4fc;
+  --text-muted: #8c9cb8;
+  --text-gold: #ffc400;
+  
+  /* Elemental Bright Themes */
+  --elem-fire: #ff473a;
+  --elem-fire-glow: rgba(255, 71, 58, 0.4);
+  --elem-water: #00d0ff;
+  --elem-water-glow: rgba(0, 208, 255, 0.4);
+  --elem-earth: #2ed573;
+  --elem-earth-glow: rgba(46, 213, 115, 0.4);
+  --elem-wind: #eccc68;
+  --elem-wind-glow: rgba(236, 204, 104, 0.4);
+  --elem-dark: #b537f2;
+  --elem-dark-glow: rgba(181, 55, 242, 0.45);
+  --elem-light: #ffa502;
+  --elem-light-glow: rgba(255, 165, 2, 0.4);
+  
+  /* Corrupted / Madness Theme */
+  --madness-red: #ff0055;
+  --madness-purple: #7928ca;
+  --madness-glow: rgba(255, 0, 85, 0.5);
+
+  --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  line-height: 1.4;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+/* Base button minimum touch target: 44px */
+button {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  min-height: 44px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+/* STRICT RULE: DO NOT USE HOVER STATES. USE ACTIVE FOR TACTILE MOBILE TOUCH */
+button:active {
+  transform: scale(0.95) translateY(1px);
+  filter: brightness(1.2);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: none !important;
+}
+
+/* ==========================================================================
+   APP CONTAINER (STRICT MOBILE-FIRST: Max 480px, centered on larger screens)
+   ========================================================================== */
+
+#app {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+/* HEADER BAR */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-surface-glass);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--border-color);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: linear-gradient(90deg, #ff7675, #74b9ff, #ffeaa7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-indicator {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.save-indicator.pulse {
+  color: #2ed573;
+  border-color: #2ed573;
+}
+
+.resources-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.resource-pill {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.resource-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.resource-val {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.shards-pill .resource-val {
+  color: #70a1ff;
+}
+
+.essence-pill .resource-val {
+  color: #e056fd;
+}
+
+/* MAIN VIEW CONTENT AREA */
+.view-content {
+  flex: 1;
+  padding: 12px;
+  padding-bottom: 74px; /* Space for bottom nav */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   BOTTOM NAVIGATION BAR (Touch friendly >= 56px height)
+   ========================================================================== */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  height: 60px;
+  background: #0f1422;
+  border-top: 2px solid var(--border-color);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  z-index: 50;
+}
+
+.nav-tab {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 0;
+  min-height: 100%;
+  position: relative;
+}
+
+.nav-tab .tab-icon {
+  font-size: 18px;
+}
+
+.nav-tab .tab-label {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.nav-tab.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tab.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: #00d2ff;
+  border-radius: 0 0 3px 3px;
+}
+
+.nav-badge {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  background: #ff4757;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px #ff4757;
+  animation: pulseBadge 1.2s infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* ==========================================================================
+   BRIGHT CSS PLACEHOLDER BOXES FOR SPIRITS & ENEMIES
+   Distinct pixel-border styling for drop-in manual pixel art integration
+   ========================================================================== */
+
+.pixel-box {
+  position: relative;
+  border: 3px solid #000;
+  border-radius: 8px;
+  box-shadow: 
+    inset 2px 2px 0px rgba(255, 255, 255, 0.3),
+    inset -2px -2px 0px rgba(0, 0, 0, 0.5),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Elemental Palette Variants */
+.pixel-box.elem-FIRE {
+  background: linear-gradient(145deg, #78150e, #330805);
+  border-color: #ff5252;
+  box-shadow: 0 0 12px var(--elem-fire-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+}
+.pixel-box.elem-WATER {
+  background: linear-gradient(145deg, #094766, #041924);
+  border-color: #00d2ff;
+  box-shadow: 0 0 12px var(--elem-water-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+}
+.pixel-box.elem-EARTH {
+  background: linear-gradient(145deg, #10592e, #052111);
+  border-color: #2ed573;
+  box-shadow: 0 0 12px var(--elem-earth-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+}
+.pixel-box.elem-WIND {
+  background: linear-gradient(145deg, #665b1b, #262208);
+  border-color: #eccc68;
+  box-shadow: 0 0 12px var(--elem-wind-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+}
+.pixel-box.elem-DARK {
+  background: linear-gradient(145deg, #441461, #180724);
+  border-color: #b537f2;
+  box-shadow: 0 0 12px var(--elem-dark-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+}
+.pixel-box.elem-LIGHT {
+  background: linear-gradient(145deg, #6b4700, #261900);
+  border-color: #ffa502;
+  box-shadow: 0 0 12px var(--elem-light-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+}
+
+/* Corrupted Madness Enemy Placeholder */
+.pixel-box.enemy-box {
+  background: linear-gradient(145deg, #420619, #1a0209);
+  border-color: var(--madness-red);
+  box-shadow: 0 0 18px var(--madness-glow), inset 2px 2px 0px rgba(255, 100, 150, 0.4);
+}
+
+.pixel-art-slot {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* User's manual pixel art image insertion point */
+.pixel-art-slot img.pixel-art {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Procedural Placeholder Creature Visual */
+.placeholder-creature-sprite {
+  width: 52px;
+  height: 52px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+}
+
+.placeholder-creature-sprite .core-glyph {
+  font-size: 32px;
+  animation: creatureIdle 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes creatureIdle {
+  0% { transform: translateY(0px) scale(1); }
+  100% { transform: translateY(-4px) scale(1.05); }
+}
+
+/* Badges overlay */
+.tier-tag {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffd700;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+}
+
+.element-tag {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 11px;
+}
+
+.rarity-ribbon {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding: 2px 0;
+  text-transform: uppercase;
+}
+
+.rarity-ribbon.common {
+  background: rgba(0, 0, 0, 0.6);
+  color: #dcdde1;
+}
+
+.rarity-ribbon.rare {
+  background: linear-gradient(90deg, #ff7675, #e84393);
+  color: #ffffff;
+  box-shadow: 0 0 6px rgba(232, 67, 147, 0.6);
+}
+
+.rarity-ribbon.mythic,
+.rarity-ribbon.supreme {
+  background: linear-gradient(90deg, #f9ca24, #f0932b);
+  color: #000000;
+  font-weight: 900;
+}
+
+/* ==========================================================================
+   VIEW 1: MADNESS ZONE (Combat loop & math comparison)
+   ========================================================================== */
+
+.madness-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.zone-header-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zone-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.zone-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.zone-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.zone-btn-sm {
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #202b40;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.zone-toggle-btn {
+  min-height: 44px;
+  font-size: 12px;
+  background: #25162a;
+  color: #f368e0;
+  border: 1px solid #7928ca;
+  flex: 1;
+}
+
+.zone-toggle-btn.active {
+  background: #7928ca;
+  color: #ffffff;
+}
+
+/* Arena View */
+.arena-card {
+  background: radial-gradient(circle at 50% 30%, #1e1329 0%, #0d0f18 100%);
+  border: 2px solid #3b2247;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.boss-flare {
+  position: absolute;
+  top: 8px;
+  background: #ff0055;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 10px #ff0055;
+  animation: bossBlink 1s infinite alternate;
+}
+
+@keyframes bossBlink {
+  0% { opacity: 0.8; }
+  100% { opacity: 1; transform: scale(1.04); }
+}
+
+.enemy-placeholder-frame {
+  width: 104px;
+  height: 104px;
+  margin-top: 10px;
+}
+
+.enemy-details {
+  text-align: center;
+  width: 100%;
+}
+
+.enemy-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ff6b81;
+}
+
+.enemy-power-stat {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: #ff9ff3;
+  margin-top: 2px;
+}
+
+/* Enemy Health Bar */
+.hp-bar-wrapper {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.hp-bar-track {
+  width: 100%;
+  height: 14px;
+  background: #2c0914;
+  border: 1px solid #ff4757;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4757, #ff6b81);
+  transition: width 0.15s ease-out;
+}
+
+.hp-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #ffffff;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* Math Comparison Power Gauge */
+.math-power-gauge {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.power-comparison-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.power-status-pill {
+  font-size: 11px;
+  text-align: center;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
+.power-status-pill.crushing {
+  background: rgba(46, 213, 115, 0.2);
+  color: #2ed573;
+  border: 1px solid #2ed573;
+}
+
+.power-status-pill.matched {
+  background: rgba(241, 196, 15, 0.2);
+  color: #f1c40f;
+  border: 1px solid #f1c40f;
+}
+
+.power-status-pill.underpowered {
+  background: rgba(255, 71, 87, 0.2);
+  color: #ff4757;
+  border: 1px solid #ff4757;
+}
+
+/* Battle Party Line (5 Equipped attacking spirits) */
+.battle-party-line {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.battle-spirit-mini {
+  height: 64px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.battle-spirit-mini.attacking {
+  animation: attackPulse 0.4s ease;
+}
+
+@keyframes attackPulse {
+  0% { transform: scale(1); }
+  50% { transform: translateY(-6px) scale(1.1); filter: brightness(1.3); }
+  100% { transform: scale(1); }
+}
+
+.battle-empty-slot {
+  height: 64px;
+  border: 2px dashed #26334d;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #3b4e75;
+}
+
+/* Combat Stats & Loot Ticker */
+.combat-stats-strip {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+/* ==========================================================================
+   VIEW 2: ACTIVE PARTY & AFK TRAINING VIEW
+   ========================================================================== */
+
+.party-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.afk-training-banner {
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  border: 1px solid #4a90e2;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
+}
+
+.afk-banner-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.afk-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.afk-subtitle {
+  font-size: 11px;
+  color: #d0e1fd;
+  margin-top: 2px;
+}
+
+.afk-rate-pill {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  color: #00d2ff;
+}
+
+.party-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.party-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 74px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.party-card.evolvable {
+  border-color: #ffd700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+.spirit-thumb-box {
+  width: 74px;
+  height: 74px;
+}
+
+.party-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.party-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.party-card-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.party-card-level-badge {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: #ffc400;
+}
+
+.party-card-power {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: #2ed573;
+  font-weight: 700;
+}
+
+/* XP Bar */
+.xp-bar-track {
+  width: 100%;
+  height: 10px;
+  background: #141b2a;
+  border-radius: 5px;
+  border: 1px solid #2e3d5e;
+  overflow: hidden;
+  position: relative;
+  margin-top: 2px;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3742fa, #70a1ff);
+  transition: width 0.2s ease-out;
+}
+
+.xp-bar-text {
+  position: absolute;
+  inset: 0;
+  font-size: 8px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.party-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Evolve Button: glowing, min 44px */
+.btn-evolve {
+  min-height: 44px;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: #000000;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  animation: evolveGlow 1.5s infinite alternate;
+}
+
+@keyframes evolveGlow {
+  0% { transform: scale(1); box-shadow: 0 0 6px #ffd700; }
+  100% { transform: scale(1.03); box-shadow: 0 0 16px #ff8c00; }
+}
+
+.btn-unequip {
+  min-height: 44px;
+  background: #252e42;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.empty-party-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px dashed #26334d;
+  border-radius: 10px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   VIEW 3: CONTRACT VIEW (Gacha / Summoning)
+   ========================================================================== */
+
+.contract-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.altar-card {
+  background: radial-gradient(circle at 50% 40%, #1e2640 0%, #0d121f 100%);
+  border: 2px solid #3b4e75;
+  border-radius: 14px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.altar-box-preview {
+  width: 110px;
+  height: 110px;
+  border-radius: 12px;
+  border: 3px solid #70a1ff;
+  box-shadow: 0 0 20px rgba(112, 161, 255, 0.4);
+}
+
+.altar-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.altar-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  max-width: 320px;
+}
+
+.summon-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-summon-single {
+  min-height: 52px;
+  background: linear-gradient(135deg, #1e90ff, #0984e3);
+  color: #ffffff;
+  font-size: 14px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(9, 132, 227, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.btn-summon-multi {
+  min-height: 52px;
+  background: linear-gradient(135deg, #e056fd, #be2edd);
+  color: #ffffff;
+  font-size: 14px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(190, 46, 221, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cost-sub {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.contract-rates-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rates-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-gold);
+}
+
+.rates-list {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   VIEW 4: SPIRIT VAULT (Storage / Inventory)
+   ========================================================================== */
+
+.vault-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vault-header-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.vault-filter-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filter-btn {
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.filter-btn.active {
+  background: #3742fa;
+  color: #ffffff;
+  border-color: #70a1ff;
+}
+
+.vault-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vault-item-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 68px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-equip-action {
+  min-height: 44px;
+  background: #2ed573;
+  color: #000000;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.btn-release-action {
+  min-height: 44px;
+  background: rgba(255, 71, 87, 0.15);
+  color: #ff4757;
+  border: 1px solid rgba(255, 71, 87, 0.4);
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* ==========================================================================
+   VIEW 5: SYSTEM & STATS VIEW
+   ========================================================================== */
+
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-key {
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.system-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-save-manual {
+  min-height: 48px;
+  background: #3742fa;
+  color: #ffffff;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.btn-reset-danger {
+  min-height: 48px;
+  background: rgba(255, 71, 87, 0.15);
+  color: #ff4757;
+  border: 1px solid #ff4757;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+/* ==========================================================================
+   MODALS (Strict mobile touch overlays)
+   ========================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: #151b2a;
+  border: 2px solid var(--border-bright);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  color: #ffffff;
+}
+
+.modal-btn-confirm {
+  min-height: 50px;
+  background: linear-gradient(135deg, #2ed573, #26af5f);
+  color: #000000;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 8px;
+  width: 100%;
+}
+
+/* Offline Welcome Gains List */
+.offline-gains-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offline-loot-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Evolution Animation Display */
+.evolution-display-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.evolution-cards-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.evolution-card-frame {
+  width: 90px;
+  height: 90px;
+}
+
+.evolution-arrow {
+  font-size: 24px;
+  color: #ffd700;
+}
+
+.variant-announcement {
+  font-size: 15px;
+  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.variant-announcement.rare {
+  background: linear-gradient(90deg, #ff4757, #ff6b81);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 71, 87, 0.7);
+  animation: variantPulse 1s infinite alternate;
+}
+
+.variant-announcement.common {
+  background: #2f3542;
+  color: #a4b0be;
+}
+
+@keyframes variantPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}
+
+.evo-power-surge {
+  font-size: 14px;
+  font-family: var(--font-mono);
+  color: #2ed573;
+  font-weight: 800;
+}
