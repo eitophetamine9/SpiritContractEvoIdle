@@ -1,10 +1,10 @@
-# ⛩️ Spirit Contract Evo | Idle
+# Spirit Contract Evo | Idle
 
 > A mobile-first, dark fantasy Idle RPG where you bind ancient Spirits, train them AFK in the astral plane, evolve them through weighted RNG tables, and pit your party against corrupted horrors in the Madness Zone.
 
 ---
 
-## 🎮 Game Core Loop & Mechanics
+## Game Core Loop & Mechanics
 
 ```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
@@ -22,11 +22,11 @@
 2. **The 5-Slot Active Party**: Players can collect an unlimited number of Spirits in their **Vault**, but can only equip a maximum of **5 Spirits** to their Active Party to train and fight simultaneously.
 3. **AFK Training & Idle Engine**: Equipped Spirits continuously gain XP over time using a smooth `requestAnimationFrame` loop. When returning to the app, the engine retroactively awards offline XP and farm loot based on `last_saved` timestamp.
 4. **80/20 RNG Evolution**: When a Spirit reaches its Level Cap (Tier 1 cap: Lv. 10; Tier 2 cap: Lv. 25), it unlocks the **Evolution Ceremony**, rolling against a weighted RNG table (80% Common Variant, 20% Rare Variant) for a massive power surge.
-5. **The Madness Zone**: Pit your party against corrupted beasts. Features both continuous math comparison DPS (Party Total Power vs. Enemy Power) and an interactive **"⚔️ Attack Enemy"** tap action using your party's combined power.
+5. **The Madness Zone**: Pit your party against corrupted beasts. Features both continuous math comparison DPS (Party Total Power vs. Enemy Power) and an interactive **"Attack Enemy"** tap action using your party's combined power.
 
 ---
 
-## 📐 Mathematical Models & Scaling
+## Mathematical Models & Scaling
 
 ### 1. XP Progression & Level Caps
 $$\text{XP}_{\text{required}}(L) = \lfloor 30 \times L^{1.65} \rfloor$$
@@ -56,7 +56,7 @@ $$\text{Enemy Power} = \lfloor 28 \times 1.22^{\text{Zone} - 1} \times (1 + 0.15
 
 ---
 
-## 🎨 Asset Integration: Manual Pixel Art Drop-In
+## Asset Integration: Manual Pixel Art Drop-In
 
 The UI features brightly colored, distinct CSS placeholder boxes with pixelated borders for all Spirits, Enemies, and UI buttons.
 
@@ -84,21 +84,21 @@ All sprites cleanly scale and fit into their elemental neon frames without blurr
 
 ---
 
-## 📱 Mobile-First UI Constraints
+## Mobile-First UI Constraints
 
 - **Viewport**: Mobile-first layout container (max 480px, responsive, zero horizontal scrolling).
 - **Strict Touch Standard**: Zero `:hover` states to prevent mobile sticky states. Replaced with snappy, tactile `:active` tap feedback (`transform: scale(0.95)`).
 - **Minimum Touch Targets**: Every button is at least **44px** to **52px** tall for effortless single-hand thumb reach.
 - **5-Tab Navigation**:
-  - ⚔️ **Madness**: Stage progression, click-to-fight enemy, power gauge, and party line.
-  - ⛩️ **Party (5)**: 5 active training slots, XP progress bars, and glowing Evolve triggers.
-  - 📜 **Contract**: Astral summon circle (1x and 10x contracts).
-  - 🎒 **Vault**: Full collection storage, element filters, equip, and shard dispel.
-  - ⚙️ **Stats**: Lifetime records, manual force save, and reset options.
+  - **Madness**: Stage progression, click-to-fight enemy, power gauge, and party line.
+  - **Party (5)**: 5 active training slots, XP progress bars, and glowing Evolve triggers.
+  - **Contract**: Astral summon circle (1x and 10x contracts).
+  - **Vault**: Full collection storage, element filters, equip, and shard dispel.
+  - **Stats**: Lifetime records, manual force save, and reset options.
 
 ---
 
-## 💾 Architecture & State Management
+## Architecture & State Management
 
 - **Central Game State Manager** ([`src/state/gameState.js`](src/state/gameState.js)):
   - Reactive pub/sub event system (`subscribe`/`emit`).
@@ -107,7 +107,7 @@ All sprites cleanly scale and fit into their elemental neon frames without blurr
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 SpiritContractEvoIdle/
@@ -140,7 +140,7 @@ SpiritContractEvoIdle/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18+ recommended)
