@@ -663,6 +663,34 @@ export function rollContractSpirit() {
 }
 
 /**
+ * Astral Contract (Purchased with Soul Essence) - 0% Commons!
+ */
+export const ASTRAL_CONTRACT_RARITY_ODDS = [
+  { rarity: 'UNCOMMON', weight: 65.0 },
+  { rarity: 'RARE', weight: 25.0 },
+  { rarity: 'EPIC', weight: 8.0 },
+  { rarity: 'LEGENDARY', weight: 2.0 }
+];
+
+export function rollAstralContractSpirit() {
+  const roll = Math.random() * 100;
+  let running = 0;
+  let selectedRarity = 'UNCOMMON';
+
+  for (const entry of ASTRAL_CONTRACT_RARITY_ODDS) {
+    running += entry.weight;
+    if (roll <= running) {
+      selectedRarity = entry.rarity;
+      break;
+    }
+  }
+
+  const pool = CONTRACT_POOLS_BY_RARITY[selectedRarity];
+  const speciesId = pool[Math.floor(Math.random() * pool.length)];
+  return { speciesId, rarityTier: selectedRarity };
+}
+
+/**
  * Formula to calculate XP required to level up
  */
 export function getXpRequiredForLevel(level) {

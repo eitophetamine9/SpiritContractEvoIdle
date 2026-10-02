@@ -1,5 +1,6 @@
 /**
  * Madness Zone Combat Configuration & Enemy Generation
+ * Rebalanced for meaningful idle progression and earned shard economy.
  */
 
 export const CORRUPTED_PREFIXES = [
@@ -9,10 +10,10 @@ export const CORRUPTED_PREFIXES = [
 
 export const CORRUPTED_TYPES = [
   { name: 'Crawler', baseMultiplier: 0.9, color: '#e74c3c' },
-  { name: 'Stalker', baseMultiplier: 1.0, color: '#9b59b6' },
+  { name: 'Stalker', baseMultiplier: 1.05, color: '#9b59b6' },
   { name: 'Behemoth', baseMultiplier: 1.35, color: '#c0392b' },
-  { name: 'Harpy', baseMultiplier: 0.95, color: '#3498db' },
-  { name: 'Specter', baseMultiplier: 1.05, color: '#8e44ad' },
+  { name: 'Harpy', baseMultiplier: 1.0, color: '#3498db' },
+  { name: 'Specter', baseMultiplier: 1.15, color: '#8e44ad' },
   { name: 'Overlord (BOSS)', baseMultiplier: 2.2, color: '#ff0055' }
 ];
 
@@ -22,23 +23,31 @@ export function getEnemyForStage(stage, subStage) {
   const typeObj = isBoss ? CORRUPTED_TYPES[5] : CORRUPTED_TYPES[(subStage - 1) % 5];
   const name = `${prefix} ${typeObj.name}`;
 
-  // Mathematical scaling for Enemy Power
-  // Stage 1 subStage 1: ~30-40 power. Easily matched by 2-3 tier 1 spirits.
-  const baseScale = Math.pow(1.22, stage - 1);
-  const waveScale = 1 + (subStage - 1) * 0.15;
-  const bossScale = isBoss ? 1.7 : 1.0;
+  // Rebalanced Mathematical scaling:
+  // Enemies now possess robust HP and damage scaling that requires party training & evolutions
+  const baseScale = Math.pow(1.28, stage - 1);
+  const waveScale = 1 + (subStage - 1) * 0.18;
+  const bossScale = isBoss ? 2.0 : 1.0;
 
   const enemyPower = Math.max(
-    25,
-    Math.round(28 * baseScale * waveScale * bossScale * typeObj.baseMultiplier)
+    32,
+    Math.round(35 * baseScale * waveScale * bossScale * typeObj.baseMultiplier)
   );
 
-  // HP is proportionate to power
-  const maxHp = Math.round(enemyPower * (isBoss ? 4.5 : 2.5));
+  // HP scaling: normal mobs take focused strikes, bosses require strategic party strength
+  const maxHp = Math.round(enemyPower * (isBoss ? 8.5 : 4.8));
 
-  // Shards reward
-  const shardReward = Math.round((12 * stage + subStage * 4) * (isBoss ? 3.5 : 1.0));
-  const essenceReward = isBoss ? Math.max(1, Math.floor(stage / 2)) : (Math.random() < 0.15 ? 1 : 0);
+  // Rebalanced Shard Economy:
+  // Normal wave: ~3-8 shards. Boss wave: 20-40 shards + guaranteed Soul Essence.
+  // 1 full floor clear yields ~35-40 shards (3 full floors = 1 summon).
+  const shardReward = isBoss 
+    ? Math.round(18 + stage * 5)
+    : Math.max(1, Math.round(2 + (stage - 1) * 1.5 + subStage * 0.8));
+
+  // Bosses always drop 1+ Soul Essence for the Essence Sanctum Shop
+  const essenceReward = isBoss 
+    ? Math.max(1, Math.floor(1 + (stage - 1) * 0.5)) 
+    : (Math.random() < 0.05 ? 1 : 0);
 
   return {
     name,

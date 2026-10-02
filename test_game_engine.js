@@ -2,12 +2,13 @@ import {
   SPIRIT_SPECIES, 
   CONTRACT_POOLS_BY_RARITY,
   rollContractSpirit,
+  rollAstralContractSpirit,
   getXpRequiredForLevel, 
   calculateSpiritPower 
-} from './src/data/spiritsData.js';
-import { getEnemyForStage } from './src/data/madnessZoneData.js';
+} from './src/data/index.js';
+import { getEnemyForStage } from './src/data/index.js';
 
-console.log('--- RUNNING SPIRIT CONTRACT EVO UPDATED ENGINE TESTS ---');
+console.log('--- RUNNING SPIRIT CONTRACT EVO ENGINE & BALANCE TESTS ---');
 
 // 1. Verify Roster & Rarity Tiers
 console.log('\n[TEST 1] Verifying Contract Roster by Rarity:');
@@ -20,59 +21,54 @@ for (const [rarity, pool] of Object.entries(CONTRACT_POOLS_BY_RARITY)) {
   }
 }
 
-// 2. Test RNG Evolutions for Specific Requested Paths
-console.log('\n[TEST 2] Testing 10,000 Evolution Rolls:');
+// 2. Test Astral Contract (0% Commons Guarantee)
+console.log('\n[TEST 2] Testing Astral Contract (1,000 pulls, 0% Commons expected):');
+let commonFound = 0;
+let uncommonCount = 0;
+let rareCount = 0;
+let epicCount = 0;
+let legendaryCount = 0;
 
-// Test A: Cat Spirit (80% Furious Cat, 20% Elemental Cat)
-const cat = SPIRIT_SPECIES['cat_spirit'];
-let furiousCatCount = 0;
-let elementalCatCount = 0;
-for (let i = 0; i < 10000; i++) {
-  const roll = Math.random() * 100;
-  if (roll <= 80) furiousCatCount++;
-  else elementalCatCount++;
+for (let i = 0; i < 1000; i++) {
+  const result = rollAstralContractSpirit();
+  if (result.rarityTier === 'COMMON') commonFound++;
+  if (result.rarityTier === 'UNCOMMON') uncommonCount++;
+  if (result.rarityTier === 'RARE') rareCount++;
+  if (result.rarityTier === 'EPIC') epicCount++;
+  if (result.rarityTier === 'LEGENDARY') legendaryCount++;
 }
-console.log(`  Cat Spirit: Furious Cat = ${(furiousCatCount / 100).toFixed(1)}% (expected ~80%), Elemental Cat = ${(elementalCatCount / 100).toFixed(1)}% (expected ~20%)`);
 
-// Test B: Shark Spirit (90% Great White Shark, 8% Megalodon, 2% Cosmic Oceanic Devourer)
-let gwsCount = 0;
-let megalodonCount = 0;
-let cosmicCount = 0;
-for (let i = 0; i < 10000; i++) {
-  const roll = Math.random() * 100;
-  if (roll <= 90) gwsCount++;
-  else if (roll <= 98) megalodonCount++;
-  else cosmicCount++;
+console.log(`  Commons: ${commonFound} (0% expected)`);
+console.log(`  Uncommons: ${(uncommonCount / 10).toFixed(1)}% (exp ~65%)`);
+console.log(`  Rares: ${(rareCount / 10).toFixed(1)}% (exp ~25%)`);
+console.log(`  Epics: ${(epicCount / 10).toFixed(1)}% (exp ~8%)`);
+console.log(`  Legendaries: ${(legendaryCount / 10).toFixed(1)}% (exp ~2%)`);
+
+if (commonFound > 0) throw new Error('Astral Contract yielded a Common spirit!');
+
+// 3. Test Rebalanced Shard Economy & Enemy HP
+console.log('\n[TEST 3] Testing Rebalanced Shard Economy & Enemy Difficulty:');
+let totalFloor1Shards = 0;
+for (let wave = 1; wave <= 5; wave++) {
+  const enemy = getEnemyForStage(1, wave);
+  totalFloor1Shards += enemy.shardReward;
+  console.log(`  Floor 1 Wave ${wave} (${enemy.name}): Power: ${enemy.power}, HP: ${enemy.maxHp}, Reward: ${enemy.shardReward} Shards ${enemy.essenceReward > 0 ? `+ ${enemy.essenceReward} Essence` : ''}`);
 }
-console.log(`  Shark Spirit: Great White = ${(gwsCount / 100).toFixed(1)}% (exp ~90%), Megalodon = ${(megalodonCount / 100).toFixed(1)}% (exp ~8%), Cosmic Devourer = ${(cosmicCount / 100).toFixed(1)}% (exp ~2%)`);
+console.log(`  Total Shards for 1 Full Clear of Floor 1: ${totalFloor1Shards} Shards`);
+console.log(`  Floors needed for 1 Contract (100 shards): ~${(100 / totalFloor1Shards).toFixed(1)} floors (Meaningful progression!)`);
 
-// Test C: Fallen Warrior (99% Sovereign Warrior, 1% DreadLord Warrior)
-let sovereignCount = 0;
-let dreadlordCount = 0;
-for (let i = 0; i < 10000; i++) {
-  const roll = Math.random() * 100;
-  if (roll <= 99) sovereignCount++;
-  else dreadlordCount++;
+if (totalFloor1Shards > 50) {
+  throw new Error(`Total shards ${totalFloor1Shards} is too high for a single floor clear!`);
 }
-console.log(`  Fallen Warrior: Sovereign Warrior = ${(sovereignCount / 100).toFixed(1)}% (exp ~99%), DreadLord = ${(dreadlordCount / 100).toFixed(1)}% (exp ~1%)`);
 
-// 3. Test Energy Regeneration Math (1 energy per 30 seconds)
-console.log('\n[TEST 3] Testing Energy Offline & Realtime Math:');
+// 4. Test Energy System Math
+console.log('\n[TEST 4] Testing Energy Regeneration:');
 const maxEnergy = 60;
-let currentEnergy = 10;
-const offlineSeconds = 1200; // 20 minutes
-const energyGained = Math.min(maxEnergy - currentEnergy, Math.floor(offlineSeconds / 30));
-currentEnergy += energyGained;
-console.log(`  Starting Energy: 10, Offline Time: ${offlineSeconds}s (20m) -> Restored: +${energyGained} Energy -> Current: ${currentEnergy} / ${maxEnergy}`);
-if (currentEnergy !== 50) throw new Error('Energy calculation mismatch');
-
-// 4. Test Locked Floor Entry Logic
-console.log('\n[TEST 4] Testing Energy Cost for Unlocking Floors:');
-const entryCost = 10;
-const floorToUnlock = 2;
-console.log(`  Attempting to enter Floor ${floorToUnlock}: Cost = ${entryCost} Energy`);
-currentEnergy -= entryCost;
-console.log(`  Floor ${floorToUnlock} Unlocked permanently! Remaining Energy: ${currentEnergy}`);
-console.log(`  Replaying Floor 1 and Floor 2 now costs: 0 Energy (Unlimited Free Farming)`);
+let energy = 0;
+const elapsedSeconds = 1800; // 30 minutes
+const restored = Math.min(maxEnergy - energy, Math.floor(elapsedSeconds / 30));
+energy += restored;
+console.log(`  30 minutes offline -> Restored: +${restored} ⚡ -> Current: ${energy}/${maxEnergy}`);
+if (energy !== 60) throw new Error('Energy calculation incorrect');
 
 console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
