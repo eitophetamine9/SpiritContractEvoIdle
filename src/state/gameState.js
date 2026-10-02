@@ -2,6 +2,7 @@ import {
   SPIRIT_SPECIES, 
   CONTRACT_POOLS_BY_RARITY,
   rollContractSpirit,
+  rollAstralContractSpirit,
   getXpRequiredForLevel, 
   calculateSpiritPower 
 } from '../data/spiritsData.js';
@@ -135,7 +136,8 @@ class GameStateManager {
         soulEssence: 0,
         energy: 60,        // Max 60 Energy base
         maxEnergy: 60,
-        energySecondsAccumulator: 0
+        energySecondsAccumulator: 0,
+        resonanceTier: 0    // Essence upgrade: permanent +5% power per tier
       },
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
@@ -778,7 +780,157 @@ class GameStateManager {
 
   getTotalPartyPower() {
     const party = this.getPartySpirits();
-    return party.reduce((sum, s) => sum + s.power, 0);
+    const basePower = party.reduce((sum, s) => sum + s.power, 0);
+    const resonanceBonus = 1 + (this.state.resources.resonanceTier || 0) * 0.05;
+    return Math.round(basePower * resonanceBonus);
+  }
+
+  // =========================================================================
+  // SOUL ESSENCE SANCTUM (Essence Spending Shop)
+  // =========================================================================
+
+  /**
+   * Premium Astral Contract (0% Commons, guaranteed Uncommon+)
+   * Costs 5 Soul Essence
+   */
+  contractAstralSpirit() {
+    const cost = 5;
+    if (this.state.resources.soulEssence < cost) {
+      throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮 (Have: ${this.state.resources.soulEssence} 🔮). Earn Essence by defeating Floor Bosses.`);
+    }
+
+    this.state.resources.soulEssence -= cost;
+    const rolled = rollAstralContractSpirit();
+    const species = SPIRIT_SPECIES[rolled.speciesId];
+
+    const spirit = {
+      id: this.generateId(),
+      speciesId: species.id,
+      customName: species.name,
+      level: 1,
+      xp: 0,
+      tier: 1,
+      rarity: rolled.rarityTier,
+      power: calculateSpiritPower(species, 1, rolled.rarityTier),
+      isEquipped: false,
+      canEvolve: false,
+      evolutionHistory: [species.name],
+      contractedAt: Date.now()
+    };
+
+    if (this.state.party.length < 5) {
+      spirit.isEquipped = true;
+      this.state.party.push(spirit.id);
+    }
+
+    this.state.spirits.unshift(spirit);
+    this.state.stats.totalSpiritsContracted += 1;
+    this.save();
+
+    this.emit('spiritsContracted', { spirits: [spirit], cost, currency: 'essence' });
+    return [spirit];
+  }
+
+  /**
+   * Instantly grants +2,500 AFK Training XP to all active party spirits
+   * Costs 3 Soul Essence
+   */
+  buyPartyXpElixir() {
+    const cost = 3;
+    if (this.state.resources.soulEssence < cost) {
+      throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
+    }
+
+    const party = this.getPartySpirits();
+    if (party.length === 0) {
+      throw new Error('You have no spirits in your active party to receive XP!');
+    }
+
+    this.state.resources.soulEssence -= cost;
+    const xpBonus = 2500;
+
+    for (const spirit of party) {
+      const species = SPIRIT_SPECIES[spirit.speciesId];
+      if (!species) continue;
+
+      let remainingXp = xpBonus;
+      while (remainingXp > 0 && spirit.level < species.levelCap) {
+        const req = getXpRequiredForLevel(spirit.level) - spirit.xp;
+        if (remainingXp >= req) {
+          remainingXp -= req;
+          spirit.xp = 0;
+          spirit.level += 1;
+          spirit.power = calculateSpiritPower(species, spirit.level, spirit.rarity);
+        } else {
+          spirit.xp += remainingXp;
+          remainingXp = 0;
+        }
+      }
+
+      if (spirit.level >= species.levelCap) {
+        spirit.xp = getXpRequiredForLevel(spirit.level);
+        if (species.evolutions && species.evolutions.length > 0) {
+          spirit.canEvolve = true;
+        }
+      }
+    }
+
+    this.save();
+    this.emit('partyUpdated', party);
+    return { success: true, xpGranted: xpBonus };
+  }
+
+  /**
+   * Permanently expands Max Energy by +10
+   * Costs 5 Soul Essence
+   */
+  buyMaxEnergyExpansion() {
+    const cost = 5;
+    if (this.state.resources.soulEssence < cost) {
+      throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
+    }
+
+    this.state.resources.soulEssence -= cost;
+    this.state.resources.maxEnergy += 10;
+    this.state.resources.energy += 10; // also top-up
+    this.save();
+    this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
+    return { newMaxEnergy: this.state.resources.maxEnergy };
+  }
+
+  /**
+   * Instantly restores +30 Energy
+   * Costs 2 Soul Essence
+   */
+  buyInstantEnergySurge() {
+    const cost = 2;
+    if (this.state.resources.soulEssence < cost) {
+      throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
+    }
+
+    this.state.resources.soulEssence -= cost;
+    this.state.resources.energy = Math.min(this.state.resources.maxEnergy, this.state.resources.energy + 30);
+    this.save();
+    this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
+    return { currentEnergy: this.state.resources.energy };
+  }
+
+  /**
+   * Permanently upgrades party resonance (+5% all spirit power per tier)
+   * Costs 3 + (tier * 2) Soul Essence
+   */
+  buyPartyResonanceUpgrade() {
+    const currentTier = this.state.resources.resonanceTier || 0;
+    const cost = 3 + currentTier * 2;
+    if (this.state.resources.soulEssence < cost) {
+      throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
+    }
+
+    this.state.resources.soulEssence -= cost;
+    this.state.resources.resonanceTier = currentTier + 1;
+    this.save();
+    this.emit('partyUpdated', this.getPartySpirits());
+    return { newTier: this.state.resources.resonanceTier, bonusPercent: (currentTier + 1) * 5 };
   }
 
   /**

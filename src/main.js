@@ -1,11 +1,14 @@
 import './style.css';
-import { gameState } from './state/gameState.js';
-import { renderMadnessView, updateMadnessCombatTick } from './ui/views/madnessView.js';
-import { renderPartyView } from './ui/views/partyView.js';
-import { renderContractView } from './ui/views/contractView.js';
-import { renderVaultView } from './ui/views/vaultView.js';
-import { renderStatsView } from './ui/views/statsView.js';
-import { showOfflineModal } from './ui/components/modals.js';
+import { gameState } from './state/index.js';
+import { 
+  renderMadnessView, 
+  updateMadnessCombatTick,
+  renderPartyView, 
+  renderContractView, 
+  renderVaultView, 
+  renderStatsView,
+  showOfflineModal 
+} from './ui/index.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
