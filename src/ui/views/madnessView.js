@@ -1,18 +1,17 @@
-import { gameState } from '../../state/gameState.js';
+import { gameState, ENERGY_ENTRY_COST } from '../../state/gameState.js';
 import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../components/pixelBox.js';
 
 export function renderMadnessView(container) {
   const state = gameState.state;
   const mz = state.madnessZone;
+  const res = state.resources;
   const enemy = mz.currentEnemy;
   const partySpirits = gameState.getPartySpirits();
   const partyPower = gameState.getTotalPartyPower();
   const enemyPower = enemy ? enemy.power : 1;
 
   // Math comparison
-  const powerDiff = partyPower - enemyPower;
   const powerRatio = partyPower / Math.max(1, enemyPower);
-  
   let powerStatusClass = 'matched';
   let powerStatusText = '⚖️ EVEN MATCH';
   if (powerRatio >= 1.25) {
@@ -25,26 +24,68 @@ export function renderMadnessView(container) {
 
   const hpPercent = enemy ? Math.max(0, Math.min(100, Math.round((enemy.hp / enemy.maxHp) * 100))) : 0;
 
+  const nextStageNum = mz.highestStageUnlocked + 1;
+  const canAffordNext = res.energy >= ENERGY_ENTRY_COST;
+  const isCurrentStageBossCleared = mz.highestStageCleared >= mz.stage;
+
   container.innerHTML = `
     <div class="madness-container">
       
+      <!-- Energy & Floor Status Card -->
+      <div class="energy-status-banner">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 16px;">⚡</span>
+            <span style="font-size: 13px; font-weight: 800; color: #f1c40f;">Madness Energy:</span>
+            <span style="font-family: var(--font-mono); font-size: 14px; font-weight: 800; color: #ffffff;" id="energy-counter">
+              ${res.energy} / ${res.maxEnergy}
+            </span>
+          </div>
+
+          <div style="font-size: 11px; color: var(--text-muted);">
+            ${res.energy < res.maxEnergy ? `+1 in ${30 - (res.energySecondsAccumulator || 0)}s` : 'MAX'}
+          </div>
+        </div>
+
+        <div class="energy-bar-track">
+          <div class="energy-bar-fill" style="width: ${Math.round((res.energy / res.maxEnergy) * 100)}%;"></div>
+        </div>
+      </div>
+
       <!-- Stage & Progression Controls -->
       <div class="zone-header-card">
         <div class="zone-title-row">
           <div class="zone-title">
-            <span>⚔️ Zone ${mz.stage}</span>
-            <span style="font-size: 13px; color: var(--text-muted);">Wave ${mz.subStage}/5</span>
+            <span>⚔️ Floor ${mz.stage}</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Wave ${mz.subStage}/5</span>
+            <span style="font-size: 10px; background: rgba(46, 213, 115, 0.2); color: #2ecc71; border: 1px solid #2ecc71; padding: 1px 6px; border-radius: 4px;">
+              FREE REPEAT
+            </span>
           </div>
 
           <div class="zone-controls">
             <button id="btn-prev-stage" class="zone-btn-sm" ${mz.stage <= 1 ? 'disabled' : ''}>
               ◀ Prev
             </button>
-            <button id="btn-next-stage" class="zone-btn-sm" ${mz.stage >= mz.highestStageCleared ? 'disabled' : ''}>
+            <button id="btn-next-stage" class="zone-btn-sm" ${mz.stage >= mz.highestStageUnlocked ? 'disabled' : ''}>
               Next ▶
             </button>
           </div>
         </div>
+
+        <!-- Unlock Next Locked Floor with Energy Action -->
+        ${isCurrentStageBossCleared ? `
+          <div style="background: rgba(0, 0, 0, 0.35); border: 1px solid #3b4e75; border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-size: 12px; font-weight: 800; color: #fff;">Floor ${nextStageNum} (Locked)</span>
+              <span style="font-size: 10px; color: var(--text-muted);">Entry Cost: 10 ⚡ (Unlocks permanent 0-energy repeats)</span>
+            </div>
+
+            <button id="btn-unlock-next-floor" class="btn-unlock-stage" ${canAffordNext ? '' : 'disabled'}>
+              Unlock Floor ${nextStageNum} (10 ⚡)
+            </button>
+          </div>
+        ` : ''}
 
         <div style="display: flex; gap: 8px;">
           <button id="btn-toggle-advance" class="zone-toggle-btn ${mz.autoAdvance ? 'active' : ''}">
@@ -95,14 +136,14 @@ export function renderMadnessView(container) {
           </div>
 
           <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
-            Math Engine: Active Party Power yields Shards every time a corrupted enemy falls!
+            Unlocked floors repeat indefinitely for 0 ⚡ Energy! Harvest Shards to summon more Spirits.
           </div>
         </div>
 
         <!-- Active Party 5-Spirit Battle Formation -->
         <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
           <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">ACTIVE PARTY FORMATION (${partySpirits.length}/5)</span>
-          <span style="font-size: 11px; font-family: var(--font-mono); color: #2ed573;">Party DPS: ${Math.round(partyPower * 0.4)} /s</span>
+          <span style="font-size: 11px; font-family: var(--font-mono); color: #2ed573;">DPS: ${Math.round(partyPower * 0.4)} /s</span>
         </div>
 
         <div class="battle-party-line">
@@ -138,13 +179,30 @@ export function renderMadnessView(container) {
 
   // Attach button event listeners
   document.getElementById('btn-prev-stage')?.addEventListener('click', () => {
-    gameState.setStage(gameState.state.madnessZone.stage - 1);
-    renderMadnessView(container);
+    try {
+      gameState.setStage(gameState.state.madnessZone.stage - 1);
+      renderMadnessView(container);
+    } catch (err) {
+      alert(err.message);
+    }
   });
 
   document.getElementById('btn-next-stage')?.addEventListener('click', () => {
-    gameState.setStage(gameState.state.madnessZone.stage + 1);
-    renderMadnessView(container);
+    try {
+      gameState.setStage(gameState.state.madnessZone.stage + 1);
+      renderMadnessView(container);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  document.getElementById('btn-unlock-next-floor')?.addEventListener('click', () => {
+    try {
+      gameState.unlockAndEnterStage(nextStageNum);
+      renderMadnessView(container);
+    } catch (err) {
+      alert(err.message);
+    }
   });
 
   document.getElementById('btn-toggle-advance')?.addEventListener('click', () => {

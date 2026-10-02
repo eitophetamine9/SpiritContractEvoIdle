@@ -11,10 +11,15 @@ let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
 const resShardsEl = document.getElementById('res-shards');
 const resEssenceEl = document.getElementById('res-essence');
+const resEnergyEl = document.getElementById('res-energy');
 const saveStatusEl = document.getElementById('save-status');
 const partyEvolveBadgeEl = document.getElementById('party-evolve-badge');
 
 function updateResourcesDisplay() {
+  if (resEnergyEl && gameState.state.resources) {
+    const res = gameState.state.resources;
+    resEnergyEl.textContent = `${res.energy}/${res.maxEnergy}`;
+  }
   if (resShardsEl) {
     resShardsEl.textContent = gameState.state.resources.spiritShards.toLocaleString();
   }

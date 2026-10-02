@@ -1,5 +1,6 @@
 /**
  * Spirit Species Catalog, Evolution RNG Trees, and Base Stats
+ * Configured with the updated Spirit roster and multi-tier Evolution paths.
  */
 
 export const ELEMENTS = {
@@ -11,635 +12,655 @@ export const ELEMENTS = {
   LIGHT: { name: 'Solar', color: '#ffb300', bg: '#2f2005', border: '#ffc107', symbol: '✨' },
 };
 
+export const RARITIES = {
+  COMMON: { name: 'Common', multiplier: 1.0, color: '#bdc3c7' },
+  UNCOMMON: { name: 'Uncommon', multiplier: 1.18, color: '#2ecc71' },
+  RARE: { name: 'Rare', multiplier: 1.35, color: '#3498db' },
+  EPIC: { name: 'Epic', multiplier: 1.6, color: '#9b59b6' },
+  LEGENDARY: { name: 'Legendary', multiplier: 2.1, color: '#f39c12' },
+  MYTHICAL: { name: 'Mythical', multiplier: 2.8, color: '#e74c3c' },
+  TRANSCENDENT: { name: 'Transcendent', multiplier: 4.0, color: '#00ffff' }
+};
+
 export const SPIRIT_SPECIES = {
-  // === TIER 1 BASE SPIRITS (Level Cap 10) ===
-  'ignis_wisp': {
-    id: 'ignis_wisp',
-    name: 'Ignis Wisp',
-    element: 'FIRE',
+  // ==========================================
+  // COMMON BASE SPIRITS (Cap Level 10)
+  // ==========================================
+  'cat_spirit': {
+    id: 'cat_spirit',
+    name: 'Cat Spirit',
+    baseRarity: 'COMMON',
+    element: 'WIND',
     tier: 1,
     levelCap: 10,
     basePower: 12,
     growthRate: 0.18,
-    avatarKey: 'fire_wisp',
-    accentColor: '#ff4500',
-    description: 'A flickering ember spirit born from an ancient volcanic fissure.',
+    avatarEmoji: '🐱',
+    accentColor: '#e0c93c',
+    description: 'A nimble feline spirit known for swift claws and cunning instincts.',
     evolutions: [
-      { targetSpeciesId: 'inferno_hound', weight: 80, variant: 'Common Variant', powerMult: 2.3 },
-      { targetSpeciesId: 'solar_drake', weight: 20, variant: 'Rare Variant', powerMult: 3.4 }
+      { targetSpeciesId: 'furious_cat', weight: 80, variant: 'Furious Cat', rarity: 'UNCOMMON', powerMult: 2.2 },
+      { targetSpeciesId: 'elemental_cat', weight: 20, variant: 'Elemental Cat (EPIC)', rarity: 'EPIC', powerMult: 3.5 }
     ]
   },
-  'aqua_sprout': {
-    id: 'aqua_sprout',
-    name: 'Aqua Sprout',
-    element: 'WATER',
+  'dog_spirit': {
+    id: 'dog_spirit',
+    name: 'Dog Spirit',
+    baseRarity: 'COMMON',
+    element: 'EARTH',
+    tier: 1,
+    levelCap: 10,
+    basePower: 13,
+    growthRate: 0.18,
+    avatarEmoji: '🐶',
+    accentColor: '#2ecc71',
+    description: 'A loyal hound spirit radiating steady defensive aura and vitality.',
+    evolutions: [
+      { targetSpeciesId: 'vitality_dog', weight: 80, variant: 'Vitality Dog', rarity: 'UNCOMMON', powerMult: 2.2 },
+      { targetSpeciesId: 'guardian_dog', weight: 20, variant: 'Guardian Dog (EPIC)', rarity: 'EPIC', powerMult: 3.5 }
+    ]
+  },
+  'chicken_spirit': {
+    id: 'chicken_spirit',
+    name: 'Chicken Spirit',
+    baseRarity: 'COMMON',
+    element: 'FIRE',
     tier: 1,
     levelCap: 10,
     basePower: 11,
-    growthRate: 0.19,
-    avatarKey: 'water_sprout',
-    accentColor: '#00d2ff',
-    description: 'A lively droplet creature that purifies corrupted currents.',
+    growthRate: 0.17,
+    avatarEmoji: '🐔',
+    accentColor: '#ff4438',
+    description: 'A feisty avian spirit with explosive pecks and unexpected courage.',
     evolutions: [
-      { targetSpeciesId: 'tide_serpent', weight: 80, variant: 'Common Variant', powerMult: 2.3 },
-      { targetSpeciesId: 'abyssal_naga', weight: 20, variant: 'Rare Variant', powerMult: 3.4 }
+      { targetSpeciesId: 'battle_chicken', weight: 90, variant: 'Battle Chicken', rarity: 'UNCOMMON', powerMult: 2.2 },
+      { targetSpeciesId: 'dino_genus_chicken', weight: 10, variant: 'Dino Genus Chicken (LEGENDARY)', rarity: 'LEGENDARY', powerMult: 5.5 }
     ]
   },
-  'terra_golem': {
-    id: 'terra_golem',
-    name: 'Terra Pebble',
+  'caterpillar_spirit': {
+    id: 'caterpillar_spirit',
+    name: 'Caterpillar Spirit',
+    baseRarity: 'COMMON',
     element: 'EARTH',
     tier: 1,
     levelCap: 10,
-    basePower: 14,
+    basePower: 10,
     growthRate: 0.16,
-    avatarKey: 'earth_pebble',
-    accentColor: '#27ae60',
-    description: 'A dense clump of mossy sediment with astonishing resilience.',
+    avatarEmoji: '🐛',
+    accentColor: '#2ecc71',
+    description: 'A humble chrysalis spirit patiently incubating ancient lepidopteran secrets.',
     evolutions: [
-      { targetSpeciesId: 'granite_gargoyle', weight: 80, variant: 'Common Variant', powerMult: 2.2 },
-      { targetSpeciesId: 'crystal_colossus', weight: 20, variant: 'Rare Variant', powerMult: 3.5 }
+      { targetSpeciesId: 'elegant_butterfly', weight: 90, variant: 'Elegant Butterfly', rarity: 'UNCOMMON', powerMult: 2.2 },
+      { targetSpeciesId: 'mystical_butterfly', weight: 10, variant: 'Mystical Butterfly (LEGENDARY)', rarity: 'LEGENDARY', powerMult: 5.5 }
     ]
   },
-  'zephyr_bird': {
-    id: 'zephyr_bird',
-    name: 'Zephyr Finch',
-    element: 'WIND',
+
+  // ==========================================
+  // UNCOMMON BASE SPIRITS (Cap Level 15)
+  // ==========================================
+  'bull_spirit': {
+    id: 'bull_spirit',
+    name: 'Bull Spirit',
+    baseRarity: 'UNCOMMON',
+    element: 'EARTH',
     tier: 1,
-    levelCap: 10,
-    basePower: 13,
-    growthRate: 0.17,
-    avatarKey: 'wind_finch',
-    accentColor: '#f1c40f',
-    description: 'A swift avian spirit riding miniature thermal drafts.',
+    levelCap: 15,
+    basePower: 20,
+    growthRate: 0.20,
+    avatarEmoji: '🐂',
+    accentColor: '#27ae60',
+    description: 'A thunderous bovine spirit capable of trampling corrupted frontlines.',
     evolutions: [
-      { targetSpeciesId: 'tempest_falcon', weight: 80, variant: 'Common Variant', powerMult: 2.3 },
-      { targetSpeciesId: 'celestial_roc', weight: 20, variant: 'Rare Variant', powerMult: 3.3 }
+      { targetSpeciesId: 'raging_bull', weight: 80, variant: 'Raging Bull', rarity: 'UNCOMMON', powerMult: 2.0 },
+      { targetSpeciesId: 'elemental_bull', weight: 15, variant: 'Elemental Bull (EPIC)', rarity: 'EPIC', powerMult: 3.2 },
+      { targetSpeciesId: 'minotaur', weight: 5, variant: 'Minotaur (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 6.2 }
     ]
   },
-  'umbra_shade': {
-    id: 'umbra_shade',
-    name: 'Umbra Shade',
+  'lizard_spirit': {
+    id: 'lizard_spirit',
+    name: 'Lizard Spirit',
+    baseRarity: 'UNCOMMON',
+    element: 'WATER',
+    tier: 1,
+    levelCap: 15,
+    basePower: 19,
+    growthRate: 0.20,
+    avatarEmoji: '🦎',
+    accentColor: '#00c3ff',
+    description: 'A venom-coated reptilian that regenerates vigor under intense pressure.',
+    evolutions: [
+      { targetSpeciesId: 'multi_venom_lizard', weight: 80, variant: 'Multi-venom Lizard', rarity: 'UNCOMMON', powerMult: 2.0 },
+      { targetSpeciesId: 'komodo_dragon', weight: 15, variant: 'Komodo Dragon (EPIC)', rarity: 'EPIC', powerMult: 3.2 },
+      { targetSpeciesId: 'drake', weight: 5, variant: 'Drake (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 6.2 }
+    ]
+  },
+  'python_spirit': {
+    id: 'python_spirit',
+    name: 'Python Spirit',
+    baseRarity: 'UNCOMMON',
     element: 'DARK',
     tier: 1,
-    levelCap: 10,
-    basePower: 15,
-    growthRate: 0.20,
-    avatarKey: 'void_shade',
-    accentColor: '#9b59b6',
-    description: 'A silent phantom that feeds on chaotic psychic echoes.',
+    levelCap: 15,
+    basePower: 21,
+    growthRate: 0.21,
+    avatarEmoji: '🐍',
+    accentColor: '#b342ff',
+    description: 'A constricting serpent wrapped in shadowy miasma that chokes out madness.',
     evolutions: [
-      { targetSpeciesId: 'nightmare_stalker', weight: 80, variant: 'Common Variant', powerMult: 2.4 },
-      { targetSpeciesId: 'void_harbinger', weight: 20, variant: 'Rare Variant', powerMult: 3.6 }
+      { targetSpeciesId: 'highlord_python', weight: 80, variant: 'HighLord Python', rarity: 'UNCOMMON', powerMult: 2.0 },
+      { targetSpeciesId: 'huge_albino_anaconda', weight: 15, variant: 'Huge Albino Anaconda (EPIC)', rarity: 'EPIC', powerMult: 3.2 },
+      { targetSpeciesId: 'wyrm', weight: 5, variant: 'Wyrm (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 6.2 }
     ]
   },
-  'lux_sprite': {
-    id: 'lux_sprite',
-    name: 'Lux Sprite',
+
+  // ==========================================
+  // RARE BASE SPIRITS (Cap Level 20)
+  // ==========================================
+  'shark_spirit': {
+    id: 'shark_spirit',
+    name: 'Shark Spirit',
+    baseRarity: 'RARE',
+    element: 'WATER',
+    tier: 1,
+    levelCap: 20,
+    basePower: 32,
+    growthRate: 0.24,
+    avatarEmoji: '🦈',
+    accentColor: '#00b4d8',
+    description: 'An apex oceanic predator smelling corruption from across dimensions.',
+    evolutions: [
+      { targetSpeciesId: 'great_white_shark', weight: 90, variant: 'Great White Shark (EPIC)', rarity: 'EPIC', powerMult: 2.5 },
+      { targetSpeciesId: 'megalodon', weight: 8, variant: 'Megalodon (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 4.8 },
+      { targetSpeciesId: 'cosmic_oceanic_devourer', weight: 2, variant: 'Cosmic Oceanic Devourer (TRANSCENDENT)', rarity: 'TRANSCENDENT', powerMult: 8.5 }
+    ]
+  },
+  'bear_spirit': {
+    id: 'bear_spirit',
+    name: 'Bear Spirit',
+    baseRarity: 'RARE',
+    element: 'EARTH',
+    tier: 1,
+    levelCap: 20,
+    basePower: 34,
+    growthRate: 0.24,
+    avatarEmoji: '🐻',
+    accentColor: '#2e7d32',
+    description: 'A colossal ursine guardian whose roars fracture reality and crush foes.',
+    evolutions: [
+      { targetSpeciesId: 'highlord_bear', weight: 90, variant: 'HighLord Bear (EPIC)', rarity: 'EPIC', powerMult: 2.5 },
+      { targetSpeciesId: 'bear_of_dreams', weight: 8, variant: 'Bear of Dreams (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 4.8 },
+      { targetSpeciesId: 'cosmic_bear_ursalite', weight: 2, variant: 'Cosmic Bear Ursalite (TRANSCENDENT)', rarity: 'TRANSCENDENT', powerMult: 8.5 }
+    ]
+  },
+
+  // ==========================================
+  // EPIC BASE SPIRITS (Cap Level 25)
+  // ==========================================
+  'wisp_spirit': {
+    id: 'wisp_spirit',
+    name: 'Wisp Spirit',
+    baseRarity: 'EPIC',
     element: 'LIGHT',
     tier: 1,
-    levelCap: 10,
-    basePower: 13,
-    growthRate: 0.19,
-    avatarKey: 'light_sprite',
-    accentColor: '#ffa502',
-    description: 'A sparkling mote of dawn light capable of piercing madness.',
-    evolutions: [
-      { targetSpeciesId: 'radiant_seraph', weight: 80, variant: 'Common Variant', powerMult: 2.3 },
-      { targetSpeciesId: 'aurora_sovereign', weight: 20, variant: 'Rare Variant', powerMult: 3.5 }
-    ]
-  },
-
-  // === TIER 2 COMMON & RARE EVOLUTIONS (Level Cap 25) ===
-  'inferno_hound': {
-    id: 'inferno_hound',
-    name: 'Inferno Hound',
-    element: 'FIRE',
-    tier: 2,
-    levelCap: 25,
-    basePower: 35,
-    growthRate: 0.22,
-    avatarKey: 'fire_hound',
-    accentColor: '#ff2a00',
-    description: 'A relentless hound clothed in living magma.',
-    evolutions: [
-      { targetSpeciesId: 'hellfire_cerberus', weight: 85, variant: 'Common Apex', powerMult: 2.8 },
-      { targetSpeciesId: 'volcanic_titan', weight: 15, variant: 'Mythic Ascendant', powerMult: 4.2 }
-    ]
-  },
-  'solar_drake': {
-    id: 'solar_drake',
-    name: 'Solar Drake [RARE]',
-    element: 'FIRE',
-    tier: 2,
-    levelCap: 25,
-    basePower: 52,
-    growthRate: 0.26,
-    avatarKey: 'fire_drake',
-    accentColor: '#ff7700',
-    description: 'A rare celestial reptile radiating blinding thermonuclear heat.',
-    evolutions: [
-      { targetSpeciesId: 'supernova_phoenix', weight: 75, variant: 'Stellar Variant', powerMult: 3.0 },
-      { targetSpeciesId: 'sun_emperor_dragon', weight: 25, variant: 'Solar Supreme', powerMult: 4.5 }
-    ]
-  },
-
-  'tide_serpent': {
-    id: 'tide_serpent',
-    name: 'Tide Serpent',
-    element: 'WATER',
-    tier: 2,
-    levelCap: 25,
-    basePower: 34,
-    growthRate: 0.22,
-    avatarKey: 'water_serpent',
-    accentColor: '#00b4d8',
-    description: 'A muscular water serpent that commands whirlpools.',
-    evolutions: [
-      { targetSpeciesId: 'maelstrom_hydra', weight: 85, variant: 'Common Apex', powerMult: 2.8 },
-      { targetSpeciesId: 'abyssal_leviathan', weight: 15, variant: 'Mythic Ascendant', powerMult: 4.2 }
-    ]
-  },
-  'abyssal_naga': {
-    id: 'abyssal_naga',
-    name: 'Abyssal Naga [RARE]',
-    element: 'WATER',
-    tier: 2,
     levelCap: 25,
     basePower: 50,
-    growthRate: 0.25,
-    avatarKey: 'water_naga',
-    accentColor: '#0077b6',
-    description: 'A rare trench sovereign wielding crushing oceanic depth magic.',
+    growthRate: 0.28,
+    avatarEmoji: '✨',
+    accentColor: '#ffb300',
+    description: 'A concentrated orb of stellar luminescence holding royal astral genetics.',
     evolutions: [
-      { targetSpeciesId: 'oceanic_demigod', weight: 75, variant: 'Tidal Lord', powerMult: 3.0 },
-      { targetSpeciesId: 'primordial_ocean_queen', weight: 25, variant: 'Deep Supreme', powerMult: 4.5 }
+      { targetSpeciesId: 'high_elf', weight: 100, variant: 'High Elf (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 3.5 }
     ]
   },
 
-  'granite_gargoyle': {
-    id: 'granite_gargoyle',
-    name: 'Granite Gargoyle',
-    element: 'EARTH',
-    tier: 2,
-    levelCap: 25,
-    basePower: 36,
-    growthRate: 0.21,
-    avatarKey: 'earth_gargoyle',
-    accentColor: '#2e7d32',
-    description: 'An impenetrable guardian carved from petrified mountain peaks.',
-    evolutions: [
-      { targetSpeciesId: 'tectonic_behemoth', weight: 85, variant: 'Common Apex', powerMult: 2.8 },
-      { targetSpeciesId: 'crystal_colossus_apex', weight: 15, variant: 'Mythic Ascendant', powerMult: 4.2 }
-    ]
-  },
-  'crystal_colossus': {
-    id: 'crystal_colossus',
-    name: 'Crystal Colossus [RARE]',
-    element: 'EARTH',
-    tier: 2,
-    levelCap: 25,
-    basePower: 54,
-    growthRate: 0.25,
-    avatarKey: 'earth_colossus',
-    accentColor: '#00e676',
-    description: 'Refracts pure geothermal energy through crystalline armor.',
-    evolutions: [
-      { targetSpeciesId: 'diamond_dreadnought', weight: 70, variant: 'Prism Overlord', powerMult: 3.1 },
-      { targetSpeciesId: 'gaia_world_breaker', weight: 30, variant: 'Terran Supreme', powerMult: 4.6 }
-    ]
-  },
-
-  'tempest_falcon': {
-    id: 'tempest_falcon',
-    name: 'Tempest Falcon',
-    element: 'WIND',
-    tier: 2,
-    levelCap: 25,
-    basePower: 35,
-    growthRate: 0.23,
-    avatarKey: 'wind_falcon',
-    accentColor: '#f9a825',
-    description: 'Cuts through gale force winds with razor-sharp gale plumage.',
-    evolutions: [
-      { targetSpeciesId: 'cyclone_griffin', weight: 85, variant: 'Common Apex', powerMult: 2.8 },
-      { targetSpeciesId: 'typhoon_valkyrie', weight: 15, variant: 'Mythic Ascendant', powerMult: 4.2 }
-    ]
-  },
-  'celestial_roc': {
-    id: 'celestial_roc',
-    name: 'Celestial Roc [RARE]',
-    element: 'WIND',
-    tier: 2,
-    levelCap: 25,
-    basePower: 51,
-    growthRate: 0.26,
-    avatarKey: 'wind_roc',
-    accentColor: '#ffee58',
-    description: 'A rare celestial bird whose wingbeats cause stratosphere rifts.',
-    evolutions: [
-      { targetSpeciesId: 'storm_emperor_eagle', weight: 75, variant: 'Sky Monarch', powerMult: 3.0 },
-      { targetSpeciesId: 'sky_rending_sovereign', weight: 25, variant: 'Aether Supreme', powerMult: 4.5 }
-    ]
-  },
-
-  'nightmare_stalker': {
-    id: 'nightmare_stalker',
-    name: 'Nightmare Stalker',
+  // ==========================================
+  // LEGENDARY BASE SPIRITS (Cap Level 30)
+  // ==========================================
+  'fallen_warrior_spirit': {
+    id: 'fallen_warrior_spirit',
+    name: 'Fallen Warrior Spirit',
+    baseRarity: 'LEGENDARY',
     element: 'DARK',
+    tier: 1,
+    levelCap: 30,
+    basePower: 95,
+    growthRate: 0.35,
+    avatarEmoji: '⚔️',
+    accentColor: '#b342ff',
+    description: 'The indomitable soul of an ancient war god wandering the purgatorial rim.',
+    evolutions: [
+      { targetSpeciesId: 'sovereign_warrior', weight: 99, variant: 'Sovereign Warrior (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 2.2 },
+      { targetSpeciesId: 'dreadlord_warrior', weight: 1, variant: 'DreadLord Warrior (TRANSCENDENT)', rarity: 'TRANSCENDENT', powerMult: 4.5 }
+    ]
+  },
+
+  // =========================================================================
+  // EVOLVED FORMS (Tier 2 / Ascended)
+  // =========================================================================
+
+  // Cat Evolutions
+  'furious_cat': {
+    id: 'furious_cat',
+    name: 'Furious Cat',
+    baseRarity: 'UNCOMMON',
+    element: 'WIND',
     tier: 2,
-    levelCap: 25,
-    basePower: 38,
+    levelCap: 35,
+    basePower: 32,
     growthRate: 0.24,
-    avatarKey: 'void_stalker',
-    accentColor: '#8e24aa',
-    description: 'Prowls unseen in the madness frequencies of the dark realm.',
-    evolutions: [
-      { targetSpeciesId: 'void_reaper', weight: 85, variant: 'Common Apex', powerMult: 2.8 },
-      { targetSpeciesId: 'abyssal_oblivion', weight: 15, variant: 'Mythic Ascendant', powerMult: 4.3 }
-    ]
+    avatarEmoji: '😼',
+    accentColor: '#f1c40f',
+    description: 'Strikes in relentless flurries faster than corrupted eyes can follow.',
+    evolutions: []
   },
-  'void_harbinger': {
-    id: 'void_harbinger',
-    name: 'Void Harbinger [RARE]',
+  'elemental_cat': {
+    id: 'elemental_cat',
+    name: 'Elemental Cat',
+    baseRarity: 'EPIC',
+    element: 'LIGHT',
+    tier: 2,
+    levelCap: 40,
+    basePower: 58,
+    growthRate: 0.30,
+    avatarEmoji: '✨🐱',
+    accentColor: '#ffa502',
+    description: 'Channels atmospheric elemental currents into devastating shockwaves.',
+    evolutions: []
+  },
+
+  // Dog Evolutions
+  'vitality_dog': {
+    id: 'vitality_dog',
+    name: 'Vitality Dog',
+    baseRarity: 'UNCOMMON',
+    element: 'EARTH',
+    tier: 2,
+    levelCap: 35,
+    basePower: 33,
+    growthRate: 0.24,
+    avatarEmoji: '🐕',
+    accentColor: '#2ecc71',
+    description: 'Imbued with boundless vitality that bolsters the entire party line.',
+    evolutions: []
+  },
+  'guardian_dog': {
+    id: 'guardian_dog',
+    name: 'Guardian Dog',
+    baseRarity: 'EPIC',
+    element: 'LIGHT',
+    tier: 2,
+    levelCap: 40,
+    basePower: 60,
+    growthRate: 0.30,
+    avatarEmoji: '🛡️🐶',
+    accentColor: '#ffc107',
+    description: 'An angelic watch-dog surrounded by impenetrable divine barriers.',
+    evolutions: []
+  },
+
+  // Chicken Evolutions
+  'battle_chicken': {
+    id: 'battle_chicken',
+    name: 'Battle Chicken',
+    baseRarity: 'UNCOMMON',
+    element: 'FIRE',
+    tier: 2,
+    levelCap: 35,
+    basePower: 34,
+    growthRate: 0.24,
+    avatarEmoji: '🐓',
+    accentColor: '#ff5722',
+    description: 'Spurs hardened with igneous crystal, striking down corruption without fear.',
+    evolutions: []
+  },
+  'dino_genus_chicken': {
+    id: 'dino_genus_chicken',
+    name: 'Dino Genus Chicken',
+    baseRarity: 'LEGENDARY',
+    element: 'FIRE',
+    tier: 2,
+    levelCap: 45,
+    basePower: 115,
+    growthRate: 0.38,
+    avatarEmoji: '🦖',
+    accentColor: '#ff1744',
+    description: 'Awakened prehistoric apex DNA; its primordial shriek levels mountains.',
+    evolutions: []
+  },
+
+  // Caterpillar Evolutions
+  'elegant_butterfly': {
+    id: 'elegant_butterfly',
+    name: 'Elegant Butterfly',
+    baseRarity: 'UNCOMMON',
+    element: 'WIND',
+    tier: 2,
+    levelCap: 35,
+    basePower: 33,
+    growthRate: 0.24,
+    avatarEmoji: '🦋',
+    accentColor: '#26de81',
+    description: 'Spreads soothing pollen scales that disorient hostile madness.',
+    evolutions: []
+  },
+  'mystical_butterfly': {
+    id: 'mystical_butterfly',
+    name: 'Mystical Butterfly',
+    baseRarity: 'LEGENDARY',
+    element: 'LIGHT',
+    tier: 2,
+    levelCap: 45,
+    basePower: 118,
+    growthRate: 0.38,
+    avatarEmoji: '✨🦋',
+    accentColor: '#fd9644',
+    description: 'Weaves the fabric of fate with prismatic dream dust wings.',
+    evolutions: []
+  },
+
+  // Bull Evolutions
+  'raging_bull': {
+    id: 'raging_bull',
+    name: 'Raging Bull',
+    baseRarity: 'UNCOMMON',
+    element: 'FIRE',
+    tier: 2,
+    levelCap: 35,
+    basePower: 45,
+    growthRate: 0.26,
+    avatarEmoji: '🐂🔥',
+    accentColor: '#e74c3c',
+    description: 'Leaves trails of flaming devastation with every unstoppable charge.',
+    evolutions: []
+  },
+  'elemental_bull': {
+    id: 'elemental_bull',
+    name: 'Elemental Bull',
+    baseRarity: 'EPIC',
+    element: 'EARTH',
+    tier: 2,
+    levelCap: 40,
+    basePower: 70,
+    growthRate: 0.32,
+    avatarEmoji: '⚡🐂',
+    accentColor: '#27ae60',
+    description: 'Synthesizes tectonic tremors into pulverizing subterranean shockwaves.',
+    evolutions: []
+  },
+  'minotaur': {
+    id: 'minotaur',
+    name: 'Minotaur',
+    baseRarity: 'MYTHICAL',
+    element: 'FIRE',
+    tier: 2,
+    levelCap: 50,
+    basePower: 145,
+    growthRate: 0.42,
+    avatarEmoji: '👹🪓',
+    accentColor: '#c0392b',
+    description: 'Legendary labyrinth overlord wielding an axe forged in magma rifts.',
+    evolutions: []
+  },
+
+  // Lizard Evolutions
+  'multi_venom_lizard': {
+    id: 'multi_venom_lizard',
+    name: 'Multi-venom Lizard',
+    baseRarity: 'UNCOMMON',
+    element: 'EARTH',
+    tier: 2,
+    levelCap: 35,
+    basePower: 44,
+    growthRate: 0.26,
+    avatarEmoji: '🦎🧪',
+    accentColor: '#20bf6b',
+    description: 'Exudes lethal corrosive secretions that melt corrupted armor.',
+    evolutions: []
+  },
+  'komodo_dragon': {
+    id: 'komodo_dragon',
+    name: 'Komodo Dragon',
+    baseRarity: 'EPIC',
+    element: 'WATER',
+    tier: 2,
+    levelCap: 40,
+    basePower: 68,
+    growthRate: 0.32,
+    avatarEmoji: '🐊',
+    accentColor: '#0fb9b1',
+    description: 'An armored behemoth whose bite infects corrupted minds with weakness.',
+    evolutions: []
+  },
+  'drake': {
+    id: 'drake',
+    name: 'Drake',
+    baseRarity: 'MYTHICAL',
+    element: 'FIRE',
+    tier: 2,
+    levelCap: 50,
+    basePower: 148,
+    growthRate: 0.42,
+    avatarEmoji: '🐉',
+    accentColor: '#eb3b5a',
+    description: 'A winged draconic titan dominating the battlefield with hellfire breath.',
+    evolutions: []
+  },
+
+  // Python Evolutions
+  'highlord_python': {
+    id: 'highlord_python',
+    name: 'HighLord Python',
+    baseRarity: 'UNCOMMON',
     element: 'DARK',
     tier: 2,
-    levelCap: 25,
-    basePower: 56,
-    growthRate: 0.27,
-    avatarKey: 'void_harbinger',
-    accentColor: '#ba68c8',
-    description: 'A terrifying riftwalker wrapped in dark singularity threads.',
-    evolutions: [
-      { targetSpeciesId: 'blackhole_emperor', weight: 70, variant: 'Entropy Prince', powerMult: 3.2 },
-      { targetSpeciesId: 'chaos_godhead', weight: 30, variant: 'Void Supreme', powerMult: 4.8 }
-    ]
-  },
-
-  'radiant_seraph': {
-    id: 'radiant_seraph',
-    name: 'Radiant Seraph',
-    element: 'LIGHT',
-    tier: 2,
-    levelCap: 25,
-    basePower: 35,
-    growthRate: 0.23,
-    avatarKey: 'light_seraph',
-    accentColor: '#ff9800',
-    description: 'Shines with the unwavering dawn to banish madness.',
-    evolutions: [
-      { targetSpeciesId: 'archangel_aegis', weight: 85, variant: 'Common Apex', powerMult: 2.8 },
-      { targetSpeciesId: 'dawn_empress', weight: 15, variant: 'Mythic Ascendant', powerMult: 4.2 }
-    ]
-  },
-  'aurora_sovereign': {
-    id: 'aurora_sovereign',
-    name: 'Aurora Sovereign [RARE]',
-    element: 'LIGHT',
-    tier: 2,
-    levelCap: 25,
-    basePower: 53,
+    levelCap: 35,
+    basePower: 45,
     growthRate: 0.26,
-    avatarKey: 'light_sovereign',
-    accentColor: '#ffe082',
-    description: 'Weaves kaleidoscopic solar beams that blind corrupted horrors.',
-    evolutions: [
-      { targetSpeciesId: 'supernal_avatar', weight: 70, variant: 'Luminous Deity', powerMult: 3.1 },
-      { targetSpeciesId: 'cosmic_divinity', weight: 30, variant: 'Sun Supreme', powerMult: 4.7 }
-    ]
+    avatarEmoji: '🐍👑',
+    accentColor: '#8854d0',
+    description: 'Crowns itself ruler of shadows, crushing foes in shadowy coils.',
+    evolutions: []
   },
-
-  // === TIER 3 FINAL APEX FORMS (Level Cap 50) ===
-  'hellfire_cerberus': {
-    id: 'hellfire_cerberus',
-    name: 'Hellfire Cerberus',
-    element: 'FIRE',
-    tier: 3,
-    levelCap: 50,
-    basePower: 120,
+  'huge_albino_anaconda': {
+    id: 'huge_albino_anaconda',
+    name: 'Huge Albino Anaconda',
+    baseRarity: 'EPIC',
+    element: 'LIGHT',
+    tier: 2,
+    levelCap: 40,
+    basePower: 70,
     growthRate: 0.32,
-    avatarKey: 'fire_cerberus',
-    accentColor: '#d50000',
-    description: 'A three-headed guardian unleashing eternal volcanic ruin.',
+    avatarEmoji: '🤍🐍',
+    accentColor: '#a55eea',
+    description: 'Glistening white scales reflect darkness while suffocating corrupted horrors.',
     evolutions: []
   },
-  'volcanic_titan': {
-    id: 'volcanic_titan',
-    name: 'Volcanic Titan [MYTHIC]',
-    element: 'FIRE',
-    tier: 3,
+  'wyrm': {
+    id: 'wyrm',
+    name: 'Wyrm',
+    baseRarity: 'MYTHICAL',
+    element: 'DARK',
+    tier: 2,
     levelCap: 50,
-    basePower: 185,
-    growthRate: 0.38,
-    avatarKey: 'fire_titan',
-    accentColor: '#ff1744',
-    description: 'The incarnation of tectonic brimstone, an unstoppable apex deity.',
-    evolutions: []
-  },
-  'supernova_phoenix': {
-    id: 'supernova_phoenix',
-    name: 'Supernova Phoenix',
-    element: 'FIRE',
-    tier: 3,
-    levelCap: 50,
-    basePower: 160,
-    growthRate: 0.35,
-    avatarKey: 'fire_phoenix',
-    accentColor: '#ff6d00',
-    description: 'Burns at core temperature, resurrecting in explosive radiant flares.',
-    evolutions: []
-  },
-  'sun_emperor_dragon': {
-    id: 'sun_emperor_dragon',
-    name: 'Sun Emperor Dragon [SUPREME]',
-    element: 'FIRE',
-    tier: 3,
-    levelCap: 50,
-    basePower: 220,
-    growthRate: 0.42,
-    avatarKey: 'fire_dragon_supreme',
-    accentColor: '#ff9100',
-    description: 'Lord of every flame that ever burned across the cosmos.',
+    basePower: 150,
+    growthRate: 0.43,
+    avatarEmoji: '🐲',
+    accentColor: '#3867d6',
+    description: 'An ancient limbless dragon that burrows through dimensional fault lines.',
     evolutions: []
   },
 
-  'maelstrom_hydra': {
-    id: 'maelstrom_hydra',
-    name: 'Maelstrom Hydra',
+  // Shark Evolutions
+  'great_white_shark': {
+    id: 'great_white_shark',
+    name: 'Great White Shark',
+    baseRarity: 'EPIC',
     element: 'WATER',
-    tier: 3,
-    levelCap: 50,
-    basePower: 118,
-    growthRate: 0.32,
-    avatarKey: 'water_hydra',
-    accentColor: '#0091ea',
-    description: 'Multi-headed abyssal predator crushing everything into vortexes.',
+    tier: 2,
+    levelCap: 40,
+    basePower: 82,
+    growthRate: 0.34,
+    avatarEmoji: '🦈⚡',
+    accentColor: '#4b7bec',
+    description: 'Serrated astral jaws tear through corrupted nightmares with zero effort.',
     evolutions: []
   },
-  'abyssal_leviathan': {
-    id: 'abyssal_leviathan',
-    name: 'Abyssal Leviathan [MYTHIC]',
+  'megalodon': {
+    id: 'megalodon',
+    name: 'Megalodon',
+    baseRarity: 'MYTHICAL',
     element: 'WATER',
-    tier: 3,
-    levelCap: 50,
-    basePower: 180,
-    growthRate: 0.38,
-    avatarKey: 'water_leviathan',
-    accentColor: '#00b0ff',
-    description: 'Ancient titan of the deepest trench that swallows continents.',
-    evolutions: []
-  },
-  'oceanic_demigod': {
-    id: 'oceanic_demigod',
-    name: 'Oceanic Demigod',
-    element: 'WATER',
-    tier: 3,
-    levelCap: 50,
-    basePower: 155,
-    growthRate: 0.35,
-    avatarKey: 'water_demigod',
-    accentColor: '#00e5ff',
-    description: 'Commands tidal forces with effortless celestial grace.',
-    evolutions: []
-  },
-  'primordial_ocean_queen': {
-    id: 'primordial_ocean_queen',
-    name: 'Ocean Queen [SUPREME]',
-    element: 'WATER',
-    tier: 3,
-    levelCap: 50,
-    basePower: 225,
-    growthRate: 0.42,
-    avatarKey: 'water_queen_supreme',
-    accentColor: '#18ffff',
-    description: 'Ruler of the primordial waters before the creation of land.',
-    evolutions: []
-  },
-
-  'tectonic_behemoth': {
-    id: 'tectonic_behemoth',
-    name: 'Tectonic Behemoth',
-    element: 'EARTH',
-    tier: 3,
-    levelCap: 50,
-    basePower: 122,
-    growthRate: 0.31,
-    avatarKey: 'earth_behemoth',
-    accentColor: '#1b5e20',
-    description: 'Carries mountain ridges on its shell, shifting tectonic plates.',
-    evolutions: []
-  },
-  'crystal_colossus_apex': {
-    id: 'crystal_colossus_apex',
-    name: 'Prismatic Colossus [MYTHIC]',
-    element: 'EARTH',
-    tier: 3,
-    levelCap: 50,
-    basePower: 190,
-    growthRate: 0.39,
-    avatarKey: 'earth_colossus_apex',
-    accentColor: '#00c853',
-    description: 'Radiates impenetrable diamond shields that deflect all malice.',
-    evolutions: []
-  },
-  'diamond_dreadnought': {
-    id: 'diamond_dreadnought',
-    name: 'Diamond Dreadnought',
-    element: 'EARTH',
-    tier: 3,
+    tier: 2,
     levelCap: 50,
     basePower: 165,
-    growthRate: 0.36,
-    avatarKey: 'earth_dreadnought',
-    accentColor: '#69f0ae',
-    description: 'A floating crystalline fortress that pulverizes enemy frontlines.',
-    evolutions: []
-  },
-  'gaia_world_breaker': {
-    id: 'gaia_world_breaker',
-    name: 'Gaia World Breaker [SUPREME]',
-    element: 'EARTH',
-    tier: 3,
-    levelCap: 50,
-    basePower: 230,
-    growthRate: 0.43,
-    avatarKey: 'earth_world_breaker',
-    accentColor: '#b9f6ca',
-    description: 'Commands the planetary crust itself; earthquakes obey its call.',
-    evolutions: []
-  },
-
-  'cyclone_griffin': {
-    id: 'cyclone_griffin',
-    name: 'Cyclone Griffin',
-    element: 'WIND',
-    tier: 3,
-    levelCap: 50,
-    basePower: 119,
-    growthRate: 0.33,
-    avatarKey: 'wind_griffin',
-    accentColor: '#e65100',
-    description: 'Blends lion ferocity with hurricane velocity.',
-    evolutions: []
-  },
-  'typhoon_valkyrie': {
-    id: 'typhoon_valkyrie',
-    name: 'Typhoon Valkyrie [MYTHIC]',
-    element: 'WIND',
-    tier: 3,
-    levelCap: 50,
-    basePower: 182,
-    growthRate: 0.38,
-    avatarKey: 'wind_valkyrie',
-    accentColor: '#ffd600',
-    description: 'Descends from jetstreams to cleanly dissect corrupted forces.',
-    evolutions: []
-  },
-  'storm_emperor_eagle': {
-    id: 'storm_emperor_eagle',
-    name: 'Storm Emperor Eagle',
-    element: 'WIND',
-    tier: 3,
-    levelCap: 50,
-    basePower: 158,
-    growthRate: 0.35,
-    avatarKey: 'wind_eagle',
-    accentColor: '#ffea00',
-    description: 'Its cries bring thunderstorms; its wings shroud whole kingdoms.',
-    evolutions: []
-  },
-  'sky_rending_sovereign': {
-    id: 'sky_rending_sovereign',
-    name: 'Aether Sovereign [SUPREME]',
-    element: 'WIND',
-    tier: 3,
-    levelCap: 50,
-    basePower: 222,
-    growthRate: 0.42,
-    avatarKey: 'wind_sovereign_supreme',
-    accentColor: '#ffff00',
-    description: 'Sovereign of the endless atmosphere that bends storms to its will.',
-    evolutions: []
-  },
-
-  'void_reaper': {
-    id: 'void_reaper',
-    name: 'Void Reaper',
-    element: 'DARK',
-    tier: 3,
-    levelCap: 50,
-    basePower: 125,
-    growthRate: 0.34,
-    avatarKey: 'void_reaper',
-    accentColor: '#4a148c',
-    description: 'A shadowy executioner harvest souls unperturbed by madness.',
-    evolutions: []
-  },
-  'abyssal_oblivion': {
-    id: 'abyssal_oblivion',
-    name: 'Abyssal Oblivion [MYTHIC]',
-    element: 'DARK',
-    tier: 3,
-    levelCap: 50,
-    basePower: 195,
-    growthRate: 0.40,
-    avatarKey: 'void_oblivion',
-    accentColor: '#aa00ff',
-    description: 'A walking event horizon dissolving physical matter into void.',
-    evolutions: []
-  },
-  'blackhole_emperor': {
-    id: 'blackhole_emperor',
-    name: 'Blackhole Emperor',
-    element: 'DARK',
-    tier: 3,
-    levelCap: 50,
-    basePower: 170,
-    growthRate: 0.36,
-    avatarKey: 'void_emperor',
-    accentColor: '#d500f9',
-    description: 'Rules over the gravitational singularities of collapsed dimensions.',
-    evolutions: []
-  },
-  'chaos_godhead': {
-    id: 'chaos_godhead',
-    name: 'Chaos Godhead [SUPREME]',
-    element: 'DARK',
-    tier: 3,
-    levelCap: 50,
-    basePower: 240,
-    growthRate: 0.45,
-    avatarKey: 'void_godhead',
-    accentColor: '#ea80fc',
-    description: 'The ancient will of primordial chaos; all madness bows to it.',
-    evolutions: []
-  },
-
-  'archangel_aegis': {
-    id: 'archangel_aegis',
-    name: 'Archangel Aegis',
-    element: 'LIGHT',
-    tier: 3,
-    levelCap: 50,
-    basePower: 120,
-    growthRate: 0.33,
-    avatarKey: 'light_archangel',
-    accentColor: '#ff6f00',
-    description: 'A six-winged bastion whose holy shield cleanses all corruption.',
-    evolutions: []
-  },
-  'dawn_empress': {
-    id: 'dawn_empress',
-    name: 'Dawn Empress [MYTHIC]',
-    element: 'LIGHT',
-    tier: 3,
-    levelCap: 50,
-    basePower: 188,
-    growthRate: 0.39,
-    avatarKey: 'light_empress',
-    accentColor: '#ffab00',
-    description: 'Channels first morning light to obliterate shadows unconditionally.',
-    evolutions: []
-  },
-  'supernal_avatar': {
-    id: 'supernal_avatar',
-    name: 'Supernal Avatar',
-    element: 'LIGHT',
-    tier: 3,
-    levelCap: 50,
-    basePower: 162,
-    growthRate: 0.35,
-    avatarKey: 'light_avatar',
-    accentColor: '#ffd740',
-    description: 'A towering embodiment of purity that transmutes madness into peace.',
-    evolutions: []
-  },
-  'cosmic_divinity': {
-    id: 'cosmic_divinity',
-    name: 'Cosmic Divinity [SUPREME]',
-    element: 'LIGHT',
-    tier: 3,
-    levelCap: 50,
-    basePower: 235,
     growthRate: 0.44,
-    avatarKey: 'light_divinity_supreme',
-    accentColor: '#ffe57f',
-    description: 'Sits at the heart of the galaxy, bathing all existence in celestial vigor.',
+    avatarEmoji: '🦈🌊',
+    accentColor: '#0984e3',
+    description: 'Prehistoric behemoth of the Mariana rifts; swallowed islands in ancient eras.',
+    evolutions: []
+  },
+  'cosmic_oceanic_devourer': {
+    id: 'cosmic_oceanic_devourer',
+    name: 'Cosmic Oceanic Devourer',
+    baseRarity: 'TRANSCENDENT',
+    element: 'WATER',
+    tier: 2,
+    levelCap: 60,
+    basePower: 295,
+    growthRate: 0.55,
+    avatarEmoji: '🌌🦈',
+    accentColor: '#00ffff',
+    description: 'A transcendent cosmic entity that swims between galaxies and devours supernovas.',
+    evolutions: []
+  },
+
+  // Bear Evolutions
+  'highlord_bear': {
+    id: 'highlord_bear',
+    name: 'HighLord Bear',
+    baseRarity: 'EPIC',
+    element: 'EARTH',
+    tier: 2,
+    levelCap: 40,
+    basePower: 84,
+    growthRate: 0.34,
+    avatarEmoji: '🐻👑',
+    accentColor: '#fa8231',
+    description: 'Commands the deep forests and mountains with an iron paw.',
+    evolutions: []
+  },
+  'bear_of_dreams': {
+    id: 'bear_of_dreams',
+    name: 'Bear of Dreams',
+    baseRarity: 'MYTHICAL',
+    element: 'LIGHT',
+    tier: 2,
+    levelCap: 50,
+    basePower: 168,
+    growthRate: 0.44,
+    avatarEmoji: '🐻✨',
+    accentColor: '#f7b731',
+    description: 'Woven from celestial stardust; its gentle aura shields reality from collapsing.',
+    evolutions: []
+  },
+  'cosmic_bear_ursalite': {
+    id: 'cosmic_bear_ursalite',
+    name: 'Cosmic Bear Ursalite',
+    baseRarity: 'TRANSCENDENT',
+    element: 'EARTH',
+    tier: 2,
+    levelCap: 60,
+    basePower: 300,
+    growthRate: 0.55,
+    avatarEmoji: '🌌🐻',
+    accentColor: '#20bf6b',
+    description: 'Embodies the celestial constellation Ursa Major; crushing worlds in its paw.',
+    evolutions: []
+  },
+
+  // Wisp Evolutions
+  'high_elf': {
+    id: 'high_elf',
+    name: 'High Elf',
+    baseRarity: 'MYTHICAL',
+    element: 'LIGHT',
+    tier: 2,
+    levelCap: 50,
+    basePower: 185,
+    growthRate: 0.46,
+    avatarEmoji: '🧝‍♂️',
+    accentColor: '#fed330',
+    description: 'Archon of pure solar nobility, channeling stellar magic to banish darkness.',
+    evolutions: []
+  },
+
+  // Fallen Warrior Evolutions
+  'sovereign_warrior': {
+    id: 'sovereign_warrior',
+    name: 'Sovereign Warrior',
+    baseRarity: 'MYTHICAL',
+    element: 'DARK',
+    tier: 2,
+    levelCap: 50,
+    basePower: 210,
+    growthRate: 0.48,
+    avatarEmoji: '👑⚔️',
+    accentColor: '#8854d0',
+    description: 'Restores his ancient empire from the grave, wielding blades of pure eclipse.',
+    evolutions: []
+  },
+  'dreadlord_warrior': {
+    id: 'dreadlord_warrior',
+    name: 'DreadLord Warrior',
+    baseRarity: 'TRANSCENDENT',
+    element: 'DARK',
+    tier: 2,
+    levelCap: 60,
+    basePower: 360,
+    growthRate: 0.60,
+    avatarEmoji: '💀⚔️',
+    accentColor: '#fc5c65',
+    description: 'The supreme conqueror of all madness and realities; all creation kneels before his blade.',
     evolutions: []
   }
 };
 
 /**
- * Base Tier 1 Species IDs available through the Spirit Contract altar
+ * Base Species available through the Spirit Contract altar grouped by rarity
  */
-export const CONTRACT_BASE_POOL = [
-  'ignis_wisp',
-  'aqua_sprout',
-  'terra_golem',
-  'zephyr_bird',
-  'umbra_shade',
-  'lux_sprite'
+export const CONTRACT_POOLS_BY_RARITY = {
+  COMMON: ['cat_spirit', 'dog_spirit', 'chicken_spirit', 'caterpillar_spirit'],
+  UNCOMMON: ['bull_spirit', 'lizard_spirit', 'python_spirit'],
+  RARE: ['shark_spirit', 'bear_spirit'],
+  EPIC: ['wisp_spirit'],
+  LEGENDARY: ['fallen_warrior_spirit']
+};
+
+export const CONTRACT_RARITY_ODDS = [
+  { rarity: 'COMMON', weight: 60.0 },
+  { rarity: 'UNCOMMON', weight: 26.0 },
+  { rarity: 'RARE', weight: 10.0 },
+  { rarity: 'EPIC', weight: 3.5 },
+  { rarity: 'LEGENDARY', weight: 0.5 }
 ];
+
+export function rollContractSpirit() {
+  const roll = Math.random() * 100;
+  let running = 0;
+  let selectedRarity = 'COMMON';
+
+  for (const entry of CONTRACT_RARITY_ODDS) {
+    running += entry.weight;
+    if (roll <= running) {
+      selectedRarity = entry.rarity;
+      break;
+    }
+  }
+
+  const pool = CONTRACT_POOLS_BY_RARITY[selectedRarity];
+  const speciesId = pool[Math.floor(Math.random() * pool.length)];
+  return { speciesId, rarityTier: selectedRarity };
+}
 
 /**
  * Formula to calculate XP required to level up
@@ -651,8 +672,9 @@ export function getXpRequiredForLevel(level) {
 /**
  * Formula to calculate Spirit combat power
  */
-export function calculateSpiritPower(species, level, rarity = 'common') {
-  const rarityMult = rarity === 'mythic' ? 1.5 : (rarity === 'rare' ? 1.25 : 1.0);
+export function calculateSpiritPower(species, level, rarityName) {
+  const effectiveRarity = rarityName ? rarityName.toUpperCase() : (species.baseRarity || 'COMMON');
+  const rarityObj = RARITIES[effectiveRarity] || RARITIES.COMMON;
   const lvlMult = 1 + (level - 1) * species.growthRate;
-  return Math.max(1, Math.round(species.basePower * lvlMult * rarityMult));
+  return Math.max(1, Math.round(species.basePower * lvlMult * rarityObj.multiplier));
 }
