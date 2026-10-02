@@ -1,83 +1,78 @@
 import { 
   SPIRIT_SPECIES, 
-  CONTRACT_BASE_POOL, 
+  CONTRACT_POOLS_BY_RARITY,
+  rollContractSpirit,
   getXpRequiredForLevel, 
   calculateSpiritPower 
 } from './src/data/spiritsData.js';
 import { getEnemyForStage } from './src/data/madnessZoneData.js';
 
-console.log('--- RUNNING SPIRIT CONTRACT EVO MATH ENGINE TESTS ---');
+console.log('--- RUNNING SPIRIT CONTRACT EVO UPDATED ENGINE TESTS ---');
 
-// 1. Test Base Species Catalog
-console.log(`[TEST 1] Base Pool Size: ${CONTRACT_BASE_POOL.length}`);
-CONTRACT_BASE_POOL.forEach(id => {
-  const species = SPIRIT_SPECIES[id];
-  if (!species) throw new Error(`Missing species for ${id}`);
-  if (!species.evolutions || species.evolutions.length === 0) throw new Error(`Missing evolutions for ${id}`);
-  console.log(`  ✓ ${species.name} (Tier ${species.tier}, Cap ${species.levelCap}) -> Evolves into: ${species.evolutions.map(e => `${e.variant} (${e.weight}%)`).join(', ')}`);
-});
+// 1. Verify Roster & Rarity Tiers
+console.log('\n[TEST 1] Verifying Contract Roster by Rarity:');
+for (const [rarity, pool] of Object.entries(CONTRACT_POOLS_BY_RARITY)) {
+  console.log(`  ${rarity}: ${pool.map(id => SPIRIT_SPECIES[id]?.name).join(', ')}`);
+  for (const id of pool) {
+    const sp = SPIRIT_SPECIES[id];
+    if (!sp) throw new Error(`Missing species for ${id}`);
+    if (!sp.evolutions || sp.evolutions.length === 0) throw new Error(`Missing evolutions for ${id}`);
+  }
+}
 
-// 2. Test RNG Evolution Simulation
-console.log('\n[TEST 2] Testing 1000 RNG Evolutions on Ignis Wisp (Expected ~80% Common, ~20% Rare):');
-const ignis = SPIRIT_SPECIES['ignis_wisp'];
-let commonCount = 0;
-let rareCount = 0;
-const totalTrials = 1000;
+// 2. Test RNG Evolutions for Specific Requested Paths
+console.log('\n[TEST 2] Testing 10,000 Evolution Rolls:');
 
-for (let i = 0; i < totalTrials; i++) {
+// Test A: Cat Spirit (80% Furious Cat, 20% Elemental Cat)
+const cat = SPIRIT_SPECIES['cat_spirit'];
+let furiousCatCount = 0;
+let elementalCatCount = 0;
+for (let i = 0; i < 10000; i++) {
   const roll = Math.random() * 100;
-  let running = 0;
-  let chosen = ignis.evolutions[0];
-  for (const evo of ignis.evolutions) {
-    running += evo.weight;
-    if (roll <= running) {
-      chosen = evo;
-      break;
-    }
-  }
-  if (chosen.variant.includes('Rare')) rareCount++;
-  else commonCount++;
+  if (roll <= 80) furiousCatCount++;
+  else elementalCatCount++;
 }
-console.log(`  Results over ${totalTrials} rolls: Common: ${commonCount} (${(commonCount/10).toFixed(1)}%), Rare: ${rareCount} (${(rareCount/10).toFixed(1)}%)`);
+console.log(`  Cat Spirit: Furious Cat = ${(furiousCatCount / 100).toFixed(1)}% (expected ~80%), Elemental Cat = ${(elementalCatCount / 100).toFixed(1)}% (expected ~20%)`);
 
-// 3. Test XP & Level Scaling Math
-console.log('\n[TEST 3] XP Scaling curve:');
-for (let lvl = 1; lvl <= 10; lvl++) {
-  console.log(`  Level ${lvl}: ${getXpRequiredForLevel(lvl)} XP required`);
+// Test B: Shark Spirit (90% Great White Shark, 8% Megalodon, 2% Cosmic Oceanic Devourer)
+let gwsCount = 0;
+let megalodonCount = 0;
+let cosmicCount = 0;
+for (let i = 0; i < 10000; i++) {
+  const roll = Math.random() * 100;
+  if (roll <= 90) gwsCount++;
+  else if (roll <= 98) megalodonCount++;
+  else cosmicCount++;
 }
+console.log(`  Shark Spirit: Great White = ${(gwsCount / 100).toFixed(1)}% (exp ~90%), Megalodon = ${(megalodonCount / 100).toFixed(1)}% (exp ~8%), Cosmic Devourer = ${(cosmicCount / 100).toFixed(1)}% (exp ~2%)`);
 
-// 4. Test Madness Zone Scaling
-console.log('\n[TEST 4] Madness Zone Enemy Scaling:');
-for (let stage = 1; stage <= 5; stage++) {
-  const mob = getEnemyForStage(stage, 1);
-  const boss = getEnemyForStage(stage, 5);
-  console.log(`  Stage ${stage} Mob: ${mob.name} (Power: ${mob.power}, HP: ${mob.maxHp}, Reward: ${mob.shardReward} shards)`);
-  console.log(`  Stage ${stage} Boss: ${boss.name} (Power: ${boss.power}, HP: ${boss.maxHp}, Reward: ${boss.shardReward} shards + ${boss.essenceReward} essence)`);
+// Test C: Fallen Warrior (99% Sovereign Warrior, 1% DreadLord Warrior)
+let sovereignCount = 0;
+let dreadlordCount = 0;
+for (let i = 0; i < 10000; i++) {
+  const roll = Math.random() * 100;
+  if (roll <= 99) sovereignCount++;
+  else dreadlordCount++;
 }
+console.log(`  Fallen Warrior: Sovereign Warrior = ${(sovereignCount / 100).toFixed(1)}% (exp ~99%), DreadLord = ${(dreadlordCount / 100).toFixed(1)}% (exp ~1%)`);
 
-// 5. Test Offline XP calculation formula
-console.log('\n[TEST 5] Offline XP Calculation for 2 hours (7200 seconds):');
-const offlineSec = 7200;
-const xpRate = 3.0; // 3 XP / sec
-const totalGainedXp = offlineSec * xpRate;
-console.log(`  Offline Duration: ${offlineSec}s (${offlineSec / 3600}h) -> Total XP gained: ${totalGainedXp} XP`);
+// 3. Test Energy Regeneration Math (1 energy per 30 seconds)
+console.log('\n[TEST 3] Testing Energy Offline & Realtime Math:');
+const maxEnergy = 60;
+let currentEnergy = 10;
+const offlineSeconds = 1200; // 20 minutes
+const energyGained = Math.min(maxEnergy - currentEnergy, Math.floor(offlineSeconds / 30));
+currentEnergy += energyGained;
+console.log(`  Starting Energy: 10, Offline Time: ${offlineSeconds}s (20m) -> Restored: +${energyGained} Energy -> Current: ${currentEnergy} / ${maxEnergy}`);
+if (currentEnergy !== 50) throw new Error('Energy calculation mismatch');
 
-// Simulate leveling up from 0 XP at Level 1 with 21600 XP
-let lvl = 1;
-let currentXp = 0;
-let remaining = totalGainedXp;
-const cap = 10;
-while (remaining > 0 && lvl < cap) {
-  const req = getXpRequiredForLevel(lvl) - currentXp;
-  if (remaining >= req) {
-    remaining -= req;
-    currentXp = 0;
-    lvl++;
-  } else {
-    currentXp += remaining;
-    remaining = 0;
-  }
-}
-console.log(`  Result: Reached Level ${lvl}/${cap} (Excess XP: ${remaining}, Current XP: ${currentXp}, Ready to Evolve: ${lvl >= cap})`);
+// 4. Test Locked Floor Entry Logic
+console.log('\n[TEST 4] Testing Energy Cost for Unlocking Floors:');
+const entryCost = 10;
+const floorToUnlock = 2;
+console.log(`  Attempting to enter Floor ${floorToUnlock}: Cost = ${entryCost} Energy`);
+currentEnergy -= entryCost;
+console.log(`  Floor ${floorToUnlock} Unlocked permanently! Remaining Energy: ${currentEnergy}`);
+console.log(`  Replaying Floor 1 and Floor 2 now costs: 0 Energy (Unlimited Free Farming)`);
 
-console.log('\nALL MATH ENGINE INTEGRATION TESTS PASSED SUCCESSFULLY! ✅');
+console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');

@@ -28,26 +28,37 @@
 
 ## Mathematical Models & Scaling
 
-### 1. XP Progression & Level Caps
-$$\text{XP}_{\text{required}}(L) = \lfloor 30 \times L^{1.65} \rfloor$$
+### 1. Spirit Contract Roster & Evolution Paths
 
-| Tier | Classification | Level Cap | Evolution Paths |
+| Rarity | Base Spirit | Level Cap | Evolution Paths & Odds |
 | :--- | :--- | :---: | :--- |
-| **Tier 1** | Base Spirits (*Wisp, Sprout, Pebble, etc.*) | **Lv. 10** | 80% Common Variant, 20% Rare Variant |
-| **Tier 2** | Evolved Familiars (*Hound, Serpent, Drake*) | **Lv. 25** | 75-85% Apex, 15-25% Mythic / Supreme |
-| **Tier 3** | Primordial Deities (*Cerberus, Leviathan*) | **Lv. 50** | Final Apex Form |
+| **Common** | Cat Spirit | Lv. 10 | 80% Furious Cat, 20% Elemental Cat (EPIC) |
+| **Common** | Dog Spirit | Lv. 10 | 80% Vitality Dog, 20% Guardian Dog (EPIC) |
+| **Common** | Chicken Spirit | Lv. 10 | 90% Battle Chicken, 10% Dino Genus Chicken (LEGENDARY) |
+| **Common** | Caterpillar Spirit | Lv. 10 | 90% Elegant Butterfly, 10% Mystical Butterfly (LEGENDARY) |
+| **Uncommon** | Bull Spirit | Lv. 15 | 80% Raging Bull, 15% Elemental Bull (EPIC), 5% Minotaur (MYTHICAL) |
+| **Uncommon** | Lizard Spirit | Lv. 15 | 80% Multi-venom Lizard, 15% Komodo Dragon (EPIC), 5% Drake (MYTHICAL) |
+| **Uncommon** | Python Spirit | Lv. 15 | 80% HighLord Python, 15% Huge Albino Anaconda (EPIC), 5% Wyrm (MYTHICAL) |
+| **Rare** | Shark Spirit | Lv. 20 | 90% Great White Shark (EPIC), 8% Megalodon (MYTHICAL), 2% Cosmic Oceanic Devourer (TRANSCENDENT) |
+| **Rare** | Bear Spirit | Lv. 20 | 90% HighLord Bear (EPIC), 8% Bear of Dreams (MYTHICAL), 2% Cosmic Bear Ursalite (TRANSCENDENT) |
+| **Epic** | Wisp Spirit | Lv. 25 | 100% High Elf (MYTHICAL) |
+| **Legendary** | Fallen Warrior Spirit | Lv. 30 | 99% Sovereign Warrior (MYTHICAL), 1% DreadLord Warrior (TRANSCENDENT) |
 
-### 2. Combat Power Formula
+### 2. Madness Zone Entry & Energy System
+- **Time-Gated Floor Unlocking**: Tackling a new, locked floor costs **10 Energy**.
+- **Permanent Free Repeats**: Once a floor is unlocked, it can be replayed and farmed indefinitely for **0 Energy**.
+- **Energy Regeneration**: Accumulates at 1 Energy per 30 seconds (even while offline, up to maximum 60 Energy).
+
+### 3. Combat Power Formula
 $$\text{Power} = \lfloor \text{BasePower} \times (1 + (L - 1) \times \text{GrowthRate}) \times \text{RarityMultiplier} \rfloor$$
-- **Common Variant**: $1.0\times$ multiplier
-- **Rare Variant**: $1.25\times$ to $1.35\times$ multiplier + unique titles
+- Multipliers: Common (1.0x), Uncommon (1.18x), Rare (1.35x), Epic (1.6x), Legendary (2.1x), Mythical (2.8x), Transcendent (4.0x).
 
-### 3. AFK Training & Offline Progression
+### 4. AFK Training & Offline Progression
 $$\text{XP/sec} = 3.0 \times \left(1 + 0.08 \times (\text{Highest Zone Cleared} - 1)\right)$$
 $$\text{Offline XP} = \min(\Delta t, 604800) \times \text{XP/sec}$$
-- On launch, if $\Delta t \ge 4\text{s}$, the **"Welcome Back, Contractor!"** modal itemizes time away, earned XP, level-ups, evolution alerts, and harvested shards.
+- On launch, the offline report itemizes earned XP, level-ups, evolution alerts, harvested shards, and offline Energy restored.
 
-### 4. Madness Zone Combat Scaling
+### 5. Madness Zone Combat Scaling
 $$\text{Enemy Power} = \lfloor 28 \times 1.22^{\text{Zone} - 1} \times (1 + 0.15 \times (\text{Wave} - 1)) \times \text{BossMultiplier} \rfloor$$
 - **Power Ratio**: $\text{Party Power} / \text{Enemy Power}$
   - $\ge 1.25$: **Dominating** (rapid clears)

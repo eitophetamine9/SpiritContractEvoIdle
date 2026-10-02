@@ -56,6 +56,12 @@ export function showOfflineModal(report, onClaim) {
             <span style="color: #e056fd;">+${report.offlineEssence} 🔮</span>
           </div>` : ''}
 
+          ${report.energyGained > 0 ? `
+          <div class="offline-loot-row">
+            <span style="color: var(--text-muted);">Madness Energy Restored:</span>
+            <span style="color: #f1c40f;">+${report.energyGained} ⚡</span>
+          </div>` : ''}
+
           ${levelUpsHtml}
           ${evoHtml}
         </div>

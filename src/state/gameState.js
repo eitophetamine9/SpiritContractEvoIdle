@@ -1,22 +1,24 @@
 import { 
   SPIRIT_SPECIES, 
-  CONTRACT_BASE_POOL, 
+  CONTRACT_POOLS_BY_RARITY,
+  rollContractSpirit,
   getXpRequiredForLevel, 
   calculateSpiritPower 
 } from '../data/spiritsData.js';
 import { getEnemyForStage } from '../data/madnessZoneData.js';
 
-const SAVE_KEY = 'spirit_contract_evo_idle_save_v1';
+const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
+export const ENERGY_ENTRY_COST = 10;
+export const ENERGY_REGEN_INTERVAL_SEC = 30; // 1 energy per 30 seconds
 
 class GameStateManager {
   constructor() {
     this.state = null;
     this.subscribers = new Set();
     this.saveTimer = null;
-    this.gameLoopTimer = null;
-    this.combatTickTimer = null;
-    this.lastTickTime = Date.now();
+    this.rafId = null;
+    this.lastTickTime = performance.now();
   }
 
   /**
@@ -41,9 +43,13 @@ class GameStateManager {
    * Initialize state, compute offline gains, and start tickers
    */
   init() {
-    const rawSaved = localStorage.getItem(SAVE_KEY);
-    let loaded = null;
+    // Try v2 save key first, fallback to v1 for migration
+    let rawSaved = localStorage.getItem(SAVE_KEY);
+    if (!rawSaved) {
+      rawSaved = localStorage.getItem('spirit_contract_evo_idle_save_v1');
+    }
 
+    let loaded = null;
     if (rawSaved) {
       try {
         loaded = JSON.parse(rawSaved);
@@ -64,7 +70,6 @@ class GameStateManager {
     const offlineSeconds = Math.max(0, Math.floor((now - (this.state.last_saved || now)) / 1000));
     
     let offlineReport = null;
-    // Trigger offline welcome if away for more than 4 seconds
     if (offlineSeconds >= 4) {
       offlineReport = this.applyOfflineGains(offlineSeconds);
     }
@@ -88,14 +93,13 @@ class GameStateManager {
       } else {
         // App reopened / focused
         const refocusNow = Date.now();
-        const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - this.lastTickTime) / 1000));
+        const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - (this.state.last_saved || refocusNow)) / 1000));
         if (refocusOfflineSec >= 5) {
           const refocusReport = this.applyOfflineGains(refocusOfflineSec);
           if (refocusReport) {
             this.emit('offlineGains', refocusReport);
           }
         }
-        this.lastTickTime = refocusNow;
       }
     });
 
@@ -107,7 +111,7 @@ class GameStateManager {
    */
   getInitialState() {
     const starterId = this.generateId();
-    const starterSpecies = SPIRIT_SPECIES['ignis_wisp'];
+    const starterSpecies = SPIRIT_SPECIES['cat_spirit'];
     const starterSpirit = {
       id: starterId,
       speciesId: starterSpecies.id,
@@ -115,8 +119,8 @@ class GameStateManager {
       level: 1,
       xp: 0,
       tier: 1,
-      rarity: 'common',
-      power: calculateSpiritPower(starterSpecies, 1, 'common'),
+      rarity: starterSpecies.baseRarity,
+      power: calculateSpiritPower(starterSpecies, 1, starterSpecies.baseRarity),
       isEquipped: true,
       canEvolve: false,
       evolutionHistory: [starterSpecies.name],
@@ -124,17 +128,22 @@ class GameStateManager {
     };
 
     return {
-      version: 1,
+      version: 2,
       last_saved: Date.now(),
       resources: {
         spiritShards: 300, // Enough for 3 summons right away!
-        soulEssence: 0
+        soulEssence: 0,
+        energy: 60,        // Max 60 Energy base
+        maxEnergy: 60,
+        energySecondsAccumulator: 0
       },
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
       madnessZone: {
         stage: 1,
         subStage: 1,
+        unlockedStages: [1],      // Floor 1 is unlocked initially
+        highestStageUnlocked: 1,
         highestStageCleared: 1,
         autoAdvance: true,
         farmMode: false,
@@ -166,16 +175,39 @@ class GameStateManager {
       party: loaded.party || []
     };
 
-    // Recalculate power and evolution flags for loaded spirits
+    // Ensure energy properties exist
+    if (typeof state.resources.energy !== 'number') {
+      state.resources.energy = base.resources.energy;
+    }
+    if (typeof state.resources.maxEnergy !== 'number') {
+      state.resources.maxEnergy = base.resources.maxEnergy;
+    }
+    if (typeof state.resources.energySecondsAccumulator !== 'number') {
+      state.resources.energySecondsAccumulator = 0;
+    }
+
+    // Ensure unlocked stages exist
+    if (!Array.isArray(state.madnessZone.unlockedStages) || state.madnessZone.unlockedStages.length === 0) {
+      state.madnessZone.unlockedStages = [1];
+    }
+    if (!state.madnessZone.highestStageUnlocked) {
+      state.madnessZone.highestStageUnlocked = Math.max(...state.madnessZone.unlockedStages, 1);
+    }
+
+    // Graceful migration of old spirit species if needed
     state.spirits.forEach(s => {
+      if (!SPIRIT_SPECIES[s.speciesId]) {
+        s.speciesId = 'cat_spirit';
+        s.customName = 'Cat Spirit';
+      }
       const species = SPIRIT_SPECIES[s.speciesId];
       if (species) {
-        s.power = calculateSpiritPower(species, s.level, s.rarity);
+        s.power = calculateSpiritPower(species, s.level, s.rarity || species.baseRarity);
         s.canEvolve = s.level >= species.levelCap && species.evolutions && species.evolutions.length > 0;
       }
     });
 
-    // Make sure party doesn't exceed 5
+    // Enforce active party limit of 5
     if (state.party.length > 5) {
       state.party = state.party.slice(0, 5);
     }
@@ -206,7 +238,7 @@ class GameStateManager {
 
   /**
    * Main game loop using requestAnimationFrame
-   * Adds XP to the 5 active Spirits every second
+   * Adds XP to the 5 active Spirits every second and regenerates Energy
    */
   startGameLoop() {
     if (this.rafId) {
@@ -217,11 +249,17 @@ class GameStateManager {
     let lastFrameTime = performance.now();
 
     const loop = (timestamp) => {
-      // 1. Every second: add XP to the 5 active Spirits
+      // 1. Every second: add XP to the 5 active Spirits and update energy regeneration
       if (timestamp - lastSecondTime >= 1000) {
         const secondsPassed = Math.floor((timestamp - lastSecondTime) / 1000);
         lastSecondTime = timestamp;
+
+        // AFK Training XP
         this.tickAfkTraining(secondsPassed);
+
+        // Real-time Energy Regeneration (1 per 30s)
+        this.tickEnergyRegen(secondsPassed);
+
         this.emit('secondTick', { seconds: secondsPassed });
       }
 
@@ -235,6 +273,24 @@ class GameStateManager {
     };
 
     this.rafId = requestAnimationFrame(loop);
+  }
+
+  /**
+   * Regenerates energy over time (1 energy per 30 seconds)
+   */
+  tickEnergyRegen(secondsPassed) {
+    const res = this.state.resources;
+    if (res.energy >= res.maxEnergy) {
+      res.energySecondsAccumulator = 0;
+      return;
+    }
+
+    res.energySecondsAccumulator += secondsPassed;
+    while (res.energySecondsAccumulator >= ENERGY_REGEN_INTERVAL_SEC && res.energy < res.maxEnergy) {
+      res.energy += 1;
+      res.energySecondsAccumulator -= ENERGY_REGEN_INTERVAL_SEC;
+      this.emit('energyGained', { current: res.energy, max: res.maxEnergy });
+    }
   }
 
   /**
@@ -331,11 +387,10 @@ class GameStateManager {
   }
 
   /**
-   * Offline XP & Resources Calculation when reopening the app
+   * Offline XP & Resources & Energy Calculation when reopening the app
    */
   applyOfflineGains(elapsedSeconds) {
-    // Max cap: 7 days offline
-    const cappedSeconds = Math.min(elapsedSeconds, 86400 * 7);
+    const cappedSeconds = Math.min(elapsedSeconds, 86400 * 7); // Max cap: 7 days
     const xpRate = this.getXpGainRate();
     const totalOfflineXp = xpRate * cappedSeconds;
 
@@ -343,7 +398,7 @@ class GameStateManager {
     const levelUps = [];
     const readyToEvolve = [];
 
-    // Distribute offline XP to equipped spirits
+    // 1. Distribute offline XP to equipped spirits
     for (const spirit of partySpirits) {
       const species = SPIRIT_SPECIES[spirit.speciesId];
       if (!species) continue;
@@ -383,7 +438,17 @@ class GameStateManager {
       }
     }
 
-    // Offline Madness Zone combat farming
+    // 2. Offline Energy Accumulation
+    const res = this.state.resources;
+    const energyGained = Math.min(
+      res.maxEnergy - res.energy,
+      Math.floor(cappedSeconds / ENERGY_REGEN_INTERVAL_SEC)
+    );
+    if (energyGained > 0) {
+      res.energy += energyGained;
+    }
+
+    // 3. Offline Madness Zone combat farming on previously unlocked stages
     const partyPower = this.getTotalPartyPower();
     const farmStage = this.state.madnessZone.farmMode 
       ? Math.max(1, this.state.madnessZone.stage - 1)
@@ -409,6 +474,7 @@ class GameStateManager {
       readyToEvolve,
       offlineShards,
       offlineEssence,
+      energyGained,
       partyCount: partySpirits.length
     };
   }
@@ -426,13 +492,8 @@ class GameStateManager {
     const enemy = madnessZone.currentEnemy;
     const partyPower = this.getTotalPartyPower();
 
-    // Mathematical comparison: Party Total Power vs. Madness Enemy Power
-    // DPS ratio: If party is 2x enemy power, enemy falls very quickly.
-    // If party is equal, takes standard ~4 seconds.
-    // If party is lower, takes longer.
+    // DPS ratio: Party Total Power vs. Madness Enemy Power
     const partyPowerRatio = partyPower / Math.max(1, enemy.power);
-    
-    // Effective damage per second dealt to corrupted enemy
     const baseDps = enemy.maxHp / 4.0;
     const actualDps = Math.max(1, baseDps * Math.min(6, Math.max(0.2, partyPowerRatio)));
     const damageThisTick = actualDps * deltaSec;
@@ -472,11 +533,15 @@ class GameStateManager {
       // Zone Boss Defeated!
       mz.highestStageCleared = Math.max(mz.highestStageCleared, mz.stage);
 
-      if (mz.autoAdvance && !mz.farmMode) {
-        mz.stage += 1;
+      // Check if next stage is already unlocked
+      const nextStage = mz.stage + 1;
+      const isNextUnlocked = mz.unlockedStages.includes(nextStage);
+
+      if (mz.autoAdvance && !mz.farmMode && isNextUnlocked) {
+        mz.stage = nextStage;
         mz.subStage = 1;
       } else {
-        // Loop current stage boss or wave
+        // Repeat current stage boss/wave (infinite repetition of unlocked stages with 0 energy)
         mz.subStage = 1;
       }
     } else {
@@ -486,6 +551,48 @@ class GameStateManager {
     this.spawnMadnessEnemy();
   }
 
+  /**
+   * Unlock and enter a new floor using Energy
+   * Once unlocked, repeated plays of this floor cost 0 Energy!
+   */
+  unlockAndEnterStage(targetStage) {
+    const mz = this.state.madnessZone;
+    const res = this.state.resources;
+
+    // If already unlocked, simply switch to it (0 Energy cost)
+    if (mz.unlockedStages.includes(targetStage)) {
+      mz.stage = targetStage;
+      mz.subStage = 1;
+      this.spawnMadnessEnemy();
+      this.emit('madnessZoneUpdated', mz);
+      return { success: true, alreadyUnlocked: true };
+    }
+
+    // Must be the immediate next locked stage
+    if (targetStage !== mz.highestStageUnlocked + 1) {
+      throw new Error(`You must clear Floor ${mz.highestStageUnlocked} before unlocking Floor ${targetStage}!`);
+    }
+
+    // Energy cost check
+    if (res.energy < ENERGY_ENTRY_COST) {
+      throw new Error(`Insufficient Energy! Tackling Floor ${targetStage} costs ${ENERGY_ENTRY_COST} ⚡ (Current: ${res.energy} ⚡). Energy recovers 1 per 30s.`);
+    }
+
+    // Deduct energy and unlock floor permanently
+    res.energy -= ENERGY_ENTRY_COST;
+    mz.unlockedStages.push(targetStage);
+    mz.highestStageUnlocked = Math.max(...mz.unlockedStages);
+    mz.stage = targetStage;
+    mz.subStage = 1;
+
+    this.save();
+    this.spawnMadnessEnemy();
+    this.emit('stageUnlocked', { stage: targetStage, remainingEnergy: res.energy });
+    this.emit('madnessZoneUpdated', mz);
+
+    return { success: true, stage: targetStage, remainingEnergy: res.energy };
+  }
+
   toggleAutoAdvance() {
     this.state.madnessZone.autoAdvance = !this.state.madnessZone.autoAdvance;
     this.emit('madnessZoneUpdated', this.state.madnessZone);
@@ -493,21 +600,23 @@ class GameStateManager {
 
   toggleFarmMode() {
     this.state.madnessZone.farmMode = !this.state.madnessZone.farmMode;
-    // If farm mode turned on and stage > 1, drop to stage - 1 for high-speed shard grinding
     this.emit('madnessZoneUpdated', this.state.madnessZone);
   }
 
   setStage(stage) {
-    if (stage < 1 || stage > this.state.madnessZone.highestStageCleared + 1) return;
-    this.state.madnessZone.stage = stage;
-    this.state.madnessZone.subStage = 1;
+    const mz = this.state.madnessZone;
+    if (!mz.unlockedStages.includes(stage)) {
+      throw new Error(`Floor ${stage} is locked! Unlock it with ${ENERGY_ENTRY_COST} ⚡ Energy first.`);
+    }
+    mz.stage = stage;
+    mz.subStage = 1;
     this.spawnMadnessEnemy();
-    this.emit('madnessZoneUpdated', this.state.madnessZone);
+    this.emit('madnessZoneUpdated', mz);
   }
 
   /**
    * RNG Evolution System
-   * Evaluates branch table odds (e.g. 80% Common Variant, 20% Rare Variant)
+   * Evaluates branch table odds for the spirit's species
    */
   evolveSpirit(spiritId) {
     const spirit = this.state.spirits.find(s => s.id === spiritId);
@@ -520,7 +629,7 @@ class GameStateManager {
       throw new Error('This Spirit is not eligible for evolution yet.');
     }
 
-    // RNG Branch Roll
+    // RNG Branch Roll based on weights
     const totalWeight = currentSpecies.evolutions.reduce((acc, ev) => acc + ev.weight, 0);
     const roll = Math.random() * totalWeight;
 
@@ -539,18 +648,16 @@ class GameStateManager {
     if (!nextSpecies) throw new Error(`Target species ${chosenBranch.targetSpeciesId} does not exist`);
 
     const oldPower = spirit.power;
-    const isRare = chosenBranch.variant.toLowerCase().includes('rare') || 
-                  chosenBranch.variant.toLowerCase().includes('mythic') ||
-                  chosenBranch.variant.toLowerCase().includes('supreme');
+    const isRare = chosenBranch.rarity && chosenBranch.rarity !== 'UNCOMMON';
 
     // Apply Evolution
     spirit.speciesId = nextSpecies.id;
     spirit.customName = nextSpecies.name;
-    spirit.tier = nextSpecies.tier;
+    spirit.tier = nextSpecies.tier || 2;
     spirit.level = 1; // Resets to Lv 1 of new Tier for high-ceiling AFK progression
     spirit.xp = 0;
     spirit.canEvolve = false;
-    spirit.rarity = isRare ? 'rare' : 'common';
+    spirit.rarity = chosenBranch.rarity || nextSpecies.baseRarity;
     spirit.power = calculateSpiritPower(nextSpecies, spirit.level, spirit.rarity);
     spirit.evolutionHistory.push(nextSpecies.name);
 
@@ -563,6 +670,7 @@ class GameStateManager {
       oldSpecies: currentSpecies,
       newSpecies: nextSpecies,
       variantName: chosenBranch.variant,
+      rarity: spirit.rarity,
       isRare,
       rollValue: Math.round((roll / totalWeight) * 100),
       oldPower,
@@ -575,6 +683,7 @@ class GameStateManager {
 
   /**
    * Contracting random Spirits (Gacha / Summoning)
+   * Supports Common, Uncommon, Rare, Epic, Legendary pulls
    */
   contractSpirit(count = 1) {
     const singleCost = 100;
@@ -589,31 +698,25 @@ class GameStateManager {
     const newSpirits = [];
 
     for (let i = 0; i < count; i++) {
-      // Pick random base species
-      const randomIndex = Math.floor(Math.random() * CONTRACT_BASE_POOL.length);
-      const speciesId = CONTRACT_BASE_POOL[randomIndex];
-      const species = SPIRIT_SPECIES[speciesId];
-
-      // Small 10% chance to summon with an innate "Blessed" Rare IV boost
-      const isLucky = Math.random() < 0.10;
-      const rarity = isLucky ? 'rare' : 'common';
+      const rolled = rollContractSpirit();
+      const species = SPIRIT_SPECIES[rolled.speciesId];
 
       const spirit = {
         id: this.generateId(),
         speciesId: species.id,
-        customName: isLucky ? `${species.name} ⭐` : species.name,
+        customName: species.name,
         level: 1,
         xp: 0,
         tier: 1,
-        rarity,
-        power: calculateSpiritPower(species, 1, rarity),
+        rarity: rolled.rarityTier,
+        power: calculateSpiritPower(species, 1, rolled.rarityTier),
         isEquipped: false,
         canEvolve: false,
         evolutionHistory: [species.name],
         contractedAt: Date.now()
       };
 
-      // Auto-equip if party has available slot (< 5)
+      // Auto-equip if active party has room (< 5)
       if (this.state.party.length < 5) {
         spirit.isEquipped = true;
         this.state.party.push(spirit.id);
@@ -631,7 +734,7 @@ class GameStateManager {
   }
 
   /**
-   * Party Management (Max 5 Spirits)
+   * Party Management (Strict limit: Max 5 Spirits)
    */
   equipSpirit(spiritId) {
     const spirit = this.state.spirits.find(s => s.id === spiritId);
@@ -702,6 +805,7 @@ class GameStateManager {
 
   resetAllProgress() {
     localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem('spirit_contract_evo_idle_save_v1');
     this.state = this.getInitialState();
     this.spawnMadnessEnemy();
     this.save();

@@ -1,0 +1,45 @@
+Madness Zone Entry, it should cost us energy to tackle a floor we haven't unlocked yet
+Once unlocked, we can repeat these stages (this should time gate players)
+
+For the Energy it should accumulate overtime, even offline
+
+As for the spirit contracts here are what I want you to add these instead of the new ones
+
+Can be Obtained through contract
+Common:
+Cat Spirit
+Dog Spirit
+Chicken Spirit
+Caterpillar Spirit
+
+Uncommon:
+Bull Spirit
+Lizard Spirit
+Python Spirit
+
+Rare:
+Shark Spirit
+Bear Spirit
+
+Epic:
+Wisp Spirit
+
+Legendary:
+Fallen Warrior Spirit
+
+Evolution Paths:
+Cat Spirit - 80% Furious Cat, 20% Elemental Cat (EPIC)
+Dog Spirit - 80% Vitality Dog, 20% Guardian Dog (EPIC)
+Chicken Spirit - 90% Battle Chicken, 10% Dino Genus Chicken (LEGENDARY)
+Caterpillar Spirit - 90% Elegant Butterfly, 10% Mystical Butterfly (LEGENDARY)
+
+Bull Spirit - 80% Raging Bull, 15% Elemental Bull (EPIC), 5% Minotaur (MYTHICAL) 
+Lizard Spirit - 80% Multi-venom Lizard, 15% Komodo Dragon (EPIC), 5% Drake (MYTHICAL)
+Python Spirit - 80% HighLord Python, 15% Huge Albino Anaconda (EPIC), 5% Wyrm (MYTHICAL)
+
+Shark Spirit - 90% Great White Shark (EPIC), 8% Megalodon (MYTHICAL), 2% Cosmic Oceanic Devourer (TRANSCENDENT)
+Bear Spirit - 90% HighLord Bear (EPIC), 8% Bear of Dreams (MYTHICAL), 2% Cosmic Bear Ursalite (TRANSCENDENT)
+
+Wisp Spirit - 100% High Elf (MYTHICAL)
+
+Fallen Warrior Spirit - 99% Sovereign Warrior (MYTHICAL), 1% DreadLord Warrior (TRANSCENDENT)

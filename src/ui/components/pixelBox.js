@@ -14,11 +14,11 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
   const elem = ELEMENTS[species.element] || ELEMENTS.FIRE;
   const tier = species.tier || 1;
   const stars = '★'.repeat(tier);
-  const rarity = (spiritOrSpecies.rarity || 'common').toLowerCase();
+  const rarity = (spiritOrSpecies.rarity || species.baseRarity || 'common').toLowerCase();
   const boxClass = options.boxClass || '';
   const isCapped = options.isCapped || false;
 
-  // Elemental representative pixel icons
+  // Use the species specific emoji icon if available, otherwise elemental glyph
   const elementalGlyphs = {
     FIRE: '🔥',
     WATER: '💧',
@@ -28,12 +28,13 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
     LIGHT: '✨'
   };
 
-  const glyph = elementalGlyphs[species.element] || '✨';
+  const glyph = species.avatarEmoji || elementalGlyphs[species.element] || '✨';
 
   return `
-    <div class="pixel-box elem-${species.element} ${boxClass} ${isCapped ? 'capped-pulse' : ''}" 
+    <div class="pixel-box elem-${species.element} rarity-${rarity} ${boxClass} ${isCapped ? 'capped-pulse' : ''}" 
          data-species="${species.id}" 
          data-tier="${tier}"
+         data-rarity="${rarity}"
          data-element="${species.element}"
          title="${species.name} (${elem.name})">
       
@@ -47,7 +48,7 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
         </div>
       </div>
 
-      <div class="rarity-ribbon ${rarity}">${rarity}</div>
+      <div class="rarity-ribbon ${rarity}">${rarity.toUpperCase()}</div>
     </div>
   `;
 }
