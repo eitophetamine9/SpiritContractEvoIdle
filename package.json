@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/test_game_engine.js && node tests/test_ui_components.js",
+    "test:prob": "node tests/run_probability_tests.js"
   },
   "devDependencies": {
     "vite": "^8.3.0",

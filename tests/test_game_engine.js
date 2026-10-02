@@ -5,8 +5,8 @@ import {
   rollAstralContractSpirit,
   getXpRequiredForLevel, 
   calculateSpiritPower 
-} from './src/data/index.js';
-import { getEnemyForStage } from './src/data/index.js';
+} from '../src/data/index.js';
+import { getEnemyForStage } from '../src/data/index.js';
 
 console.log('--- RUNNING SPIRIT CONTRACT EVO ENGINE & BALANCE TESTS ---');
 
@@ -73,7 +73,7 @@ if (energy !== 60) throw new Error('Energy calculation incorrect');
 
 // 5. Test Biomes Progression (1-100+ and Enchanted repeating cycles)
 console.log('\n[TEST 5] Testing Tower Biome Progression Engine:');
-import('./src/data/biomesData.js').then(({ getBiomeForStage }) => {
+import('../src/data/biomesData.js').then(({ getBiomeForStage }) => {
   const b1 = getBiomeForStage(1);
   const b15 = getBiomeForStage(15);
   const b30 = getBiomeForStage(30);

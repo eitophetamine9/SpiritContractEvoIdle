@@ -4,7 +4,7 @@ import {
   ASTRAL_CONTRACT_RARITY_ODDS,
   rollContractSpirit, 
   rollAstralContractSpirit 
-} from './src/data/spiritsData.js';
+} from '../src/data/spiritsData.js';
 
 console.log('===============================================================');
 console.log('      SPIRIT CONTRACT EVO | IDLE - PROBABILITY TEST RUN        ');

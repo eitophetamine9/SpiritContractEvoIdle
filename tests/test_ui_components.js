@@ -1,7 +1,7 @@
-import { SPIRIT_SPECIES, RARITIES, getRarityInfo } from './src/data/spiritsData.js';
-import { gameState } from './src/state/gameState.js';
-import { showHallOfFamePickerModal, showBestiaryInspectModal } from './src/ui/components/modals.js';
-import { renderIndexView } from './src/ui/views/indexView.js';
+import { SPIRIT_SPECIES, RARITIES, getRarityInfo } from '../src/data/spiritsData.js';
+import { gameState } from '../src/state/gameState.js';
+import { showHallOfFamePickerModal, showBestiaryInspectModal } from '../src/ui/components/modals.js';
+import { renderIndexView } from '../src/ui/views/indexView.js';
 
 // Setup Mock DOM environment
 globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 16);

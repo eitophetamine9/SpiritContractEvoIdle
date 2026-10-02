@@ -62,14 +62,15 @@ npm run preview
 ### Running Test Suites
 
 ```bash
-# Run core math, economy, and balance tests
-node test_game_engine.js
+# Run all core engine, balance, and UI component tests
+npm test
+
+# Run individual test suites
+node tests/test_game_engine.js
+node tests/test_ui_components.js
 
 # Run probability verification tests (100 pulls and 100 evolutions)
-node run_probability_tests.js
-
-# Run UI component and Bestiary inspect modal tests
-node test_ui_components.js
+npm run test:prob
 ```
 
 ---
@@ -125,8 +126,32 @@ The following features and enhancements are planned for upcoming releases:
 
 ---
 
+## Project Structure
+
+```
+SpiritContractEvoIdle/
+|-- docs/                        # In-depth system and technical documentation
+|   `-- DOCUMENTATION.md
+|-- tests/                       # Automated test suites
+|   |-- test_game_engine.js      # Core math, economy, and balance tests
+|   |-- run_probability_tests.js # 100-pull and 100-evolution verification
+|   `-- test_ui_components.js    # UI components and Bestiary inspect modal tests
+|-- public/                      # Vite static assets (favicon, theme backdrops)
+|-- src/                         # All application source code
+|   |-- data/                    # Species catalog, evolution tables, biomes
+|   |-- state/                   # Reactive state manager and offline engine
+|   `-- ui/                      # Components, modals, and screen views
+|-- index.html                   # Mobile-first shell and entry point
+|-- package.json                 # Project dependencies and npm scripts
+|-- vite.config.js               # Build & PWA configuration
+|-- .gitignore                   # Git ignore patterns
+`-- README.md                    # High-level overview and setup guide
+```
+
+---
+
 ## Detailed Documentation
 
 For complete mathematical formulations, economy balancing sheets, full evolution horizon tables, and internal state machine schemas, consult the system documentation:
 
-- [System & Technical Documentation](DOCUMENTATION.md)
+- [System & Technical Documentation](docs/DOCUMENTATION.md)
