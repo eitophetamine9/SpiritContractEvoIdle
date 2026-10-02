@@ -1,6 +1,7 @@
 import { gameState } from '../../state/gameState.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
+import { showHallOfFamePickerModal } from '../components/modals.js';
 
 export function renderProfileView(container) {
   const state = gameState.state;
@@ -154,21 +155,10 @@ export function renderProfileView(container) {
   // Attach Hall of Fame empty slot picker
   container.querySelectorAll('[data-action="pick-hall-spirit"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      // Pick an unassigned spirit from vault
-      const available = spirits.filter(s => !state.hallOfFame.includes(s.id));
-      if (available.length === 0) {
-        alert('You do not have any other spirits to showcase in the Hall of Fame!');
-        return;
-      }
-
-      const promptText = available.slice(0, 10).map((s, idx) => `${idx + 1}. ${s.customName} [${(s.rarity || 'COMMON').toUpperCase()}] (PWR: ${s.power})`).join('\n');
-      const choice = prompt(`Select spirit number to showcase in Hall of Fame:\n\n${promptText}`);
-      const choiceNum = parseInt(choice, 10);
-      if (choiceNum >= 1 && choiceNum <= Math.min(10, available.length)) {
-        const picked = available[choiceNum - 1];
-        gameState.toggleHallOfFame(picked.id);
+      showHallOfFamePickerModal((selectedSpiritId) => {
+        gameState.toggleHallOfFame(selectedSpiritId);
         renderProfileView(container);
-      }
+      });
     });
   });
 

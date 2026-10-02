@@ -1,6 +1,7 @@
 import { gameState } from '../../state/gameState.js';
-import { SPIRIT_SPECIES, RARITIES, getRarityInfo } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from '../components/pixelBox.js';
+import { showBestiaryInspectModal } from '../components/modals.js';
 
 let activeRarityFilter = 'ALL';
 
@@ -10,8 +11,14 @@ export function renderIndexView(container) {
   const discoveredCount = allSpecies.filter(sp => gameState.isSpeciesDiscovered(sp.id)).length;
   const progressPercent = Math.round((discoveredCount / totalCount) * 100);
 
-  // Filter species
-  const filteredSpecies = allSpecies.filter(sp => {
+  // Map each species to its deterministic Bestiary ID number (1-based index)
+  const speciesWithIndex = allSpecies.map((sp, idx) => ({
+    ...sp,
+    bestiaryNum: idx + 1
+  }));
+
+  // Filter species by rarity
+  const filteredSpecies = speciesWithIndex.filter(sp => {
     if (activeRarityFilter === 'ALL') return true;
     return sp.baseRarity === activeRarityFilter;
   });
@@ -25,8 +32,8 @@ export function renderIndexView(container) {
       <div class="index-header-banner">
         <div class="index-header-top">
           <div class="index-title-group">
-            <span class="index-main-title">📖 Spirit Index</span>
-            <span class="index-subtitle">Contractor's Ancient Compendium & Evolution Lineage</span>
+            <span class="index-main-title">📖 Spirit Bestiary</span>
+            <span class="index-subtitle">Contractor's Ancient Bestiary & Evolution Lineage</span>
           </div>
 
           <div class="index-score-badge">
@@ -60,94 +67,35 @@ export function renderIndexView(container) {
         }).join('')}
       </div>
 
-      <!-- Species Cards List -->
-      <div class="index-species-list">
+      <!-- Terraria-Style Compact Bestiary Grid -->
+      <div class="bestiary-grid">
         ${filteredSpecies.map(sp => {
           const isDiscovered = gameState.isSpeciesDiscovered(sp.id);
           const rarity = getRarityInfo(sp.baseRarity);
+          const numStr = `#${String(sp.bestiaryNum).padStart(3, '0')}`;
 
           if (!isDiscovered) {
             return `
-              <div class="index-card unknown-card">
-                <div class="index-card-thumb">
-                  ${createUnknownSpiritPlaceholderBox(sp, { boxClass: 'index-box' })}
+              <div class="bestiary-tile locked" data-species-id="${sp.id}" data-num="${sp.bestiaryNum}" title="Undiscovered Spirit">
+                <span class="bestiary-tile-num">${numStr}</span>
+                <div class="bestiary-tile-art">
+                  <div class="bestiary-silhouette-box">?</div>
                 </div>
-                <div class="index-card-info">
-                  <div class="index-card-header">
-                    <span class="index-species-name unknown-name">??? (Undiscovered)</span>
-                    <span class="rarity-pill unknown">UNKNOWN</span>
-                  </div>
-                  <div class="index-desc unknown-desc">
-                    Contract or evolve new Spirits to unlock this species and view its evolution branches.
-                  </div>
-                </div>
+                <span class="bestiary-tile-name">???</span>
               </div>
             `;
           }
 
-          // Discovered card with full lore and evolution branches
-          const evolutions = sp.evolutions || [];
-
           return `
-            <div class="index-card discovered-card rarity-${sp.baseRarity.toLowerCase()}">
-              <div class="index-card-top-row">
-                <div class="index-card-thumb">
-                  ${createSpiritPlaceholderBox(sp, { boxClass: 'index-box' })}
-                </div>
-
-                <div class="index-card-info">
-                  <div class="index-card-header">
-                    <span class="index-species-name">${sp.name}</span>
-                    <span class="rarity-pill ${sp.baseRarity.toLowerCase()}" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
-                      ${rarity.name}
-                    </span>
-                  </div>
-
-                  <div class="index-meta-row">
-                    <span>Tier ${sp.tier || 1}</span>
-                    <span>Max Lv: ${sp.levelCap}</span>
-                    <span>Base PWR: ${sp.basePower}</span>
-                  </div>
-
-                  <p class="index-desc">${sp.description || 'A mysterious otherworldly spirit.'}</p>
-                </div>
+            <div class="bestiary-tile discovered rarity-${sp.baseRarity.toLowerCase()}" 
+                 data-species-id="${sp.id}" 
+                 data-num="${sp.bestiaryNum}" 
+                 title="${sp.name} [${rarity.name}]">
+              <span class="bestiary-tile-num">${numStr}</span>
+              <div class="bestiary-tile-art">
+                ${createSpiritPlaceholderBox(sp, { boxClass: 'bestiary-mini-box' })}
               </div>
-
-              <!-- Evolution Branches (Relocated exclusively from summon to index) -->
-              ${evolutions.length > 0 ? `
-                <div class="index-evo-section">
-                  <div class="index-evo-title">
-                    <span>🧬 Evolution Branches (Unlocks at Lv. ${sp.levelCap}):</span>
-                  </div>
-                  <div class="index-evo-branches">
-                    ${evolutions.map(evo => {
-                      const targetSp = SPIRIT_SPECIES[evo.targetSpeciesId];
-                      const targetRarity = getRarityInfo(evo.rarity || (targetSp ? targetSp.baseRarity : 'COMMON'));
-                      const isTargetDiscovered = targetSp && gameState.isSpeciesDiscovered(targetSp.id);
-
-                      return `
-                        <div class="index-evo-branch-card ${targetRarity.name.toLowerCase()}">
-                          <div class="evo-branch-header">
-                            <span class="evo-name" style="color: ${targetRarity.color}; font-weight: 800;">
-                              ${isTargetDiscovered ? (targetSp ? targetSp.name : evo.variant) : '??? (Hidden Branch)'}
-                            </span>
-                            <span class="evo-weight-tag">${evo.weight}% Chance</span>
-                          </div>
-
-                          <div class="evo-meta-sub">
-                            <span style="color: ${targetRarity.color};">[${targetRarity.name.toUpperCase()}]</span>
-                            <span>PWR Multiplier: x${evo.powerMult || 2.0}</span>
-                          </div>
-                        </div>
-                      `;
-                    }).join('')}
-                  </div>
-                </div>
-              ` : `
-                <div class="index-evo-section terminal-branch">
-                  <span style="font-size: 11px; color: var(--text-muted);">✨ Apex Evolution Form (Max Tier reached)</span>
-                </div>
-              `}
+              <span class="bestiary-tile-name">${sp.name}</span>
             </div>
           `;
         }).join('')}
@@ -161,6 +109,19 @@ export function renderIndexView(container) {
     btn.addEventListener('click', () => {
       activeRarityFilter = btn.dataset.tier;
       renderIndexView(container);
+    });
+  });
+
+  // Attach Bestiary tile click listeners to open inspect modal
+  container.querySelectorAll('.bestiary-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const speciesId = tile.dataset.speciesId;
+      const bestiaryNum = parseInt(tile.dataset.num, 10);
+      const sp = SPIRIT_SPECIES[speciesId];
+      if (sp) {
+        const isDiscovered = gameState.isSpeciesDiscovered(speciesId);
+        showBestiaryInspectModal(sp, isDiscovered, bestiaryNum);
+      }
     });
   });
 }

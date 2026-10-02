@@ -18,8 +18,14 @@
           <div class="game-title">
             <span>⛩️ Spirit Contract Evo</span>
           </div>
-          <div id="save-status" class="save-indicator">
-            <span class="save-dot">●</span> 💾 Saved
+          <div class="header-right-actions">
+            <div id="save-status" class="save-indicator">
+              <span class="save-dot">●</span> 💾 Saved
+            </div>
+            <button id="btn-top-profile" class="header-profile-btn" data-tab="profile" title="Contractor Profile">
+              <span class="profile-avatar-icon">🧙‍♂️</span>
+              <span class="profile-btn-text">Profile</span>
+            </button>
           </div>
         </div>
 
@@ -42,38 +48,49 @@
       <!-- Active Screen View Content -->
       <main id="view-container" class="view-content"></main>
 
-      <!-- Fixed Bottom Navigation (Min 60px touch height) -->
+      <!-- Fixed Bottom Navigation (Party left, Madness center, Contract right, More side-drawer) -->
       <nav class="bottom-nav">
-        <button id="nav-madness" class="nav-tab active" data-tab="madness">
-          <span class="tab-icon">⚔️</span>
-          <span class="tab-label">Madness</span>
-        </button>
+        <!-- Main Core Dock (Default Visible) -->
+        <div id="nav-dock-main" class="nav-dock-group">
+          <button id="nav-party" class="nav-tab" data-tab="party">
+            <span class="tab-icon">⛩️</span>
+            <span class="tab-label">Party</span>
+            <span id="party-evolve-badge" class="nav-badge" style="display: none;">!</span>
+          </button>
 
-        <button id="nav-party" class="nav-tab" data-tab="party">
-          <span class="tab-icon">⛩️</span>
-          <span class="tab-label">Party</span>
-          <span id="party-evolve-badge" class="nav-badge" style="display: none;">!</span>
-        </button>
+          <button id="nav-madness" class="nav-tab active nav-tab-center" data-tab="madness">
+            <span class="tab-icon">⚔️</span>
+            <span class="tab-label">Madness</span>
+          </button>
 
-        <button id="nav-contract" class="nav-tab" data-tab="contract">
-          <span class="tab-icon">📜</span>
-          <span class="tab-label">Contract</span>
-        </button>
+          <button id="nav-contract" class="nav-tab" data-tab="contract">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label">Contract</span>
+          </button>
 
-        <button id="nav-vault" class="nav-tab" data-tab="vault">
-          <span class="tab-icon">🎒</span>
-          <span class="tab-label">Vault</span>
-        </button>
+          <button id="nav-more-toggle" class="nav-tab nav-drawer-toggle" title="More Options">
+            <span class="tab-icon">▶</span>
+            <span class="tab-label">More</span>
+          </button>
+        </div>
 
-        <button id="nav-index" class="nav-tab" data-tab="index">
-          <span class="tab-icon">📖</span>
-          <span class="tab-label">Index</span>
-        </button>
+        <!-- Secondary 'More' Dock (Vault & Index) -->
+        <div id="nav-dock-more" class="nav-dock-group nav-dock-hidden">
+          <button id="nav-more-back" class="nav-tab nav-drawer-back" title="Back to Main">
+            <span class="tab-icon">◀</span>
+            <span class="tab-label">Back</span>
+          </button>
 
-        <button id="nav-profile" class="nav-tab" data-tab="profile">
-          <span class="tab-icon">🧙‍♂️</span>
-          <span class="tab-label">Profile</span>
-        </button>
+          <button id="nav-vault" class="nav-tab" data-tab="vault">
+            <span class="tab-icon">🎒</span>
+            <span class="tab-label">Vault</span>
+          </button>
+
+          <button id="nav-index" class="nav-tab" data-tab="index">
+            <span class="tab-icon">📖</span>
+            <span class="tab-label">Index</span>
+          </button>
+        </div>
       </nav>
 
       <!-- Modal Injection Layer -->

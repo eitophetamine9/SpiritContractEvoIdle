@@ -42,6 +42,16 @@ function updateResourcesDisplay() {
 function switchTab(tabName) {
   activeTab = tabName;
 
+  const btnTopProfile = document.getElementById('btn-top-profile');
+  if (btnTopProfile) {
+    if (tabName === 'profile') {
+      btnTopProfile.classList.add('active');
+    } else {
+      btnTopProfile.classList.remove('active');
+    }
+  }
+
+  // Update active state on bottom nav tabs
   document.querySelectorAll('.nav-tab').forEach(tab => {
     if (tab.getAttribute('data-tab') === tabName) {
       tab.classList.add('active');
@@ -49,6 +59,19 @@ function switchTab(tabName) {
       tab.classList.remove('active');
     }
   });
+
+  // Automatically show appropriate dock
+  const dockMain = document.getElementById('nav-dock-main');
+  const dockMore = document.getElementById('nav-dock-more');
+  if (dockMain && dockMore) {
+    if (tabName === 'vault' || tabName === 'index') {
+      dockMain.classList.add('nav-dock-hidden');
+      dockMore.classList.remove('nav-dock-hidden');
+    } else if (tabName === 'party' || tabName === 'madness' || tabName === 'contract') {
+      dockMain.classList.remove('nav-dock-hidden');
+      dockMore.classList.add('nav-dock-hidden');
+    }
+  }
 
   renderActiveTab();
 }
@@ -82,7 +105,7 @@ function renderActiveTab() {
 }
 
 // Setup Bottom Navigation listeners
-document.querySelectorAll('.nav-tab').forEach(tab => {
+document.querySelectorAll('.nav-tab[data-tab]').forEach(tab => {
   tab.addEventListener('click', (e) => {
     const tabName = e.currentTarget.getAttribute('data-tab');
     if (tabName && tabName !== activeTab) {
@@ -90,6 +113,34 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     }
   });
 });
+
+// Setup More / Back drawer toggles
+const navMoreToggle = document.getElementById('nav-more-toggle');
+const navMoreBack = document.getElementById('nav-more-back');
+const dockMain = document.getElementById('nav-dock-main');
+const dockMore = document.getElementById('nav-dock-more');
+
+if (navMoreToggle && dockMain && dockMore) {
+  navMoreToggle.addEventListener('click', () => {
+    dockMain.classList.add('nav-dock-hidden');
+    dockMore.classList.remove('nav-dock-hidden');
+  });
+}
+
+if (navMoreBack && dockMain && dockMore) {
+  navMoreBack.addEventListener('click', () => {
+    dockMore.classList.add('nav-dock-hidden');
+    dockMain.classList.remove('nav-dock-hidden');
+  });
+}
+
+// Setup Header Profile button
+const btnTopProfile = document.getElementById('btn-top-profile');
+if (btnTopProfile) {
+  btnTopProfile.addEventListener('click', () => {
+    switchTab('profile');
+  });
+}
 
 // Subscribe to Game State updates
 gameState.subscribe((eventType, payload, state) => {

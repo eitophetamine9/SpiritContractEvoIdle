@@ -161,6 +161,9 @@ export function renderVaultView(container) {
                   <button class="btn-fav-spirit ${spirit.favorite ? 'active' : ''}" data-id="${spirit.id}" title="${spirit.favorite ? 'Favorited' : 'Add to Favorites'}">
                     ${spirit.favorite ? '⭐' : '☆'}
                   </button>
+                  <button class="btn-hof-spirit ${isHallOfFame ? 'active' : ''}" data-id="${spirit.id}" title="${isHallOfFame ? 'In Hall of Fame (Click to Remove)' : 'Assign to Hall of Fame'}">
+                    ${isHallOfFame ? '👑' : '🏛️'}
+                  </button>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
@@ -307,6 +310,20 @@ export function renderVaultView(container) {
       const id = btn.dataset.id;
       gameState.toggleFavoriteSpirit(id);
       renderVaultView(container);
+    });
+  });
+
+  // Hall of Fame toggle directly from Vault
+  container.querySelectorAll('.btn-hof-spirit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      try {
+        gameState.toggleHallOfFame(id);
+        renderVaultView(container);
+      } catch (err) {
+        alert(err.message);
+      }
     });
   });
 
