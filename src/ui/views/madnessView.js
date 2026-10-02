@@ -98,7 +98,7 @@ export function renderMadnessView(container) {
       </div>
 
       <!-- Combat Arena -->
-      <div class="arena-card">
+      <div class="arena-card ${enemy && enemy.isBoss ? 'boss-encounter' : ''}">
         ${enemy && enemy.isBoss ? '<div class="boss-flare">⚠️ ZONE OVERLORD BOSS ⚠️</div>' : ''}
 
         <div class="enemy-placeholder-frame">

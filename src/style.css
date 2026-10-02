@@ -1,26 +1,37 @@
 /* ==========================================================================
-   SPIRIT CONTRACT EVO | IDLE - Mobile-First Stylesheet
-   Strict constraints: Mobile-first, No :hover states, Touch targets >= 44px
+   SPIRIT CONTRACT EVO | IDLE - Dark Fantasy Woodland & Gothic Ruins Theme
+   Inspired by: Sacred Elder Spirit Tree, Moonlit Swamp Ruins, Gothic Crag Castle
+   Strict constraints: Mobile-first (max 480px), No :hover states, Touch targets >= 44px
    Brightly colored, distinct CSS placeholder boxes for Spirits & Enemies
    ========================================================================== */
 
 :root {
-  --bg-deep: #0a0d14;
-  --bg-surface: #121824;
-  --bg-surface-elevated: #1a2234;
-  --bg-surface-glass: rgba(22, 30, 47, 0.85);
+  /* Dark Fantasy Woodland & Obsidian Stone Palette */
+  --bg-deep: #060b08;
+  --bg-surface: #0e1712;
+  --bg-surface-elevated: #15231b;
+  --bg-surface-glass: rgba(14, 23, 18, 0.88);
   
-  --border-color: #26334d;
-  --border-bright: #3b4e75;
-  --border-pixel: 3px solid #000000;
+  --border-color: #273b2e;
+  --border-bright: #3f5c49;
+  --border-rune: #5a7d65;
   
-  --text-main: #f0f4fc;
-  --text-muted: #8c9cb8;
-  --text-gold: #ffc400;
+  --text-main: #edf5ee;
+  --text-muted: #8fa596;
+  --text-gold: #ffd152;
+  --text-moon: #d4e478;
   
+  /* Celestial Moon & Sacred Tree Accents */
+  --moon-pale: #d4e478;
+  --moon-glow: rgba(212, 228, 120, 0.35);
+  --tree-gold: #ffd152;
+  --tree-gold-glow: rgba(255, 209, 82, 0.45);
+  --forest-emerald: #2ecc71;
+  --forest-glow: rgba(46, 204, 113, 0.4);
+
   /* Elemental Bright Themes */
-  --elem-fire: #ff473a;
-  --elem-fire-glow: rgba(255, 71, 58, 0.4);
+  --elem-fire: #ff523d;
+  --elem-fire-glow: rgba(255, 82, 61, 0.4);
   --elem-water: #00d0ff;
   --elem-water-glow: rgba(0, 208, 255, 0.4);
   --elem-earth: #2ed573;
@@ -32,10 +43,10 @@
   --elem-light: #ffa502;
   --elem-light-glow: rgba(255, 165, 2, 0.4);
   
-  /* Corrupted / Madness Theme */
-  --madness-red: #ff0055;
+  /* Corrupted Madness & Haunted Swamp Theme */
+  --madness-red: #ff3366;
   --madness-purple: #7928ca;
-  --madness-glow: rgba(255, 0, 85, 0.5);
+  --madness-glow: rgba(255, 51, 102, 0.5);
 
   --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -51,6 +62,11 @@
 
 body {
   background-color: var(--bg-deep);
+  background-image: 
+    radial-gradient(circle at 50% 10%, #15241b 0%, #060b08 80%),
+    linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px);
+  background-size: 100% 100%, 24px 24px, 24px 24px;
   color: var(--text-main);
   font-family: var(--font-main);
   line-height: 1.4;
@@ -61,38 +77,38 @@ body {
   justify-content: center;
 }
 
-/* Base button minimum touch target: 44px */
+/* Base button minimum touch target: 44px (strictly mobile friendly) */
 button {
   font-family: inherit;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   min-height: 44px;
   border-radius: 8px;
-  border: none;
+  border: 1px solid var(--border-color);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   transition: transform 0.08s ease, filter 0.08s ease;
 }
 
 /* STRICT RULE: DO NOT USE HOVER STATES. USE ACTIVE FOR TACTILE MOBILE TOUCH */
 button:active {
-  transform: scale(0.95) translateY(1px);
+  transform: scale(0.95) translateY(2px);
   filter: brightness(1.2);
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: not-allowed;
   transform: none !important;
   filter: none !important;
 }
 
 /* ==========================================================================
-   APP CONTAINER (STRICT MOBILE-FIRST: Max 480px, centered on larger screens)
+   APP CONTAINER (STRICT MOBILE-FIRST: Max 480px, centered on desktop)
    ========================================================================== */
 
 #app {
@@ -101,10 +117,11 @@ button:disabled {
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--bg-surface);
+  background-image: radial-gradient(circle at 50% 0%, rgba(39, 59, 46, 0.4) 0%, rgba(14, 23, 18, 0.95) 75%);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.95);
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
 }
@@ -115,9 +132,10 @@ button:disabled {
   top: 0;
   z-index: 50;
   background: var(--bg-surface-glass);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 2px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
@@ -132,21 +150,22 @@ button:disabled {
 
 .game-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 0.5px;
-  background: linear-gradient(90deg, #ff7675, #74b9ff, #ffeaa7);
+  background: linear-gradient(90deg, #ffd152, #d4e478, #6ee7b7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: flex;
   align-items: center;
   gap: 6px;
+  text-shadow: 0 0 12px rgba(212, 228, 120, 0.3);
 }
 
 .save-indicator {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   padding: 4px 8px;
   border-radius: 12px;
   border: 1px solid var(--border-color);
@@ -158,8 +177,10 @@ button:disabled {
 .save-indicator.pulse {
   color: #2ed573;
   border-color: #2ed573;
+  box-shadow: 0 0 8px rgba(46, 213, 115, 0.5);
 }
 
+/* Resources Bar: 3 Columns (Energy, Shards, Essence) */
 .resources-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -167,19 +188,21 @@ button:disabled {
 }
 
 .resource-pill {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(7, 12, 9, 0.75);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 5px 8px;
+  padding: 5px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .resource-label {
   font-size: 10px;
+  font-weight: 700;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -189,20 +212,23 @@ button:disabled {
 .resource-val {
   font-family: var(--font-mono);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
   color: #ffffff;
 }
 
 .energy-pill .resource-val {
   color: #f1c40f;
+  text-shadow: 0 0 6px rgba(241, 196, 15, 0.4);
 }
 
 .shards-pill .resource-val {
   color: #70a1ff;
+  text-shadow: 0 0 6px rgba(112, 161, 255, 0.4);
 }
 
 .essence-pill .resource-val {
   color: #e056fd;
+  text-shadow: 0 0 6px rgba(224, 86, 253, 0.4);
 }
 
 /* MAIN VIEW CONTENT AREA */
@@ -215,7 +241,7 @@ button:disabled {
 }
 
 /* ==========================================================================
-   BOTTOM NAVIGATION BAR (Touch friendly >= 56px height)
+   BOTTOM NAVIGATION BAR (Weathered Stone & Mossy Touch Tabs >= 60px height)
    ========================================================================== */
 
 .bottom-nav {
@@ -224,8 +250,9 @@ button:disabled {
   width: 100%;
   max-width: 480px;
   height: 60px;
-  background: #0f1422;
+  background: #09110c;
   border-top: 2px solid var(--border-color);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.7);
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   z-index: 50;
@@ -252,12 +279,12 @@ button:disabled {
 
 .nav-tab .tab-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .nav-tab.active {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(39, 59, 46, 0.35);
 }
 
 .nav-tab.active::after {
@@ -267,7 +294,8 @@ button:disabled {
   left: 20%;
   right: 20%;
   height: 3px;
-  background: #00d2ff;
+  background: linear-gradient(90deg, #d4e478, #2ecc71);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.7);
   border-radius: 0 0 3px 3px;
 }
 
@@ -296,7 +324,7 @@ button:disabled {
 
 /* ==========================================================================
    BRIGHT CSS PLACEHOLDER BOXES FOR SPIRITS & ENEMIES
-   Distinct pixel-border styling for drop-in manual pixel art integration
+   Stone reliquaries with glowing insets for drop-in manual pixel art
    ========================================================================== */
 
 .pixel-box {
@@ -304,9 +332,9 @@ button:disabled {
   border: 3px solid #000;
   border-radius: 8px;
   box-shadow: 
-    inset 2px 2px 0px rgba(255, 255, 255, 0.3),
-    inset -2px -2px 0px rgba(0, 0, 0, 0.5),
-    0 4px 10px rgba(0, 0, 0, 0.4);
+    inset 2px 2px 0px rgba(255, 255, 255, 0.25),
+    inset -2px -2px 0px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.6);
   image-rendering: pixelated;
   overflow: hidden;
   display: flex;
@@ -316,41 +344,41 @@ button:disabled {
 
 /* Elemental Palette Variants */
 .pixel-box.elem-FIRE {
-  background: linear-gradient(145deg, #78150e, #330805);
+  background: linear-gradient(145deg, #61130d, #270705);
   border-color: #ff5252;
-  box-shadow: 0 0 12px var(--elem-fire-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+  box-shadow: 0 0 12px var(--elem-fire-glow), inset 2px 2px 0px rgba(255,255,255,0.3);
 }
 .pixel-box.elem-WATER {
-  background: linear-gradient(145deg, #094766, #041924);
+  background: linear-gradient(145deg, #093c54, #041721);
   border-color: #00d2ff;
-  box-shadow: 0 0 12px var(--elem-water-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+  box-shadow: 0 0 12px var(--elem-water-glow), inset 2px 2px 0px rgba(255,255,255,0.3);
 }
 .pixel-box.elem-EARTH {
-  background: linear-gradient(145deg, #10592e, #052111);
+  background: linear-gradient(145deg, #104a26, #051c0e);
   border-color: #2ed573;
-  box-shadow: 0 0 12px var(--elem-earth-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+  box-shadow: 0 0 12px var(--elem-earth-glow), inset 2px 2px 0px rgba(255,255,255,0.3);
 }
 .pixel-box.elem-WIND {
-  background: linear-gradient(145deg, #665b1b, #262208);
+  background: linear-gradient(145deg, #574c15, #1f1b06);
   border-color: #eccc68;
-  box-shadow: 0 0 12px var(--elem-wind-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+  box-shadow: 0 0 12px var(--elem-wind-glow), inset 2px 2px 0px rgba(255,255,255,0.3);
 }
 .pixel-box.elem-DARK {
-  background: linear-gradient(145deg, #441461, #180724);
+  background: linear-gradient(145deg, #370e50, #14051d);
   border-color: #b537f2;
-  box-shadow: 0 0 12px var(--elem-dark-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+  box-shadow: 0 0 12px var(--elem-dark-glow), inset 2px 2px 0px rgba(255,255,255,0.3);
 }
 .pixel-box.elem-LIGHT {
-  background: linear-gradient(145deg, #6b4700, #261900);
+  background: linear-gradient(145deg, #5c3c00, #201500);
   border-color: #ffa502;
-  box-shadow: 0 0 12px var(--elem-light-glow), inset 2px 2px 0px rgba(255,255,255,0.4);
+  box-shadow: 0 0 12px var(--elem-light-glow), inset 2px 2px 0px rgba(255,255,255,0.3);
 }
 
 /* Corrupted Madness Enemy Placeholder */
 .pixel-box.enemy-box {
-  background: linear-gradient(145deg, #420619, #1a0209);
+  background: linear-gradient(145deg, #3b0616, #140207);
   border-color: var(--madness-red);
-  box-shadow: 0 0 18px var(--madness-glow), inset 2px 2px 0px rgba(255, 100, 150, 0.4);
+  box-shadow: 0 0 20px var(--madness-glow), inset 2px 2px 0px rgba(255, 100, 150, 0.4);
 }
 
 .pixel-art-slot {
@@ -380,7 +408,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.7));
 }
 
 .placeholder-creature-sprite .core-glyph {
@@ -390,7 +418,7 @@ button:disabled {
 
 @keyframes creatureIdle {
   0% { transform: translateY(0px) scale(1); }
-  100% { transform: translateY(-4px) scale(1.05); }
+  100% { transform: translateY(-4px) scale(1.06); }
 }
 
 /* Badges overlay */
@@ -398,13 +426,13 @@ button:disabled {
   position: absolute;
   top: 4px;
   left: 4px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #ffd700;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffd152;
   font-size: 9px;
   font-weight: 800;
   padding: 1px 4px;
   border-radius: 4px;
-  border: 1px solid rgba(255, 215, 0, 0.5);
+  border: 1px solid rgba(255, 209, 82, 0.4);
 }
 
 .element-tag {
@@ -414,6 +442,7 @@ button:disabled {
   font-size: 11px;
 }
 
+/* Rarity Ribbons */
 .rarity-ribbon {
   position: absolute;
   bottom: 0;
@@ -428,7 +457,7 @@ button:disabled {
 }
 
 .rarity-ribbon.common {
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.7);
   color: #bdc3c7;
 }
 
@@ -459,7 +488,7 @@ button:disabled {
 
 .rarity-ribbon.mythical,
 .rarity-ribbon.mythic {
-  background: linear-gradient(90deg, #e74c3c, #ee5253);
+  background: linear-gradient(90deg, #c0392b, #e74c3c);
   color: #ffffff;
   font-weight: 900;
   box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
@@ -478,52 +507,42 @@ button:disabled {
   100% { filter: hue-rotate(360deg); }
 }
 
-/* Energy Status Banner */
-.energy-status-banner {
-  background: linear-gradient(135deg, #1f1b07, #2c2509);
-  border: 1px solid #795548;
-  border-radius: 10px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-.energy-bar-track {
-  width: 100%;
-  height: 8px;
-  background: #141103;
-  border-radius: 4px;
-  border: 1px solid #57480a;
-  overflow: hidden;
-}
-
-.energy-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #f1c40f, #f39c12);
-  transition: width 0.3s ease;
-}
-
-.btn-unlock-stage {
-  min-height: 44px;
-  background: linear-gradient(135deg, #f1c40f, #e67e22);
-  color: #000000;
-  font-weight: 900;
-  font-size: 11px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
 /* ==========================================================================
-   VIEW 1: MADNESS ZONE (Combat loop & math comparison)
+   VIEW 1: MADNESS ZONE (Haunted Moonlit Swamp & Gothic Crag Castle Aesthetic)
    ========================================================================== */
 
 .madness-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* Energy Status Banner */
+.energy-status-banner {
+  background: linear-gradient(135deg, #1b261b, #0f1811);
+  border: 1px solid var(--border-bright);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(212, 228, 120, 0.15);
+}
+
+.energy-bar-track {
+  width: 100%;
+  height: 8px;
+  background: #090e0a;
+  border-radius: 4px;
+  border: 1px solid #2e4333;
+  overflow: hidden;
+}
+
+.energy-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f1c40f, #f39c12);
+  box-shadow: 0 0 8px rgba(241, 196, 15, 0.5);
+  transition: width 0.3s ease;
 }
 
 .zone-header-card {
@@ -534,6 +553,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .zone-title-row {
@@ -544,8 +564,8 @@ button:disabled {
 
 .zone-title {
   font-size: 16px;
-  font-weight: 800;
-  color: #ffffff;
+  font-weight: 900;
+  color: var(--text-moon);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -560,30 +580,46 @@ button:disabled {
   min-height: 44px;
   padding: 6px 12px;
   font-size: 12px;
-  background: #202b40;
+  background: #18271e;
   color: var(--text-main);
   border: 1px solid var(--border-color);
   border-radius: 6px;
 }
 
+.btn-unlock-stage {
+  min-height: 44px;
+  background: linear-gradient(135deg, #f1c40f, #e67e22);
+  color: #000000;
+  font-weight: 900;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(241, 196, 15, 0.4);
+}
+
 .zone-toggle-btn {
   min-height: 44px;
   font-size: 12px;
-  background: #25162a;
-  color: #f368e0;
-  border: 1px solid #7928ca;
+  background: #17241c;
+  color: var(--text-moon);
+  border: 1px solid var(--border-color);
   flex: 1;
 }
 
 .zone-toggle-btn.active {
-  background: #7928ca;
+  background: #273e2e;
+  border-color: #5a7d65;
   color: #ffffff;
+  box-shadow: 0 0 10px rgba(90, 125, 101, 0.4);
 }
 
-/* Arena View */
+/* Arena View (Moonlit Swamp & Gothic Crag Castle backdrop) */
 .arena-card {
-  background: radial-gradient(circle at 50% 30%, #1e1329 0%, #0d0f18 100%);
-  border: 2px solid #3b2247;
+  background: 
+    linear-gradient(180deg, rgba(6, 11, 8, 0.78) 0%, rgba(14, 23, 18, 0.94) 100%),
+    url('/theme/moonlit_swamp.png') center/cover no-repeat;
+  border: 2px solid var(--border-bright);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -592,19 +628,28 @@ button:disabled {
   gap: 12px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), inset 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+.arena-card.boss-encounter {
+  background: 
+    linear-gradient(180deg, rgba(14, 5, 8, 0.78) 0%, rgba(26, 10, 16, 0.95) 100%),
+    url('/theme/gothic_spire.jpg') center/cover no-repeat;
+  border-color: #ff4757;
+  box-shadow: 0 8px 24px rgba(255, 71, 87, 0.35), inset 0 0 40px rgba(0, 0, 0, 0.85);
 }
 
 .boss-flare {
   position: absolute;
   top: 8px;
-  background: #ff0055;
+  background: var(--madness-red);
   color: #ffffff;
   font-size: 10px;
   font-weight: 900;
   padding: 3px 10px;
   border-radius: 20px;
   letter-spacing: 1px;
-  box-shadow: 0 0 10px #ff0055;
+  box-shadow: 0 0 12px var(--madness-red);
   animation: bossBlink 1s infinite alternate;
 }
 
@@ -626,8 +671,9 @@ button:disabled {
 
 .enemy-name {
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 900;
   color: #ff6b81;
+  text-shadow: 0 0 10px rgba(255, 107, 129, 0.4);
 }
 
 .enemy-power-stat {
@@ -646,7 +692,7 @@ button:disabled {
 .hp-bar-track {
   width: 100%;
   height: 14px;
-  background: #2c0914;
+  background: #20050e;
   border: 1px solid #ff4757;
   border-radius: 8px;
   overflow: hidden;
@@ -669,26 +715,39 @@ button:disabled {
   font-weight: 800;
   font-family: var(--font-mono);
   color: #ffffff;
-  text-shadow: 0 1px 2px #000;
+  text-shadow: 0 1px 3px #000;
+}
+
+/* Click to Fight Button */
+.btn-fight-action {
+  min-height: 48px;
+  background: linear-gradient(135deg, #a71d2a, #d63031);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 14px;
+  border: 1px solid #ff7675;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(214, 48, 49, 0.4);
 }
 
 /* Math Comparison Power Gauge */
 .math-power-gauge {
   width: 100%;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(6, 11, 8, 0.75);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
 }
 
 .power-comparison-row {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .power-status-pill {
@@ -750,16 +809,16 @@ button:disabled {
 
 .battle-empty-slot {
   height: 64px;
-  border: 2px dashed #26334d;
+  border: 2px dashed var(--border-color);
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: #3b4e75;
+  color: var(--border-bright);
 }
 
-/* Combat Stats & Loot Ticker */
 .combat-stats-strip {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-color);
@@ -772,7 +831,7 @@ button:disabled {
 }
 
 /* ==========================================================================
-   VIEW 2: ACTIVE PARTY & AFK TRAINING VIEW
+   VIEW 2: ACTIVE PARTY & AFK TRAINING VIEW (Ancient Mossy Shrine)
    ========================================================================== */
 
 .party-container {
@@ -782,14 +841,16 @@ button:disabled {
 }
 
 .afk-training-banner {
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-  border: 1px solid #4a90e2;
-  border-radius: 10px;
-  padding: 12px;
+  background: 
+    linear-gradient(135deg, rgba(14, 28, 19, 0.85) 0%, rgba(7, 15, 10, 0.92) 100%),
+    url('/theme/gothic_spire.jpg') center/cover no-repeat;
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  padding: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 4px 12px rgba(42, 82, 152, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(212, 228, 120, 0.2);
 }
 
 .afk-banner-left {
@@ -799,8 +860,8 @@ button:disabled {
 
 .afk-title {
   font-size: 14px;
-  font-weight: 800;
-  color: #ffffff;
+  font-weight: 900;
+  color: var(--text-moon);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -808,19 +869,20 @@ button:disabled {
 
 .afk-subtitle {
   font-size: 11px;
-  color: #d0e1fd;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
 .afk-rate-pill {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(6, 11, 8, 0.6);
+  border: 1px solid var(--forest-emerald);
   border-radius: 20px;
   padding: 6px 12px;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 800;
-  color: #00d2ff;
+  color: #2ed573;
+  box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
 }
 
 .party-slots-list {
@@ -838,11 +900,12 @@ button:disabled {
   grid-template-columns: 74px 1fr auto;
   gap: 10px;
   align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .party-card.evolvable {
-  border-color: #ffd700;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+  border-color: var(--tree-gold);
+  box-shadow: 0 0 14px var(--tree-gold-glow);
 }
 
 .spirit-thumb-box {
@@ -873,23 +936,23 @@ button:disabled {
   font-size: 11px;
   font-family: var(--font-mono);
   font-weight: 800;
-  color: #ffc400;
+  color: var(--text-gold);
 }
 
 .party-card-power {
   font-size: 12px;
   font-family: var(--font-mono);
   color: #2ed573;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 /* XP Bar */
 .xp-bar-track {
   width: 100%;
   height: 10px;
-  background: #141b2a;
+  background: #090f0b;
   border-radius: 5px;
-  border: 1px solid #2e3d5e;
+  border: 1px solid var(--border-color);
   overflow: hidden;
   position: relative;
   margin-top: 2px;
@@ -897,7 +960,8 @@ button:disabled {
 
 .xp-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3742fa, #70a1ff);
+  background: linear-gradient(90deg, #27ae60, #2ecc71);
+  box-shadow: 0 0 6px rgba(46, 204, 113, 0.4);
   transition: width 0.2s ease-out;
 }
 
@@ -905,12 +969,13 @@ button:disabled {
   position: absolute;
   inset: 0;
   font-size: 8px;
-  font-weight: 700;
+  font-weight: 800;
   font-family: var(--font-mono);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
+  text-shadow: 0 1px 2px #000;
 }
 
 .party-card-actions {
@@ -922,24 +987,25 @@ button:disabled {
 /* Evolve Button: glowing, min 44px */
 .btn-evolve {
   min-height: 44px;
-  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  background: linear-gradient(135deg, #ffd152, #e67e22);
   color: #000000;
   font-weight: 900;
   font-size: 12px;
   padding: 8px 12px;
   border-radius: 6px;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  border: 1px solid #ffd152;
+  box-shadow: 0 0 12px rgba(255, 209, 82, 0.6);
   animation: evolveGlow 1.5s infinite alternate;
 }
 
 @keyframes evolveGlow {
-  0% { transform: scale(1); box-shadow: 0 0 6px #ffd700; }
-  100% { transform: scale(1.03); box-shadow: 0 0 16px #ff8c00; }
+  0% { transform: scale(1); box-shadow: 0 0 6px #ffd152; }
+  100% { transform: scale(1.03); box-shadow: 0 0 16px #e67e22; }
 }
 
 .btn-unequip {
   min-height: 44px;
-  background: #252e42;
+  background: #17241c;
   color: var(--text-muted);
   font-size: 12px;
   padding: 6px 10px;
@@ -947,8 +1013,8 @@ button:disabled {
 }
 
 .empty-party-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 2px dashed #26334d;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px dashed var(--border-color);
   border-radius: 10px;
   min-height: 64px;
   display: flex;
@@ -961,7 +1027,7 @@ button:disabled {
 }
 
 /* ==========================================================================
-   VIEW 3: CONTRACT VIEW (Gacha / Summoning)
+   VIEW 3: CONTRACT VIEW (Sacred Elder Spirit Tree Altar & Essence Sanctum)
    ========================================================================== */
 
 .contract-container {
@@ -971,8 +1037,10 @@ button:disabled {
 }
 
 .altar-card {
-  background: radial-gradient(circle at 50% 40%, #1e2640 0%, #0d121f 100%);
-  border: 2px solid #3b4e75;
+  background: 
+    linear-gradient(180deg, rgba(8, 15, 11, 0.78) 0%, rgba(14, 23, 18, 0.94) 100%),
+    url('/theme/spirit_tree.png') center/cover no-repeat;
+  border: 2px solid var(--border-bright);
   border-radius: 14px;
   padding: 20px 16px;
   display: flex;
@@ -980,20 +1048,22 @@ button:disabled {
   align-items: center;
   gap: 14px;
   text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), inset 0 0 35px rgba(255, 209, 82, 0.1);
 }
 
 .altar-box-preview {
   width: 110px;
   height: 110px;
   border-radius: 12px;
-  border: 3px solid #70a1ff;
-  box-shadow: 0 0 20px rgba(112, 161, 255, 0.4);
+  border: 3px solid var(--tree-gold);
+  box-shadow: 0 0 20px rgba(255, 209, 82, 0.4);
 }
 
 .altar-title {
   font-size: 18px;
-  font-weight: 800;
-  color: #ffffff;
+  font-weight: 900;
+  color: var(--text-moon);
+  text-shadow: 0 0 10px rgba(212, 228, 120, 0.3);
 }
 
 .altar-desc {
@@ -1011,11 +1081,13 @@ button:disabled {
 
 .btn-summon-single {
   min-height: 52px;
-  background: linear-gradient(135deg, #1e90ff, #0984e3);
+  background: linear-gradient(135deg, #1b7a48, #27ae60);
   color: #ffffff;
   font-size: 14px;
+  font-weight: 900;
+  border: 1px solid #2ecc71;
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(9, 132, 227, 0.4);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1023,11 +1095,13 @@ button:disabled {
 
 .btn-summon-multi {
   min-height: 52px;
-  background: linear-gradient(135deg, #e056fd, #be2edd);
+  background: linear-gradient(135deg, #d35400, #f39c12);
   color: #ffffff;
   font-size: 14px;
+  font-weight: 900;
+  border: 1px solid #ffd152;
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(190, 46, 221, 0.4);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1035,7 +1109,7 @@ button:disabled {
 
 .cost-sub {
   font-size: 11px;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .contract-rates-card {
@@ -1046,12 +1120,13 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .rates-title {
   font-size: 13px;
   font-weight: 800;
-  color: var(--text-gold);
+  color: var(--text-moon);
 }
 
 .rates-list {
@@ -1062,8 +1137,34 @@ button:disabled {
   gap: 4px;
 }
 
+/* Essence Sanctum Shop Items */
+.essence-item-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid #3b2247;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.btn-essence-buy {
+  min-height: 48px;
+  background: linear-gradient(135deg, #6c2d82, #8e44ad);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 14px;
+  border: 1px solid #a55eea;
+  border-radius: 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(142, 68, 173, 0.4);
+}
+
 /* ==========================================================================
-   VIEW 4: SPIRIT VAULT (Storage / Inventory)
+   VIEW 4: SPIRIT VAULT (Reliquary Storage / Inventory)
    ========================================================================== */
 
 .vault-container {
@@ -1092,7 +1193,7 @@ button:disabled {
   min-height: 44px;
   padding: 6px 12px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   background: var(--bg-surface-elevated);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
@@ -1101,9 +1202,10 @@ button:disabled {
 }
 
 .filter-btn.active {
-  background: #3742fa;
+  background: #1f3927;
   color: #ffffff;
-  border-color: #70a1ff;
+  border-color: var(--forest-emerald);
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
 }
 
 .vault-grid {
@@ -1121,15 +1223,17 @@ button:disabled {
   grid-template-columns: 68px 1fr auto;
   gap: 10px;
   align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .btn-equip-action {
   min-height: 44px;
-  background: #2ed573;
-  color: #000000;
-  font-weight: 800;
+  background: linear-gradient(135deg, #1b7a48, #27ae60);
+  color: #ffffff;
+  font-weight: 900;
   font-size: 12px;
   padding: 8px 12px;
+  border: 1px solid #2ecc71;
   border-radius: 6px;
 }
 
@@ -1161,6 +1265,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .stat-row {
@@ -1181,7 +1286,7 @@ button:disabled {
 
 .stat-value {
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: 800;
   color: #ffffff;
 }
 
@@ -1194,9 +1299,11 @@ button:disabled {
 
 .btn-save-manual {
   min-height: 48px;
-  background: #3742fa;
+  background: linear-gradient(135deg, #1b7a48, #27ae60);
   color: #ffffff;
   font-size: 14px;
+  font-weight: 900;
+  border: 1px solid #2ecc71;
   border-radius: 8px;
 }
 
@@ -1216,9 +1323,9 @@ button:disabled {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(4, 8, 6, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -1229,38 +1336,41 @@ button:disabled {
 .modal-card {
   width: 100%;
   max-width: 420px;
-  background: #151b2a;
+  background: #0e1712;
   border: 2px solid var(--border-bright);
   border-radius: 14px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95);
   max-height: 90vh;
   overflow-y: auto;
 }
 
 .modal-title {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 900;
   text-align: center;
-  color: #ffffff;
+  color: var(--text-moon);
+  text-shadow: 0 0 10px rgba(212, 228, 120, 0.3);
 }
 
 .modal-btn-confirm {
   min-height: 50px;
-  background: linear-gradient(135deg, #2ed573, #26af5f);
-  color: #000000;
+  background: linear-gradient(135deg, #1b7a48, #2ecc71);
+  color: #ffffff;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 900;
+  border: 1px solid #2ecc71;
   border-radius: 8px;
   width: 100%;
+  box-shadow: 0 4px 14px rgba(46, 204, 113, 0.4);
 }
 
 /* Offline Welcome Gains List */
 .offline-gains-box {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 12px;
@@ -1273,7 +1383,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 /* Evolution Animation Display */
@@ -1300,7 +1410,7 @@ button:disabled {
 
 .evolution-arrow {
   font-size: 24px;
-  color: #ffd700;
+  color: var(--text-gold);
 }
 
 .variant-announcement {
@@ -1319,8 +1429,8 @@ button:disabled {
 }
 
 .variant-announcement.common {
-  background: #2f3542;
-  color: #a4b0be;
+  background: #17241c;
+  color: var(--text-moon);
 }
 
 @keyframes variantPulse {
@@ -1332,30 +1442,5 @@ button:disabled {
   font-size: 14px;
   font-family: var(--font-mono);
   color: #2ed573;
-  font-weight: 800;
+  font-weight: 900;
 }
-
-/* Essence Sanctum Shop Items */
-.essence-item-card {
-  background: var(--bg-surface-elevated);
-  border: 1px solid #3b2247;
-  border-radius: 10px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.btn-essence-buy {
-  min-height: 48px;
-  background: linear-gradient(135deg, #8e44ad, #9b59b6);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 12px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(142, 68, 173, 0.4);
-}
-
