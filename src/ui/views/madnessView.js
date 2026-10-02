@@ -1,5 +1,10 @@
 import { gameState, ENERGY_ENTRY_COST } from '../../state/gameState.js';
+import { getBiomeForStage } from '../../data/biomesData.js';
+import { getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../components/pixelBox.js';
+
+let isPaused = false;
+let battleSpeed = 1; // 1 or 2
 
 export function renderMadnessView(container) {
   const state = gameState.state;
@@ -10,7 +15,10 @@ export function renderMadnessView(container) {
   const partyPower = gameState.getTotalPartyPower();
   const enemyPower = enemy ? enemy.power : 1;
 
-  // Math comparison
+  // Current Biome Information
+  const biome = getBiomeForStage(mz.stage);
+
+  // Power comparison ratio
   const powerRatio = partyPower / Math.max(1, enemyPower);
   let powerStatusClass = 'matched';
   let powerStatusText = '⚖️ EVEN MATCH';
@@ -23,71 +31,171 @@ export function renderMadnessView(container) {
   }
 
   const hpPercent = enemy ? Math.max(0, Math.min(100, Math.round((enemy.hp / enemy.maxHp) * 100))) : 0;
-
   const nextStageNum = mz.highestStageUnlocked + 1;
   const canAffordNext = res.energy >= ENERGY_ENTRY_COST;
   const isCurrentStageBossCleared = mz.highestStageCleared >= mz.stage;
 
   container.innerHTML = `
-    <div class="madness-container">
+    <div class="madness-container ${biome.themeClass}">
       
-      <!-- Energy & Floor Status Card -->
-      <div class="energy-status-banner">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 16px;">⚡</span>
-            <span style="font-size: 13px; font-weight: 800; color: #f1c40f;">Madness Energy:</span>
-            <span style="font-family: var(--font-mono); font-size: 14px; font-weight: 800; color: #ffffff;" id="energy-counter">
-              ${res.energy} / ${res.maxEnergy}
-            </span>
-          </div>
-
-          <div style="font-size: 11px; color: var(--text-muted);">
-            ${res.energy < res.maxEnergy ? `+1 in ${30 - (res.energySecondsAccumulator || 0)}s` : 'MAX'}
-          </div>
+      <!-- Top Tactical Combat HUD (Inspired by Reference Battle Sequence) -->
+      <div class="combat-top-hud">
+        <div class="combat-hud-left">
+          <button id="btn-combat-pause" class="hud-icon-btn" title="Pause Combat">
+            ${isPaused ? '▶️' : '⏸️'}
+          </button>
+          <button id="btn-combat-sound" class="hud-icon-btn" title="Sound Effects">
+            🔊
+          </button>
         </div>
 
-        <div class="energy-bar-track">
-          <div class="energy-bar-fill" style="width: ${Math.round((res.energy / res.maxEnergy) * 100)}%;"></div>
+        <div class="combat-vs-banner">
+          <span class="vs-ally-tag">Contractor</span>
+          <span class="vs-center-tag">VS</span>
+          <span class="vs-enemy-tag">${enemy && enemy.isBoss ? 'OVERLORD' : 'CORRUPTED'}</span>
+        </div>
+
+        <div class="combat-hud-right">
+          <button id="btn-combat-speed" class="hud-speed-btn ${battleSpeed === 2 ? 'speed-2x' : ''}" title="Battle Speed">
+            ${battleSpeed}X
+          </button>
         </div>
       </div>
 
-      <!-- Stage & Progression Controls -->
-      <div class="zone-header-card">
-        <div class="zone-title-row">
-          <div class="zone-title">
-            <span>⚔️ Floor ${mz.stage}</span>
-            <span style="font-size: 12px; color: var(--text-muted);">Wave ${mz.subStage}/5</span>
-            <span style="font-size: 10px; background: rgba(46, 213, 115, 0.2); color: #2ecc71; border: 1px solid #2ecc71; padding: 1px 6px; border-radius: 4px;">
-              FREE REPEAT
+      <!-- Biome & Floor Progression Strip -->
+      <div class="biome-progression-strip" style="border-left: 4px solid ${biome.badgeColor};">
+        <div class="biome-info-col">
+          <div class="biome-name-row">
+            <span class="biome-badge-pill" style="background: ${biome.badgeColor}; color: #000;">
+              ${biome.name}
             </span>
+            <span class="biome-floor-tag">Floor ${mz.stage} • Wave ${mz.subStage}/5</span>
+          </div>
+          <div class="biome-desc-text">${biome.description}</div>
+        </div>
+
+        <div class="zone-nav-buttons">
+          <button id="btn-prev-stage" class="zone-btn-sm" ${mz.stage <= 1 ? 'disabled' : ''}>◀ Prev</button>
+          <button id="btn-next-stage" class="zone-btn-sm" ${mz.stage >= mz.highestStageUnlocked ? 'disabled' : ''}>Next ▶</button>
+        </div>
+      </div>
+
+      <!-- Unlock Next Floor Banner (If Boss Cleared) -->
+      ${isCurrentStageBossCleared ? `
+        <div class="floor-unlock-banner">
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 13px; font-weight: 800; color: #fff;">Floor ${nextStageNum} (Locked)</span>
+            <span style="font-size: 10px; color: var(--text-muted);">Entry Cost: 10 ⚡ (Unlocks permanent free farming)</span>
           </div>
 
-          <div class="zone-controls">
-            <button id="btn-prev-stage" class="zone-btn-sm" ${mz.stage <= 1 ? 'disabled' : ''}>
-              ◀ Prev
-            </button>
-            <button id="btn-next-stage" class="zone-btn-sm" ${mz.stage >= mz.highestStageUnlocked ? 'disabled' : ''}>
-              Next ▶
-            </button>
+          <button id="btn-unlock-next-floor" class="btn-unlock-stage" ${canAffordNext ? '' : 'disabled'}>
+            Unlock Floor ${nextStageNum} (10 ⚡)
+          </button>
+        </div>
+      ` : ''}
+
+      <!-- Dynamic Isometric Battlefield Area -->
+      <div class="isometric-battlefield ${biome.themeClass} ${enemy && enemy.isBoss ? 'boss-battlefield' : ''}">
+        
+        <!-- Floating Bouncing Damage Overlay Layer -->
+        <div id="damage-popup-layer" class="damage-popup-layer"></div>
+
+        <!-- Left Side: Staggered Allied Spirit Formation -->
+        <div class="allied-formation-column">
+          <div class="formation-header-label">ALLIED SPIRIT LINEUP</div>
+          
+          <div class="staggered-party-formation">
+            ${Array.from({ length: 5 }).map((_, idx) => {
+              const spirit = partySpirits[idx];
+              if (!spirit) {
+                return `
+                  <div class="spirit-formation-slot empty-slot" style="--stagger-offset: ${idx * 6}px;">
+                    <div class="empty-slot-marker">+</div>
+                  </div>
+                `;
+              }
+
+              const species = SPIRIT_SPECIES[spirit.speciesId];
+              const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
+
+              return `
+                <div class="spirit-formation-slot slot-active" id="allied-slot-${idx}" style="--stagger-offset: ${(idx % 2) * 12}px;">
+                  
+                  <!-- Overhead Rarity & Level Floating Badge -->
+                  <div class="overhead-status-bar">
+                    <span class="overhead-rarity" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
+                      ${rarity.name.toUpperCase()}
+                    </span>
+                    <span class="overhead-level">Lv.${spirit.level}</span>
+                  </div>
+
+                  <!-- Spirit Sprite Box with Ground Shadow -->
+                  <div class="spirit-sprite-container">
+                    ${createSpiritPlaceholderBox(spirit, { boxClass: 'formation-spirit-box' })}
+                    <div class="combat-ground-shadow"></div>
+                  </div>
+
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
 
-        <!-- Unlock Next Locked Floor with Energy Action -->
-        ${isCurrentStageBossCleared ? `
-          <div style="background: rgba(0, 0, 0, 0.35); border: 1px solid #3b4e75; border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-            <div style="display: flex; flex-direction: column;">
-              <span style="font-size: 12px; font-weight: 800; color: #fff;">Floor ${nextStageNum} (Locked)</span>
-              <span style="font-size: 10px; color: var(--text-muted);">Entry Cost: 10 ⚡ (Unlocks permanent 0-energy repeats)</span>
+        <!-- Center Combat Clash Point (Animations / Particles) -->
+        <div class="combat-clash-divider">
+          <div class="clash-sparks-icon">⚔️</div>
+        </div>
+
+        <!-- Right Side: Corrupted Enemy / Boss Vanguard -->
+        <div class="enemy-formation-column">
+          <div class="formation-header-label" style="color: #ff6b81;">
+            ${enemy && enemy.isBoss ? '⚠️ OVERLORD BOSS' : 'CORRUPTED FOE'}
+          </div>
+
+          <div class="enemy-combatant-wrapper" id="enemy-combatant">
+            
+            <!-- Enemy Overhead Details & Health Bar -->
+            <div class="enemy-overhead-card">
+              <div class="enemy-name-label">${enemy ? enemy.name : 'Unknown Corrupted'}</div>
+              <div class="enemy-pwr-label">⚡ ${enemyPower.toLocaleString()} PWR</div>
+
+              <div class="enemy-hp-track">
+                <div id="enemy-hp-fill" class="enemy-hp-fill" style="width: ${hpPercent}%;"></div>
+                <div id="enemy-hp-text" class="enemy-hp-text">
+                  ${enemy ? `${Math.ceil(enemy.hp).toLocaleString()} / ${enemy.maxHp.toLocaleString()} HP` : '0/0'}
+                </div>
+              </div>
             </div>
 
-            <button id="btn-unlock-next-floor" class="btn-unlock-stage" ${canAffordNext ? '' : 'disabled'}>
-              Unlock Floor ${nextStageNum} (10 ⚡)
-            </button>
-          </div>
-        ` : ''}
+            <!-- Enemy Sprite Frame with Ground Shadow -->
+            <div class="enemy-sprite-container">
+              <div class="enemy-placeholder-frame">
+                ${enemy ? createEnemyPlaceholderBox(enemy) : '<div class="pixel-box">Searching...</div>'}
+              </div>
+              <div class="combat-ground-shadow enemy-shadow"></div>
+            </div>
 
-        <div style="display: flex; gap: 8px;">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Attack Command & DPS Strip -->
+      <div class="combat-action-footer">
+        
+        <!-- Active Attack Button -->
+        <button id="btn-fight-enemy" class="btn-main-attack">
+          <span>⚔️ Attack Foe (Party Strike)</span>
+          <span class="btn-subtext">Party Power: ⚡ ${partyPower.toLocaleString()} PWR • DPS: ${Math.round(partyPower * 0.45 * battleSpeed)}/s</span>
+        </button>
+
+        <!-- Power Assessment Badge -->
+        <div class="power-status-pill ${powerStatusClass}">
+          ${powerStatusText}
+        </div>
+
+        <!-- Automation Controls -->
+        <div class="combat-toggle-row">
           <button id="btn-toggle-advance" class="zone-toggle-btn ${mz.autoAdvance ? 'active' : ''}">
             Auto-Advance: ${mz.autoAdvance ? 'ON' : 'OFF'}
           </button>
@@ -95,148 +203,142 @@ export function renderMadnessView(container) {
             Farm Mode: ${mz.farmMode ? 'ON' : 'OFF'}
           </button>
         </div>
-      </div>
 
-      <!-- Combat Arena -->
-      <div class="arena-card ${enemy && enemy.isBoss ? 'boss-encounter' : ''}">
-        ${enemy && enemy.isBoss ? '<div class="boss-flare">⚠️ ZONE OVERLORD BOSS ⚠️</div>' : ''}
-
-        <div class="enemy-placeholder-frame">
-          ${enemy ? createEnemyPlaceholderBox(enemy) : '<div class="pixel-box">Searching...</div>'}
+        <!-- Loot Yield Strip -->
+        <div class="combat-yield-summary">
+          <span style="color: var(--text-muted);">Victory Spoils:</span>
+          <span style="color: #ffd152; font-weight: 800;">
+            +${enemy ? enemy.shardReward : 0} 💎 Shards ${enemy && enemy.essenceReward > 0 ? `• +${enemy.essenceReward} 🔮 Essence` : ''}
+          </span>
         </div>
 
-        <div class="enemy-details">
-          <div class="enemy-name">${enemy ? enemy.name : 'Unknown Corrupted'}</div>
-          <div class="enemy-power-stat">Enemy Power: ${enemyPower.toLocaleString()} PWR</div>
-
-          <div class="hp-bar-wrapper">
-            <div class="hp-bar-track">
-              <div id="enemy-hp-fill" class="hp-bar-fill" style="width: ${hpPercent}%;"></div>
-              <div id="enemy-hp-text" class="hp-bar-text">
-                ${enemy ? `${Math.ceil(enemy.hp)} / ${enemy.maxHp} HP (${hpPercent}%)` : '0/0'}
-              </div>
-            </div>
-          </div>
-
-          <!-- Click to fight enemy with combined party power -->
-          <button id="btn-fight-enemy" class="btn-fight-action" style="width: 100%; min-height: 48px; margin-top: 10px; background: linear-gradient(135deg, #ff4757, #ff6b81); color: #ffffff; font-weight: 800; font-size: 14px; border-radius: 8px; box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);">
-            ⚔️ Attack Enemy (Party Power: ⚡ ${partyPower.toLocaleString()})
-          </button>
-        </div>
-
-        <!-- Math Comparison Power Gauge -->
-        <div class="math-power-gauge">
-          <div class="power-comparison-row">
-            <span style="color: #70a1ff;">Party Total: ⚡ ${partyPower.toLocaleString()} PWR</span>
-            <span style="color: #ff6b81;">Enemy: 👾 ${enemyPower.toLocaleString()} PWR</span>
-          </div>
-
-          <div class="power-status-pill ${powerStatusClass}">
-            ${powerStatusText}
-          </div>
-
-          <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
-            Unlocked floors repeat indefinitely for 0 ⚡ Energy! Harvest Shards to summon more Spirits.
-          </div>
-        </div>
-
-        <!-- Active Party 5-Spirit Battle Formation -->
-        <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-          <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">ACTIVE PARTY FORMATION (${partySpirits.length}/5)</span>
-          <span style="font-size: 11px; font-family: var(--font-mono); color: #2ed573;">DPS: ${Math.round(partyPower * 0.4)} /s</span>
-        </div>
-
-        <div class="battle-party-line">
-          ${Array.from({ length: 5 }).map((_, idx) => {
-            const spirit = partySpirits[idx];
-            if (spirit) {
-              return `
-                <div class="battle-spirit-mini elem-${spirit.element || 'FIRE'} attacking" id="battle-spirit-${idx}">
-                  ${createSpiritPlaceholderBox(spirit, { boxClass: 'spirit-mini-box' })}
-                </div>
-              `;
-            } else {
-              return `
-                <div class="battle-empty-slot" title="Empty Party Slot">
-                  +
-                </div>
-              `;
-            }
-          }).join('')}
-        </div>
-      </div>
-
-      <!-- Loot Ticker / Yields -->
-      <div class="combat-stats-strip">
-        <span style="color: var(--text-muted);">Yield on Defeat:</span>
-        <span style="color: #70a1ff; font-weight: 800;">
-          +${enemy ? enemy.shardReward : 0} 💎 Shards ${enemy && enemy.essenceReward > 0 ? `| +${enemy.essenceReward} 🔮 Essence` : ''}
-        </span>
       </div>
 
     </div>
   `;
 
   // Attach button event listeners
-  document.getElementById('btn-prev-stage')?.addEventListener('click', () => {
-    try {
-      gameState.setStage(gameState.state.madnessZone.stage - 1);
-      renderMadnessView(container);
-    } catch (err) {
-      alert(err.message);
-    }
-  });
-
-  document.getElementById('btn-next-stage')?.addEventListener('click', () => {
-    try {
-      gameState.setStage(gameState.state.madnessZone.stage + 1);
-      renderMadnessView(container);
-    } catch (err) {
-      alert(err.message);
-    }
-  });
-
-  document.getElementById('btn-unlock-next-floor')?.addEventListener('click', () => {
-    try {
-      gameState.unlockAndEnterStage(nextStageNum);
-      renderMadnessView(container);
-    } catch (err) {
-      alert(err.message);
-    }
-  });
-
-  document.getElementById('btn-toggle-advance')?.addEventListener('click', () => {
-    gameState.toggleAutoAdvance();
-    renderMadnessView(container);
-  });
-
-  document.getElementById('btn-toggle-farm')?.addEventListener('click', () => {
-    gameState.toggleFarmMode();
-    renderMadnessView(container);
-  });
-
-  document.getElementById('btn-fight-enemy')?.addEventListener('click', () => {
-    const res = gameState.attackEnemyWithPartyPower();
-    // Visual pulse on enemy and party members
-    const enemyBox = container.querySelector('.enemy-placeholder-frame .pixel-box');
-    if (enemyBox) {
-      enemyBox.style.transform = 'scale(0.94)';
-      enemyBox.style.filter = 'brightness(1.5)';
-      setTimeout(() => {
-        enemyBox.style.transform = '';
-        enemyBox.style.filter = '';
-      }, 120);
-    }
-    container.querySelectorAll('.battle-spirit-mini').forEach(sp => {
-      sp.classList.remove('attacking');
-      void sp.offsetWidth;
-      sp.classList.add('attacking');
+  const btnPrev = container.querySelector('#btn-prev-stage');
+  if (btnPrev) {
+    btnPrev.addEventListener('click', () => {
+      try {
+        gameState.setStage(gameState.state.madnessZone.stage - 1);
+        renderMadnessView(container);
+      } catch (err) {
+        alert(err.message);
+      }
     });
-    updateMadnessCombatTick(container);
-    if (res.killed) {
+  }
+
+  const btnNext = container.querySelector('#btn-next-stage');
+  if (btnNext) {
+    btnNext.addEventListener('click', () => {
+      try {
+        gameState.setStage(gameState.state.madnessZone.stage + 1);
+        renderMadnessView(container);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  const btnUnlockNext = container.querySelector('#btn-unlock-next-floor');
+  if (btnUnlockNext) {
+    btnUnlockNext.addEventListener('click', () => {
+      try {
+        gameState.unlockAndEnterStage(nextStageNum);
+        renderMadnessView(container);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  const btnAuto = container.querySelector('#btn-toggle-advance');
+  if (btnAuto) {
+    btnAuto.addEventListener('click', () => {
+      gameState.toggleAutoAdvance();
       renderMadnessView(container);
-    }
-  });
+    });
+  }
+
+  const btnFarm = container.querySelector('#btn-toggle-farm');
+  if (btnFarm) {
+    btnFarm.addEventListener('click', () => {
+      gameState.toggleFarmMode();
+      renderMadnessView(container);
+    });
+  }
+
+  // Battle Speed Toggle (1X / 2X)
+  const btnSpeed = container.querySelector('#btn-combat-speed');
+  if (btnSpeed) {
+    btnSpeed.addEventListener('click', () => {
+      battleSpeed = battleSpeed === 1 ? 2 : 1;
+      renderMadnessView(container);
+    });
+  }
+
+  // Combat Pause Toggle
+  const btnPause = container.querySelector('#btn-combat-pause');
+  if (btnPause) {
+    btnPause.addEventListener('click', () => {
+      isPaused = !isPaused;
+      renderMadnessView(container);
+    });
+  }
+
+  // Manual Attack with Floating Damage animation
+  const btnFight = container.querySelector('#btn-fight-enemy');
+  if (btnFight) {
+    btnFight.addEventListener('click', () => {
+      const res = gameState.attackEnemyWithPartyPower();
+      spawnDamageNumber(container, res.damage);
+
+      // Visual attack animation for party members and enemy hit flash
+      const enemyEl = container.querySelector('#enemy-combatant');
+      if (enemyEl) {
+        enemyEl.classList.remove('enemy-hit-flash');
+        void enemyEl.offsetWidth;
+        enemyEl.classList.add('enemy-hit-flash');
+      }
+
+      container.querySelectorAll('.spirit-formation-slot.slot-active').forEach(slot => {
+        slot.classList.remove('lunge-attack');
+        void slot.offsetWidth;
+        slot.classList.add('lunge-attack');
+      });
+
+      updateMadnessCombatTick(container);
+
+      if (res.killed) {
+        setTimeout(() => renderMadnessView(container), 250);
+      }
+    });
+  }
+}
+
+/**
+ * Creates floating bouncing damage text directly on the battlefield (e.g. "217")
+ */
+function spawnDamageNumber(container, dmgAmount) {
+  const layer = container.querySelector('#damage-popup-layer');
+  if (!layer) return;
+
+  const dmgEl = document.createElement('div');
+  const isCrit = Math.random() < 0.25;
+  dmgEl.className = `floating-dmg-popup ${isCrit ? 'crit' : ''}`;
+  dmgEl.textContent = isCrit ? `CRIT ${Math.round(dmgAmount * 1.5)}!` : `${dmgAmount}`;
+
+  // Random offset for organic scattering
+  const offsetX = (Math.random() - 0.5) * 60;
+  dmgEl.style.transform = `translate(${offsetX}px, 0)`;
+
+  layer.appendChild(dmgEl);
+
+  setTimeout(() => {
+    if (dmgEl.parentNode) dmgEl.parentNode.removeChild(dmgEl);
+  }, 850);
 }
 
 /**
@@ -252,6 +354,6 @@ export function updateMadnessCombatTick(container) {
   if (hpFill && hpText) {
     const hpPercent = Math.max(0, Math.min(100, Math.round((enemy.hp / enemy.maxHp) * 100)));
     hpFill.style.width = `${hpPercent}%`;
-    hpText.textContent = `${Math.ceil(enemy.hp)} / ${enemy.maxHp} HP (${hpPercent}%)`;
+    hpText.textContent = `${Math.ceil(enemy.hp).toLocaleString()} / ${enemy.maxHp.toLocaleString()} HP`;
   }
 }

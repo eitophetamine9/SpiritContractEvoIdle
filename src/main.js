@@ -7,6 +7,8 @@ import {
   renderContractView, 
   renderVaultView, 
   renderStatsView,
+  renderProfileView,
+  renderIndexView,
   showOfflineModal 
 } from './ui/index.js';
 
@@ -62,13 +64,17 @@ function renderActiveTab() {
       renderPartyView(viewContainer);
       break;
     case 'contract':
-      renderContractView(viewContainer);
+      renderContractView(viewContainer, () => switchTab('index'));
       break;
     case 'vault':
       renderVaultView(viewContainer);
       break;
+    case 'index':
+      renderIndexView(viewContainer);
+      break;
+    case 'profile':
     case 'stats':
-      renderStatsView(viewContainer);
+      renderProfileView(viewContainer);
       break;
   }
 
