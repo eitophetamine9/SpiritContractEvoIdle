@@ -141,6 +141,8 @@ class GameStateManager {
       },
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
+      hallOfFame: [starterId], // Max 5 showcase spirits
+      discoveredSpeciesIds: [starterSpecies.id], // Spirit Compendium
       madnessZone: {
         stage: 1,
         subStage: 1,
@@ -207,7 +209,28 @@ class GameStateManager {
         s.power = calculateSpiritPower(species, s.level, s.rarity || species.baseRarity);
         s.canEvolve = s.level >= species.levelCap && species.evolutions && species.evolutions.length > 0;
       }
+      if (typeof s.favorite !== 'boolean') {
+        s.favorite = false;
+      }
+      if (!s.customName && species) {
+        s.customName = species.name;
+      }
     });
+
+    // Ensure discoveredSpeciesIds array exists
+    if (!Array.isArray(state.discoveredSpeciesIds)) {
+      state.discoveredSpeciesIds = [];
+    }
+    state.spirits.forEach(s => {
+      if (s.speciesId && !state.discoveredSpeciesIds.includes(s.speciesId)) {
+        state.discoveredSpeciesIds.push(s.speciesId);
+      }
+    });
+
+    // Ensure hall of fame array exists
+    if (!Array.isArray(state.hallOfFame)) {
+      state.hallOfFame = state.party ? state.party.slice(0, 5) : [];
+    }
 
     // Enforce active party limit of 5
     if (state.party.length > 5) {
@@ -390,10 +413,12 @@ class GameStateManager {
 
   /**
    * Offline XP & Resources & Energy Calculation when reopening the app
+   * Rebalanced: 24-hour cap before diminishing returns, 20% passive meditation rate
    */
   applyOfflineGains(elapsedSeconds) {
-    const cappedSeconds = Math.min(elapsedSeconds, 86400 * 7); // Max cap: 7 days
-    const xpRate = this.getXpGainRate();
+    const cappedSeconds = Math.min(elapsedSeconds, 86400); // 24-hour cap
+    // Passive meditation rate: 20% of active rate
+    const xpRate = this.getXpGainRate() * 0.20;
     const totalOfflineXp = xpRate * cappedSeconds;
 
     const partySpirits = this.getPartySpirits();
@@ -451,6 +476,7 @@ class GameStateManager {
     }
 
     // 3. Offline Madness Zone combat farming on previously unlocked stages
+    // Rebalanced: 25% shard salvage rate, Essence capped at 1 per 2 hours (max 12 in 24h)
     const partyPower = this.getTotalPartyPower();
     const farmStage = this.state.madnessZone.farmMode 
       ? Math.max(1, this.state.madnessZone.stage - 1)
@@ -459,8 +485,9 @@ class GameStateManager {
     const sampleEnemy = getEnemyForStage(farmStage, 3);
     const killTimeSec = Math.max(2, (sampleEnemy.power / Math.max(1, partyPower)) * 4);
     const estimatedKills = Math.floor(cappedSeconds / killTimeSec);
-    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.7);
-    const offlineEssence = Math.floor(estimatedKills / 15);
+    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.25);
+    const maxOfflineEssence = Math.min(12, Math.floor(cappedSeconds / 7200));
+    const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 60));
 
     this.state.resources.spiritShards += offlineShards;
     this.state.resources.soulEssence += offlineEssence;
@@ -506,6 +533,23 @@ class GameStateManager {
     if (enemy.hp <= 0) {
       this.onEnemyDefeated(enemy);
     }
+  }
+
+  attackEnemyWithPartyPower() {
+    const { madnessZone } = this.state;
+    if (!madnessZone.currentEnemy) return { damage: 0, killed: false };
+
+    const enemy = madnessZone.currentEnemy;
+    const partyPower = this.getTotalPartyPower();
+    const damage = Math.max(1, Math.round(partyPower * 0.45));
+    enemy.hp = Math.max(0, enemy.hp - damage);
+
+    let killed = false;
+    if (enemy.hp <= 0) {
+      this.onEnemyDefeated(enemy);
+      killed = true;
+    }
+    return { damage, killed, remainingHp: enemy.hp };
   }
 
   spawnMadnessEnemy() {
@@ -664,6 +708,7 @@ class GameStateManager {
     spirit.evolutionHistory.push(nextSpecies.name);
 
     this.state.stats.totalEvolutions += 1;
+    this.markSpeciesDiscovered(nextSpecies.id);
     this.save();
 
     const result = {
@@ -726,6 +771,7 @@ class GameStateManager {
 
       this.state.spirits.unshift(spirit);
       newSpirits.push(spirit);
+      this.markSpeciesDiscovered(species.id);
     }
 
     this.state.stats.totalSpiritsContracted += count;
@@ -786,15 +832,15 @@ class GameStateManager {
   }
 
   // =========================================================================
-  // SOUL ESSENCE SANCTUM (Essence Spending Shop)
+  // SOUL ESSENCE SANCTUM (Essence Spending Shop) - Rebalanced
   // =========================================================================
 
   /**
    * Premium Astral Contract (0% Commons, guaranteed Uncommon+)
-   * Costs 5 Soul Essence
+   * Costs 8 Soul Essence (Rebalanced from 5)
    */
   contractAstralSpirit() {
-    const cost = 5;
+    const cost = 8;
     if (this.state.resources.soulEssence < cost) {
       throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮 (Have: ${this.state.resources.soulEssence} 🔮). Earn Essence by defeating Floor Bosses.`);
     }
@@ -814,6 +860,7 @@ class GameStateManager {
       power: calculateSpiritPower(species, 1, rolled.rarityTier),
       isEquipped: false,
       canEvolve: false,
+      favorite: false,
       evolutionHistory: [species.name],
       contractedAt: Date.now()
     };
@@ -825,6 +872,7 @@ class GameStateManager {
 
     this.state.spirits.unshift(spirit);
     this.state.stats.totalSpiritsContracted += 1;
+    this.markSpeciesDiscovered(species.id);
     this.save();
 
     this.emit('spiritsContracted', { spirits: [spirit], cost, currency: 'essence' });
@@ -832,11 +880,11 @@ class GameStateManager {
   }
 
   /**
-   * Instantly grants +2,500 AFK Training XP to all active party spirits
-   * Costs 3 Soul Essence
+   * Grants +500 AFK Training XP to all active party spirits (Rebalanced from 2,500)
+   * Costs 10 Soul Essence (Rebalanced from 3)
    */
   buyPartyXpElixir() {
-    const cost = 3;
+    const cost = 10;
     if (this.state.resources.soulEssence < cost) {
       throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
     }
@@ -847,7 +895,7 @@ class GameStateManager {
     }
 
     this.state.resources.soulEssence -= cost;
-    const xpBonus = 2500;
+    const xpBonus = 500; // Balanced boost, not instant level-skip
 
     for (const spirit of party) {
       const species = SPIRIT_SPECIES[spirit.speciesId];
@@ -882,17 +930,19 @@ class GameStateManager {
 
   /**
    * Permanently expands Max Energy by +10
-   * Costs 5 Soul Essence
+   * Scaling cost: 8 + (purchases * 4) Soul Essence
    */
   buyMaxEnergyExpansion() {
-    const cost = 5;
+    const purchases = this.state.resources.maxEnergyPurchases || 0;
+    const cost = 8 + purchases * 4;
     if (this.state.resources.soulEssence < cost) {
       throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
     }
 
     this.state.resources.soulEssence -= cost;
+    this.state.resources.maxEnergyPurchases = purchases + 1;
     this.state.resources.maxEnergy += 10;
-    this.state.resources.energy += 10; // also top-up
+    this.state.resources.energy += 10;
     this.save();
     this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
     return { newMaxEnergy: this.state.resources.maxEnergy };
@@ -900,10 +950,10 @@ class GameStateManager {
 
   /**
    * Instantly restores +30 Energy
-   * Costs 2 Soul Essence
+   * Costs 3 Soul Essence (Rebalanced from 2)
    */
   buyInstantEnergySurge() {
-    const cost = 2;
+    const cost = 3;
     if (this.state.resources.soulEssence < cost) {
       throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
     }
@@ -917,11 +967,11 @@ class GameStateManager {
 
   /**
    * Permanently upgrades party resonance (+5% all spirit power per tier)
-   * Costs 3 + (tier * 2) Soul Essence
+   * Costs 6 + (tier * 4) Soul Essence (Rebalanced)
    */
   buyPartyResonanceUpgrade() {
     const currentTier = this.state.resources.resonanceTier || 0;
-    const cost = 3 + currentTier * 2;
+    const cost = 6 + currentTier * 4;
     if (this.state.resources.soulEssence < cost) {
       throw new Error(`Insufficient Soul Essence! Need ${cost} 🔮.`);
     }
@@ -933,26 +983,143 @@ class GameStateManager {
     return { newTier: this.state.resources.resonanceTier, bonusPercent: (currentTier + 1) * 5 };
   }
 
+  // =========================================================================
+  // VAULT & SPIRIT MANAGEMENT QoL (Annul, Bulk Annul, Rename, Favorite)
+  // =========================================================================
+
+  toggleFavoriteSpirit(spiritId) {
+    const spirit = this.state.spirits.find(s => s.id === spiritId);
+    if (!spirit) return false;
+    spirit.favorite = !spirit.favorite;
+    this.save();
+    this.emit('spiritUpdated', spirit);
+    return spirit.favorite;
+  }
+
+  renameSpirit(spiritId, newName) {
+    const spirit = this.state.spirits.find(s => s.id === spiritId);
+    if (!spirit) return false;
+    const cleanName = (newName || '').trim();
+    if (!cleanName) return false;
+    spirit.customName = cleanName.substring(0, 24);
+    this.save();
+    this.emit('spiritUpdated', spirit);
+    return true;
+  }
+
   /**
-   * Release/Dispel Spirit for refund shards
+   * Annul Contract with Spirit (formerly Dispel) for refund shards
    */
-  releaseSpirit(spiritId) {
+  annulContract(spiritId) {
     if (this.state.party.includes(spiritId)) {
-      throw new Error('Cannot release an equipped party Spirit. Unequip it first.');
+      throw new Error('Cannot annul contract with an active party Spirit. Unequip it first.');
     }
 
     const idx = this.state.spirits.findIndex(s => s.id === spiritId);
     if (idx === -1) return 0;
 
     const spirit = this.state.spirits[idx];
-    const shardsGained = 40 * spirit.tier + Math.floor(spirit.level * 3);
+    if (spirit.favorite) {
+      throw new Error('This Spirit is marked as Favorite! Unfavorite it first before annulling contract.');
+    }
 
+    const shardsGained = 40 * (spirit.tier || 1) + Math.floor((spirit.level || 1) * 3);
     this.state.spirits.splice(idx, 1);
     this.state.resources.spiritShards += shardsGained;
-    this.save();
 
-    this.emit('spiritReleased', { spiritId, shardsGained });
+    if (Array.isArray(this.state.hallOfFame)) {
+      this.state.hallOfFame = this.state.hallOfFame.filter(id => id !== spiritId);
+    }
+
+    this.save();
+    this.emit('spiritAnnulled', { spiritId, shardsGained });
     return shardsGained;
+  }
+
+  releaseSpirit(spiritId) {
+    return this.annulContract(spiritId);
+  }
+
+  bulkAnnulSpirits(spiritIds) {
+    if (!Array.isArray(spiritIds) || spiritIds.length === 0) return { count: 0, shardsGained: 0 };
+
+    let count = 0;
+    let totalShardsGained = 0;
+
+    for (const id of spiritIds) {
+      if (this.state.party.includes(id)) continue;
+      const idx = this.state.spirits.findIndex(s => s.id === id);
+      if (idx === -1) continue;
+      const spirit = this.state.spirits[idx];
+      if (spirit.favorite) continue;
+
+      const shards = 40 * (spirit.tier || 1) + Math.floor((spirit.level || 1) * 3);
+      totalShardsGained += shards;
+      count++;
+      this.state.spirits.splice(idx, 1);
+
+      if (Array.isArray(this.state.hallOfFame)) {
+        this.state.hallOfFame = this.state.hallOfFame.filter(hid => hid !== id);
+      }
+    }
+
+    this.state.resources.spiritShards += totalShardsGained;
+    this.save();
+    this.emit('spiritsBulkAnnulled', { count, shardsGained: totalShardsGained });
+    return { count, shardsGained: totalShardsGained };
+  }
+
+  // =========================================================================
+  // HALL OF FAME (Profile Showcase - up to 5 Spirits)
+  // =========================================================================
+
+  toggleHallOfFame(spiritId) {
+    if (!Array.isArray(this.state.hallOfFame)) {
+      this.state.hallOfFame = [];
+    }
+    const idx = this.state.hallOfFame.indexOf(spiritId);
+    if (idx !== -1) {
+      this.state.hallOfFame.splice(idx, 1);
+      this.save();
+      this.emit('hallOfFameUpdated', this.state.hallOfFame);
+      return false;
+    }
+
+    if (this.state.hallOfFame.length >= 5) {
+      throw new Error('Hall of Fame is full! Maximum 5 Spirits can be showcased.');
+    }
+
+    this.state.hallOfFame.push(spiritId);
+    this.save();
+    this.emit('hallOfFameUpdated', this.state.hallOfFame);
+    return true;
+  }
+
+  getHallOfFameSpirits() {
+    if (!Array.isArray(this.state.hallOfFame)) return [];
+    return this.state.hallOfFame
+      .map(id => this.state.spirits.find(s => s.id === id))
+      .filter(Boolean);
+  }
+
+  // =========================================================================
+  // SPIRIT COMPENDIUM / INDEX
+  // =========================================================================
+
+  markSpeciesDiscovered(speciesId) {
+    if (!Array.isArray(this.state.discoveredSpeciesIds)) {
+      this.state.discoveredSpeciesIds = [];
+    }
+    if (speciesId && !this.state.discoveredSpeciesIds.includes(speciesId)) {
+      this.state.discoveredSpeciesIds.push(speciesId);
+      this.save();
+      this.emit('speciesDiscovered', speciesId);
+    }
+  }
+
+  isSpeciesDiscovered(speciesId) {
+    if (!Array.isArray(this.state.discoveredSpeciesIds)) return false;
+    return this.state.discoveredSpeciesIds.includes(speciesId);
   }
 
   resetAllProgress() {

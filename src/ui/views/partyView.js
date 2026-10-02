@@ -1,5 +1,5 @@
 import { gameState } from '../../state/gameState.js';
-import { SPIRIT_SPECIES, getXpRequiredForLevel } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getXpRequiredForLevel, getRarityInfo } from '../../data/spiritsData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showEvolutionCeremonyModal } from '../components/modals.js';
 
@@ -46,6 +46,7 @@ export function renderPartyView(container) {
           }
 
           const species = SPIRIT_SPECIES[spirit.speciesId];
+          const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
           const reqXp = getXpRequiredForLevel(spirit.level);
           const isCapped = spirit.level >= (species ? species.levelCap : 99);
           const xpPercent = isCapped ? 100 : Math.min(100, Math.floor((spirit.xp / reqXp) * 100));
@@ -67,8 +68,9 @@ export function renderPartyView(container) {
                   </span>
                 </div>
 
-                <div class="party-card-power">
-                  ⚡ ${spirit.power.toLocaleString()} PWR
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="color: ${rarity.color}; font-weight: 800; font-size: 11px;">[${rarity.name.toUpperCase()}]</span>
+                  <span class="party-card-power">⚡ ${spirit.power.toLocaleString()} PWR</span>
                 </div>
 
                 <!-- Real-time XP Bar -->

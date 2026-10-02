@@ -3,12 +3,14 @@ import { showSummonRevealModal } from '../components/modals.js';
 
 let activeSanctumTab = 'shards'; // 'shards' | 'essence'
 
-export function renderContractView(container) {
+export function renderContractView(container, onNavigateToIndex) {
   const state = gameState.state;
   const shards = state.resources.spiritShards;
   const essence = state.resources.soulEssence;
   const resonanceTier = state.resources.resonanceTier || 0;
-  const resonanceCost = 3 + resonanceTier * 2;
+  const resonanceCost = 6 + resonanceTier * 4;
+  const maxEnergyPurchases = state.resources.maxEnergyPurchases || 0;
+  const energyExpansionCost = 8 + maxEnergyPurchases * 4;
 
   container.innerHTML = `
     <div class="contract-container">
@@ -26,20 +28,20 @@ export function renderContractView(container) {
       ${activeSanctumTab === 'shards' ? `
         <!-- Shards Altar -->
         <div class="altar-card">
-          <div class="pixel-box altar-box-preview elem-DARK">
+          <div class="pixel-box altar-box-preview rarity-legendary">
             <div class="placeholder-creature-sprite">
               <span class="core-glyph" style="font-size: 42px;">📜</span>
             </div>
           </div>
 
           <div>
-            <div class="altar-title">Astral Summoning Circle</div>
+            <div class="altar-title">Sacred Elder Spirit Tree</div>
             <div class="altar-desc">
-              Channel Spirit Shards to bind elemental beasts and ancient mythical guardians.
+              Channel Spirit Shards to form mystical bonds with wandering spirits.
             </div>
           </div>
 
-          <div style="font-size: 14px; font-weight: 800; color: #70a1ff;">
+          <div style="font-size: 14px; font-weight: 800; color: #ffd152;">
             Available Shards: 💎 ${shards.toLocaleString()}
           </div>
 
@@ -56,36 +58,31 @@ export function renderContractView(container) {
           </div>
         </div>
 
-        <!-- Contract Roster & Rates Card -->
+        <!-- Quick Compendium Link & Gacha Rarity Rates -->
         <div class="contract-rates-card">
-          <div class="rates-title">📜 Available Spirits by Rarity</div>
-          <div class="rates-list">
-            <div><strong style="color: #bdc3c7;">• Common (60%):</strong> Cat Spirit 🐱, Dog Spirit 🐶, Chicken Spirit 🐔, Caterpillar Spirit 🐛</div>
-            <div><strong style="color: #2ecc71;">• Uncommon (26%):</strong> Bull Spirit 🐂, Lizard Spirit 🦎, Python Spirit 🐍</div>
-            <div><strong style="color: #3498db;">• Rare (10%):</strong> Shark Spirit 🦈, Bear Spirit 🐻</div>
-            <div><strong style="color: #9b59b6;">• Epic (3.5%):</strong> Wisp Spirit ✨</div>
-            <div><strong style="color: #f39c12;">• Legendary (0.5%):</strong> Fallen Warrior Spirit ⚔️</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="rates-title">📜 Contract Probability Rates</div>
+            <button id="btn-view-index-link" class="btn-view-index-sm">
+              📖 View Spirit Index & Trees
+            </button>
           </div>
 
-          <div class="rates-title" style="margin-top: 8px;">⚡ Evolution Horizons</div>
-          <div class="rates-list" style="font-size: 11px;">
-            <div>• <strong>Cat:</strong> 80% Furious Cat, 20% Elemental Cat (EPIC)</div>
-            <div>• <strong>Dog:</strong> 80% Vitality Dog, 20% Guardian Dog (EPIC)</div>
-            <div>• <strong>Chicken:</strong> 90% Battle Chicken, 10% Dino Genus Chicken (LEGENDARY)</div>
-            <div>• <strong>Caterpillar:</strong> 90% Elegant Butterfly, 10% Mystical Butterfly (LEGENDARY)</div>
-            <div>• <strong>Bull:</strong> 80% Raging Bull, 15% Elemental Bull (EPIC), 5% Minotaur (MYTHICAL)</div>
-            <div>• <strong>Lizard:</strong> 80% Multi-venom Lizard, 15% Komodo Dragon (EPIC), 5% Drake (MYTHICAL)</div>
-            <div>• <strong>Python:</strong> 80% HighLord Python, 15% Huge Albino Anaconda (EPIC), 5% Wyrm (MYTHICAL)</div>
-            <div>• <strong>Shark:</strong> 90% Great White Shark (EPIC), 8% Megalodon (MYTHICAL), 2% Cosmic Oceanic Devourer (TRANSCENDENT)</div>
-            <div>• <strong>Bear:</strong> 90% HighLord Bear (EPIC), 8% Bear of Dreams (MYTHICAL), 2% Cosmic Bear Ursalite (TRANSCENDENT)</div>
-            <div>• <strong>Wisp:</strong> 100% High Elf (MYTHICAL)</div>
-            <div>• <strong>Fallen Warrior:</strong> 99% Sovereign Warrior (MYTHICAL), 1% DreadLord Warrior (TRANSCENDENT)</div>
+          <div class="rates-list">
+            <div><strong style="color: #bdc3c7;">• Common (60%):</strong> Cat, Dog, Chicken, Caterpillar</div>
+            <div><strong style="color: #2ecc71;">• Uncommon (26%):</strong> Bull, Lizard, Python</div>
+            <div><strong style="color: #3498db;">• Rare (10%):</strong> Shark, Bear</div>
+            <div><strong style="color: #9b59b6;">• Epic (3.5%):</strong> Wisp Spirit</div>
+            <div><strong style="color: #f39c12;">• Legendary (0.5%):</strong> Fallen Warrior Spirit</div>
+          </div>
+
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+            *All evolution paths, Mythical & Transcendent variants, and species lore are cataloged in the <strong>Spirit Index</strong>.
           </div>
         </div>
       ` : `
         <!-- Soul Essence Sanctum Shop -->
         <div class="altar-card" style="border-color: #9b59b6; background: radial-gradient(circle at 50% 40%, #2c1638 0%, #0d0a14 100%);">
-          <div class="pixel-box altar-box-preview elem-DARK" style="border-color: #e056fd; box-shadow: 0 0 20px rgba(224, 86, 253, 0.4);">
+          <div class="pixel-box altar-box-preview rarity-mythical" style="border-color: #e056fd; box-shadow: 0 0 20px rgba(224, 86, 253, 0.4);">
             <div class="placeholder-creature-sprite">
               <span class="core-glyph" style="font-size: 42px;">🔮</span>
             </div>
@@ -103,32 +100,32 @@ export function renderContractView(container) {
           </div>
         </div>
 
-        <!-- Essence Shop Items List -->
+        <!-- Essence Shop Items List (Rebalanced) -->
         <div style="display: flex; flex-direction: column; gap: 10px;">
           
           <!-- 1. Astral Contract -->
           <div class="essence-item-card">
             <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">🌟 Astral Contract (No Commons)</span>
+              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">🌟 Astral Contract (Guaranteed Uncommon+)</span>
               <span style="font-size: 11px; color: var(--text-muted);">
-                Guarantees Uncommon (65%), Rare (25%), Epic (8%), or Legendary (2%) Spirit!
+                100% chance for Uncommon, Rare, Epic, or Legendary spirits! (0% Commons)
               </span>
             </div>
-            <button id="btn-buy-astral-summon" class="btn-essence-buy" ${essence < 5 ? 'disabled' : ''}>
-              Summon (5 🔮)
+            <button id="btn-buy-astral-summon" class="btn-essence-buy" ${essence < 8 ? 'disabled' : ''}>
+              Contract (8 🔮)
             </button>
           </div>
 
           <!-- 2. Party XP Elixir -->
           <div class="essence-item-card">
             <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">🧪 Transcendent Party Elixir</span>
+              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">🧪 Ancient Party EXP Elixir</span>
               <span style="font-size: 11px; color: var(--text-muted);">
-                Instantly bestows +2,500 AFK Training XP to all 5 equipped Spirits.
+                Grants +500 Training XP to all active party spirits.
               </span>
             </div>
-            <button id="btn-buy-xp-elixir" class="btn-essence-buy" ${essence < 3 ? 'disabled' : ''}>
-              Grant XP (3 🔮)
+            <button id="btn-buy-xp-elixir" class="btn-essence-buy" ${essence < 10 ? 'disabled' : ''}>
+              Grant XP (10 🔮)
             </button>
           </div>
 
@@ -137,37 +134,37 @@ export function renderContractView(container) {
             <div style="display: flex; flex-direction: column; gap: 2px;">
               <span style="font-size: 14px; font-weight: 800; color: #ffffff;">⚡ Expand Max Energy (+10)</span>
               <span style="font-size: 11px; color: var(--text-muted);">
-                Permanently raises your Energy ceiling (Current Max: ${state.resources.maxEnergy} ⚡).
+                Permanently raises your Energy ceiling (Current: ${state.resources.maxEnergy} ⚡).
               </span>
             </div>
-            <button id="btn-buy-max-energy" class="btn-essence-buy" ${essence < 5 ? 'disabled' : ''}>
-              Upgrade (5 🔮)
+            <button id="btn-buy-max-energy" class="btn-essence-buy" ${essence < energyExpansionCost ? 'disabled' : ''}>
+              Expand (${energyExpansionCost} 🔮)
             </button>
           </div>
 
-          <!-- 4. Energy Surge -->
+          <!-- 4. Instant Energy Surge -->
           <div class="essence-item-card">
             <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">⚡ Instant Energy Surge (+30)</span>
+              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">⚡ Instant Energy Surge (+30 ⚡)</span>
               <span style="font-size: 11px; color: var(--text-muted);">
-                Instantly replenishes +30 Energy to push locked floors right now.
+                Instantly replenishes 30 Energy for boss tackling.
               </span>
             </div>
-            <button id="btn-buy-energy-surge" class="btn-essence-buy" ${essence < 2 ? 'disabled' : ''}>
-              Recharge (2 🔮)
+            <button id="btn-buy-energy-surge" class="btn-essence-buy" ${essence < 3 || state.resources.energy >= state.resources.maxEnergy ? 'disabled' : ''}>
+              Replenish (3 🔮)
             </button>
           </div>
 
-          <!-- 5. Permanent Party Resonance -->
+          <!-- 5. Party Resonance Upgrade -->
           <div class="essence-item-card">
             <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">⚔️ Party Resonance (Tier ${resonanceTier})</span>
+              <span style="font-size: 14px; font-weight: 800; color: #ffffff;">✨ Party Resonance Blessing (Tier ${resonanceTier})</span>
               <span style="font-size: 11px; color: var(--text-muted);">
-                Permanently increases all Spirits' power by +5% (Current bonus: +${resonanceTier * 5}%).
+                Permanently grants +${(resonanceTier + 1) * 5}% Power to all equipped Spirits.
               </span>
             </div>
             <button id="btn-buy-resonance" class="btn-essence-buy" ${essence < resonanceCost ? 'disabled' : ''}>
-              Level Up (${resonanceCost} 🔮)
+              Upgrade (${resonanceCost} 🔮)
             </button>
           </div>
 
@@ -177,89 +174,125 @@ export function renderContractView(container) {
     </div>
   `;
 
-  // Attach Tab switcher listeners
-  document.getElementById('tab-btn-shards')?.addEventListener('click', () => {
-    activeSanctumTab = 'shards';
-    renderContractView(container);
-  });
+  // Attach Event Listeners
+  const btnShards = container.querySelector('#tab-btn-shards');
+  const btnEssence = container.querySelector('#tab-btn-essence');
 
-  document.getElementById('tab-btn-essence')?.addEventListener('click', () => {
-    activeSanctumTab = 'essence';
-    renderContractView(container);
-  });
+  if (btnShards && btnEssence) {
+    btnShards.addEventListener('click', () => {
+      activeSanctumTab = 'shards';
+      renderContractView(container, onNavigateToIndex);
+    });
 
-  // Attach Shards summon listeners
-  document.getElementById('btn-summon-1')?.addEventListener('click', () => {
-    try {
-      const summoned = gameState.contractSpirit(1);
-      showSummonRevealModal(summoned, () => {
-        renderContractView(container);
-      });
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+    btnEssence.addEventListener('click', () => {
+      activeSanctumTab = 'essence';
+      renderContractView(container, onNavigateToIndex);
+    });
+  }
 
-  document.getElementById('btn-summon-10')?.addEventListener('click', () => {
-    try {
-      const summoned = gameState.contractSpirit(10);
-      showSummonRevealModal(summoned, () => {
-        renderContractView(container);
-      });
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+  // Link to Spirit Index
+  const btnViewIndex = container.querySelector('#btn-view-index-link');
+  if (btnViewIndex && typeof onNavigateToIndex === 'function') {
+    btnViewIndex.addEventListener('click', () => {
+      onNavigateToIndex();
+    });
+  }
 
-  // Attach Essence Sanctum shop listeners
-  document.getElementById('btn-buy-astral-summon')?.addEventListener('click', () => {
-    try {
-      const summoned = gameState.contractAstralSpirit();
-      showSummonRevealModal(summoned, () => {
-        renderContractView(container);
-      });
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+  // Summon 1x
+  const btnSummon1 = container.querySelector('#btn-summon-1');
+  if (btnSummon1) {
+    btnSummon1.addEventListener('click', () => {
+      try {
+        const newSpirits = gameState.contractSpirit(1);
+        showSummonRevealModal(newSpirits);
+        renderContractView(container, onNavigateToIndex);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
 
-  document.getElementById('btn-buy-xp-elixir')?.addEventListener('click', () => {
-    try {
-      gameState.buyPartyXpElixir();
-      alert('✨ Transcendent Elixir consumed! +2,500 XP granted to all equipped Spirits!');
-      renderContractView(container);
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+  // Summon 10x
+  const btnSummon10 = container.querySelector('#btn-summon-10');
+  if (btnSummon10) {
+    btnSummon10.addEventListener('click', () => {
+      try {
+        const newSpirits = gameState.contractSpirit(10);
+        showSummonRevealModal(newSpirits);
+        renderContractView(container, onNavigateToIndex);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
 
-  document.getElementById('btn-buy-max-energy')?.addEventListener('click', () => {
-    try {
-      const res = gameState.buyMaxEnergyExpansion();
-      alert(`⚡ Max Energy capacity expanded to ${res.newMaxEnergy} ⚡!`);
-      renderContractView(container);
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+  // Astral Summon
+  const btnAstral = container.querySelector('#btn-buy-astral-summon');
+  if (btnAstral) {
+    btnAstral.addEventListener('click', () => {
+      try {
+        const newSpirits = gameState.contractAstralSpirit();
+        showSummonRevealModal(newSpirits);
+        renderContractView(container, onNavigateToIndex);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
 
-  document.getElementById('btn-buy-energy-surge')?.addEventListener('click', () => {
-    try {
-      const res = gameState.buyInstantEnergySurge();
-      alert(`⚡ Energy recharged! Current Energy: ${res.currentEnergy} ⚡.`);
-      renderContractView(container);
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+  // Buy XP Elixir
+  const btnXp = container.querySelector('#btn-buy-xp-elixir');
+  if (btnXp) {
+    btnXp.addEventListener('click', () => {
+      try {
+        const res = gameState.buyPartyXpElixir();
+        alert(`✨ Granted +${res.xpGranted} XP to all equipped Spirits!`);
+        renderContractView(container, onNavigateToIndex);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
 
-  document.getElementById('btn-buy-resonance')?.addEventListener('click', () => {
-    try {
-      const res = gameState.buyPartyResonanceUpgrade();
-      alert(`⚔️ Party Resonance upgraded to Tier ${res.newTier}! (+${res.bonusPercent}% Power Bonus)`);
-      renderContractView(container);
-    } catch (err) {
-      alert(err.message);
-    }
-  });
+  // Buy Max Energy
+  const btnMaxEnergy = container.querySelector('#btn-buy-max-energy');
+  if (btnMaxEnergy) {
+    btnMaxEnergy.addEventListener('click', () => {
+      try {
+        const res = gameState.buyMaxEnergyExpansion();
+        alert(`⚡ Max Energy increased to ${res.newMaxEnergy}!`);
+        renderContractView(container, onNavigateToIndex);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  // Buy Energy Surge
+  const btnEnergySurge = container.querySelector('#btn-buy-energy-surge');
+  if (btnEnergySurge) {
+    btnEnergySurge.addEventListener('click', () => {
+      try {
+        const res = gameState.buyInstantEnergySurge();
+        alert(`⚡ Energy restored to ${res.currentEnergy}!`);
+        renderContractView(container, onNavigateToIndex);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  // Buy Resonance
+  const btnResonance = container.querySelector('#btn-buy-resonance');
+  if (btnResonance) {
+    btnResonance.addEventListener('click', () => {
+      try {
+        const res = gameState.buyPartyResonanceUpgrade();
+        alert(`✨ Resonance upgraded to Tier ${res.newTier} (+${res.bonusPercent}% Party Power)!`);
+        renderContractView(container, onNavigateToIndex);
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
 }

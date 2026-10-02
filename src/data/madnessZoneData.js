@@ -17,11 +17,19 @@ export const CORRUPTED_TYPES = [
   { name: 'Overlord (BOSS)', baseMultiplier: 2.2, color: '#ff0055' }
 ];
 
+import { getBiomeForStage } from './biomesData.js';
+
 export function getEnemyForStage(stage, subStage) {
   const isBoss = subStage >= 5;
-  const prefix = CORRUPTED_PREFIXES[(stage * 3 + subStage) % CORRUPTED_PREFIXES.length];
+  const biome = getBiomeForStage(stage);
+  const prefixes = biome.enemyPrefixes && biome.enemyPrefixes.length > 0 
+    ? biome.enemyPrefixes 
+    : CORRUPTED_PREFIXES;
+  const prefix = prefixes[(stage * 3 + subStage) % prefixes.length];
   const typeObj = isBoss ? CORRUPTED_TYPES[5] : CORRUPTED_TYPES[(subStage - 1) % 5];
-  const name = `${prefix} ${typeObj.name}`;
+  const name = isBoss && biome.bossTitle 
+    ? `${prefix} ${biome.bossTitle} (BOSS)`
+    : `${prefix} ${typeObj.name}`;
 
   // Rebalanced Mathematical scaling:
   // Enemies now possess robust HP and damage scaling that requires party training & evolutions

@@ -13,14 +13,19 @@ export const ELEMENTS = {
 };
 
 export const RARITIES = {
-  COMMON: { name: 'Common', multiplier: 1.0, color: '#bdc3c7' },
-  UNCOMMON: { name: 'Uncommon', multiplier: 1.18, color: '#2ecc71' },
-  RARE: { name: 'Rare', multiplier: 1.35, color: '#3498db' },
-  EPIC: { name: 'Epic', multiplier: 1.6, color: '#9b59b6' },
-  LEGENDARY: { name: 'Legendary', multiplier: 2.1, color: '#f39c12' },
-  MYTHICAL: { name: 'Mythical', multiplier: 2.8, color: '#e74c3c' },
-  TRANSCENDENT: { name: 'Transcendent', multiplier: 4.0, color: '#00ffff' }
+  COMMON: { name: 'Common', order: 1, multiplier: 1.0, color: '#bdc3c7', bg: '#1c2226', border: '#5a6268', glow: 'rgba(189,195,199,0.3)' },
+  UNCOMMON: { name: 'Uncommon', order: 2, multiplier: 1.18, color: '#2ecc71', bg: '#0b2413', border: '#27ae60', glow: 'rgba(46,204,113,0.35)' },
+  RARE: { name: 'Rare', order: 3, multiplier: 1.35, color: '#3498db', bg: '#0a1d2e', border: '#2980b9', glow: 'rgba(52,152,219,0.4)' },
+  EPIC: { name: 'Epic', order: 4, multiplier: 1.6, color: '#9b59b6', bg: '#220d2e', border: '#8e44ad', glow: 'rgba(155,89,182,0.45)' },
+  LEGENDARY: { name: 'Legendary', order: 5, multiplier: 2.1, color: '#f39c12', bg: '#2b1b04', border: '#e67e22', glow: 'rgba(243,156,18,0.5)' },
+  MYTHICAL: { name: 'Mythical', order: 6, multiplier: 2.8, color: '#e74c3c', bg: '#2d0909', border: '#c0392b', glow: 'rgba(231,76,60,0.6)' },
+  TRANSCENDENT: { name: 'Transcendent', order: 7, multiplier: 4.0, color: '#00ffff', bg: '#04272b', border: '#00d2d3', glow: 'rgba(0,255,255,0.7)' }
 };
+
+export function getRarityInfo(rarity) {
+  const key = (rarity || 'COMMON').toUpperCase();
+  return RARITIES[key] || RARITIES.COMMON;
+}
 
 export const SPIRIT_SPECIES = {
   // ==========================================
