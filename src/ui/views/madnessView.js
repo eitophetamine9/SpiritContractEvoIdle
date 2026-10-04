@@ -79,6 +79,7 @@ export function renderMadnessView(container) {
         <div class="zone-nav-buttons">
           <button id="btn-prev-stage" class="zone-btn-sm" ${mz.stage <= 1 ? 'disabled' : ''}>◀ Prev</button>
           <button id="btn-next-stage" class="zone-btn-sm" ${mz.stage >= mz.highestStageUnlocked ? 'disabled' : ''}>Next ▶</button>
+          <button id="btn-trials-shortcut" class="zone-btn-sm" style="background: rgba(241, 196, 15, 0.18); border-color: #f1c40f; color: #ffd32a; font-weight: 800;" title="Challenge Pantheon Trials to farm Greek God Relics">🏛️ Trials</button>
         </div>
       </div>
 
@@ -275,6 +276,13 @@ export function renderMadnessView(container) {
       } catch (err) {
         alert(err.message);
       }
+    });
+  }
+
+  const btnTrials = container.querySelector('#btn-trials-shortcut');
+  if (btnTrials) {
+    btnTrials.addEventListener('click', () => {
+      document.querySelector('[data-tab="trials"]')?.click();
     });
   }
 

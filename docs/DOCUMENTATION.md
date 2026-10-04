@@ -167,3 +167,48 @@ At 100 MP, spirits unleash their species-specific Ultimate skill:
   - **Floor Victory**: Defeating the wave 5 boss revives all fallen and damaged spirits to 100% Max HP.
   - **Party Wipeout**: If all active party members fall in combat, the party safely resets to Wave 1 of the current floor with 100% Max HP restored and zero loss of progression, items, or currency.
 
+---
+
+## 8. Equipment, Greek God Relics & The Pantheon Trials
+
+### 8.1 Equipment Sockets
+Each contracted spirit possesses seven dedicated equipment slots:
+- **1 Weapon Slot**: Main offensive armament providing raw ATK Power, Critical Rate, and Ultimate Amplification. Weapon archetypes include Spectral Blade, Celestial Bow, Astral Scepter, Primordial Claws, Shadow Dagger, and Titan Mallet.
+- **6 Relic Slots**:
+  1. **Crown**: Grants Bonus Max HP and Mana capacity.
+  2. **Goblet**: Grants Shield Strength and incoming healing amplification.
+  3. **Feather**: Grants Evasion Rating and attack cadence.
+  4. **Ring**: Grants Bonus ATK Power and Critical Strike damage.
+  5. **Pendant**: Grants Mana Replenishment and energy recovery rate.
+  6. **Aegis**: Grants Ultimate Amplification and physical mitigation.
+
+### 8.2 Greek God Relic Sets & Set Bonuses
+Relics belong to one of eight Olympian God sets. Equipping matching set pieces activates two-piece (2pc) and four-piece (4pc) passive blessings:
+
+| God Set | 2-Piece Set Bonus | 4-Piece Set Bonus |
+| :--- | :--- | :--- |
+| **Hades** | +10% Damage, +5% Mana Replenish | **Underworld Flames**: Unleashes dark flames dealing 5% enemy Max HP as damage-over-time for 7 seconds (15s cooldown). |
+| **Zeus** | +20% Mana Replenish Rate | **Divine Retribution**: Strikes all enemies with instant lightning dealing 15% enemy Max HP (45s cooldown). |
+| **Poseidon** | +10% Damage, +5% Ultimate Amplification | **Oceanic Surge**: Grants +15% team damage buff and 15% Max HP water shield to all spirits (45s cooldown). |
+| **Hermes** | +15% Evasion, +5% Mana Replenish | **Swift Support**: Every 30 seconds, automatically cleanses debuffs and charges the Ultimate gauges of living spirits by +25 MP. |
+| **Ares** | +15% Damage Bonus | **War of Olympus**: Enters a berserk battle trance granting +35% Attack Power for 10 seconds (25s cooldown). |
+| **Apollo** | +10% Damage, +10% Mana Replenish | **Sun Radiance**: Emits solar light that heals all allies for 20% Max HP and burns enemies for 10% current HP (35s cooldown). |
+| **Athena** | +15% Shield Strength, +5% Damage | **Aegis Bulwark**: Grants an impenetrable defensive barrier absorbing up to 25% team Max HP (40s cooldown). |
+| **Artemis** | +10% Critical Strike Chance, +10% Damage | **Hunters True Strike**: Fires focused arrows targeting the highest-health enemy dealing 25% single-target burst damage (20s cooldown). |
+
+### 8.3 The Pantheon Trials (Artifact Dungeon)
+The Pantheon Trials provide a dedicated dungeon instance for targeted relic farming:
+- **Chambers**: 8 dedicated god chambers corresponding to each Olympian deity (Crypt of the Underworld, Sky Sanctum of Olympus, Abyssal Trench, Crossroads of the Wind, Colosseum of War, Temple of the Sun, Citadel of Wisdom, Silver Woods).
+- **Difficulty Tiers & Energy Costs**:
+  - **Disciple Trial (Tier 1)**: Costs 10 Energy. Recommended Power: 150 PWR. Drops 2 targeted Uncommon/Rare relics + 25 Madness Shards + 1 Soul Essence.
+  - **Champion Trial (Tier 2)**: Costs 12 Energy. Recommended Power: 800 PWR. Drops 3 targeted Rare/Epic relics + 50 Madness Shards + 2 Soul Essence.
+  - **Sovereign Trial (Tier 3)**: Costs 15 Energy. Recommended Power: 3,500 PWR. Drops 3 targeted Epic/Legendary relics + 100 Madness Shards + 4 Soul Essence.
+  - **Divine Trial (Tier 4)**: Costs 18 Energy. Recommended Power: 12,000 PWR. Drops 4 targeted Legendary/Mythical relics + 250 Madness Shards + 8 Soul Essence.
+- **Madness Tower Overlord Boss Caches**:
+  - Overlord Bosses (Wave 5 of every floor) have a 35% chance to drop a random Relic Cache upon defeat, providing supplemental relic drops during idle tower progression.
+
+### 8.4 Equipment Management & Dismantling
+- **Equipping**: Players can tap any weapon or relic socket in the Party View to inspect the equipped item, unequip it, or swap with any compatible equipment item from inventory.
+- **Dismantling**: Unequipped weapons and relics can be dismantled in the equipment modal to yield bonus Spirit Shards ($20 \times \text{Item Level}$), providing recycling utility for surplus gear.
+
+
