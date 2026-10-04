@@ -107,9 +107,26 @@ npm run test:prob
 
 ### 6. Contractor Profile & Hall of Fame
 - **Top-Right Header Access**: One-tap contractor profile button from any screen.
-- **5-Slot Showcase**: Interactive visual spirit picker modal with tabs for Highest Power, Favorites, and All Vault.
-- **Lifetime Statistics**: Detailed tracking of total contracts, evolutions, enemies slain, shards harvested, and offline time.
-- **Save Management**: Manual save triggers, JSON backup clipboard export, and file import.
+### 7. Two-Way Combat & Spirit Ultimates
+- **Allied Health & Mana**: Spirits possess dedicated HP and MP pools. Basic attacks accumulate Mana; reaching 100 MP triggers species-specific Ultimate abilities (damage bursts, AoE sweeps, team heals, shields, and executes).
+- **Corrupted Enemy Swarms**: Battles feature multi-unit swarms with staggered counter-attack timers, culminating in Overlord Bosses accompanied by Royal Guards.
+- **Floor Recovery & Wipeout Safety**: Boss clearance instantly revives all party members to 100% HP; full wipeouts reset cleanly to Wave 1 with zero progression or item loss.
+
+### 8. Weapons, Greek God Relics & The Pantheon Trials
+- **Seven Equipment Sockets**: Each spirit equips 1 Weapon and 6 Relics (Crown, Goblet, Feather, Ring, Pendant, Aegis).
+- **Eight Olympian God Sets**: Complete 2-piece and 4-piece set bonuses for Hades, Zeus, Poseidon, Hermes, Ares, Apollo, Athena, and Artemis.
+- **Artifact Dungeon**: The Pantheon Trials offer 8 dedicated deity chambers across 4 difficulty tiers for targeted relic farming.
+- **Equipment Management**: Rapid inspection, 1-tap equipping, and dismantling of surplus gear into Spirit Shards.
+
+### 9. High-Fantasy UI & Hero Pedestal Showcase
+- **Hero Pedestal View**: An illuminated 3D isometric stage with rotating runic rings, light rays, and floating spirit sprites.
+- **Segmented Stat Meters**: Classical RPG micro-segmented gauges for Attack, Health, and Mana.
+- **Diamond Fast-Travel Hub**: Central quad-directional cluster for immediate navigation between battle, pedestal, altar, and vault.
+
+### 10. Integrated Audio Engine
+- **Background Music**: Dynamic looping atmospheric themes for the Astral Sanctum, Madness Tower combat, and Pantheon Trials.
+- **Tactile Sound Effects**: Impact transients, critical blow booms, ultimate release bursts, level-up chimes, and victory fanfares.
+- **Autoplay Compliance**: Seamless one-tap audio initialization with persistent mute and volume preferences.
 
 ---
 
@@ -117,12 +134,10 @@ npm run test:prob
 
 The following features and enhancements are planned for upcoming releases:
 
-- **Spirit Equipment & Relics**: Collect ancient artifacts and accessories to equip on individual spirits for stat bonuses and elemental effects.
-- **Synergy Combos & Party Perks**: Specialized bonuses for fielding specific species combinations or rarity lineups.
 - **Guild Raids & World Bosses**: Cooperative community milestones facing off against colossal primordial beasts.
 - **Custom Pixel Art Asset Packs**: Upgrading CSS placeholder frames to full animated pixel sprites for all 37 spirit species and enemies.
-- **Audio & Sound Design**: Dark fantasy ambient background tracks and tactile sound effects for combat hits, summons, and evolution ascensions.
 - **Cloud Account Synchronization**: Optional cloud save synchronization across multiple mobile and desktop devices.
+
 
 ---
 

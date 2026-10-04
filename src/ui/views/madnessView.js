@@ -215,6 +215,39 @@ export function renderMadnessView(container) {
           </div>
         </div>
 
+      <!-- Diamond Fast-Travel Hub (Reference 2 & 3 Aesthetic) -->
+      <div class="diamond-hub-wrapper">
+        <div class="diamond-hub-cluster">
+          <button class="diamond-node-btn top-node" data-nav-target="trials" title="Pantheon Trials">
+            <div class="diamond-content">
+              <span class="diamond-icon">🏛️</span>
+              <span class="diamond-label">TRIALS</span>
+            </div>
+          </button>
+          <div class="diamond-mid-row">
+            <button class="diamond-node-btn left-node" data-nav-target="party" title="Hero Pedestal & Party">
+              <div class="diamond-content">
+                <span class="diamond-icon">👑</span>
+                <span class="diamond-label">HERO</span>
+              </div>
+            </button>
+            <div class="diamond-center-core">
+              <span class="core-crest">⛩️</span>
+            </div>
+            <button class="diamond-node-btn right-node" data-nav-target="contract" title="Astral Contract Summons">
+              <div class="diamond-content">
+                <span class="diamond-icon">🔮</span>
+                <span class="diamond-label">SUMMON</span>
+              </div>
+            </button>
+          </div>
+          <button class="diamond-node-btn bottom-node" data-nav-target="vault" title="Spirit Vault & Bestiary">
+            <div class="diamond-content">
+              <span class="diamond-icon">📜</span>
+              <span class="diamond-label">VAULT</span>
+            </div>
+          </button>
+        </div>
       </div>
 
       <!-- Action Attack Command & DPS Strip -->
@@ -285,6 +318,16 @@ export function renderMadnessView(container) {
       document.querySelector('[data-tab="trials"]')?.click();
     });
   }
+
+  // Diamond Fast-Travel Hub Listeners
+  container.querySelectorAll('[data-nav-target]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetTab = e.currentTarget.getAttribute('data-nav-target');
+      if (targetTab) {
+        document.querySelector(`[data-tab="${targetTab}"]`)?.click();
+      }
+    });
+  });
 
   const btnUnlockNext = container.querySelector('#btn-unlock-next-floor');
   if (btnUnlockNext) {
