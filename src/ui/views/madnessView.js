@@ -5,12 +5,14 @@ import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../compon
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
+let isEventsBound = false;
 
 export function renderMadnessView(container) {
   const state = gameState.state;
   const mz = state.madnessZone;
   const res = state.resources;
-  const enemy = mz.currentEnemy;
+  const swarm = (mz.currentSwarm && mz.currentSwarm.length > 0) ? mz.currentSwarm : (mz.currentEnemy ? [mz.currentEnemy] : []);
+  const enemy = swarm.find(e => !e.isDefeated && e.hp > 0) || swarm[0] || null;
   const partySpirits = gameState.getPartySpirits();
   const partyPower = gameState.getTotalPartyPower();
   const enemyPower = enemy ? enemy.power : 1;
@@ -30,15 +32,15 @@ export function renderMadnessView(container) {
     powerStatusText = `⚠️ UNDERPOWERED (-${Math.round((1 - powerRatio) * 100)}% Deficit)`;
   }
 
-  const hpPercent = enemy ? Math.max(0, Math.min(100, Math.round((enemy.hp / enemy.maxHp) * 100))) : 0;
   const nextStageNum = mz.highestStageUnlocked + 1;
   const canAffordNext = res.energy >= ENERGY_ENTRY_COST;
   const isCurrentStageBossCleared = mz.highestStageCleared >= mz.stage;
+  const livingEnemiesCount = swarm.filter(e => !e.isDefeated && e.hp > 0).length;
 
   container.innerHTML = `
     <div class="madness-container ${biome.themeClass}">
       
-      <!-- Top Tactical Combat HUD (Inspired by Reference Battle Sequence) -->
+      <!-- Top Tactical Combat HUD -->
       <div class="combat-top-hud">
         <div class="combat-hud-left">
           <button id="btn-combat-pause" class="hud-icon-btn" title="Pause Combat">
@@ -52,7 +54,7 @@ export function renderMadnessView(container) {
         <div class="combat-vs-banner">
           <span class="vs-ally-tag">Contractor</span>
           <span class="vs-center-tag">VS</span>
-          <span class="vs-enemy-tag">${enemy && enemy.isBoss ? 'OVERLORD' : 'CORRUPTED'}</span>
+          <span class="vs-enemy-tag">${swarm.some(e => e.isBoss) ? 'OVERLORD SWARM' : 'CORRUPTED SWARM'}</span>
         </div>
 
         <div class="combat-hud-right">
@@ -95,12 +97,15 @@ export function renderMadnessView(container) {
       ` : ''}
 
       <!-- Dynamic Isometric Battlefield Area -->
-      <div class="isometric-battlefield ${biome.themeClass} ${enemy && enemy.isBoss ? 'boss-battlefield' : ''}">
+      <div class="isometric-battlefield ${biome.themeClass} ${swarm.some(e => e.isBoss) ? 'boss-battlefield' : ''}">
         
+        <!-- Top Battlefield Announcement Banner Layer -->
+        <div id="combat-banner-layer" class="combat-banner-layer"></div>
+
         <!-- Floating Bouncing Damage Overlay Layer -->
         <div id="damage-popup-layer" class="damage-popup-layer"></div>
 
-        <!-- Left Side: Staggered Allied Spirit Formation -->
+        <!-- Left Side: Staggered Allied Spirit Formation with HP/MP Bars -->
         <div class="allied-formation-column">
           <div class="formation-header-label">ALLIED SPIRIT LINEUP</div>
           
@@ -117,9 +122,16 @@ export function renderMadnessView(container) {
 
               const species = SPIRIT_SPECIES[spirit.speciesId];
               const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
+              const maxHp = spirit.maxHp || 100;
+              const curHp = typeof spirit.currentHp === 'number' ? spirit.currentHp : maxHp;
+              const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+              const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
+              const isUltReady = mpPct >= 100;
+              const isFallen = spirit.isFallen || curHp <= 0;
+              const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
 
               return `
-                <div class="spirit-formation-slot slot-active" id="allied-slot-${idx}" style="--stagger-offset: ${(idx % 2) * 12}px;">
+                <div class="spirit-formation-slot slot-active ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="allied-slot-${idx}" style="--stagger-offset: ${(idx % 2) * 12}px;">
                   
                   <!-- Overhead Rarity & Level Floating Badge -->
                   <div class="overhead-status-bar">
@@ -132,7 +144,20 @@ export function renderMadnessView(container) {
                   <!-- Spirit Sprite Box with Ground Shadow -->
                   <div class="spirit-sprite-container">
                     ${createSpiritPlaceholderBox(spirit, { boxClass: 'formation-spirit-box' })}
+                    ${isUltReady ? '<div class="ult-ready-tag" id="ult-ready-tag-' + idx + '">✨ ULT READY</div>' : ''}
+                    ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
                     <div class="combat-ground-shadow"></div>
+                  </div>
+
+                  <!-- Dual HP / MP Bars -->
+                  <div class="spirit-hud-bars">
+                    <div class="hud-bar-hp" title="${curHp}/${maxHp} HP ${spirit.shieldHp > 0 ? `(+${spirit.shieldHp} Shield)` : ''}">
+                      <div class="hud-hp-fill" id="spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
+                      ${shieldPct > 0 ? `<div class="hud-shield-fill" id="spirit-shield-fill-${idx}" style="width: ${shieldPct}%;"></div>` : ''}
+                    </div>
+                    <div class="hud-bar-mp" title="${mpPct}/100 MP">
+                      <div class="hud-mp-fill" id="spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
+                    </div>
                   </div>
 
                 </div>
@@ -146,35 +171,46 @@ export function renderMadnessView(container) {
           <div class="clash-sparks-icon">⚔️</div>
         </div>
 
-        <!-- Right Side: Corrupted Enemy / Boss Vanguard -->
+        <!-- Right Side: Corrupted Swarm Formation -->
         <div class="enemy-formation-column">
           <div class="formation-header-label" style="color: #ff6b81;">
-            ${enemy && enemy.isBoss ? '⚠️ OVERLORD BOSS' : 'CORRUPTED FOE'}
+            ${swarm.some(e => e.isBoss) ? '⚠️ OVERLORD SWARM' : `CORRUPTED SWARM (${livingEnemiesCount}/${swarm.length})`}
           </div>
 
-          <div class="enemy-combatant-wrapper" id="enemy-combatant">
-            
-            <!-- Enemy Overhead Details & Health Bar -->
-            <div class="enemy-overhead-card">
-              <div class="enemy-name-label">${enemy ? enemy.name : 'Unknown Corrupted'}</div>
-              <div class="enemy-pwr-label">⚡ ${enemyPower.toLocaleString()} PWR</div>
+          <div class="enemy-swarm-wrapper" id="enemy-swarm-wrapper">
+            ${swarm.map((em, sIdx) => {
+              const isDead = em.isDefeated || em.hp <= 0;
+              const emHpPct = Math.max(0, Math.min(100, Math.round((em.hp / em.maxHp) * 100)));
+              return `
+                <div class="enemy-swarm-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="enemy-slot-${sIdx}" style="--swarm-stagger: ${(sIdx % 2) * 8}px;">
+                  
+                  <!-- Enemy Details & Health Bar -->
+                  <div class="enemy-overhead-card">
+                    <div class="enemy-name-row">
+                      <span class="enemy-name-label">${em.name}</span>
+                      ${em.isBoss ? '<span class="boss-crown-badge">👑 BOSS</span>' : ''}
+                    </div>
+                    <div class="enemy-pwr-label">⚡ ${em.power.toLocaleString()} PWR</div>
 
-              <div class="enemy-hp-track">
-                <div id="enemy-hp-fill" class="enemy-hp-fill" style="width: ${hpPercent}%;"></div>
-                <div id="enemy-hp-text" class="enemy-hp-text">
-                  ${enemy ? `${Math.ceil(enemy.hp).toLocaleString()} / ${enemy.maxHp.toLocaleString()} HP` : '0/0'}
+                    <div class="enemy-hp-track">
+                      <div id="enemy-hp-fill-${sIdx}" class="enemy-hp-fill" style="width: ${emHpPct}%;"></div>
+                      <div id="enemy-hp-text-${sIdx}" class="enemy-hp-text">
+                        ${Math.ceil(em.hp).toLocaleString()} / ${em.maxHp.toLocaleString()} HP
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Enemy Sprite Frame with Ground Shadow -->
+                  <div class="enemy-sprite-container">
+                    <div class="enemy-placeholder-frame">
+                      ${createEnemyPlaceholderBox(em)}
+                    </div>
+                    <div class="combat-ground-shadow enemy-shadow"></div>
+                  </div>
+
                 </div>
-              </div>
-            </div>
-
-            <!-- Enemy Sprite Frame with Ground Shadow -->
-            <div class="enemy-sprite-container">
-              <div class="enemy-placeholder-frame">
-                ${enemy ? createEnemyPlaceholderBox(enemy) : '<div class="pixel-box">Searching...</div>'}
-              </div>
-              <div class="combat-ground-shadow enemy-shadow"></div>
-            </div>
-
+              `;
+            }).join('')}
           </div>
         </div>
 
@@ -185,7 +221,7 @@ export function renderMadnessView(container) {
         
         <!-- Active Attack Button -->
         <button id="btn-fight-enemy" class="btn-main-attack">
-          <span>⚔️ Attack Foe (Party Strike)</span>
+          <span>⚔️ Attack Foe (Party Strike • Charges +10 MP)</span>
           <span class="btn-subtext">Party Power: ⚡ ${partyPower.toLocaleString()} PWR • DPS: ${Math.round(partyPower * 0.45 * battleSpeed)}/s</span>
         </button>
 
@@ -208,7 +244,7 @@ export function renderMadnessView(container) {
         <div class="combat-yield-summary">
           <span style="color: var(--text-muted);">Victory Spoils:</span>
           <span style="color: #ffd152; font-weight: 800;">
-            +${enemy ? enemy.shardReward : 0} 💎 Shards ${enemy && enemy.essenceReward > 0 ? `• +${enemy.essenceReward} 🔮 Essence` : ''}
+            +${swarm.reduce((sum, e) => sum + (e.shardReward || 0), 0)} 💎 Shards ${swarm.some(e => e.essenceReward > 0) ? `• +${swarm.reduce((sum, e) => sum + (e.essenceReward || 0), 0)} 🔮 Essence` : ''}
           </span>
         </div>
 
@@ -293,14 +329,14 @@ export function renderMadnessView(container) {
   if (btnFight) {
     btnFight.addEventListener('click', () => {
       const res = gameState.attackEnemyWithPartyPower();
-      spawnDamageNumber(container, res.damage);
+      spawnCombatNumber(container, res.damage, 'crit');
 
       // Visual attack animation for party members and enemy hit flash
-      const enemyEl = container.querySelector('#enemy-combatant');
-      if (enemyEl) {
-        enemyEl.classList.remove('enemy-hit-flash');
-        void enemyEl.offsetWidth;
-        enemyEl.classList.add('enemy-hit-flash');
+      const leadEnemySlot = container.querySelector('.enemy-swarm-slot:not(.enemy-defeated)');
+      if (leadEnemySlot) {
+        leadEnemySlot.classList.remove('enemy-hit-flash');
+        void leadEnemySlot.offsetWidth;
+        leadEnemySlot.classList.add('enemy-hit-flash');
       }
 
       container.querySelectorAll('.spirit-formation-slot.slot-active').forEach(slot => {
@@ -316,23 +352,49 @@ export function renderMadnessView(container) {
       }
     });
   }
+
+  // Hook global combat listeners once
+  if (!isEventsBound) {
+    isEventsBound = true;
+    gameState.subscribe((eventType, payload) => {
+      const currentContainer = document.querySelector('#view-container');
+      if (!currentContainer) return;
+
+      if (eventType === 'ultimateCast') {
+        showCombatBanner(currentContainer, `✨ ${payload.spirit.customName} casts ${payload.ult.name}!`, 'ult');
+        if (payload.totalDamageDealt > 0) {
+          spawnCombatNumber(currentContainer, `${payload.totalDamageDealt} ULT!`, 'ult');
+        }
+        if (payload.totalHealingDone > 0) {
+          spawnCombatNumber(currentContainer, `+${payload.totalHealingDone} HP`, 'heal');
+        }
+      } else if (eventType === 'enemyCounterAttack') {
+        spawnCombatNumber(currentContainer, `-${payload.damage}`, 'enemy-hit');
+      } else if (eventType === 'partyWiped') {
+        showCombatBanner(currentContainer, '💀 PARTY WIPED! Regrouping at Wave 1 with 100% HP restored...', 'wipe');
+        setTimeout(() => renderMadnessView(currentContainer), 800);
+      } else if (eventType === 'floorCleared') {
+        showCombatBanner(currentContainer, `🏆 FLOOR ${payload.stage} CLEARED! Party fully restored!`, 'victory');
+        setTimeout(() => renderMadnessView(currentContainer), 800);
+      }
+    });
+  }
 }
 
 /**
- * Creates floating bouncing damage text directly on the battlefield (e.g. "217")
+ * Creates floating bouncing combat text (damage, crit, heal, ult, enemy damage)
  */
-function spawnDamageNumber(container, dmgAmount) {
+function spawnCombatNumber(container, text, type = 'dmg') {
   const layer = container.querySelector('#damage-popup-layer');
   if (!layer) return;
 
   const dmgEl = document.createElement('div');
-  const isCrit = Math.random() < 0.25;
-  dmgEl.className = `floating-dmg-popup ${isCrit ? 'crit' : ''}`;
-  dmgEl.textContent = isCrit ? `CRIT ${Math.round(dmgAmount * 1.5)}!` : `${dmgAmount}`;
+  dmgEl.className = `floating-dmg-popup ${type}`;
+  dmgEl.textContent = text;
 
-  // Random offset for organic scattering
-  const offsetX = (Math.random() - 0.5) * 60;
-  dmgEl.style.transform = `translate(${offsetX}px, 0)`;
+  const offsetX = (Math.random() - 0.5) * 80;
+  const offsetY = (Math.random() - 0.5) * 30;
+  dmgEl.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
 
   layer.appendChild(dmgEl);
 
@@ -342,18 +404,83 @@ function spawnDamageNumber(container, dmgAmount) {
 }
 
 /**
- * Fast-update helper to update health bar and power comparison without full re-render
+ * Shows temporary glowing alert banner at top of battlefield
+ */
+function showCombatBanner(container, text, type = 'ult') {
+  const layer = container.querySelector('#combat-banner-layer');
+  if (!layer) return;
+
+  const banner = document.createElement('div');
+  banner.className = `combat-alert-banner ${type}-banner`;
+  banner.textContent = text;
+
+  layer.appendChild(banner);
+
+  setTimeout(() => {
+    if (banner.parentNode) banner.parentNode.removeChild(banner);
+  }, 2200);
+}
+
+/**
+ * Fast-update helper to update health/mana bars and swarm without tearing down DOM elements
  */
 export function updateMadnessCombatTick(container) {
   const mz = gameState.state.madnessZone;
-  const enemy = mz.currentEnemy;
-  if (!enemy) return;
+  const swarm = mz.currentSwarm || [];
+  const partySpirits = gameState.getPartySpirits();
 
-  const hpFill = document.getElementById('enemy-hp-fill');
-  const hpText = document.getElementById('enemy-hp-text');
-  if (hpFill && hpText) {
-    const hpPercent = Math.max(0, Math.min(100, Math.round((enemy.hp / enemy.maxHp) * 100)));
-    hpFill.style.width = `${hpPercent}%`;
-    hpText.textContent = `${Math.ceil(enemy.hp).toLocaleString()} / ${enemy.maxHp.toLocaleString()} HP`;
-  }
+  // 1. Update Allied Spirits HP/MP/Shields
+  partySpirits.forEach((spirit, idx) => {
+    const hpFill = container.querySelector(`#spirit-hp-fill-${idx}`);
+    const shieldFill = container.querySelector(`#spirit-shield-fill-${idx}`);
+    const mpFill = container.querySelector(`#spirit-mp-fill-${idx}`);
+    const slot = container.querySelector(`#allied-slot-${idx}`);
+
+    if (slot && spirit) {
+      const maxHp = spirit.maxHp || 100;
+      const curHp = typeof spirit.currentHp === 'number' ? spirit.currentHp : maxHp;
+      const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+      const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
+      const isUltReady = mpPct >= 100;
+      const isFallen = spirit.isFallen || curHp <= 0;
+
+      if (hpFill) hpFill.style.width = `${hpPct}%`;
+      if (mpFill) mpFill.style.width = `${mpPct}%`;
+      if (shieldFill) {
+        const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
+        shieldFill.style.width = `${shieldPct}%`;
+      }
+
+      if (isUltReady) {
+        slot.classList.add('ult-ready');
+      } else {
+        slot.classList.remove('ult-ready');
+      }
+
+      if (isFallen) {
+        slot.classList.add('spirit-fallen');
+      } else {
+        slot.classList.remove('spirit-fallen');
+      }
+    }
+  });
+
+  // 2. Update Swarm Enemies HP
+  swarm.forEach((em, sIdx) => {
+    const hpFill = container.querySelector(`#enemy-hp-fill-${sIdx}`);
+    const hpText = container.querySelector(`#enemy-hp-text-${sIdx}`);
+    const slot = container.querySelector(`#enemy-slot-${sIdx}`);
+
+    if (slot && em) {
+      const isDead = em.isDefeated || em.hp <= 0;
+      const emHpPct = Math.max(0, Math.min(100, Math.round((em.hp / em.maxHp) * 100)));
+
+      if (hpFill) hpFill.style.width = `${emHpPct}%`;
+      if (hpText) hpText.textContent = `${Math.ceil(em.hp).toLocaleString()} / ${em.maxHp.toLocaleString()} HP`;
+
+      if (isDead) {
+        slot.classList.add('enemy-defeated');
+      }
+    }
+  });
 }

@@ -1987,6 +1987,208 @@ button:disabled {
   height: 96px;
 }
 
+/* Allied Spirit HUD Bars (HP, Shield, MP) */
+.spirit-hud-bars {
+  width: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.hud-bar-hp {
+  width: 100%;
+  height: 6px;
+  background: rgba(30, 10, 15, 0.85);
+  border: 1px solid #2ed573;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2ed573, #7bed9f);
+  transition: width 0.12s ease-out;
+}
+
+.hud-shield-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(70, 190, 255, 0.7);
+  box-shadow: 0 0 6px #00d2d3;
+  transition: width 0.12s ease-out;
+}
+
+.hud-bar-mp {
+  width: 100%;
+  height: 4px;
+  background: rgba(10, 20, 35, 0.85);
+  border: 1px solid #1e90ff;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-mp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d2d3, #54a0ff);
+  transition: width 0.12s ease-out;
+}
+
+/* Ult Ready Glow & Flash */
+.spirit-formation-slot.ult-ready .formation-spirit-box {
+  box-shadow: 0 0 16px #ffd32a, inset 0 0 10px #fffa65 !important;
+  animation: ultPulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes ultPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.08); filter: brightness(1.3); box-shadow: 0 0 22px #ffd32a; }
+}
+
+.ult-ready-tag {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 7px;
+  font-weight: 900;
+  background: #ffd32a;
+  color: #000;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 8px rgba(255, 211, 42, 0.9);
+  white-space: nowrap;
+  animation: ultTagFlash 0.7s infinite alternate ease-in-out;
+  z-index: 5;
+}
+
+@keyframes ultTagFlash {
+  0% { opacity: 0.85; transform: translateX(-50%) scale(0.95); }
+  100% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+}
+
+/* Fallen Spirit State */
+.spirit-formation-slot.spirit-fallen {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.fallen-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(235, 47, 6, 0.92);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 8px rgba(235, 47, 6, 0.8);
+  z-index: 5;
+  white-space: nowrap;
+}
+
+/* Enemy Swarm Layout */
+.enemy-swarm-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.enemy-swarm-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  margin-right: var(--swarm-stagger, 0px);
+  transition: transform 0.15s ease, opacity 0.25s ease;
+}
+
+.enemy-swarm-slot.boss-slot {
+  transform: scale(1.06);
+}
+
+.enemy-swarm-slot.enemy-defeated {
+  opacity: 0.22;
+  filter: grayscale(1);
+  transform: scale(0.92);
+  pointer-events: none;
+}
+
+.boss-crown-badge {
+  font-size: 8px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffd32a, #ff9f1a);
+  color: #000;
+  padding: 1px 4px;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(255, 211, 42, 0.7);
+}
+
+.enemy-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+/* Top Battlefield Announcement Banner Layer */
+.combat-banner-layer {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.combat-alert-banner {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  animation: bannerSlideIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8);
+}
+
+.combat-alert-banner.ult-banner {
+  background: linear-gradient(135deg, rgba(255, 211, 42, 0.95), rgba(255, 159, 26, 0.95));
+  color: #000;
+  border: 1px solid #ffffff;
+}
+
+.combat-alert-banner.wipe-banner {
+  background: linear-gradient(135deg, rgba(235, 47, 6, 0.95), rgba(194, 54, 22, 0.95));
+  color: #fff;
+  border: 1px solid #ff7979;
+}
+
+.combat-alert-banner.victory-banner {
+  background: linear-gradient(135deg, rgba(46, 213, 115, 0.95), rgba(10, 189, 227, 0.95));
+  color: #000;
+  border: 1px solid #ffffff;
+}
+
+@keyframes bannerSlideIn {
+  0% { transform: translateY(-12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
 /* Floating Bouncing Damage Popups */
 .damage-popup-layer {
   position: absolute;
@@ -2002,16 +2204,34 @@ button:disabled {
   position: absolute;
   font-family: var(--font-mono);
   font-weight: 900;
-  font-size: 20px;
+  font-size: 18px;
   color: #ffffff;
   text-shadow: 0 2px 4px #000, 0 0 10px rgba(255, 71, 87, 0.8);
-  animation: floatDmgBounce 0.8s ease-out forwards;
+  animation: floatDmgBounce 0.85s ease-out forwards;
 }
 
 .floating-dmg-popup.crit {
-  font-size: 26px;
+  font-size: 24px;
   color: #ffd152;
   text-shadow: 0 2px 6px #000, 0 0 14px rgba(255, 209, 82, 0.9);
+}
+
+.floating-dmg-popup.ult {
+  font-size: 24px;
+  color: #ffd32a;
+  text-shadow: 0 2px 6px #000, 0 0 16px rgba(255, 211, 42, 0.95);
+}
+
+.floating-dmg-popup.heal {
+  font-size: 18px;
+  color: #2ed573;
+  text-shadow: 0 2px 4px #000, 0 0 12px rgba(46, 213, 115, 0.9);
+}
+
+.floating-dmg-popup.enemy-hit {
+  font-size: 18px;
+  color: #ff4757;
+  text-shadow: 0 2px 4px #000, 0 0 10px rgba(255, 71, 87, 0.9);
 }
 
 @keyframes floatDmgBounce {

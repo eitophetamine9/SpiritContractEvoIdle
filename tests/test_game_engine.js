@@ -73,7 +73,7 @@ if (energy !== 60) throw new Error('Energy calculation incorrect');
 
 // 5. Test Biomes Progression (1-100+ and Enchanted repeating cycles)
 console.log('\n[TEST 5] Testing Tower Biome Progression Engine:');
-import('../src/data/biomesData.js').then(({ getBiomeForStage }) => {
+import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   const b1 = getBiomeForStage(1);
   const b15 = getBiomeForStage(15);
   const b30 = getBiomeForStage(30);
@@ -98,5 +98,104 @@ import('../src/data/biomesData.js').then(({ getBiomeForStage }) => {
   if (b90.id !== 'primordial_sanctum') throw new Error('Floor 90 should be primordial_sanctum');
   if (!b105.name.startsWith('Enchanted Mystical Swamp')) throw new Error('Floor 105 should be Enchanted Mystical Swamp');
 
+  // 6. Test Spirit HP, Ultimates, and Enemy Swarms
+  console.log('\n[TEST 6] Testing Spirit HP, Ultimates Catalog, and Swarm Formations:');
+  const { calculateSpiritMaxHp, getSpiritUltimate, getSwarmForStage } = await import('../src/data/index.js');
+  const catSpecies = SPIRIT_SPECIES['cat_spirit'];
+  const catHp = calculateSpiritMaxHp(catSpecies, 1, 'COMMON');
+  console.log(`  Cat Spirit Lv 1 COMMON Max HP: ${catHp} (Expected >= 80)`);
+  if (catHp < 80) throw new Error(`Cat Spirit HP ${catHp} too low`);
+
+  const catUlt = getSpiritUltimate('cat_spirit');
+  console.log(`  Cat Spirit Ult: "${catUlt.name}" (${catUlt.type}, ${catUlt.multiplier}x)`);
+  if (catUlt.type !== 'AOE_DAMAGE') throw new Error('Cat Spirit Ult should be AOE_DAMAGE');
+
+  const dogUlt = getSpiritUltimate('dog_spirit');
+  console.log(`  Dog Spirit Ult: "${dogUlt.name}" (${dogUlt.type}, Heal ${dogUlt.healPercent}%, Shield ${dogUlt.shieldPercent}%)`);
+  if (dogUlt.type !== 'SUPPORT') throw new Error('Dog Spirit Ult should be SUPPORT');
+
+  // Test Swarms
+  const swarmW1 = getSwarmForStage(1, 1);
+  const swarmW3 = getSwarmForStage(1, 3);
+  const swarmW5 = getSwarmForStage(1, 5);
+  console.log(`  Floor 1 Wave 1 swarm count: ${swarmW1.length}`);
+  console.log(`  Floor 1 Wave 3 swarm count: ${swarmW3.length}`);
+  console.log(`  Floor 1 Wave 5 (Boss) swarm count: ${swarmW5.length} (Expected Boss + 2 Guards = 3)`);
+  if (swarmW5.length !== 3) throw new Error('Boss wave should have 3 enemies (Boss + 2 Guards)');
+  if (!swarmW5[0].isBoss) throw new Error('First enemy of boss wave should be the Boss');
+
+  // 7. Test Two-Way Combat Simulation in GameState
+  console.log('\n[TEST 7] Testing Two-Way Combat Simulation in GameState:');
+  // Mock window & document if not in browser
+  if (typeof window === 'undefined') {
+    global.window = { addEventListener: () => {} };
+    global.document = { addEventListener: () => {}, visibilityState: 'visible' };
+    global.performance = { now: () => Date.now() };
+    global.requestAnimationFrame = () => 1;
+    global.cancelAnimationFrame = () => {};
+    global.localStorage = {
+      getItem: () => null,
+      setItem: () => {}
+    };
+  }
+
+  const { gameState } = await import('../src/state/gameState.js');
+  gameState.init();
+  const starter = gameState.state.spirits[0];
+  console.log(`  Starter Spirit: ${starter.customName} | HP: ${starter.currentHp}/${starter.maxHp} | MP: ${starter.currentMp}/${starter.maxMp}`);
+  if (starter.currentHp <= 0 || starter.maxHp <= 0) throw new Error('Starter spirit has invalid HP');
+
+  // Simulate party attack click (Mana generation test)
+  const initialMp = starter.currentMp;
+  gameState.attackEnemyWithPartyPower();
+  console.log(`  After Manual Party Attack -> MP: ${starter.currentMp} (Initial was ${initialMp}, +10 expected)`);
+  if (starter.currentMp !== initialMp + 10) throw new Error('Active tapping did not award +10 MP');
+
+  // Simulate ticks to test Mana build-up and Ultimate proc
+  let ultFired = false;
+  let wipeoutTriggered = false;
+  gameState.subscribe((ev, data) => {
+    if (ev === 'ultimateCast') {
+      ultFired = true;
+      console.log(`  [EVENT] Ultimate cast fired: ${data.spirit.customName} used "${data.ult.name}" dealing ${data.totalDamageDealt} dmg!`);
+    }
+    if (ev === 'partyWiped') {
+      wipeoutTriggered = true;
+      console.log(`  [EVENT] Party Wiped: "${data.message}", reset to wave: ${gameState.state.madnessZone.subStage}`);
+    }
+  });
+
+  // Advance combat ticks to hit 100 MP
+  for (let i = 0; i < 25; i++) {
+    gameState.tickMadnessCombat(0.25);
+  }
+  if (!ultFired) throw new Error('Ultimate did not fire after sufficient combat ticks');
+
+  // Test Floor Victory revival:
+  starter.currentHp = 10; // artificially lower health
+  starter.isFallen = true;
+  gameState.state.madnessZone.subStage = 5;
+  // Clear all enemies to simulate boss kill
+  gameState.state.madnessZone.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.onSwarmCleared();
+  console.log(`  After Boss Floor Victory -> Starter HP: ${starter.currentHp}/${starter.maxHp}, Fallen: ${starter.isFallen}`);
+  if (starter.currentHp !== starter.maxHp || starter.isFallen) {
+    throw new Error('Floor victory did not fully revive party spirit to 100% HP');
+  }
+
+  // Test Party Wipeout Reset:
+  starter.currentHp = 0;
+  starter.isFallen = true;
+  gameState.state.madnessZone.subStage = 3;
+  gameState.tickMadnessCombat(0.2);
+  if (!wipeoutTriggered) throw new Error('Party wipeout did not trigger when all party members fell');
+  if (gameState.state.madnessZone.subStage !== 1) throw new Error('Party wipeout did not reset subStage to 1');
+  if (starter.currentHp !== starter.maxHp) throw new Error('Party wipeout did not restore spirits to full HP');
+
+  if (gameState.saveTimer) clearInterval(gameState.saveTimer);
+  if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
+
   console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
 });
+
+
