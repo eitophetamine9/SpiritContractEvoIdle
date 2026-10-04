@@ -50,6 +50,17 @@ class GameStateManager {
     return () => this.subscribers.delete(callback);
   }
 
+  /**
+   * Register event listener for a specific event type
+   */
+  on(eventType, callback) {
+    return this.subscribe((evType, payload, state) => {
+      if (evType === eventType) {
+        callback(payload, state);
+      }
+    });
+  }
+
   emit(eventType, payload) {
     for (const callback of this.subscribers) {
       try {
@@ -95,8 +106,9 @@ class GameStateManager {
       offlineReport = this.applyOfflineGains(offlineSeconds);
     }
 
-    // Ensure Madness Zone current enemy is active
-    if (!this.state.madnessZone.currentEnemy) {
+    // Ensure Madness Zone current enemy is active and living
+    const mz = this.state.madnessZone;
+    if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
       this.spawnMadnessEnemy();
     }
 
@@ -1031,6 +1043,24 @@ class GameStateManager {
   }
 
   /**
+   * Navigate to a previously unlocked floor (costs 0 Energy)
+   */
+  setStage(targetStage) {
+    const mz = this.state.madnessZone;
+    const stageNum = parseInt(targetStage, 10);
+    if (isNaN(stageNum) || stageNum < 1) return;
+    if (stageNum > mz.highestStageUnlocked && !mz.unlockedStages.includes(stageNum)) {
+      throw new Error(`Floor ${stageNum} is not yet unlocked!`);
+    }
+    mz.stage = stageNum;
+    mz.subStage = 1;
+    this.spawnMadnessEnemy();
+    this.save();
+    this.emit('madnessZoneUpdated', mz);
+    return { success: true, stage: stageNum };
+  }
+
+  /**
    * Unlock and enter a new floor using Energy
    * Once unlocked, repeated plays of this floor cost 0 Energy!
    */
@@ -1933,19 +1963,21 @@ class GameStateManager {
       tierObj = FORGE_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || FORGE_DIFFICULTY_TIERS[0];
     }
 
-    const baseHp = Math.round(tierObj.minPartyPower * 1.6);
+    const targetPower = tierObj.recommendedPower || tierObj.minPartyPower || 1500;
+    const baseHp = Math.round(targetPower * 1.6);
+    const targetGod = chamber.god || chamber.godTitle || (chamber.godId && GREEK_GOD_SETS[chamber.godId] ? GREEK_GOD_SETS[chamber.godId].god : null) || chamber.name;
     const enemies = [];
 
     if (waveNum === 1) {
-      const namePrefix = dungeonType === 'pantheon' ? `${chamber.god || chamber.name} Sentinel` : 'Cinder Golem';
+      const namePrefix = dungeonType === 'pantheon' ? `${targetGod} Sentinel` : 'Cinder Golem';
       const icon = dungeonType === 'pantheon' ? '🛡️' : '🔥';
       enemies.push({
         id: `wave1_e1_${Date.now()}`,
         name: `${namePrefix} Alpha`,
         icon,
-        maxHp: Math.round(baseHp * 0.45),
-        hp: Math.round(baseHp * 0.45),
-        power: Math.round(tierObj.minPartyPower * 0.25),
+        maxHp: Math.max(50, Math.round(baseHp * 0.45)),
+        hp: Math.max(50, Math.round(baseHp * 0.45)),
+        power: Math.max(10, Math.round(targetPower * 0.25)),
         isDefeated: false,
         attackCooldown: 2.0,
         currentCooldown: 1.0
@@ -1954,23 +1986,23 @@ class GameStateManager {
         id: `wave1_e2_${Date.now()}`,
         name: `${namePrefix} Beta`,
         icon,
-        maxHp: Math.round(baseHp * 0.45),
-        hp: Math.round(baseHp * 0.45),
-        power: Math.round(tierObj.minPartyPower * 0.25),
+        maxHp: Math.max(50, Math.round(baseHp * 0.45)),
+        hp: Math.max(50, Math.round(baseHp * 0.45)),
+        power: Math.max(10, Math.round(targetPower * 0.25)),
         isDefeated: false,
         attackCooldown: 2.4,
         currentCooldown: 2.0
       });
     } else if (waveNum === 2) {
-      const namePrefix = dungeonType === 'pantheon' ? `${chamber.god || chamber.name} Guardian` : 'Crucible Automaton';
+      const namePrefix = dungeonType === 'pantheon' ? `${targetGod} Guardian` : 'Crucible Automaton';
       const icon = dungeonType === 'pantheon' ? '⚡' : '⚙️';
       enemies.push({
         id: `wave2_e1_${Date.now()}`,
         name: `Elite ${namePrefix}`,
         icon,
-        maxHp: Math.round(baseHp * 0.75),
-        hp: Math.round(baseHp * 0.75),
-        power: Math.round(tierObj.minPartyPower * 0.35),
+        maxHp: Math.max(80, Math.round(baseHp * 0.75)),
+        hp: Math.max(80, Math.round(baseHp * 0.75)),
+        power: Math.max(15, Math.round(targetPower * 0.35)),
         isDefeated: false,
         attackCooldown: 1.8,
         currentCooldown: 0.8
@@ -1979,35 +2011,35 @@ class GameStateManager {
         id: `wave2_e2_${Date.now()}`,
         name: `${namePrefix} Warden`,
         icon,
-        maxHp: Math.round(baseHp * 0.65),
-        hp: Math.round(baseHp * 0.65),
-        power: Math.round(tierObj.minPartyPower * 0.3),
+        maxHp: Math.max(70, Math.round(baseHp * 0.65)),
+        hp: Math.max(70, Math.round(baseHp * 0.65)),
+        power: Math.max(12, Math.round(targetPower * 0.3)),
         isDefeated: false,
         attackCooldown: 2.2,
         currentCooldown: 1.5
       });
     } else {
-      const bossName = dungeonType === 'pantheon' ? `Avatar of ${chamber.god || chamber.name}` : (chamber.bossName || 'Vulcan Titan');
-      const bossIcon = dungeonType === 'pantheon' ? chamber.icon : (chamber.bossIcon || '🌋');
+      const bossName = dungeonType === 'pantheon' ? `Avatar of ${targetGod}` : (chamber.bossName || 'Vulcan Titan');
+      const bossIcon = dungeonType === 'pantheon' ? (chamber.sigil || chamber.icon || '🔱') : (chamber.bossIcon || '🌋');
       enemies.push({
         id: `wave3_boss_${Date.now()}`,
         name: bossName,
         icon: bossIcon,
         isBoss: true,
-        maxHp: Math.round(baseHp * 1.5),
-        hp: Math.round(baseHp * 1.5),
-        power: Math.round(tierObj.minPartyPower * 0.5),
+        maxHp: Math.max(150, Math.round(baseHp * 1.5)),
+        hp: Math.max(150, Math.round(baseHp * 1.5)),
+        power: Math.max(25, Math.round(targetPower * 0.5)),
         isDefeated: false,
         attackCooldown: 1.6,
         currentCooldown: 0.5
       });
       enemies.push({
         id: `wave3_attendant_${Date.now()}`,
-        name: dungeonType === 'pantheon' ? 'High Priest' : 'Forge Overseer',
+        name: dungeonType === 'pantheon' ? 'Temple High Priest' : 'Forge Overseer',
         icon: '🔮',
-        maxHp: Math.round(baseHp * 0.5),
-        hp: Math.round(baseHp * 0.5),
-        power: Math.round(tierObj.minPartyPower * 0.28),
+        maxHp: Math.max(50, Math.round(baseHp * 0.5)),
+        hp: Math.max(50, Math.round(baseHp * 0.5)),
+        power: Math.max(10, Math.round(targetPower * 0.28)),
         isDefeated: false,
         attackCooldown: 2.0,
         currentCooldown: 1.8

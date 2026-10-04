@@ -74,23 +74,28 @@ export function createUnknownSpiritPlaceholderBox(species, options = {}) {
  * Creates a distinct corrupted CSS placeholder box for Madness Zone enemies.
  */
 export function createEnemyPlaceholderBox(enemy) {
+  if (!enemy) return '';
+  const enemyName = enemy.name || 'Corrupted Spirit';
+  const enemyPower = typeof enemy.power === 'number' ? enemy.power : 0;
+  const isBoss = !!enemy.isBoss;
+
   return `
-    <div class="pixel-box enemy-box ${enemy.isBoss ? 'boss-box' : ''}" 
-         data-enemy-boss="${enemy.isBoss}"
-         title="${enemy.name}">
+    <div class="pixel-box enemy-box ${isBoss ? 'boss-box' : ''}" 
+         data-enemy-boss="${isBoss}"
+         title="${enemyName}">
       
       <div class="tier-tag" style="color: #ff4757; border-color: #ff4757;">
-        ${enemy.isBoss ? '☠️ BOSS' : '👾 FOE'}
+        ${isBoss ? '☠️ BOSS' : '👾 FOE'}
       </div>
 
-      <div class="pixel-art-slot" data-art-target="enemy-${enemy.name.toLowerCase().replace(/\s+/g, '-')}">
+      <div class="pixel-art-slot" data-art-target="enemy-${enemyName.toLowerCase().replace(/\s+/g, '-')}">
         <div class="placeholder-creature-sprite">
-          <span class="core-glyph">${enemy.isBoss ? '👹' : '👿'}</span>
+          <span class="core-glyph">${isBoss ? '👹' : '👿'}</span>
         </div>
       </div>
 
       <div class="rarity-ribbon" style="background: rgba(255, 0, 85, 0.75); color: #fff;">
-        PWR ${enemy.power.toLocaleString()}
+        PWR ${enemyPower.toLocaleString()}
       </div>
     </div>
   `;

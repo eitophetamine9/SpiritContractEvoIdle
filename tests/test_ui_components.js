@@ -22,7 +22,9 @@ globalThis.document = {
       return modalRoot;
     }
     return null;
-  }
+  },
+  querySelector: () => null,
+  querySelectorAll: () => []
 };
 
 const modalRoot = {
@@ -109,6 +111,108 @@ if (testSpirit) {
   gameState.toggleHallOfFame(testSpirit.id);
   console.log('[PASS] Hall of Fame state toggle functioning correctly.');
 }
+
+// 6. Test Madness Zone View layout and controls
+import { renderMadnessView } from '../src/ui/views/madnessView.js';
+const madnessContainer = {
+  innerHTML: '',
+  querySelector: function(sel) {
+    return {
+      addEventListener: () => {},
+      classList: { toggle: () => {} }
+    };
+  },
+  querySelectorAll: function(sel) {
+    return [];
+  }
+};
+
+renderMadnessView(madnessContainer);
+if (!madnessContainer.innerHTML.includes('isometric-battlefield')) {
+  throw new Error('Isometric battlefield missing from Madness View');
+}
+if (!madnessContainer.innerHTML.includes('enemy-swarm-wrapper') || !madnessContainer.innerHTML.includes('enemy-placeholder-frame')) {
+  throw new Error('Enemies are missing from the Madness battlefield!');
+}
+if (madnessContainer.innerHTML.includes('diamond-hub-wrapper')) {
+  throw new Error('Obsolete diamond hub is still present in Madness View!');
+}
+if (!madnessContainer.innerHTML.includes('btn-fight-enemy') || !madnessContainer.innerHTML.includes('btn-toggle-engage')) {
+  throw new Error('Attack button or combat engage toggle missing from Madness View!');
+}
+if (!madnessContainer.innerHTML.includes('btn-prev-stage') || !madnessContainer.innerHTML.includes('btn-combat-sound')) {
+  throw new Error('Floor navigation or audio toggle missing from Madness View!');
+}
+console.log('[PASS] Madness Zone View renders allies, enemies, controls, and audio toggle cleanly.');
+
+// 7. Test setStage method on gameState
+const currentStage = gameState.state.madnessZone.stage;
+gameState.state.madnessZone.highestStageUnlocked = 5;
+gameState.state.madnessZone.unlockedStages = [1, 2, 3, 4, 5];
+gameState.setStage(2);
+if (gameState.state.madnessZone.stage !== 2) {
+  throw new Error(`setStage(2) failed; expected stage 2, got ${gameState.state.madnessZone.stage}`);
+}
+gameState.setStage(1);
+if (gameState.state.madnessZone.stage !== 1) {
+  throw new Error(`setStage(1) failed; expected stage 1, got ${gameState.state.madnessZone.stage}`);
+}
+console.log('[PASS] gameState.setStage correctly navigates between floors.');
+
+// 8. Test Pantheon Trial & Forge Battle arenas for no NaN / undefined
+import { renderDungeonView } from '../src/ui/views/dungeonView.js';
+import { renderForgeView } from '../src/ui/views/forgeView.js';
+
+// Start a Pantheon Trial
+gameState.startDungeonTrial('pantheon', 'crypt_of_the_underworld', 1);
+const trialContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderDungeonView(trialContainer);
+if (trialContainer.innerHTML.includes('NaN')) {
+  throw new Error('Trial arena output contains NaN!');
+}
+if (trialContainer.innerHTML.includes('undefined Relics') || trialContainer.innerHTML.includes('undefined')) {
+  throw new Error('Trial arena output contains undefined text!');
+}
+if (!trialContainer.innerHTML.includes('pantheon-battlefield') || !trialContainer.innerHTML.includes('btn-trial-strike')) {
+  throw new Error('Trial battlefield arena failed to render correctly');
+}
+gameState.exitDungeonBattle();
+console.log('[PASS] Pantheon Trials arena renders cleanly with no NaN or undefined values.');
+
+// Start a Forge Trial
+gameState.startDungeonTrial('forge', 'bladesmith_sanctum', 1);
+const forgeContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderForgeView(forgeContainer);
+if (forgeContainer.innerHTML.includes('NaN')) {
+  throw new Error('Forge arena output contains NaN!');
+}
+if (forgeContainer.innerHTML.includes('undefined')) {
+  throw new Error('Forge arena output contains undefined text!');
+}
+if (!forgeContainer.innerHTML.includes('forge-battlefield') || !forgeContainer.innerHTML.includes('btn-forge-strike')) {
+  throw new Error('Forge battlefield arena failed to render correctly');
+}
+gameState.exitDungeonBattle();
+console.log('[PASS] Divine Forge arena renders cleanly with no NaN or undefined values.');
+
+// 9. Verify index.html navigation tab label
+import fs from 'fs';
+const indexHtml = fs.readFileSync('index.html', 'utf8');
+if (indexHtml.includes('>Tower<')) {
+  throw new Error('index.html still contains Tower label! User explicitly requested Madness Zone name.');
+}
+if (!indexHtml.includes('>Madness<')) {
+  throw new Error('index.html must have Madness label on nav tab.');
+}
+console.log('[PASS] Bottom nav dock label verified as Madness.');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

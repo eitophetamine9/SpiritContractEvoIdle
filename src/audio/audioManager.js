@@ -72,6 +72,21 @@ class AudioManager {
     }
   }
 
+  updateAllAudioButtons() {
+    if (typeof document === 'undefined') return;
+    const isMuted = this.isMuted;
+    const icon = isMuted ? '🔇' : '🔊';
+
+    const topSymbol = document.getElementById('audio-icon-symbol');
+    if (topSymbol) topSymbol.textContent = icon;
+
+    const topBtn = document.getElementById('btn-top-audio');
+    if (topBtn) topBtn.classList.toggle('muted', isMuted);
+
+    const combatBtn = document.getElementById('btn-combat-sound');
+    if (combatBtn) combatBtn.textContent = icon;
+  }
+
   toggleMute() {
     this.init();
     this.isMuted = !this.isMuted;
@@ -81,23 +96,33 @@ class AudioManager {
     }
 
     if (!this.isMuted) {
-      if (this.bgmAudioElement) {
-        this.bgmAudioElement.muted = false;
-        this.bgmAudioElement.volume = this.bgmVolume;
-        if (this.bgmAudioElement.paused) {
-          this.bgmAudioElement.play().catch(() => {});
-        }
-      } else {
-        this.playBgm(this.currentBgmTrack || 'ambient');
+      if (!this.currentBgmTrack) {
+        this.currentBgmTrack = 'battle';
+      }
+      if (!this.bgmAudioElement) {
+        this.bgmAudioElement = new Audio();
+        this.bgmAudioElement.loop = true;
+      }
+      const targetSrc = this.bgmTracks[this.currentBgmTrack] || this.bgmTracks.battle;
+      if (!this.bgmAudioElement.src || !this.bgmAudioElement.src.endsWith(targetSrc)) {
+        this.bgmAudioElement.src = targetSrc;
+      }
+      this.bgmAudioElement.muted = false;
+      this.bgmAudioElement.volume = this.bgmVolume;
+      const playPromise = this.bgmAudioElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => console.warn('BGM play on unmute:', err));
       }
       this.playSfx('tap');
     } else {
       if (this.bgmAudioElement) {
         this.bgmAudioElement.muted = true;
+        this.bgmAudioElement.pause();
       }
     }
 
     this.saveSettings();
+    this.updateAllAudioButtons();
     return this.isMuted;
   }
 
@@ -117,10 +142,6 @@ class AudioManager {
   playBgm(trackKey) {
     this.init();
     const src = this.bgmTracks[trackKey] || this.bgmTracks.ambient;
-    if (this.currentBgmTrack === trackKey && this.bgmAudioElement && !this.bgmAudioElement.paused) {
-      return;
-    }
-
     this.currentBgmTrack = trackKey;
 
     if (!this.bgmAudioElement) {
@@ -128,13 +149,23 @@ class AudioManager {
       this.bgmAudioElement.loop = true;
     }
 
-    this.bgmAudioElement.src = src;
-    this.bgmAudioElement.volume = this.isMuted ? 0 : this.bgmVolume;
+    if (this.isMuted) {
+      this.bgmAudioElement.muted = true;
+      this.bgmAudioElement.pause();
+      return;
+    }
+
+    if (!this.bgmAudioElement.src || !this.bgmAudioElement.src.endsWith(src)) {
+      this.bgmAudioElement.src = src;
+    }
+
+    this.bgmAudioElement.muted = false;
+    this.bgmAudioElement.volume = this.bgmVolume;
 
     const playPromise = this.bgmAudioElement.play();
     if (playPromise !== undefined) {
       playPromise.catch(() => {
-        // Autoplay policy prevented immediate playback; will resume on first click
+        // Autoplay policy deferred playback
       });
     }
   }

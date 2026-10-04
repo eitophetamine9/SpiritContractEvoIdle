@@ -2,6 +2,7 @@ import { gameState, ENERGY_ENTRY_COST } from '../../state/gameState.js';
 import { getBiomeForStage } from '../../data/biomesData.js';
 import { getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../components/pixelBox.js';
+import { audioManager } from '../../audio/audioManager.js';
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
@@ -11,7 +12,11 @@ export function renderMadnessView(container) {
   const state = gameState.state;
   const mz = state.madnessZone;
   const res = state.resources;
-  const swarm = (mz.currentSwarm && mz.currentSwarm.length > 0) ? mz.currentSwarm : (mz.currentEnemy ? [mz.currentEnemy] : []);
+  let swarm = (mz.currentSwarm && mz.currentSwarm.length > 0) ? mz.currentSwarm : (mz.currentEnemy ? [mz.currentEnemy] : []);
+  if (!swarm || swarm.length === 0 || swarm.every(e => e.isDefeated || e.hp <= 0)) {
+    gameState.spawnMadnessEnemy();
+    swarm = gameState.state.madnessZone.currentSwarm || [];
+  }
   const enemy = swarm.find(e => !e.isDefeated && e.hp > 0) || swarm[0] || null;
   const partySpirits = gameState.getPartySpirits();
   const partyPower = gameState.getTotalPartyPower();
@@ -46,8 +51,8 @@ export function renderMadnessView(container) {
           <button id="btn-combat-pause" class="hud-icon-btn" title="Pause Combat">
             ${isPaused ? '▶️' : '⏸️'}
           </button>
-          <button id="btn-combat-sound" class="hud-icon-btn" title="Sound Effects">
-            🔊
+          <button id="btn-combat-sound" class="hud-icon-btn" title="Toggle Sound">
+            ${audioManager.isMuted ? '🔇' : '🔊'}
           </button>
         </div>
 
@@ -78,7 +83,15 @@ export function renderMadnessView(container) {
 
         <div class="zone-nav-buttons">
           <button id="btn-prev-stage" class="zone-btn-sm" ${mz.stage <= 1 ? 'disabled' : ''}>◀ Prev</button>
-          <button id="btn-next-stage" class="zone-btn-sm" ${mz.stage >= mz.highestStageUnlocked ? 'disabled' : ''}>Next ▶</button>
+          ${mz.stage < mz.highestStageUnlocked ? `
+            <button id="btn-next-stage" class="zone-btn-sm">Next ▶</button>
+          ` : (mz.highestStageCleared >= mz.stage ? `
+            <button id="btn-unlock-next-floor" class="zone-btn-sm" style="background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900;" ${canAffordNext ? '' : 'disabled'}>
+              Unlock F${nextStageNum} (10 ⚡)
+            </button>
+          ` : `
+            <button id="btn-next-stage" class="zone-btn-sm" disabled>Next ▶</button>
+          `)}
           <button id="btn-trials-shortcut" class="zone-btn-sm" style="background: rgba(241, 196, 15, 0.18); border-color: #f1c40f; color: #ffd32a; font-weight: 800;" title="Challenge Pantheon Trials to farm Greek God Relics">🏛️ Trials</button>
         </div>
       </div>
@@ -215,42 +228,9 @@ export function renderMadnessView(container) {
           </div>
         </div>
 
-      <!-- Diamond Fast-Travel Hub (Reference 2 & 3 Aesthetic) -->
-      <div class="diamond-hub-wrapper">
-        <div class="diamond-hub-cluster">
-          <button class="diamond-node-btn top-node" data-nav-target="trials" title="Pantheon Trials">
-            <div class="diamond-content">
-              <span class="diamond-icon">🏛️</span>
-              <span class="diamond-label">TRIALS</span>
-            </div>
-          </button>
-          <div class="diamond-mid-row">
-            <button class="diamond-node-btn left-node" data-nav-target="party" title="Hero Pedestal & Party">
-              <div class="diamond-content">
-                <span class="diamond-icon">👑</span>
-                <span class="diamond-label">HERO</span>
-              </div>
-            </button>
-            <div class="diamond-center-core">
-              <span class="core-crest">⛩️</span>
-            </div>
-            <button class="diamond-node-btn right-node" data-nav-target="contract" title="Astral Contract Summons">
-              <div class="diamond-content">
-                <span class="diamond-icon">🔮</span>
-                <span class="diamond-label">SUMMON</span>
-              </div>
-            </button>
-          </div>
-          <button class="diamond-node-btn bottom-node" data-nav-target="vault" title="Spirit Vault & Bestiary">
-            <div class="diamond-content">
-              <span class="diamond-icon">📜</span>
-              <span class="diamond-label">VAULT</span>
-            </div>
-          </button>
-        </div>
       </div>
 
-      <!-- Action Attack Command & DPS Strip -->
+      <!-- Action Attack Command & Combat Control Strip -->
       <div class="combat-action-footer">
         
         <!-- Active Attack Button -->
@@ -264,16 +244,10 @@ export function renderMadnessView(container) {
           ${powerStatusText}
         </div>
 
-        <!-- Automation & Engagement Controls -->
-        <div class="combat-toggle-row">
+        <!-- Combat Engagement Control -->
+        <div class="combat-toggle-row" style="grid-template-columns: 1fr;">
           <button id="btn-toggle-engage" class="zone-toggle-btn ${mz.isEngaged !== false ? 'active' : 'standby'}" title="Toggle between active combat and standby resting mode">
             ${mz.isEngaged !== false ? '⚔️ Combat: ENGAGED' : '⏸️ Combat: STANDBY'}
-          </button>
-          <button id="btn-toggle-advance" class="zone-toggle-btn ${mz.autoAdvance ? 'active' : ''}">
-            Auto-Advance: ${mz.autoAdvance ? 'ON' : 'OFF'}
-          </button>
-          <button id="btn-toggle-farm" class="zone-toggle-btn ${mz.farmMode ? 'active' : ''}">
-            Farm Mode: ${mz.farmMode ? 'ON' : 'OFF'}
           </button>
         </div>
 
@@ -322,16 +296,6 @@ export function renderMadnessView(container) {
     });
   }
 
-  // Diamond Fast-Travel Hub Listeners
-  container.querySelectorAll('[data-nav-target]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const targetTab = e.currentTarget.getAttribute('data-nav-target');
-      if (targetTab) {
-        document.querySelector(`[data-tab="${targetTab}"]`)?.click();
-      }
-    });
-  });
-
   const btnUnlockNext = container.querySelector('#btn-unlock-next-floor');
   if (btnUnlockNext) {
     btnUnlockNext.addEventListener('click', () => {
@@ -360,14 +324,6 @@ export function renderMadnessView(container) {
     });
   }
 
-  const btnFarm = container.querySelector('#btn-toggle-farm');
-  if (btnFarm) {
-    btnFarm.addEventListener('click', () => {
-      gameState.toggleFarmMode();
-      renderMadnessView(container);
-    });
-  }
-
   // Battle Speed Toggle (1X / 2X)
   const btnSpeed = container.querySelector('#btn-combat-speed');
   if (btnSpeed) {
@@ -382,10 +338,7 @@ export function renderMadnessView(container) {
   if (btnCombatSound) {
     btnCombatSound.textContent = audioManager.isMuted ? '🔇' : '🔊';
     btnCombatSound.addEventListener('click', () => {
-      const muted = audioManager.toggleMute();
-      btnCombatSound.textContent = muted ? '🔇' : '🔊';
-      const topAudioBtn = document.querySelector('#btn-top-audio');
-      if (topAudioBtn) topAudioBtn.textContent = muted ? '🔇' : '🔊';
+      audioManager.toggleMute();
     });
   }
 
@@ -435,6 +388,7 @@ export function renderMadnessView(container) {
   if (!isEventsBound) {
     isEventsBound = true;
     gameState.subscribe((eventType, payload) => {
+      if (typeof document === 'undefined' || typeof document.querySelector !== 'function') return;
       const currentContainer = document.querySelector('#view-container');
       if (!currentContainer) return;
       // STRICT GUARD: Do not hijack screen if user navigated away from Madness Zone!
@@ -454,14 +408,14 @@ export function renderMadnessView(container) {
       } else if (eventType === 'partyWiped') {
         showCombatBanner(currentContainer, '💀 PARTY WIPED! Regrouping at Wave 1 with 100% HP restored...', 'wipe');
         setTimeout(() => {
-          if (document.querySelector('.madness-container')) {
+          if (typeof document !== 'undefined' && document.querySelector && document.querySelector('.madness-container')) {
             renderMadnessView(currentContainer);
           }
         }, 800);
       } else if (eventType === 'floorCleared') {
         showCombatBanner(currentContainer, `🏆 FLOOR ${payload.stage} CLEARED! Party fully restored!`, 'victory');
         setTimeout(() => {
-          if (document.querySelector('.madness-container')) {
+          if (typeof document !== 'undefined' && document.querySelector && document.querySelector('.madness-container')) {
             renderMadnessView(currentContainer);
           }
         }, 800);
