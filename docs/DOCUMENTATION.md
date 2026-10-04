@@ -129,6 +129,41 @@ Offline progress is calculated upon session initialization:
 ## 6. Testing & Quality Assurance
 
 The codebase includes automated test suites covering all game subsystems:
-- `test_game_engine.js`: Validates contract roster distribution, 1,000-pull astral contract probabilities, shard drop economy curves, energy regeneration, and biome tier assignment up to Floor 105.
+- `test_game_engine.js`: Validates contract roster distribution, 1,000-pull astral contract probabilities, shard drop economy curves, energy regeneration, biome tier assignment, Spirit HP and Ultimates, Swarm formations, and Two-Way Combat simulation.
 - `run_probability_tests.js`: Executes 100-pull simulations on Normal and Astral summons, plus 100 simulated evolutions for every base spirit species to verify RNG tables.
 - `test_ui_components.js`: Validates Bestiary tile grid generation, Bestiary inspect modal markup, and visual Hall of Fame assignment logic.
+
+---
+
+## 7. Two-Way Combat Engine & Ultimates System
+
+### 7.1 Allied Spirit Stats (HP, MP, Shields)
+- **Max HP Calculation**:
+  $$\text{Max HP} = \max(80, \text{round}(\text{basePower} \times 12 \times (1 + (\text{level} - 1) \times 0.22) \times \text{rarityMultiplier}))$$
+- **Mana (MP) Accumulation**:
+  - Maximum MP: 100.
+  - Automatic Battle Accumulation: +20 MP/sec during active combat.
+  - Active Tapping: Manual party attack clicks award +10 MP to all living party spirits.
+- **Shields**:
+  - Granted by Support Ultimates (e.g. Dog Spirit).
+  - Shields absorb incoming enemy damage before health deduction.
+
+### 7.2 Ultimates Catalog
+At 100 MP, spirits unleash their species-specific Ultimate skill:
+- **AOE_DAMAGE**: Deals heavy multi-target damage across all living enemies in the swarm (e.g. Cat Spirit, Bull Spirit, Wyrm).
+- **DAMAGE / EXECUTE**: Deals concentrated damage to the lead enemy or executes the lowest-health enemy (e.g. Chicken Spirit, Minotaur).
+- **SUPPORT**: Restores HP to living allies, grants team shields, and revives 1 fallen ally if any are knocked out (e.g. Dog Spirit).
+- **HEAL**: Large party heal and fallen ally revival (e.g. Caterpillar Spirit, Elegant Butterfly).
+- **AOE_DAMAGE_AND_HEAL**: Hybrid burst dealing swarm damage while restoring party health (e.g. Mystical Butterfly, Bear of Dreams, High Elf).
+
+### 7.3 Enemy Swarms & Counter-Attacks
+- **Wave Formation**:
+  - Waves 1 to 4: Swarms of 1 to 4 corrupted minions with staggered attack timers.
+  - Wave 5 (Boss Wave): 1 Overlord Boss accompanied by 2 Royal Guard Sentinels.
+- **Counter-Attacks**:
+  - Each enemy attacks on an individual cooldown (2.2s to 2.8s), targeting the frontline living spirit.
+  - Knocked-out spirits enter the KO state until revived by support spirits, floor victory, or party regrouping.
+- **Victory and Wipeout Rules**:
+  - **Floor Victory**: Defeating the wave 5 boss revives all fallen and damaged spirits to 100% Max HP.
+  - **Party Wipeout**: If all active party members fall in combat, the party safely resets to Wave 1 of the current floor with 100% Max HP restored and zero loss of progression, items, or currency.
+

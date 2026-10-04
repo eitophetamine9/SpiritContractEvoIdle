@@ -4,9 +4,11 @@ import {
   rollContractSpirit,
   rollAstralContractSpirit,
   getXpRequiredForLevel, 
-  calculateSpiritPower 
+  calculateSpiritPower,
+  calculateSpiritMaxHp,
+  getSpiritUltimate
 } from '../data/spiritsData.js';
-import { getEnemyForStage } from '../data/madnessZoneData.js';
+import { getEnemyForStage, getSwarmForStage } from '../data/madnessZoneData.js';
 
 const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
@@ -113,6 +115,7 @@ class GameStateManager {
   getInitialState() {
     const starterId = this.generateId();
     const starterSpecies = SPIRIT_SPECIES['cat_spirit'];
+    const starterMaxHp = calculateSpiritMaxHp(starterSpecies, 1, starterSpecies.baseRarity);
     const starterSpirit = {
       id: starterId,
       speciesId: starterSpecies.id,
@@ -122,6 +125,12 @@ class GameStateManager {
       tier: 1,
       rarity: starterSpecies.baseRarity,
       power: calculateSpiritPower(starterSpecies, 1, starterSpecies.baseRarity),
+      maxHp: starterMaxHp,
+      currentHp: starterMaxHp,
+      maxMp: 100,
+      currentMp: 0,
+      shieldHp: 0,
+      isFallen: false,
       isEquipped: true,
       canEvolve: false,
       evolutionHistory: [starterSpecies.name],
@@ -151,6 +160,7 @@ class GameStateManager {
         highestStageCleared: 1,
         autoAdvance: true,
         farmMode: false,
+        currentSwarm: [],
         currentEnemy: null,
         combatTickProgress: 0
       },
@@ -207,6 +217,22 @@ class GameStateManager {
       const species = SPIRIT_SPECIES[s.speciesId];
       if (species) {
         s.power = calculateSpiritPower(species, s.level, s.rarity || species.baseRarity);
+        s.maxHp = calculateSpiritMaxHp(species, s.level, s.rarity || species.baseRarity);
+        if (typeof s.currentHp !== 'number' || isNaN(s.currentHp) || s.currentHp <= 0) {
+          s.currentHp = s.maxHp;
+        } else {
+          s.currentHp = Math.min(s.currentHp, s.maxHp);
+        }
+        s.maxMp = 100;
+        if (typeof s.currentMp !== 'number' || isNaN(s.currentMp)) {
+          s.currentMp = 0;
+        } else {
+          s.currentMp = Math.max(0, Math.min(100, s.currentMp));
+        }
+        if (typeof s.shieldHp !== 'number' || isNaN(s.shieldHp)) {
+          s.shieldHp = 0;
+        }
+        s.isFallen = s.currentHp <= 0;
         s.canEvolve = s.level >= species.levelCap && species.evolutions && species.evolutions.length > 0;
       }
       if (typeof s.favorite !== 'boolean') {
@@ -216,6 +242,10 @@ class GameStateManager {
         s.customName = species.name;
       }
     });
+
+    if (!Array.isArray(state.madnessZone.currentSwarm)) {
+      state.madnessZone.currentSwarm = [];
+    }
 
     // Ensure discoveredSpeciesIds array exists
     if (!Array.isArray(state.discoveredSpeciesIds)) {
@@ -318,36 +348,6 @@ class GameStateManager {
     }
   }
 
-  /**
-   * Click-to-fight action: strike the enemy using the Active Party's combined power
-   */
-  attackEnemyWithPartyPower() {
-    const mz = this.state.madnessZone;
-    if (!mz.currentEnemy) {
-      this.spawnMadnessEnemy();
-      return { damage: 0, killed: false };
-    }
-
-    const enemy = mz.currentEnemy;
-    const combinedPartyPower = Math.max(1, this.getTotalPartyPower());
-    const damageDealt = combinedPartyPower;
-
-    enemy.hp = Math.max(0, enemy.hp - damageDealt);
-    const killed = enemy.hp <= 0;
-
-    this.emit('partyAttack', {
-      damage: damageDealt,
-      enemyHp: enemy.hp,
-      enemyMaxHp: enemy.maxHp,
-      killed
-    });
-
-    if (killed) {
-      this.onEnemyDefeated(enemy);
-    }
-
-    return { damage: damageDealt, killed };
-  }
 
   /**
    * AFK Training - equipped spirits continuously gain XP
@@ -382,6 +382,11 @@ class GameStateManager {
         spirit.xp -= reqXp;
         spirit.level += 1;
         spirit.power = calculateSpiritPower(species, spirit.level, spirit.rarity);
+        const newMaxHp = calculateSpiritMaxHp(species, spirit.level, spirit.rarity);
+        const hpBonus = newMaxHp - (spirit.maxHp || newMaxHp);
+        spirit.maxHp = newMaxHp;
+        spirit.currentHp = Math.min(spirit.maxHp, (spirit.currentHp || newMaxHp) + Math.max(0, hpBonus));
+        spirit.isFallen = false;
         stateChanged = true;
 
         if (spirit.level >= species.levelCap) {
@@ -454,6 +459,9 @@ class GameStateManager {
       }
 
       spirit.power = calculateSpiritPower(species, spirit.level, spirit.rarity);
+      spirit.maxHp = calculateSpiritMaxHp(species, spirit.level, spirit.rarity);
+      spirit.currentHp = spirit.maxHp;
+      spirit.isFallen = false;
 
       if (spirit.level > initialLevel) {
         levelUps.push({
@@ -509,58 +517,296 @@ class GameStateManager {
   }
 
   /**
-   * Madness Zone Combat Math Loop
+   * Madness Zone Two-Way Combat Loop
+   * Living spirits attack living swarm enemies & accumulate Mana
+   * At 100 MP, spirits unleash Ultimates (AoE, Heals, Shields, Executes)
+   * Enemies fight back on cooldowns, damaging spirits
+   * Revives whole party on Floor Boss Victory; Resets to Wave 1 on Party Wipeout
    */
   tickMadnessCombat(deltaSec) {
     const { madnessZone } = this.state;
-    if (!madnessZone.currentEnemy) {
+    if (!madnessZone.currentSwarm || madnessZone.currentSwarm.length === 0) {
       this.spawnMadnessEnemy();
       return;
     }
 
-    const enemy = madnessZone.currentEnemy;
-    const partyPower = this.getTotalPartyPower();
+    const party = this.getPartySpirits();
+    const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
+    const livingEnemies = madnessZone.currentSwarm.filter(e => !e.isDefeated && e.hp > 0);
 
-    // DPS ratio: Party Total Power vs. Madness Enemy Power
-    const partyPowerRatio = partyPower / Math.max(1, enemy.power);
-    const baseDps = enemy.maxHp / 4.0;
-    const actualDps = Math.max(1, baseDps * Math.min(6, Math.max(0.2, partyPowerRatio)));
-    const damageThisTick = actualDps * deltaSec;
+    // 1. Check for Party Wipeout (All party members fallen)
+    if (livingSpirits.length === 0 && party.length > 0) {
+      madnessZone.subStage = 1;
+      party.forEach(s => {
+        s.currentHp = s.maxHp;
+        s.currentMp = 0;
+        s.shieldHp = 0;
+        s.isFallen = false;
+      });
+      this.spawnMadnessEnemy();
+      this.emit('partyWiped', {
+        stage: madnessZone.stage,
+        message: 'Party wiped out! Regrouping at Wave 1...'
+      });
+      this.emit('madnessZoneUpdated', madnessZone);
+      return;
+    }
 
-    enemy.hp = Math.max(0, enemy.hp - damageThisTick);
+    // 2. Check if all enemies in swarm defeated
+    if (livingEnemies.length === 0) {
+      this.onSwarmCleared();
+      return;
+    }
 
-    // If enemy defeated
-    if (enemy.hp <= 0) {
-      this.onEnemyDefeated(enemy);
+    // Frontline target enemy
+    const leadEnemy = livingEnemies[0];
+
+    // 3. Spirits Attack & Mana Accumulation
+    for (const spirit of livingSpirits) {
+      // Basic DPS contribution
+      const baseDps = Math.max(1, Math.round(spirit.power * 0.45));
+      const damageThisTick = baseDps * deltaSec;
+      leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
+
+      // Mana Accumulation: ~20 MP per second (Procs Ult in ~5 seconds)
+      spirit.currentMp = Math.min(spirit.maxMp || 100, (spirit.currentMp || 0) + (20 * deltaSec));
+
+      // Trigger Ultimate at 100 MP
+      if (spirit.currentMp >= 100) {
+        spirit.currentMp = 0;
+        this.procSpiritUltimate(spirit);
+      }
+
+      // Check if lead enemy died from basic attack
+      if (leadEnemy.hp <= 0 && !leadEnemy.isDefeated) {
+        this.onIndividualEnemyKilled(leadEnemy);
+        break;
+      }
+    }
+
+    // Keep currentEnemy in sync with lead living enemy
+    madnessZone.currentEnemy = livingEnemies.find(e => !e.isDefeated && e.hp > 0) || null;
+
+    // 4. Enemies Fight Back (Counter-attacks on cooldown timers)
+    for (const enemy of livingEnemies) {
+      if (enemy.hp <= 0 || enemy.isDefeated) continue;
+
+      enemy.attackTimer = (enemy.attackTimer || 2.0) - deltaSec;
+      if (enemy.attackTimer <= 0) {
+        enemy.attackTimer = enemy.attackCooldown || 2.4;
+
+        // Counter-attack the lead living spirit
+        const targetSpirit = livingSpirits[0];
+        if (targetSpirit) {
+          let enemyDamage = Math.max(1, Math.round(enemy.power * (0.8 + Math.random() * 0.35)));
+
+          // Absorb damage with shield first
+          if (targetSpirit.shieldHp > 0) {
+            const absorb = Math.min(targetSpirit.shieldHp, enemyDamage);
+            targetSpirit.shieldHp -= absorb;
+            enemyDamage -= absorb;
+          }
+
+          // Apply remaining damage to HP
+          targetSpirit.currentHp = Math.max(0, targetSpirit.currentHp - enemyDamage);
+          if (targetSpirit.currentHp <= 0) {
+            targetSpirit.isFallen = true;
+            targetSpirit.currentHp = 0;
+            this.emit('spiritDefeated', targetSpirit);
+          }
+
+          this.emit('enemyCounterAttack', {
+            enemy,
+            targetSpirit,
+            damage: enemyDamage
+          });
+        }
+      }
     }
   }
 
+  /**
+   * Spirit Ultimate Execution
+   */
+  procSpiritUltimate(spirit) {
+    const ult = getSpiritUltimate(spirit.speciesId);
+    const { madnessZone } = this.state;
+    const livingEnemies = (madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
+    const party = this.getPartySpirits();
+    const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
+    const fallenSpirits = party.filter(s => s.isFallen || s.currentHp <= 0);
+
+    let totalDamageDealt = 0;
+    let totalHealingDone = 0;
+
+    switch (ult.type) {
+      case 'AOE_DAMAGE': {
+        const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier));
+        for (const enemy of livingEnemies) {
+          enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
+          totalDamageDealt += damagePerEnemy;
+          if (enemy.hp <= 0) {
+            this.onIndividualEnemyKilled(enemy);
+          }
+        }
+        break;
+      }
+      case 'DAMAGE': {
+        if (livingEnemies.length > 0) {
+          const target = livingEnemies[0];
+          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier));
+          target.hp = Math.max(0, target.hp - damage);
+          totalDamageDealt = damage;
+          if (target.hp <= 0) {
+            this.onIndividualEnemyKilled(target);
+          }
+        }
+        break;
+      }
+      case 'EXECUTE': {
+        if (livingEnemies.length > 0) {
+          const sorted = [...livingEnemies].sort((a, b) => a.hp - b.hp);
+          const target = sorted[0];
+          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier));
+          target.hp = Math.max(0, target.hp - damage);
+          totalDamageDealt = damage;
+          if (target.hp <= 0) {
+            this.onIndividualEnemyKilled(target);
+          }
+        }
+        break;
+      }
+      case 'HEAL': {
+        const healRatio = (ult.healPercent || 30) / 100;
+        // Revive 1 fallen ally with healRatio HP if someone is fallen
+        if (fallenSpirits.length > 0) {
+          const allyToRevive = fallenSpirits[0];
+          allyToRevive.isFallen = false;
+          allyToRevive.currentHp = Math.max(1, Math.round(allyToRevive.maxHp * healRatio));
+          totalHealingDone += allyToRevive.currentHp;
+        }
+        for (const ally of livingSpirits) {
+          const heal = Math.round(ally.maxHp * healRatio);
+          ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
+          totalHealingDone += heal;
+        }
+        break;
+      }
+      case 'SUPPORT': {
+        const healRatio = (ult.healPercent || 20) / 100;
+        const shieldRatio = (ult.shieldPercent || 20) / 100;
+        if (fallenSpirits.length > 0) {
+          const allyToRevive = fallenSpirits[0];
+          allyToRevive.isFallen = false;
+          allyToRevive.currentHp = Math.max(1, Math.round(allyToRevive.maxHp * healRatio));
+          totalHealingDone += allyToRevive.currentHp;
+        }
+        for (const ally of livingSpirits) {
+          const heal = Math.round(ally.maxHp * healRatio);
+          ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
+          ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * shieldRatio);
+          totalHealingDone += heal;
+        }
+        break;
+      }
+      case 'AOE_DAMAGE_AND_HEAL': {
+        const damagePerEnemy = Math.max(1, Math.round(spirit.power * (ult.multiplier || 3.0)));
+        for (const enemy of livingEnemies) {
+          enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
+          totalDamageDealt += damagePerEnemy;
+          if (enemy.hp <= 0) {
+            this.onIndividualEnemyKilled(enemy);
+          }
+        }
+        const healRatio = (ult.healPercent || 25) / 100;
+        if (fallenSpirits.length > 0) {
+          const allyToRevive = fallenSpirits[0];
+          allyToRevive.isFallen = false;
+          allyToRevive.currentHp = Math.max(1, Math.round(allyToRevive.maxHp * healRatio));
+          totalHealingDone += allyToRevive.currentHp;
+        }
+        for (const ally of livingSpirits) {
+          const heal = Math.round(ally.maxHp * healRatio);
+          ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
+          totalHealingDone += heal;
+        }
+        break;
+      }
+    }
+
+    this.emit('ultimateCast', {
+      spirit,
+      ult,
+      totalDamageDealt,
+      totalHealingDone
+    });
+  }
+
+  /**
+   * Manual Party Attack Click Action
+   * Deals burst damage to frontline enemy and awards +10 MP to all living party spirits
+   */
   attackEnemyWithPartyPower() {
     const { madnessZone } = this.state;
-    if (!madnessZone.currentEnemy) return { damage: 0, killed: false };
+    if (!madnessZone.currentSwarm || madnessZone.currentSwarm.length === 0) {
+      this.spawnMadnessEnemy();
+      return { damage: 0, killed: false };
+    }
 
-    const enemy = madnessZone.currentEnemy;
+    const livingEnemies = madnessZone.currentSwarm.filter(e => !e.isDefeated && e.hp > 0);
+    if (livingEnemies.length === 0) {
+      return { damage: 0, killed: false };
+    }
+
+    const enemy = livingEnemies[0];
     const partyPower = this.getTotalPartyPower();
     const damage = Math.max(1, Math.round(partyPower * 0.45));
     enemy.hp = Math.max(0, enemy.hp - damage);
 
+    // Active tapping charges +10 MP on all living party spirits!
+    const party = this.getPartySpirits();
+    party.forEach(s => {
+      if (!s.isFallen) {
+        s.currentMp = Math.min(s.maxMp || 100, (s.currentMp || 0) + 10);
+        if (s.currentMp >= 100) {
+          s.currentMp = 0;
+          this.procSpiritUltimate(s);
+        }
+      }
+    });
+
     let killed = false;
     if (enemy.hp <= 0) {
-      this.onEnemyDefeated(enemy);
+      this.onIndividualEnemyKilled(enemy);
       killed = true;
     }
+
+    this.emit('partyAttack', {
+      damage,
+      enemyHp: enemy.hp,
+      enemyMaxHp: enemy.maxHp,
+      killed
+    });
+
     return { damage, killed, remainingHp: enemy.hp };
   }
 
   spawnMadnessEnemy() {
     const { stage, subStage } = this.state.madnessZone;
-    this.state.madnessZone.currentEnemy = getEnemyForStage(stage, subStage);
+    const swarm = getSwarmForStage(stage, subStage);
+    this.state.madnessZone.currentSwarm = swarm;
+    this.state.madnessZone.currentEnemy = swarm[0] || null;
     this.emit('enemySpawned', this.state.madnessZone.currentEnemy);
+    this.emit('swarmSpawned', this.state.madnessZone.currentSwarm);
   }
 
-  onEnemyDefeated(enemy) {
-    const shardsGained = enemy.shardReward;
-    const essenceGained = enemy.essenceReward;
+  onIndividualEnemyKilled(enemy) {
+    if (enemy.isDefeated) return;
+    enemy.isDefeated = true;
+    enemy.hp = 0;
+
+    const shardsGained = enemy.shardReward || 0;
+    const essenceGained = enemy.essenceReward || 0;
 
     this.state.resources.spiritShards += shardsGained;
     this.state.resources.soulEssence += essenceGained;
@@ -573,28 +819,58 @@ class GameStateManager {
       essenceGained
     });
 
-    const mz = this.state.madnessZone;
+    // Check if the entire swarm is defeated
+    const remaining = (this.state.madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
+    if (remaining.length === 0) {
+      this.onSwarmCleared();
+    } else {
+      this.state.madnessZone.currentEnemy = remaining[0];
+    }
+  }
 
-    if (mz.subStage >= 5) {
+  // Backward compatibility alias for tests/external callers
+  onEnemyDefeated(enemy) {
+    this.onIndividualEnemyKilled(enemy);
+  }
+
+  onSwarmCleared() {
+    const mz = this.state.madnessZone;
+    const isBossFloor = mz.subStage >= 5;
+
+    if (isBossFloor) {
       // Zone Boss Defeated!
       mz.highestStageCleared = Math.max(mz.highestStageCleared, mz.stage);
 
-      // Check if next stage is already unlocked
-      const nextStage = mz.stage + 1;
-      const isNextUnlocked = mz.unlockedStages.includes(nextStage);
+      // Floor Victory: Revive ALL party spirits to 100% HP!
+      const party = this.getPartySpirits();
+      party.forEach(s => {
+        s.currentHp = s.maxHp;
+        s.isFallen = false;
+        s.shieldHp = 0;
+      });
+      this.emit('partyRevived', { reason: 'floor_victory' });
 
-      if (mz.autoAdvance && !mz.farmMode && isNextUnlocked) {
+      // Unlock next stage permanently
+      const nextStage = mz.stage + 1;
+      if (!mz.unlockedStages.includes(nextStage)) {
+        mz.unlockedStages.push(nextStage);
+        mz.unlockedStages.sort((a, b) => a - b);
+      }
+      mz.highestStageUnlocked = Math.max(mz.highestStageUnlocked, nextStage);
+
+      if (mz.autoAdvance && !mz.farmMode) {
         mz.stage = nextStage;
         mz.subStage = 1;
       } else {
-        // Repeat current stage boss/wave (infinite repetition of unlocked stages with 0 energy)
         mz.subStage = 1;
       }
+      this.emit('floorCleared', { stage: mz.stage });
     } else {
       mz.subStage += 1;
     }
 
     this.spawnMadnessEnemy();
+    this.emit('madnessZoneUpdated', mz);
   }
 
   /**
@@ -705,6 +981,12 @@ class GameStateManager {
     spirit.canEvolve = false;
     spirit.rarity = chosenBranch.rarity || nextSpecies.baseRarity;
     spirit.power = calculateSpiritPower(nextSpecies, spirit.level, spirit.rarity);
+    spirit.maxHp = calculateSpiritMaxHp(nextSpecies, spirit.level, spirit.rarity);
+    spirit.currentHp = spirit.maxHp;
+    spirit.maxMp = 100;
+    spirit.currentMp = 0;
+    spirit.shieldHp = 0;
+    spirit.isFallen = false;
     spirit.evolutionHistory.push(nextSpecies.name);
 
     this.state.stats.totalEvolutions += 1;
@@ -757,6 +1039,12 @@ class GameStateManager {
         tier: 1,
         rarity: rolled.rarityTier,
         power: calculateSpiritPower(species, 1, rolled.rarityTier),
+        maxHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
+        currentHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
+        maxMp: 100,
+        currentMp: 0,
+        shieldHp: 0,
+        isFallen: false,
         isEquipped: false,
         canEvolve: false,
         evolutionHistory: [species.name],
@@ -858,6 +1146,12 @@ class GameStateManager {
       tier: 1,
       rarity: rolled.rarityTier,
       power: calculateSpiritPower(species, 1, rolled.rarityTier),
+      maxHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
+      currentHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
+      maxMp: 100,
+      currentMp: 0,
+      shieldHp: 0,
+      isFallen: false,
       isEquipped: false,
       canEvolve: false,
       favorite: false,
@@ -909,6 +1203,9 @@ class GameStateManager {
           spirit.xp = 0;
           spirit.level += 1;
           spirit.power = calculateSpiritPower(species, spirit.level, spirit.rarity);
+          spirit.maxHp = calculateSpiritMaxHp(species, spirit.level, spirit.rarity);
+          spirit.currentHp = spirit.maxHp;
+          spirit.isFallen = false;
         } else {
           spirit.xp += remainingXp;
           remainingXp = 0;

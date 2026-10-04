@@ -165,7 +165,7 @@ gameState.subscribe((eventType, payload, state) => {
       renderMadnessView(viewContainer);
     }
     updateResourcesDisplay();
-  } else if (eventType === 'enemySpawned') {
+  } else if (eventType === 'enemySpawned' || eventType === 'swarmSpawned') {
     if (activeTab === 'madness') {
       renderMadnessView(viewContainer);
     }
