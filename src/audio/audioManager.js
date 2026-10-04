@@ -73,10 +73,30 @@ class AudioManager {
   }
 
   toggleMute() {
+    this.init();
     this.isMuted = !this.isMuted;
-    if (this.bgmAudioElement) {
-      this.bgmAudioElement.muted = this.isMuted;
+
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume().catch(() => {});
     }
+
+    if (!this.isMuted) {
+      if (this.bgmAudioElement) {
+        this.bgmAudioElement.muted = false;
+        this.bgmAudioElement.volume = this.bgmVolume;
+        if (this.bgmAudioElement.paused) {
+          this.bgmAudioElement.play().catch(() => {});
+        }
+      } else {
+        this.playBgm(this.currentBgmTrack || 'ambient');
+      }
+      this.playSfx('tap');
+    } else {
+      if (this.bgmAudioElement) {
+        this.bgmAudioElement.muted = true;
+      }
+    }
+
     this.saveSettings();
     return this.isMuted;
   }
@@ -137,7 +157,7 @@ class AudioManager {
    * Automatically switches BGM depending on the active game view
    */
   handleTabChange(tabId) {
-    if (tabId === 'madness') {
+    if (tabId === 'madness' || tabId === 'forge') {
       this.playBgm('battle');
     } else if (tabId === 'trials') {
       this.playBgm('trials');

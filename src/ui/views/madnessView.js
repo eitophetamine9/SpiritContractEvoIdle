@@ -264,8 +264,11 @@ export function renderMadnessView(container) {
           ${powerStatusText}
         </div>
 
-        <!-- Automation Controls -->
+        <!-- Automation & Engagement Controls -->
         <div class="combat-toggle-row">
+          <button id="btn-toggle-engage" class="zone-toggle-btn ${mz.isEngaged !== false ? 'active' : 'standby'}" title="Toggle between active combat and standby resting mode">
+            ${mz.isEngaged !== false ? '⚔️ Combat: ENGAGED' : '⏸️ Combat: STANDBY'}
+          </button>
           <button id="btn-toggle-advance" class="zone-toggle-btn ${mz.autoAdvance ? 'active' : ''}">
             Auto-Advance: ${mz.autoAdvance ? 'ON' : 'OFF'}
           </button>
@@ -341,6 +344,14 @@ export function renderMadnessView(container) {
     });
   }
 
+  const btnEngage = container.querySelector('#btn-toggle-engage');
+  if (btnEngage) {
+    btnEngage.addEventListener('click', () => {
+      gameState.toggleMadnessEngagement();
+      renderMadnessView(container);
+    });
+  }
+
   const btnAuto = container.querySelector('#btn-toggle-advance');
   if (btnAuto) {
     btnAuto.addEventListener('click', () => {
@@ -363,6 +374,18 @@ export function renderMadnessView(container) {
     btnSpeed.addEventListener('click', () => {
       battleSpeed = battleSpeed === 1 ? 2 : 1;
       renderMadnessView(container);
+    });
+  }
+
+  // Combat Sound Toggle
+  const btnCombatSound = container.querySelector('#btn-combat-sound');
+  if (btnCombatSound) {
+    btnCombatSound.textContent = audioManager.isMuted ? '🔇' : '🔊';
+    btnCombatSound.addEventListener('click', () => {
+      const muted = audioManager.toggleMute();
+      btnCombatSound.textContent = muted ? '🔇' : '🔊';
+      const topAudioBtn = document.querySelector('#btn-top-audio');
+      if (topAudioBtn) topAudioBtn.textContent = muted ? '🔇' : '🔊';
     });
   }
 
@@ -399,17 +422,24 @@ export function renderMadnessView(container) {
       updateMadnessCombatTick(container);
 
       if (res.killed) {
-        setTimeout(() => renderMadnessView(container), 250);
+        setTimeout(() => {
+          if (document.querySelector('.madness-container')) {
+            renderMadnessView(container);
+          }
+        }, 250);
       }
     });
   }
 
-  // Hook global combat listeners once
+  // Hook global combat listeners once with strict container guard
   if (!isEventsBound) {
     isEventsBound = true;
     gameState.subscribe((eventType, payload) => {
       const currentContainer = document.querySelector('#view-container');
       if (!currentContainer) return;
+      // STRICT GUARD: Do not hijack screen if user navigated away from Madness Zone!
+      const hasMadnessContainer = !!currentContainer.querySelector('.madness-container');
+      if (!hasMadnessContainer) return;
 
       if (eventType === 'ultimateCast') {
         showCombatBanner(currentContainer, `✨ ${payload.spirit.customName} casts ${payload.ult.name}!`, 'ult');
@@ -423,10 +453,18 @@ export function renderMadnessView(container) {
         spawnCombatNumber(currentContainer, `-${payload.damage}`, 'enemy-hit');
       } else if (eventType === 'partyWiped') {
         showCombatBanner(currentContainer, '💀 PARTY WIPED! Regrouping at Wave 1 with 100% HP restored...', 'wipe');
-        setTimeout(() => renderMadnessView(currentContainer), 800);
+        setTimeout(() => {
+          if (document.querySelector('.madness-container')) {
+            renderMadnessView(currentContainer);
+          }
+        }, 800);
       } else if (eventType === 'floorCleared') {
         showCombatBanner(currentContainer, `🏆 FLOOR ${payload.stage} CLEARED! Party fully restored!`, 'victory');
-        setTimeout(() => renderMadnessView(currentContainer), 800);
+        setTimeout(() => {
+          if (document.querySelector('.madness-container')) {
+            renderMadnessView(currentContainer);
+          }
+        }, 800);
       }
     });
   }

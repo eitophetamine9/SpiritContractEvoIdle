@@ -158,7 +158,7 @@ export const PANTHEON_CHAMBERS = [
 /**
  * Rolls random rarity according to difficulty tier weights
  */
-function rollRarityFromWeights(weights) {
+export function rollRarityFromWeights(weights) {
   const total = Object.values(weights).reduce((a, b) => a + b, 0);
   let roll = Math.random() * total;
   for (const [rarity, weight] of Object.entries(weights)) {
@@ -178,7 +178,7 @@ export function generateDungeonLoot(chamberId, tierNum = 1) {
   const relics = [];
   // Guaranteed 2 to 3 targeted Relics from this God's Set!
   for (let i = 0; i < tierObj.relicCount; i++) {
-    // Pick random slot (Crown, Goblet, Feather, Ring, Pendant, Aegis)
+    // Pick random slot (Headgear, Totem, Ring, Necklace, Orb, Charm)
     const slotObj = RELIC_SLOT_TYPES[Math.floor(Math.random() * RELIC_SLOT_TYPES.length)];
     const rarity = rollRarityFromWeights(tierObj.rarityWeights);
     const relic = createRelicInstance({

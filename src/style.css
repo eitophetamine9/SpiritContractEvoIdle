@@ -66,12 +66,14 @@
 }
 
 body {
-  background-color: var(--bg-deep);
+  background-color: #07090e;
   background-image: 
-    radial-gradient(circle at 50% 10%, #15241b 0%, #060b08 80%),
-    linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px);
-  background-size: 100% 100%, 24px 24px, 24px 24px;
+    radial-gradient(circle at 50% 5%, rgba(68, 44, 110, 0.35) 0%, transparent 60%),
+    radial-gradient(circle at 20% 85%, rgba(26, 54, 93, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(184, 134, 11, 0.12) 0%, transparent 45%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 28px 28px;
   color: var(--text-main);
   font-family: var(--font-main);
   line-height: 1.4;
@@ -121,14 +123,17 @@ button:disabled {
   max-width: 480px;
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: var(--bg-surface);
-  background-image: radial-gradient(circle at 50% 0%, rgba(39, 59, 46, 0.4) 0%, rgba(14, 23, 18, 0.95) 75%);
+  background-color: #0b0f19;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(93, 63, 211, 0.22) 0%, transparent 65%),
+    radial-gradient(circle at 50% 100%, rgba(212, 175, 55, 0.1) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(16, 23, 38, 0.95) 0%, rgba(10, 14, 24, 0.98) 100%);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.95);
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.95), 0 0 1px rgba(212, 175, 55, 0.3);
+  border-left: 1px solid rgba(212, 175, 55, 0.25);
+  border-right: 1px solid rgba(212, 175, 55, 0.25);
 }
 
 /* HEADER BAR */
@@ -280,8 +285,8 @@ button:disabled {
 }
 
 /* ==========================================================================
-   BOTTOM NAVIGATION BAR (Weathered Stone & Mossy Touch Tabs >= 60px height)
-   Party on left, Madness in middle ALWAYS, Contract on right, More side-drawer
+   BOTTOM NAVIGATION BAR (1-Line Responsive 6-Tab Console Dock)
+   [Hero] [Tower] [Trials] [Forge] [Summon] [Vault]
    ========================================================================== */
 
 .bottom-nav {
@@ -289,72 +294,63 @@ button:disabled {
   bottom: 0;
   width: 100%;
   max-width: 480px;
-  height: 60px;
-  background: #09110c;
-  border-top: 2px solid var(--border-color);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.7);
+  height: 64px;
+  background: rgba(9, 13, 22, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1.5px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   z-index: 50;
-  display: flex;
-}
-
-.nav-dock-group {
   display: grid;
-  width: 100%;
-  height: 100%;
-  transition: opacity 0.15s ease;
-}
-
-#nav-dock-main {
-  grid-template-columns: 1fr 1.25fr 1fr 0.9fr;
-}
-
-#nav-dock-more {
-  grid-template-columns: 0.9fr 1.1fr 1.1fr;
-}
-
-.nav-dock-hidden {
-  display: none !important;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  padding: 0 4px;
 }
 
 .nav-tab {
   background: transparent;
   border: none;
-  border-radius: 0;
-  color: var(--text-muted);
+  border-radius: 6px;
+  color: #8b9bb4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 4px 0;
+  padding: 4px 1px;
   min-height: 100%;
   position: relative;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .nav-tab .tab-icon {
   font-size: 18px;
+  line-height: 1.1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 .nav-tab .tab-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
+  letter-spacing: 0.3px;
+  line-height: 1;
 }
 
 .nav-tab.active {
-  color: #ffffff;
-  background: rgba(39, 59, 46, 0.35);
+  color: #ffd32a;
+  background: radial-gradient(circle at 50% 100%, rgba(212, 175, 55, 0.25) 0%, transparent 80%);
 }
 
 .nav-tab.active::after {
   content: '';
   position: absolute;
   top: 0;
-  left: 15%;
-  right: 15%;
+  left: 8%;
+  right: 8%;
   height: 3px;
-  background: linear-gradient(90deg, #d4e478, #2ecc71);
-  box-shadow: 0 0 8px rgba(46, 204, 113, 0.7);
+  background: linear-gradient(90deg, #ffd32a, #f39c12);
+  box-shadow: 0 0 12px rgba(255, 211, 42, 0.9);
   border-radius: 0 0 3px 3px;
 }
 
@@ -2270,31 +2266,95 @@ button:disabled {
 }
 
 .btn-main-attack {
-  min-height: 52px;
-  background: linear-gradient(135deg, #a71d2a, #d63031);
+  position: relative;
+  min-height: 60px;
+  background: radial-gradient(circle at 50% 15%, #ff4757 0%, #b31224 55%, #59040e 100%);
   color: #ffffff;
   font-weight: 900;
-  font-size: 14px;
-  border: 1px solid #ff7675;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(214, 48, 49, 0.45);
+  font-size: 15px;
+  font-family: var(--font-fantasy);
+  letter-spacing: 0.6px;
+  border: 2px solid #ffd32a;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(179, 18, 36, 0.65), inset 0 2px 5px rgba(255, 255, 255, 0.45), inset 0 -3px 8px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
+  padding: 8px 16px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.btn-main-attack::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -20%;
+  width: 140%;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.btn-main-attack:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 8px 26px rgba(255, 71, 87, 0.8), inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.btn-main-attack:active {
+  transform: translateY(3px) scale(0.97) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), inset 0 3px 10px rgba(0, 0, 0, 0.7);
 }
 
 .btn-subtext {
-  font-size: 11px;
-  opacity: 0.9;
+  font-size: 10px;
+  opacity: 0.95;
   font-weight: 700;
+  font-family: var(--font-main);
+  letter-spacing: 0.2px;
+  color: #ffeaa7;
 }
 
 .combat-toggle-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: 6px;
+}
+
+.zone-toggle-btn {
+  min-height: 42px;
+  background: linear-gradient(180deg, #1b263b 0%, #0d131f 100%);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 8px;
+  color: #bdc3c7;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 6px;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 3px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.zone-toggle-btn.active {
+  background: linear-gradient(180deg, rgba(39, 174, 96, 0.35) 0%, rgba(20, 90, 50, 0.7) 100%);
+  border-color: #2ecc71;
+  color: #2ecc71;
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.4), inset 0 1px 3px rgba(255,255,255,0.2);
+}
+
+.zone-toggle-btn.standby {
+  background: linear-gradient(180deg, rgba(230, 126, 34, 0.3) 0%, rgba(120, 60, 10, 0.6) 100%);
+  border-color: #e67e22;
+  color: #f39c12;
+  box-shadow: 0 0 10px rgba(230, 126, 34, 0.4);
 }
 
 .combat-yield-summary {
@@ -4779,6 +4839,90 @@ button:disabled {
 
 .core-crest {
   font-size: 14px;
+}
+
+/* ==========================================================================
+   VAULT BESTIARY CATEGORY SWITCHER & HIGH-DENSITY GRID
+   ========================================================================== */
+
+.vault-category-switcher {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.vault-cat-btn {
+  flex: 1;
+  min-height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #8b9bb4;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vault-cat-btn.active {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(13, 19, 31, 0.8) 100%);
+  border-color: #ffd32a;
+  color: #ffd32a;
+  box-shadow: 0 0 10px rgba(255, 211, 42, 0.4);
+}
+
+/* ==========================================================================
+   3-WAVE DUNGEON COMBAT ARENA (PANTHEON & THE DIVINE FORGE)
+   ========================================================================== */
+
+.trial-battle-container,
+.forge-battle-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+}
+
+.enemy-boss-slot {
+  position: relative;
+  border: 1.5px solid #f1c40f !important;
+  box-shadow: 0 0 16px rgba(241, 196, 15, 0.4) !important;
+}
+
+.boss-crown-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #d35400, #f39c12);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #ffd32a;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+
+.btn-claim-dungeon-loot {
+  width: 100%;
+  min-height: 48px;
+  font-weight: 900;
+  font-size: 14px;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+  margin-top: 14px;
 }
 
 

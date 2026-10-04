@@ -4,6 +4,7 @@
  */
 
 import { gameState } from '../../state/gameState.js';
+import { audioManager } from '../../audio/audioManager.js';
 import { PANTHEON_CHAMBERS, PANTHEON_DIFFICULTY_TIERS } from '../../data/artifactDungeonData.js';
 import { GREEK_GOD_SETS, EQUIPMENT_RARITIES } from '../../data/equipmentData.js';
 
@@ -11,6 +12,12 @@ let selectedChamberId = 'underworld_crypt';
 let selectedTierNum = 1;
 
 export function renderDungeonView(container) {
+  const battle = gameState.state.activeDungeonBattle;
+  if (battle && battle.dungeonType === 'pantheon') {
+    renderPantheonBattleArena(container, battle);
+    return;
+  }
+
   const state = gameState.state;
   const res = state.resources;
   const partyPower = gameState.getTotalPartyPower();
@@ -157,8 +164,9 @@ export function renderDungeonView(container) {
   if (btnEnter) {
     btnEnter.addEventListener('click', () => {
       try {
-        const loot = gameState.runPantheonTrial(selectedChamberId, selectedTierNum);
-        showDungeonVictoryModal(loot, () => renderDungeonView(container));
+        audioManager.playBgm('battle');
+        gameState.startDungeonTrial('pantheon', selectedChamberId, selectedTierNum);
+        renderDungeonView(container);
       } catch (err) {
         alert(err.message);
       }
@@ -259,4 +267,181 @@ export function showDungeonVictoryModal(loot, onClose) {
       if (onClose) onClose();
     });
   }
+}
+
+function renderPantheonBattleArena(container, battle) {
+  const chamber = PANTHEON_CHAMBERS.find(c => c.id === battle.chamberId) || PANTHEON_CHAMBERS[0];
+  const tier = PANTHEON_DIFFICULTY_TIERS.find(t => t.tier === battle.tier) || PANTHEON_DIFFICULTY_TIERS[0];
+  const party = gameState.getPartySpirits();
+  const swarm = battle.currentSwarm || [];
+
+  container.innerHTML = `
+    <div class="pantheon-container trial-battle-container">
+      
+      <!-- Top Trial Combat HUD Header -->
+      <div class="combat-hud-top" style="border-bottom: 2px solid ${chamber.color};">
+        <button id="btn-trial-flee" class="zone-btn-sm" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675;">
+          ◀ Flee Trial
+        </button>
+
+        <div class="combat-vs-banner">
+          <span class="vs-ally-tag" style="background: ${chamber.color}; color: #000; font-weight: 800;">
+            ${chamber.sigil} ${chamber.name}
+          </span>
+          <span class="vs-center-tag" style="background: #f1c40f; color: #000; padding: 3px 8px; border-radius: 4px; font-weight: 900;">
+            WAVE ${battle.currentWave} / 3
+          </span>
+          <span class="vs-enemy-tag">
+            ${battle.currentWave === 3 ? `AVATAR: ${chamber.god}` : 'DIVINE ATTENDANTS'}
+          </span>
+        </div>
+
+        <span class="loot-badge" style="background: rgba(0,0,0,0.5);">⚡ ${tier.energyCost} Spent</span>
+      </div>
+
+      <!-- Combat Banner & Floating Layer -->
+      <div id="trial-combat-banner" class="combat-event-banner" style="display: none;"></div>
+      <div id="damage-popup-layer" class="damage-popup-layer"></div>
+
+      <!-- Dynamic Battlefield Area -->
+      <div class="isometric-battleground">
+        
+        <!-- Left Wing: Active Party Formation -->
+        <div class="battlefield-wing allies-wing">
+          <div class="wing-formation-grid">
+            ${party.map((spirit, idx) => {
+              const hpPct = Math.round((spirit.currentHp / spirit.maxHp) * 100);
+              const mpPct = Math.round(((spirit.currentMp || 0) / (spirit.maxMp || 100)) * 100);
+              const isLead = idx === 0;
+
+              return `
+                <div class="spirit-formation-slot slot-active ${isLead ? 'slot-lead' : ''} ${spirit.isFallen ? 'slot-fallen' : ''}">
+                  <div class="slot-avatar-container">
+                    <span class="slot-spirit-sprite">${spirit.speciesId === 'cat_spirit' ? '🐱' : '🐾'}</span>
+                    ${spirit.shieldHp > 0 ? `<div class="spirit-shield-aura">🛡️ +${spirit.shieldHp}</div>` : ''}
+                  </div>
+
+                  <div class="slot-combat-bars">
+                    <div class="slot-hp-bar">
+                      <div class="slot-hp-fill" style="width: ${hpPct}%;"></div>
+                      <span class="slot-bar-text">${spirit.currentHp}/${spirit.maxHp}</span>
+                    </div>
+
+                    <div class="slot-mp-bar">
+                      <div class="slot-mp-fill" style="width: ${mpPct}%;"></div>
+                      <span class="slot-bar-text">${spirit.currentMp || 0}/100 MP</span>
+                    </div>
+                  </div>
+
+                  <span class="slot-name-tag">${spirit.customName}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Right Wing: Wave Enemies -->
+        <div class="battlefield-wing enemies-wing">
+          <div class="wing-formation-grid enemy-formation-grid">
+            ${swarm.map((enemy, idx) => {
+              const isDefeated = enemy.isDefeated || enemy.hp <= 0;
+              const hpPct = Math.round((enemy.hp / enemy.maxHp) * 100);
+
+              return `
+                <div class="enemy-swarm-slot ${isDefeated ? 'enemy-defeated' : ''} ${enemy.isBoss ? 'enemy-boss-slot' : ''}">
+                  <div class="slot-avatar-container">
+                    <span class="slot-enemy-sprite">${enemy.icon}</span>
+                    ${enemy.isBoss ? '<span class="boss-crown-badge">👑 GOD AVATAR</span>' : ''}
+                  </div>
+
+                  <div class="slot-combat-bars">
+                    <div class="slot-hp-bar enemy-hp-bar">
+                      <div class="slot-hp-fill enemy-hp-fill" style="width: ${hpPct}%;"></div>
+                      <span class="slot-bar-text">${Math.round(enemy.hp)}/${enemy.maxHp} HP</span>
+                    </div>
+                  </div>
+
+                  <span class="slot-name-tag enemy-name-tag">${enemy.name}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Strike Command Strip -->
+      <div class="combat-action-footer">
+        <button id="btn-trial-strike" class="btn-main-attack" style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
+          <span>⚔️ Divine Strike (Party Attack • Charges +10 MP)</span>
+          <span class="btn-subtext">Clear Wave ${battle.currentWave}/3 to claim targeted ${chamber.god} Relics</span>
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  // Attach Flee listener
+  const btnFlee = container.querySelector('#btn-trial-flee');
+  if (btnFlee) {
+    btnFlee.addEventListener('click', () => {
+      gameState.exitDungeonBattle();
+      renderDungeonView(container);
+    });
+  }
+
+  // Attach Strike listener
+  const btnStrike = container.querySelector('#btn-trial-strike');
+  if (btnStrike) {
+    btnStrike.addEventListener('click', () => {
+      gameState.manualDungeonStrike();
+      renderDungeonView(container);
+    });
+  }
+
+  // Check victory / defeat modal triggers
+  if (battle.status === 'victory' && battle.loot) {
+    showDungeonVictoryModal(battle.loot, () => {
+      gameState.exitDungeonBattle();
+      renderDungeonView(container);
+    });
+  } else if (battle.status === 'defeat') {
+    showPantheonDefeatModal(() => {
+      gameState.exitDungeonBattle();
+      renderDungeonView(container);
+    });
+  }
+}
+
+function showPantheonDefeatModal(onClose) {
+  const modalRoot = document.querySelector('#modal-root');
+  if (!modalRoot) return;
+
+  const modalEl = document.createElement('div');
+  modalEl.className = 'modal-backdrop';
+
+  modalEl.innerHTML = `
+    <div class="pantheon-victory-modal" style="border: 2px solid #e74c3c;">
+      <div class="victory-header" style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.4), #000);">
+        <div class="victory-sigil">💀</div>
+        <div class="victory-title-col">
+          <span class="victory-sub" style="color: #ff7675;">DIVINE TRIAL FAILED</span>
+          <h3 class="victory-name">Party Wiped in Sanctum</h3>
+          <span class="victory-tier-tag">Regroup and upgrade your spirits before challenging this god again</span>
+        </div>
+      </div>
+
+      <div class="victory-body">
+        <button id="btn-trial-defeat-ok" class="btn-claim-dungeon-loot" style="background: #34495e;">
+          Return Safely
+        </button>
+      </div>
+    </div>
+  `;
+
+  modalRoot.appendChild(modalEl);
+  modalEl.querySelector('#btn-trial-defeat-ok').addEventListener('click', () => {
+    modalRoot.removeChild(modalEl);
+    if (onClose) onClose();
+  });
 }

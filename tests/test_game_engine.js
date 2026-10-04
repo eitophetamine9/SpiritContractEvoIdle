@@ -206,11 +206,11 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
 
   // Test 4-pc Hades bonus activation by equipping 2 more Hades relics
   const hadesRing = createRelicInstance({ setId: 'hades', slotTypeId: 'ring', rarity: 'RARE', level: 1 });
-  const hadesAegis = createRelicInstance({ setId: 'hades', slotTypeId: 'aegis', rarity: 'RARE', level: 1 });
-  gameState.state.inventory.equipment.push(hadesRing, hadesAegis);
+  const hadesNecklace = createRelicInstance({ setId: 'hades', slotTypeId: 'necklace', rarity: 'RARE', level: 1 });
+  gameState.state.inventory.equipment.push(hadesRing, hadesNecklace);
 
   gameState.equipItem(starter.id, hadesRing.uid);
-  gameState.equipItem(starter.id, hadesAegis.uid);
+  gameState.equipItem(starter.id, hadesNecklace.uid);
 
   const updatedBonuses = gameState.getSpiritActiveSetBonuses(starter);
   console.log(`  After equipping 4 Hades relics -> Bonuses: ${updatedBonuses.map(b => b.name).join(', ')}`);
@@ -233,6 +233,49 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (gameState.state.resources.energy !== initialEnergy - 10) throw new Error('Dungeon run did not deduct 10 Energy');
   if (gameState.state.inventory.equipment.length < initialEquipCount + 2) throw new Error('Dungeon relics not added to inventory');
   if (dungeonResult.relics.some(r => r.setId !== 'hades')) throw new Error('Underworld Crypt should only drop Hades relics');
+
+  // Test The Divine Forge (Weapon Dungeon)
+  console.log('\n[TEST 9] Testing The Divine Forge (Dedicated Weapon Dungeon):');
+  const forgeResult = gameState.runForgeDungeon('bladesmith_sanctum', 1);
+  console.log(`  Cleared "${forgeResult.chamber.name}" [${forgeResult.tier.name}]!`);
+  console.log(`  Weapons Dropped: ${forgeResult.weapons.map(w => w.name).join(', ')}`);
+  if (forgeResult.weapons.length === 0) throw new Error('Forge Dungeon should drop targeted weapons');
+  if (forgeResult.weapons.some(w => w.weaponTypeId !== 'sword')) throw new Error('Bladesmith Sanctum should only drop swords');
+
+  // Test 3-Wave Combat Trial Runner
+  console.log('\n[TEST 10] Testing 3-Wave Combat Trial System:');
+  const trialBattle = gameState.startDungeonTrial('pantheon', 'underworld_crypt', 1);
+  console.log(`  Trial initiated: Wave ${trialBattle.currentWave}/${trialBattle.maxWaves} with ${trialBattle.currentSwarm.length} enemies`);
+  if (trialBattle.currentWave !== 1) throw new Error('Trial should start at Wave 1');
+  if (trialBattle.maxWaves !== 3) throw new Error('Trial should have exactly 3 waves');
+
+  // Manual strike
+  gameState.manualDungeonStrike();
+  // Clear Wave 1
+  trialBattle.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.tickDungeonBattle(0.1);
+  console.log(`  After clearing Wave 1 -> Current Wave: ${trialBattle.currentWave}/${trialBattle.maxWaves}`);
+  if (trialBattle.currentWave !== 2) throw new Error('Trial should advance to Wave 2');
+
+  // Clear Wave 2
+  trialBattle.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.tickDungeonBattle(0.1);
+  console.log(`  After clearing Wave 2 -> Current Wave: ${trialBattle.currentWave}/${trialBattle.maxWaves}`);
+  if (trialBattle.currentWave !== 3) throw new Error('Trial should advance to Wave 3 (Boss)');
+
+  // Clear Wave 3 (Boss)
+  trialBattle.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.tickDungeonBattle(0.1);
+  console.log(`  After clearing Wave 3 -> Battle Status: ${trialBattle.status}`);
+  if (trialBattle.status !== 'victory') throw new Error('Trial should achieve victory after Wave 3');
+  if (!trialBattle.loot || trialBattle.loot.relics.length === 0) throw new Error('Trial victory should award relics');
+
+  // Test Madness Zone Engagement Toggle
+  console.log('\n[TEST 11] Testing Madness Zone Manual Battle / Standby Toggle:');
+  const isEngaged1 = gameState.state.madnessZone.isEngaged;
+  gameState.toggleMadnessEngagement();
+  console.log(`  Toggled engagement: ${isEngaged1} -> ${gameState.state.madnessZone.isEngaged}`);
+  if (gameState.state.madnessZone.isEngaged === isEngaged1) throw new Error('Toggle should flip isEngaged state');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

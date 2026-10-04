@@ -175,12 +175,12 @@ At 100 MP, spirits unleash their species-specific Ultimate skill:
 Each contracted spirit possesses seven dedicated equipment slots:
 - **1 Weapon Slot**: Main offensive armament providing raw ATK Power, Critical Rate, and Ultimate Amplification. Weapon archetypes include Spectral Blade, Celestial Bow, Astral Scepter, Primordial Claws, Shadow Dagger, and Titan Mallet.
 - **6 Relic Slots**:
-  1. **Crown**: Grants Bonus Max HP and Mana capacity.
-  2. **Goblet**: Grants Shield Strength and incoming healing amplification.
-  3. **Feather**: Grants Evasion Rating and attack cadence.
-  4. **Ring**: Grants Bonus ATK Power and Critical Strike damage.
-  5. **Pendant**: Grants Mana Replenishment and energy recovery rate.
-  6. **Aegis**: Grants Ultimate Amplification and physical mitigation.
+  1. **Headgear**: Grants Maximum Health Points (HP).
+  2. **Totem**: Grants Defensive Shield Capacity.
+  3. **Ring**: Grants Bonus ATK Power and Critical Strike damage.
+  4. **Necklace**: Grants Mana Replenishment and energy recovery rate.
+  5. **Orb**: Grants Ultimate Amplification and magical mitigation.
+  6. **Charm**: Grants Evasion Rating and attack cadence.
 
 ### 8.2 Greek God Relic Sets & Set Bonuses
 Relics belong to one of eight Olympian God sets. Equipping matching set pieces activates two-piece (2pc) and four-piece (4pc) passive blessings:
@@ -196,41 +196,73 @@ Relics belong to one of eight Olympian God sets. Equipping matching set pieces a
 | **Athena** | +15% Shield Strength, +5% Damage | **Aegis Bulwark**: Grants an impenetrable defensive barrier absorbing up to 25% team Max HP (40s cooldown). |
 | **Artemis** | +10% Critical Strike Chance, +10% Damage | **Hunters True Strike**: Fires focused arrows targeting the highest-health enemy dealing 25% single-target burst damage (20s cooldown). |
 
-### 8.3 The Pantheon Trials (Artifact Dungeon)
-The Pantheon Trials provide a dedicated dungeon instance for targeted relic farming:
+### 8.3 The Pantheon Trials (Artifact Dungeon & 3-Wave Combat Arena)
+The Pantheon Trials provide a dedicated dungeon instance for targeted relic farming with a 3-wave combat arena:
 - **Chambers**: 8 dedicated god chambers corresponding to each Olympian deity (Crypt of the Underworld, Sky Sanctum of Olympus, Abyssal Trench, Crossroads of the Wind, Colosseum of War, Temple of the Sun, Citadel of Wisdom, Silver Woods).
+- **3-Wave Combat Encounters**:
+  - **Wave 1**: 2 Divine Sentinels.
+  - **Wave 2**: 2 Sacred Temple Guardians.
+  - **Wave 3 (Boss)**: Olympian God Avatar Boss flanked by Royal Temple Protectors.
+- **Combat Mechanics**: Living spirits automatically attack and charge Mana. Reaching 100 MP triggers team Ultimates. Players can execute manual Divine Strikes to accelerate boss decimation. Defeat allows regrouping with zero penalty; victory yields targeted God Relics.
 - **Difficulty Tiers & Energy Costs**:
-  - **Disciple Trial (Tier 1)**: Costs 10 Energy. Recommended Power: 150 PWR. Drops 2 targeted Uncommon/Rare relics + 25 Madness Shards + 1 Soul Essence.
-  - **Champion Trial (Tier 2)**: Costs 12 Energy. Recommended Power: 800 PWR. Drops 3 targeted Rare/Epic relics + 50 Madness Shards + 2 Soul Essence.
-  - **Sovereign Trial (Tier 3)**: Costs 15 Energy. Recommended Power: 3,500 PWR. Drops 3 targeted Epic/Legendary relics + 100 Madness Shards + 4 Soul Essence.
-  - **Divine Trial (Tier 4)**: Costs 18 Energy. Recommended Power: 12,000 PWR. Drops 4 targeted Legendary/Mythical relics + 250 Madness Shards + 8 Soul Essence.
+  - **Disciple Trial (Tier 1)**: Costs 10 Energy. Recommended Power: 150 PWR. Drops 2 targeted relics + 25 Madness Shards + 1 Soul Essence.
+  - **Champion Trial (Tier 2)**: Costs 12 Energy. Recommended Power: 800 PWR. Drops 3 targeted relics + 50 Madness Shards + 2 Soul Essence.
+  - **Sovereign Trial (Tier 3)**: Costs 15 Energy. Recommended Power: 3,500 PWR. Drops 3 targeted relics + 100 Madness Shards + 4 Soul Essence.
+  - **Divine Trial (Tier 4)**: Costs 18 Energy. Recommended Power: 12,000 PWR. Drops 4 targeted relics + 250 Madness Shards + 8 Soul Essence.
 - **Madness Tower Overlord Boss Caches**:
   - Overlord Bosses (Wave 5 of every floor) have a 35% chance to drop a random Relic Cache upon defeat, providing supplemental relic drops during idle tower progression.
 
-### 8.4 Equipment Management & Dismantling
-- **Equipping**: Players can tap any weapon or relic socket in the Party View to inspect the equipped item, unequip it, or swap with any compatible equipment item from inventory.
-- **Dismantling**: Unequipped weapons and relics can be dismantled in the equipment modal to yield bonus Spirit Shards ($20 \times \text{Item Level}$), providing recycling utility for surplus gear.
+### 8.4 The Divine Forge (Dedicated Weapon Dungeon)
+The Divine Forge provides a standalone dungeon instance dedicated to forging specialized spirit weapons:
+- **Forge Chambers**:
+  1. **Bladesmith Sanctum**: Forges Spectral Blades, Astral Greatswords, and Katana armaments.
+  2. **Archers Grove**: Forges Celestial Recurves, Astral Longbows, and Crossbow armaments.
+  3. **Arcane Spire**: Forges Astral Staves, Mystic Wands, and Spellbound Rods.
+  4. **Behemoth Den**: Forges Primordial Claws, Beast Gauntlets, and Spiked Knuckles.
+  5. **Shadow Armory**: Forges Shadow Daggers, Twin Blades, and Nether Stilettos.
+  6. **Titans Anvil**: Forges Titan Mallets, Warhammers, and Earthshaker Maces.
+- **Difficulty Tiers**:
+  - **Apprentice Forge (Tier 1)**: Costs 8 Energy. Recommended Power: 120 PWR. Drops 1-2 targeted weapons.
+  - **Artisan Forge (Tier 2)**: Costs 12 Energy. Recommended Power: 650 PWR. Drops 2 targeted weapons.
+  - **Master Forge (Tier 3)**: Costs 15 Energy. Recommended Power: 2,800 PWR. Drops 2-3 targeted weapons.
+  - **Celestial Forge (Tier 4)**: Costs 18 Energy. Recommended Power: 10,000 PWR. Drops 3 targeted weapons.
+- **Combat Arena**: Features 3 waves of combat (Forge Minions, Elite Automatons, and the Colossus Forge Master) before awarding weapon loot.
+
+### 8.5 Equipment Management & Dismantling
+- **Equipping**: Players can tap any weapon or relic socket in the Party View or Vault to inspect the item, equip it to active party members, or unequip it.
+- **Dismantling**: Unequipped weapons and relics can be dismantled in the inspection modal to yield bonus Spirit Shards ($20 \times \text{Item Level}$), providing recycling utility for surplus gear.
 
 ---
 
-## 9. High-Fantasy UI-Kit Architecture & Hero Pedestal Showcase
+## 9. High-Fantasy UI-Kit Architecture & Mystical Interface
 
-### 9.1 Visual Design System & UI-Kit Tokens
-The interface employs a high-fantasy mobile aesthetic inspired by classical RPG UI-Kits:
-- **Typography**: Dual-font typography utilizing Cinzel serif for headings, banners, and deity titles, alongside Outfit sans-serif for numbers, statistics, and tactical gameplay elements.
-- **Metallic Gold Gradients**: Curated linear gradients representing divine craftsmanship (`linear-gradient(135deg, #fff2ad 0%, #d4af37 50%, #99741e 100%)`) with warm specular highlights.
+### 9.1 Visual Design System & Mystical Aesthetics
+The interface employs a celestial dark fantasy aesthetic designed to eliminate blandness and provide visual depth:
+- **Celestial Astral Canvas**: Deep cosmic background featuring radial gradients, twinkling starlight layers, and celestial dust glows.
+- **Metallic Gold Filigree**: Curated linear gradients representing divine craftsmanship (`linear-gradient(135deg, #fff2ad 0%, #d4af37 50%, #99741e 100%)`) with warm specular highlights and beveled inner shadows.
 - **Regal Banner Ribbons**: Deep royal purple and obsidian ribbon containers with cut-corner borders and swallowtail contours.
-- **Segmented Stat Gauges**: Ten-segment micro-meters visualizing Attack Power, Health Points (red-orange glow), and Mana charge (cyan-blue glow).
+- **Arcane Strike Seal**: Engraved golden medallion button with runic outer borders, sunburst inner rays, and pulsing arcane center replacing standard flat attack buttons.
+- **Segmented Stat Gauges**: Ten-segment micro-meters visualizing Attack Power, Health Points (crimson-orange glow), and Mana charge (cyan-blue glow).
 
-### 9.2 Hero Pedestal Showcase
-The Party View incorporates a dual-mode layout (Hero Pedestal and Full Roster):
-- **Team Switcher Column**: Vertical stack of five party member medallions featuring active gold borders, level indicators, and evolution alert pips.
-- **Three-Dimensional Glowing Pedestal**: An illuminated isometric stage featuring concentric runic rotation, light ray emanations, and dynamic spirit sprite hovering animation. Ready-to-evolve spirits emit a radiant golden aura.
-- **Spirit Dossier**: Detailed character breakdown showcasing species lineage, total combat power with equipment bonus attribution, and segmented attribute meters.
-- **Rapid Equipment Drawer**: Direct 4x2 gear inspection drawer allowing one-tap equipping, unequipping, and dismantling without navigating away from the party showcase.
+### 9.2 Unified 1-Line Mobile Navigation Dock
+The primary bottom navigation bar is constructed as a responsive 6-column single-line dock fitting mobile screens without wrapping, multi-row stacking, or dual-dock toggles:
+- **Hero**: Active party formation, pedestal showcase, and equipment sockets.
+- **Tower**: Madness Zone tower combat, stage selector, and wave progress.
+- **Trials**: The Pantheon Trials relic dungeon and 3-wave god battles.
+- **Forge**: The Divine Forge weapon dungeon and chamber selection.
+- **Summon**: Spirit Shard and Soul Essence contract altars.
+- **Vault**: Unified Bestiary-style inventory for Spirits, Relics, and Weapons.
 
-### 9.3 Diamond Fast-Travel Hub
-In the Madness Zone combat screen, a diamond-oriented quad-cluster navigation widget enables immediate transitions between Combat, Hero Pedestal, Astral Summons, and the Pantheon Trials.
+### 9.3 Manual Battle Engagement Controls
+To prevent screen hijacking when navigating outside the Madness Zone:
+- **Battle Engagement Toggle**: Players can toggle combat between Engaged (active automated strikes and progression) and Standby (paused combat timer without screen forcing).
+- **Navigation Safety**: Floor cleared transitions and party wipeout resets strictly verify that the Madness Zone view is active before updating the screen, preventing background events from disrupting inventory or summoning workflows.
+
+### 9.4 Unified Bestiary-Style Vault & Inventory
+The Vault implements a compact tile grid matching the Terraria-style Bestiary layout:
+- **Category Switcher**: Instant switching between Spirits, Relics, and Weapons.
+- **Compact Cards**: Rarity borders, level and power indicators, and equipped status tags.
+- **Interactive Modals**: One-tap inspection to view complete attributes, equip, unequip, favorite, rename, evolve, or dismantle.
 
 ---
 

@@ -1,62 +1,95 @@
+/**
+ * Unified Bestiary-Style Vault & Inventory View
+ * High-density compact tile grid for:
+ * 1) Owned Spirits (Level, Power, Evolution, Favorite, Annul)
+ * 2) Greek God Relics (Headgear, Totem, Ring, Necklace, Orb, Charm)
+ * 3) Weapons (Blades, Bows, Staves, Claws, Daggers, Mallets)
+ */
+
 import { gameState } from '../../state/gameState.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
-import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
+import { EQUIPMENT_RARITIES, GREEK_GOD_SETS } from '../../data/equipmentData.js';
+import { showSpiritModal, showItemInspectModal } from '../components/modals.js';
 
-let currentFilter = 'ALL';
+let activeCategory = 'spirits'; // 'spirits' | 'relics' | 'weapons'
+let activeRarityFilter = 'ALL';
 let searchQuery = '';
 let isBulkMode = false;
 let selectedForBulk = new Set();
 
 export function renderVaultView(container) {
   const state = gameState.state;
-  const spirits = state.spirits;
-  const partyIds = state.party;
+  const spirits = state.spirits || [];
+  const partyIds = state.party || [];
+  const allEquipment = (state.inventory && state.inventory.equipment) || [];
+  const relics = allEquipment.filter(e => e.type === 'relic');
+  const weapons = allEquipment.filter(e => e.type === 'weapon');
 
-  // Filter by search query & rarity/favorite
   const query = searchQuery.toLowerCase().trim();
+
+  // 1. Filter Spirits
   const filteredSpirits = spirits.filter(s => {
-    // Search match
     if (query) {
       const customMatch = (s.customName || '').toLowerCase().includes(query);
       const species = SPIRIT_SPECIES[s.speciesId];
       const speciesMatch = species && species.name.toLowerCase().includes(query);
       if (!customMatch && !speciesMatch) return false;
     }
-
-    // Filter match
-    if (currentFilter === 'ALL') return true;
-    if (currentFilter === 'FAVORITES') return !!s.favorite;
-
-    const spRarity = (s.rarity || 'COMMON').toUpperCase();
-    return spRarity === currentFilter;
+    if (activeRarityFilter === 'ALL') return true;
+    if (activeRarityFilter === 'FAVORITES') return !!s.favorite;
+    return (s.rarity || 'COMMON').toUpperCase() === activeRarityFilter;
   });
 
-  // Sort: Favorited & Equipped first, then highest power
   filteredSpirits.sort((a, b) => {
     const aFav = a.favorite ? 1 : 0;
     const bFav = b.favorite ? 1 : 0;
     if (aFav !== bFav) return bFav - aFav;
-
     const aEq = partyIds.includes(a.id) ? 1 : 0;
     const bEq = partyIds.includes(b.id) ? 1 : 0;
     if (aEq !== bEq) return bEq - aEq;
-
     return b.power - a.power;
   });
 
-  const filterOptions = [
-    { id: 'ALL', label: 'All' },
-    { id: 'FAVORITES', label: '⭐ Favorites' },
-    { id: 'COMMON', label: 'Common' },
-    { id: 'UNCOMMON', label: 'Uncommon' },
-    { id: 'RARE', label: 'Rare' },
-    { id: 'EPIC', label: 'Epic' },
-    { id: 'LEGENDARY', label: 'Legendary' },
-    { id: 'MYTHICAL', label: 'Mythical' },
-    { id: 'TRANSCENDENT', label: 'Transcendent' }
-  ];
+  // 2. Filter Relics
+  const filteredRelics = relics.filter(r => {
+    if (query) {
+      const nameMatch = (r.name || '').toLowerCase().includes(query);
+      const setMatch = (r.setName || '').toLowerCase().includes(query);
+      if (!nameMatch && !setMatch) return false;
+    }
+    if (activeRarityFilter === 'ALL') return true;
+    if (activeRarityFilter === 'FAVORITES') return !!r.equippedToSpiritId;
+    return (r.rarity || 'COMMON').toUpperCase() === activeRarityFilter;
+  });
 
-  // Bulk stats
+  filteredRelics.sort((a, b) => {
+    const aEq = a.equippedToSpiritId ? 1 : 0;
+    const bEq = b.equippedToSpiritId ? 1 : 0;
+    if (aEq !== bEq) return bEq - aEq;
+    return (b.mainStatValue || 0) - (a.mainStatValue || 0);
+  });
+
+  // 3. Filter Weapons
+  const filteredWeapons = weapons.filter(w => {
+    if (query) {
+      const nameMatch = (w.name || '').toLowerCase().includes(query);
+      if (!nameMatch) return false;
+    }
+    if (activeRarityFilter === 'ALL') return true;
+    if (activeRarityFilter === 'FAVORITES') return !!w.equippedToSpiritId;
+    return (w.rarity || 'COMMON').toUpperCase() === activeRarityFilter;
+  });
+
+  filteredWeapons.sort((a, b) => {
+    const aEq = a.equippedToSpiritId ? 1 : 0;
+    const bEq = b.equippedToSpiritId ? 1 : 0;
+    if (aEq !== bEq) return bEq - aEq;
+    return (b.atkPower || 0) - (a.atkPower || 0);
+  });
+
+  const rarityTiers = ['ALL', 'FAVORITES', 'COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY', 'MYTHICAL', 'TRANSCENDENT'];
+
+  // Bulk stats for spirits
   let bulkShardsRefund = 0;
   selectedForBulk.forEach(id => {
     const sp = spirits.find(s => s.id === id);
@@ -66,31 +99,70 @@ export function renderVaultView(container) {
   });
 
   container.innerHTML = `
-    <div class="vault-container">
+    <div class="index-container vault-bestiary-container">
       
-      <!-- Vault Header Banner -->
-      <div class="vault-header-stats">
-        <div>
-          <span>Vault: <strong style="color: #fff;">${spirits.length}</strong> Spirits</span>
-          <span style="margin-left: 8px;">Party: <strong style="color: #2ed573;">${partyIds.length} / 5</strong></span>
+      <!-- Top Bestiary Inventory Header -->
+      <div class="index-header-banner">
+        <div class="index-header-top">
+          <div class="index-title-group">
+            <span class="index-main-title">📜 Vault & Bestiary</span>
+            <span class="index-subtitle">High-Density Arcane Vault: Owned Spirits, Olympian Relics & Weapons</span>
+          </div>
+
+          <div class="index-score-badge">
+            <span class="score-num">${spirits.length}</span>
+            <span class="score-lbl">Spirits Owned</span>
+          </div>
         </div>
 
-        <button id="btn-toggle-bulk" class="btn-bulk-toggle ${isBulkMode ? 'active' : ''}">
-          ${isBulkMode ? 'Done Selecting' : '📦 Bulk Annul'}
-        </button>
+        <!-- 3-Category Navigation Switcher -->
+        <div class="vault-category-switcher" style="display: flex; gap: 6px; margin-top: 12px;">
+          <button class="vault-cat-btn ${activeCategory === 'spirits' ? 'active' : ''}" data-cat="spirits">
+            ⛩️ Spirits (${spirits.length})
+          </button>
+          <button class="vault-cat-btn ${activeCategory === 'relics' ? 'active' : ''}" data-cat="relics">
+            🔱 Relics (${relics.length})
+          </button>
+          <button class="vault-cat-btn ${activeCategory === 'weapons' ? 'active' : ''}" data-cat="weapons">
+            ⚔️ Weapons (${weapons.length})
+          </button>
+        </div>
       </div>
 
-      <!-- Live Search Bar -->
-      <div class="vault-search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="vault-search-input" class="vault-search-input" 
-               placeholder="Search by name or species..." 
-               value="${searchQuery}" />
-        ${searchQuery ? `<button id="btn-clear-search" class="btn-clear-search">✕</button>` : ''}
+      <!-- Live Search & Bulk Toggle Controls -->
+      <div style="display: flex; gap: 8px; margin: 10px 0;">
+        <div class="vault-search-box" style="flex: 1; margin: 0;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="vault-search-input" class="vault-search-input" 
+                 placeholder="Search ${activeCategory}..." 
+                 value="${searchQuery}" />
+          ${searchQuery ? `<button id="btn-clear-search" class="btn-clear-search">✕</button>` : ''}
+        </div>
+
+        ${activeCategory === 'spirits' ? `
+          <button id="btn-toggle-bulk" class="btn-bulk-toggle ${isBulkMode ? 'active' : ''}" style="white-space: nowrap;">
+            ${isBulkMode ? 'Done' : '📦 Bulk Annul'}
+          </button>
+        ` : ''}
       </div>
 
-      <!-- Bulk Actions Bar (Visible when in Bulk Mode) -->
-      ${isBulkMode ? `
+      <!-- Rarity Filter Chips -->
+      <div class="index-filter-scroll">
+        ${rarityTiers.map(tier => {
+          const info = tier === 'ALL' || tier === 'FAVORITES' ? { color: '#ffffff' } : getRarityInfo(tier);
+          const isActive = activeRarityFilter === tier;
+          return `
+            <button class="index-filter-btn ${isActive ? 'active' : ''}" 
+                    data-tier="${tier}"
+                    style="${isActive && tier !== 'ALL' && tier !== 'FAVORITES' ? `border-color: ${info.color}; color: ${info.color};` : ''}">
+              ${tier === 'FAVORITES' ? (activeCategory === 'spirits' ? '⭐ Favorites' : '✓ Equipped') : tier}
+            </button>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- Bulk Actions Bar (Spirits only) -->
+      ${isBulkMode && activeCategory === 'spirits' ? `
         <div class="bulk-action-bar">
           <div class="bulk-select-presets">
             <button id="btn-select-commons" class="btn-preset-sm">Select Unequipped Commons</button>
@@ -99,117 +171,145 @@ export function renderVaultView(container) {
           </div>
 
           <div class="bulk-confirm-row">
-            <span>Selected: <strong>${selectedForBulk.size}</strong> (+${bulkShardsRefund.toLocaleString()} 💎)</span>
-            <button id="btn-confirm-bulk-annul" class="btn-bulk-confirm" ${selectedForBulk.size === 0 ? 'disabled' : ''}>
-              Annul Selected (${selectedForBulk.size})
+            <span class="bulk-count-text">Selected: <strong>${selectedForBulk.size}</strong></span>
+            <button id="btn-execute-bulk" class="btn-execute-bulk" ${selectedForBulk.size === 0 ? 'disabled' : ''}>
+              Annul Selected (+${bulkShardsRefund} 💎)
             </button>
           </div>
         </div>
       ` : ''}
 
-      <!-- Rarity / Favorite Filter Bar -->
-      <div class="vault-filter-bar">
-        ${filterOptions.map(f => {
-          const isActive = currentFilter === f.id;
-          const info = f.id !== 'ALL' && f.id !== 'FAVORITES' ? getRarityInfo(f.id) : null;
-          return `
-            <button class="filter-btn ${isActive ? 'active' : ''}" 
-                    data-filter="${f.id}"
-                    style="${isActive && info ? `border-color: ${info.color}; color: ${info.color};` : ''}">
-              ${f.label}
-            </button>
-          `;
-        }).join('')}
-      </div>
-
-      <!-- Spirit Cards Grid / List -->
-      <div class="vault-grid">
-        ${filteredSpirits.length === 0 ? `
-          <div style="text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px;">
-            No spirits found matching the current search & filter.
-          </div>
-        ` : filteredSpirits.map(spirit => {
-          const species = SPIRIT_SPECIES[spirit.speciesId];
-          const isEquipped = partyIds.includes(spirit.id);
-          const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
-          const isSelected = selectedForBulk.has(spirit.id);
-          const isHallOfFame = Array.isArray(state.hallOfFame) && state.hallOfFame.includes(spirit.id);
-
-          return `
-            <div class="vault-item-card ${isEquipped ? 'in-party' : ''} ${spirit.favorite ? 'is-fav' : ''} ${isSelected ? 'selected-bulk' : ''}">
-              
-              <!-- Bulk Checkbox Mode -->
-              ${isBulkMode ? `
-                <div class="bulk-checkbox-col">
-                  <input type="checkbox" class="bulk-check" data-id="${spirit.id}" 
-                         ${isSelected ? 'checked' : ''} 
-                         ${isEquipped || spirit.favorite ? 'disabled title="Equipped or Favorited spirits cannot be bulk annulled"' : ''} />
-                </div>
-              ` : ''}
-
-              <!-- CSS Placeholder Box -->
-              <div style="width: 68px; height: 68px; position: relative;">
-                ${createSpiritPlaceholderBox(spirit, { isCapped: spirit.canEvolve })}
-                ${isHallOfFame ? '<span class="hall-of-fame-crown" title="Showcased in Hall of Fame">👑</span>' : ''}
-              </div>
-
-              <!-- Spirit Info -->
-              <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span class="spirit-card-title">${spirit.customName}</span>
-                  <button class="btn-rename-spirit" data-id="${spirit.id}" title="Rename Spirit">✏️</button>
-                  <button class="btn-fav-spirit ${spirit.favorite ? 'active' : ''}" data-id="${spirit.id}" title="${spirit.favorite ? 'Favorited' : 'Add to Favorites'}">
-                    ${spirit.favorite ? '⭐' : '☆'}
-                  </button>
-                  <button class="btn-hof-spirit ${isHallOfFame ? 'active' : ''}" data-id="${spirit.id}" title="${isHallOfFame ? 'In Hall of Fame (Click to Remove)' : 'Assign to Hall of Fame'}">
-                    ${isHallOfFame ? '👑' : '🏛️'}
-                  </button>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
-                  <span class="rarity-badge-txt" style="color: ${rarity.color}; font-weight: 800;">[${rarity.name.toUpperCase()}]</span>
-                  <span style="color: var(--text-muted);">Lv. ${spirit.level}/${species ? species.levelCap : '??'}</span>
-                </div>
-
-                <div style="font-size: 12px; font-family: var(--font-mono); font-weight: 800; color: #2ed573;">
-                  ⚡ ${spirit.power.toLocaleString()} Power
-                </div>
-              </div>
-
-              <!-- Action Buttons -->
-              <div style="display: flex; flex-direction: column; gap: 6px;">
-                ${isEquipped ? `
-                  <button class="btn-release-action" data-action="unequip" data-id="${spirit.id}">
-                    Unequip
-                  </button>
-                ` : `
-                  <button class="btn-equip-action" data-action="equip" data-id="${spirit.id}" ${partyIds.length >= 5 ? 'title="Party is full (5/5)"' : ''}>
-                    Equip
-                  </button>
-                  <button class="btn-release-action" data-action="annul" data-id="${spirit.id}" ${spirit.favorite ? 'disabled title="Favorited spirits cannot be annulled"' : ''}>
-                    Annul
-                  </button>
-                `}
-              </div>
-
+      <!-- Grid Content Section -->
+      <div class="bestiary-grid">
+        
+        <!-- Category 1: Owned Spirits -->
+        ${activeCategory === 'spirits' ? (
+          filteredSpirits.length === 0 ? `
+            <div class="vault-empty-state" style="grid-column: 1 / -1;">
+              <span>No spirits match your filter criteria.</span>
             </div>
-          `;
-        }).join('')}
+          ` : filteredSpirits.map(s => {
+            const isEquipped = partyIds.includes(s.id);
+            const isSelected = selectedForBulk.has(s.id);
+            const rarity = getRarityInfo(s.rarity || 'COMMON');
+
+            return `
+              <div class="bestiary-tile discovered rarity-${(s.rarity || 'common').toLowerCase()} ${isSelected ? 'bulk-selected' : ''}" 
+                   data-spirit-id="${s.id}"
+                   style="border-color: ${rarity.color}; cursor: pointer;">
+                
+                <div style="position: absolute; top: 4px; left: 4px; display: flex; gap: 2px; z-index: 2;">
+                  ${isEquipped ? `<span style="font-size: 10px; background: rgba(39, 174, 96, 0.85); padding: 1px 3px; border-radius: 2px;">⛩️</span>` : ''}
+                  ${s.favorite ? `<span style="font-size: 10px; color: #ffd32a;">⭐</span>` : ''}
+                </div>
+
+                <span class="bestiary-tile-num" style="color: ${rarity.color};">Lv.${s.level}</span>
+
+                <div class="bestiary-tile-art" style="background: radial-gradient(circle, ${rarity.color}22 0%, transparent 70%);">
+                  <span style="font-size: 26px;">${s.speciesId === 'cat_spirit' ? '🐱' : '🐾'}</span>
+                </div>
+
+                <span class="bestiary-tile-name" style="color: #fff;">${s.customName}</span>
+                <span style="font-size: 9px; color: #ffd32a; font-weight: 800;">⚡${s.power.toLocaleString()}</span>
+              </div>
+            `;
+          }).join('')
+        ) : ''}
+
+        <!-- Category 2: Greek God Relics -->
+        ${activeCategory === 'relics' ? (
+          filteredRelics.length === 0 ? `
+            <div class="vault-empty-state" style="grid-column: 1 / -1;">
+              <span>No relics found. Clear Pantheon Trials to earn Greek God relics!</span>
+            </div>
+          ` : filteredRelics.map(r => {
+            const rarObj = EQUIPMENT_RARITIES[r.rarity] || EQUIPMENT_RARITIES.COMMON;
+            const isEquipped = !!r.equippedToSpiritId;
+            const equippedSpirit = isEquipped ? spirits.find(s => s.id === r.equippedToSpiritId) : null;
+
+            return `
+              <div class="bestiary-tile discovered rarity-${r.rarity.toLowerCase()}" 
+                   data-relic-uid="${r.uid}"
+                   style="border-color: ${rarObj.color}; cursor: pointer; background: linear-gradient(180deg, ${r.color || '#8e44ad'}18 0%, rgba(15, 20, 25, 0.95) 100%);">
+                
+                <div style="position: absolute; top: 4px; left: 4px; display: flex; gap: 2px; z-index: 2;">
+                  <span style="font-size: 11px;">${r.godIcon || '🔱'}</span>
+                  ${isEquipped ? `<span style="font-size: 9px; background: rgba(39, 174, 96, 0.85); padding: 1px 3px; border-radius: 2px; color: #fff;">✓</span>` : ''}
+                </div>
+
+                <span class="bestiary-tile-num" style="color: ${rarObj.color};">${r.slotName || 'Relic'}</span>
+
+                <div class="bestiary-tile-art">
+                  <span style="font-size: 26px;">${r.icon}</span>
+                </div>
+
+                <span class="bestiary-tile-name" style="color: ${r.accentColor || '#fff'}; font-size: 10px;">${r.name}</span>
+                <span style="font-size: 9px; color: #2ed573; font-weight: 800;">+${r.mainStatValue}</span>
+                ${isEquipped && equippedSpirit ? `<span style="font-size: 8px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">${equippedSpirit.customName}</span>` : ''}
+              </div>
+            `;
+          }).join('')
+        ) : ''}
+
+        <!-- Category 3: Weapons -->
+        ${activeCategory === 'weapons' ? (
+          filteredWeapons.length === 0 ? `
+            <div class="vault-empty-state" style="grid-column: 1 / -1;">
+              <span>No weapons found. Smelt weapons in The Divine Forge!</span>
+            </div>
+          ` : filteredWeapons.map(w => {
+            const rarObj = EQUIPMENT_RARITIES[w.rarity] || EQUIPMENT_RARITIES.COMMON;
+            const isEquipped = !!w.equippedToSpiritId;
+            const equippedSpirit = isEquipped ? spirits.find(s => s.id === w.equippedToSpiritId) : null;
+
+            return `
+              <div class="bestiary-tile discovered rarity-${w.rarity.toLowerCase()}" 
+                   data-weapon-uid="${w.uid}"
+                   style="border-color: ${rarObj.color}; cursor: pointer; background: linear-gradient(180deg, rgba(230, 126, 34, 0.15) 0%, rgba(15, 20, 25, 0.95) 100%);">
+                
+                <div style="position: absolute; top: 4px; left: 4px; display: flex; gap: 2px; z-index: 2;">
+                  ${isEquipped ? `<span style="font-size: 9px; background: rgba(39, 174, 96, 0.85); padding: 1px 3px; border-radius: 2px; color: #fff;">✓</span>` : ''}
+                </div>
+
+                <span class="bestiary-tile-num" style="color: ${rarObj.color};">Lv.${w.level || 1}</span>
+
+                <div class="bestiary-tile-art">
+                  <span style="font-size: 26px;">${w.icon}</span>
+                </div>
+
+                <span class="bestiary-tile-name" style="color: ${rarObj.color}; font-size: 10px;">${w.name}</span>
+                <span style="font-size: 9px; color: #ff4757; font-weight: 800;">⚡+${w.atkPower}</span>
+                ${isEquipped && equippedSpirit ? `<span style="font-size: 8px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%;">${equippedSpirit.customName}</span>` : ''}
+              </div>
+            `;
+          }).join('')
+        ) : ''}
+
       </div>
 
     </div>
   `;
 
-  // Search input binding
+  // Attach Category Switcher listeners
+  container.querySelectorAll('.vault-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.getAttribute('data-cat');
+      isBulkMode = false;
+      selectedForBulk.clear();
+      renderVaultView(container);
+    });
+  });
+
+  // Attach Search listeners
   const searchInput = container.querySelector('#vault-search-input');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value;
       renderVaultView(container);
-      const reInput = container.querySelector('#vault-search-input');
-      if (reInput) {
-        reInput.focus();
-        reInput.setSelectionRange(searchQuery.length, searchQuery.length);
+      const newInput = container.querySelector('#vault-search-input');
+      if (newInput) {
+        newInput.focus();
+        newInput.setSelectionRange(searchQuery.length, searchQuery.length);
       }
     });
   }
@@ -222,41 +322,74 @@ export function renderVaultView(container) {
     });
   }
 
-  // Filter buttons
-  container.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      currentFilter = e.currentTarget.getAttribute('data-filter');
+  // Attach Rarity Filter listeners
+  container.querySelectorAll('.index-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeRarityFilter = btn.dataset.tier;
       renderVaultView(container);
     });
   });
 
-  // Toggle Bulk Mode
+  // Attach Spirit Tile click listeners
+  container.querySelectorAll('[data-spirit-id]').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const spId = tile.dataset.spiritId;
+      if (isBulkMode) {
+        if (partyIds.includes(spId)) {
+          alert('Cannot select an active party spirit for annulment.');
+          return;
+        }
+        if (selectedForBulk.has(spId)) {
+          selectedForBulk.delete(spId);
+        } else {
+          selectedForBulk.add(spId);
+        }
+        renderVaultView(container);
+        return;
+      }
+
+      const spirit = spirits.find(s => s.id === spId);
+      if (spirit) {
+        showSpiritModal(spirit, () => renderVaultView(container));
+      }
+    });
+  });
+
+  // Attach Relic Tile click listeners
+  container.querySelectorAll('[data-relic-uid]').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const uid = tile.dataset.relicUid;
+      const relic = relics.find(r => r.uid === uid);
+      if (relic) {
+        showItemInspectModal({ item: relic, onUpdate: () => renderVaultView(container) });
+      }
+    });
+  });
+
+  // Attach Weapon Tile click listeners
+  container.querySelectorAll('[data-weapon-uid]').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const uid = tile.dataset.weaponUid;
+      const weapon = weapons.find(w => w.uid === uid);
+      if (weapon) {
+        showItemInspectModal({ item: weapon, onUpdate: () => renderVaultView(container) });
+      }
+    });
+  });
+
+  // Bulk Mode buttons
   const btnToggleBulk = container.querySelector('#btn-toggle-bulk');
   if (btnToggleBulk) {
     btnToggleBulk.addEventListener('click', () => {
       isBulkMode = !isBulkMode;
-      if (!isBulkMode) selectedForBulk.clear();
+      selectedForBulk.clear();
       renderVaultView(container);
     });
   }
 
-  // Bulk Checkboxes
-  container.querySelectorAll('.bulk-check').forEach(chk => {
-    chk.addEventListener('change', (e) => {
-      const id = e.target.dataset.id;
-      if (e.target.checked) {
-        selectedForBulk.add(id);
-      } else {
-        selectedForBulk.delete(id);
-      }
-      renderVaultView(container);
-    });
-  });
-
-  // Select Unequipped Commons Preset
-  const btnSelCommons = container.querySelector('#btn-select-commons');
-  if (btnSelCommons) {
-    btnSelCommons.addEventListener('click', () => {
+  const btnSelectCommons = container.querySelector('#btn-select-commons');
+  if (btnSelectCommons) {
+    btnSelectCommons.addEventListener('click', () => {
       spirits.forEach(s => {
         if (!partyIds.includes(s.id) && !s.favorite && (s.rarity || 'COMMON').toUpperCase() === 'COMMON') {
           selectedForBulk.add(s.id);
@@ -266,10 +399,9 @@ export function renderVaultView(container) {
     });
   }
 
-  // Select Unequipped Uncommons Preset
-  const btnSelUncommons = container.querySelector('#btn-select-uncommons');
-  if (btnSelUncommons) {
-    btnSelUncommons.addEventListener('click', () => {
+  const btnSelectUncommons = container.querySelector('#btn-select-uncommons');
+  if (btnSelectUncommons) {
+    btnSelectUncommons.addEventListener('click', () => {
       spirits.forEach(s => {
         if (!partyIds.includes(s.id) && !s.favorite && (s.rarity || 'COMMON').toUpperCase() === 'UNCOMMON') {
           selectedForBulk.add(s.id);
@@ -279,110 +411,29 @@ export function renderVaultView(container) {
     });
   }
 
-  // Clear Selection
-  const btnClearSel = container.querySelector('#btn-clear-selection');
-  if (btnClearSel) {
-    btnClearSel.addEventListener('click', () => {
+  const btnClearSelection = container.querySelector('#btn-clear-selection');
+  if (btnClearSelection) {
+    btnClearSelection.addEventListener('click', () => {
       selectedForBulk.clear();
       renderVaultView(container);
     });
   }
 
-  // Confirm Bulk Annul
-  const btnConfirmBulk = container.querySelector('#btn-confirm-bulk-annul');
-  if (btnConfirmBulk) {
-    btnConfirmBulk.addEventListener('click', () => {
+  const btnExecuteBulk = container.querySelector('#btn-execute-bulk');
+  if (btnExecuteBulk) {
+    btnExecuteBulk.addEventListener('click', () => {
       if (selectedForBulk.size === 0) return;
-      if (confirm(`Are you sure you want to annul contracts with ${selectedForBulk.size} selected spirits? You will receive ${bulkShardsRefund.toLocaleString()} 💎 Shards.`)) {
-        const res = gameState.bulkAnnulSpirits(Array.from(selectedForBulk));
-        selectedForBulk.clear();
-        isBulkMode = false;
-        alert(`Successfully annulled contracts with ${res.count} spirits and gathered ${res.shardsGained.toLocaleString()} 💎 Shards!`);
-        renderVaultView(container);
-      }
-    });
-  }
-
-  // Favorite toggle
-  container.querySelectorAll('.btn-fav-spirit').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      gameState.toggleFavoriteSpirit(id);
-      renderVaultView(container);
-    });
-  });
-
-  // Hall of Fame toggle directly from Vault
-  container.querySelectorAll('.btn-hof-spirit').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      try {
-        gameState.toggleHallOfFame(id);
-        renderVaultView(container);
-      } catch (err) {
-        alert(err.message);
-      }
-    });
-  });
-
-  // Rename prompt
-  container.querySelectorAll('.btn-rename-spirit').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const spirit = spirits.find(s => s.id === id);
-      if (!spirit) return;
-      const newName = prompt(`Enter custom nickname for ${spirit.customName}:`, spirit.customName);
-      if (newName && newName.trim()) {
-        gameState.renameSpirit(id, newName.trim());
-        renderVaultView(container);
-      }
-    });
-  });
-
-  // Equip
-  container.querySelectorAll('[data-action="equip"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.currentTarget.getAttribute('data-id');
-      try {
-        gameState.equipSpirit(id);
-        renderVaultView(container);
-      } catch (err) {
-        alert(err.message);
-      }
-    });
-  });
-
-  // Unequip
-  container.querySelectorAll('[data-action="unequip"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.currentTarget.getAttribute('data-id');
-      try {
-        gameState.unequipSpirit(id);
-        renderVaultView(container);
-      } catch (err) {
-        alert(err.message);
-      }
-    });
-  });
-
-  // Annul Single
-  container.querySelectorAll('[data-action="annul"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.currentTarget.getAttribute('data-id');
-      const spirit = spirits.find(s => s.id === id);
-      if (!spirit) return;
-      const shardsRefund = 40 * (spirit.tier || 1) + Math.floor((spirit.level || 1) * 3);
-      if (confirm(`Annul contract with ${spirit.customName}? You will receive ${shardsRefund} 💎 Shards.`)) {
+      if (confirm(`Annul contract with ${selectedForBulk.size} selected Spirits? You will receive +${bulkShardsRefund} Spirit Shards.`)) {
         try {
-          gameState.annulContract(id);
+          const res = gameState.bulkAnnulContracts(Array.from(selectedForBulk));
+          alert(`Successfully annulled contracts with ${res.annulledCount} Spirits! Gained +${res.totalShardsGained} Spirit Shards.`);
+          selectedForBulk.clear();
+          isBulkMode = false;
           renderVaultView(container);
         } catch (err) {
           alert(err.message);
         }
       }
     });
-  });
+  }
 }

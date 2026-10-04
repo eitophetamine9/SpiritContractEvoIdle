@@ -113,20 +113,25 @@ npm run test:prob
 - **Floor Recovery & Wipeout Safety**: Boss clearance instantly revives all party members to 100% HP; full wipeouts reset cleanly to Wave 1 with zero progression or item loss.
 
 ### 8. Weapons, Greek God Relics & The Pantheon Trials
-- **Seven Equipment Sockets**: Each spirit equips 1 Weapon and 6 Relics (Crown, Goblet, Feather, Ring, Pendant, Aegis).
+- **Seven Equipment Sockets**: Each spirit equips 1 Weapon and 6 Relics (Headgear, Totem, Ring, Necklace, Orb, Charm).
 - **Eight Olympian God Sets**: Complete 2-piece and 4-piece set bonuses for Hades, Zeus, Poseidon, Hermes, Ares, Apollo, Athena, and Artemis.
-- **Artifact Dungeon**: The Pantheon Trials offer 8 dedicated deity chambers across 4 difficulty tiers for targeted relic farming.
-- **Equipment Management**: Rapid inspection, 1-tap equipping, and dismantling of surplus gear into Spirit Shards.
+- **The Pantheon Trials (Artifact Dungeon)**: 8 dedicated deity chambers across 4 difficulty tiers featuring 3-wave combat encounters (Sentinels, Guardians, and the Olympian God Avatar Boss) for targeted relic farming.
+- **Equipment Management**: Rapid inspection, 1-tap equipping to active party spirits, and dismantling of surplus gear into Spirit Shards.
 
-### 9. High-Fantasy UI & Hero Pedestal Showcase
-- **Hero Pedestal View**: An illuminated 3D isometric stage with rotating runic rings, light rays, and floating spirit sprites.
-- **Segmented Stat Meters**: Classical RPG micro-segmented gauges for Attack, Health, and Mana.
-- **Diamond Fast-Travel Hub**: Central quad-directional cluster for immediate navigation between battle, pedestal, altar, and vault.
+### 9. The Divine Forge (Dedicated Weapon Dungeon)
+- **Six Weapon Chambers**: Standalone dungeon featuring Bladesmith Sanctum, Archers Grove, Arcane Spire, Behemoth Den, Shadow Armory, and Titans Anvil.
+- **Four Difficulty Tiers**: Apprentice, Artisan, Master, and Celestial forges with 3-wave battles dropping specialized weapons.
 
-### 10. Integrated Audio Engine
-- **Background Music**: Dynamic looping atmospheric themes for the Astral Sanctum, Madness Tower combat, and Pantheon Trials.
+### 10. Mystical UI & Unified Navigation
+- **1-Line Bottom Navigation Dock**: High-density 6-column single-line dock (Hero, Tower, Trials, Forge, Summon, Vault) built specifically for mobile screens without horizontal clipping or wrapping.
+- **Bestiary-Style Vault**: Unified grid with category switching across Spirits, Relics, and Weapons, complete with instant filtering, bulk annulment, and inspection modals.
+- **Manual Battle Engagement Controls**: Standby and Engaged combat states prevent screen-forcing or hijacking when viewing other menus.
+- **Mystical Visual Overhaul**: Deep astral cosmic backgrounds, ornate gold filigree borders, violet swallowtail banners, and the Arcane Strike Seal.
+
+### 11. Integrated Audio Engine
+- **Background Music**: Dynamic looping atmospheric themes for Astral Sanctum, Madness Tower combat, Pantheon Trials, and The Divine Forge.
 - **Tactile Sound Effects**: Impact transients, critical blow booms, ultimate release bursts, level-up chimes, and victory fanfares.
-- **Autoplay Compliance**: Seamless one-tap audio initialization with persistent mute and volume preferences.
+- **Autoplay & Unmute Compliance**: Reliable one-tap unmuting, AudioContext resumption, and synchronized audio controls across combat and top navigation bars.
 
 ---
 

@@ -21,6 +21,11 @@ import {
   PANTHEON_DIFFICULTY_TIERS, 
   generateDungeonLoot 
 } from '../data/artifactDungeonData.js';
+import { 
+  FORGE_CHAMBERS, 
+  FORGE_DIFFICULTY_TIERS, 
+  generateForgeLoot 
+} from '../data/weaponDungeonData.js';
 
 const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
@@ -132,8 +137,8 @@ class GameStateManager {
     
     // Starter Equipment: 1 Common Blade + 2 Hades Relics to test 2-pc Hades bonus immediately
     const starterWeapon = createWeaponInstance({ weaponTypeId: 'sword', rarity: 'COMMON', level: 1 });
-    const starterRelic1 = createRelicInstance({ setId: 'hades', slotTypeId: 'crown', rarity: 'COMMON', level: 1 });
-    const starterRelic2 = createRelicInstance({ setId: 'hades', slotTypeId: 'goblet', rarity: 'COMMON', level: 1 });
+    const starterRelic1 = createRelicInstance({ setId: 'hades', slotTypeId: 'headgear', rarity: 'COMMON', level: 1 });
+    const starterRelic2 = createRelicInstance({ setId: 'hades', slotTypeId: 'totem', rarity: 'COMMON', level: 1 });
 
     starterWeapon.equippedToSpiritId = starterId;
     starterRelic1.equippedToSpiritId = starterId;
@@ -160,12 +165,12 @@ class GameStateManager {
       contractedAt: Date.now(),
       weapon: starterWeapon.uid,
       relics: {
-        crown: starterRelic1.uid,
-        goblet: starterRelic2.uid,
-        feather: null,
+        headgear: starterRelic1.uid,
+        totem: starterRelic2.uid,
         ring: null,
-        pendant: null,
-        aegis: null
+        necklace: null,
+        orb: null,
+        charm: null
       }
     };
 
@@ -183,6 +188,7 @@ class GameStateManager {
       inventory: {
         equipment: [starterWeapon, starterRelic1, starterRelic2]
       },
+      activeDungeonBattle: null,
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
       hallOfFame: [starterId], // Max 5 showcase spirits
@@ -195,6 +201,7 @@ class GameStateManager {
         highestStageCleared: 1,
         autoAdvance: true,
         farmMode: false,
+        isEngaged: true,          // Controlled manually: false = standby/paused, true = active combat
         currentSwarm: [],
         currentEnemy: null,
         combatTickProgress: 0
@@ -287,16 +294,42 @@ class GameStateManager {
       state.inventory.equipment = [];
     }
 
+    // Ensure madnessZone.isEngaged exists
+    if (typeof state.madnessZone.isEngaged !== 'boolean') {
+      state.madnessZone.isEngaged = true;
+    }
+    state.activeDungeonBattle = null;
+
     // Ensure equipment fields on spirits
     state.spirits.forEach(s => {
       if (typeof s.weapon === 'undefined') s.weapon = null;
       if (!s.relics || typeof s.relics !== 'object') {
-        s.relics = { crown: null, goblet: null, feather: null, ring: null, pendant: null, aegis: null };
+        s.relics = { headgear: null, totem: null, ring: null, necklace: null, orb: null, charm: null };
       }
-      ['crown', 'goblet', 'feather', 'ring', 'pendant', 'aegis'].forEach(slot => {
+      // Migrate legacy slot names
+      if (s.relics.crown && !s.relics.headgear) { s.relics.headgear = s.relics.crown; delete s.relics.crown; }
+      if (s.relics.goblet && !s.relics.totem) { s.relics.totem = s.relics.goblet; delete s.relics.goblet; }
+      if (s.relics.pendant && !s.relics.necklace) { s.relics.necklace = s.relics.pendant; delete s.relics.pendant; }
+      if (s.relics.aegis && !s.relics.orb) { s.relics.orb = s.relics.aegis; delete s.relics.aegis; }
+      if (s.relics.feather && !s.relics.charm) { s.relics.charm = s.relics.feather; delete s.relics.feather; }
+
+      ['headgear', 'totem', 'ring', 'necklace', 'orb', 'charm'].forEach(slot => {
         if (typeof s.relics[slot] === 'undefined') s.relics[slot] = null;
       });
     });
+
+    // Migrate equipment items with legacy slotTypeId
+    if (state.inventory && Array.isArray(state.inventory.equipment)) {
+      state.inventory.equipment.forEach(item => {
+        if (item.type === 'relic') {
+          if (item.slotTypeId === 'crown') { item.slotTypeId = 'headgear'; item.slotName = 'Headgear'; item.icon = '👑'; item.mainStatName = 'Bonus Max HP'; }
+          else if (item.slotTypeId === 'goblet') { item.slotTypeId = 'totem'; item.slotName = 'Totem'; item.icon = '🗿'; item.mainStatName = 'Shield Strength'; }
+          else if (item.slotTypeId === 'pendant') { item.slotTypeId = 'necklace'; item.slotName = 'Necklace'; item.icon = '📿'; item.mainStatName = 'Mana Replenish'; }
+          else if (item.slotTypeId === 'aegis') { item.slotTypeId = 'orb'; item.slotName = 'Orb'; item.icon = '🔮'; item.mainStatName = 'Ult Amp'; }
+          else if (item.slotTypeId === 'feather') { item.slotTypeId = 'charm'; item.slotName = 'Charm'; item.icon = '🧿'; item.mainStatName = 'Evasion Rating'; }
+        }
+      });
+    }
 
     if (typeof state.stats.totalDungeonRuns !== 'number') {
       state.stats.totalDungeonRuns = 0;
@@ -380,7 +413,14 @@ class GameStateManager {
       // 2. Smooth frame tick for combat and visual responsiveness
       const frameDeltaSec = Math.min(0.2, (timestamp - lastFrameTime) / 1000);
       lastFrameTime = timestamp;
-      this.tickMadnessCombat(frameDeltaSec);
+
+      if (this.state.madnessZone.isEngaged !== false) {
+        this.tickMadnessCombat(frameDeltaSec);
+      }
+
+      if (this.state.activeDungeonBattle && this.state.activeDungeonBattle.status === 'active') {
+        this.tickDungeonBattle(frameDeltaSec);
+      }
 
       this.emit('tick', { frameDeltaSec });
       this.rafId = requestAnimationFrame(loop);
@@ -575,6 +615,14 @@ class GameStateManager {
     };
   }
 
+  toggleMadnessEngagement() {
+    const mz = this.state.madnessZone;
+    mz.isEngaged = mz.isEngaged === false ? true : false;
+    this.save();
+    this.emit('madnessZoneUpdated', mz);
+    return mz.isEngaged;
+  }
+
   /**
    * Madness Zone Two-Way Combat Loop
    * Living spirits attack living swarm enemies & accumulate Mana
@@ -584,6 +632,8 @@ class GameStateManager {
    */
   tickMadnessCombat(deltaSec) {
     const { madnessZone } = this.state;
+    if (madnessZone.isEngaged === false) return;
+
     if (!madnessZone.currentSwarm || madnessZone.currentSwarm.length === 0) {
       this.spawnMadnessEnemy();
       return;
@@ -1759,7 +1809,7 @@ class GameStateManager {
     } else if (item.type === 'relic') {
       const slotType = item.slotTypeId;
       if (!spirit.relics) {
-        spirit.relics = { crown: null, goblet: null, feather: null, ring: null, pendant: null, aegis: null };
+        spirit.relics = { headgear: null, totem: null, ring: null, necklace: null, orb: null, charm: null };
       }
       if (spirit.relics[slotType]) {
         const oldRelic = equipmentList.find(e => e.uid === spirit.relics[slotType]);
@@ -1867,7 +1917,433 @@ class GameStateManager {
 
     return loot;
   }
+
+  // =========================================================================
+  // 3-WAVE DUNGEON COMBAT ENGINE (PANTHEON TRIALS & THE DIVINE FORGE)
+  // =========================================================================
+
+  generateDungeonWave(dungeonType, chamberId, tierNum, waveNum) {
+    let chamber;
+    let tierObj;
+    if (dungeonType === 'pantheon') {
+      chamber = PANTHEON_CHAMBERS.find(c => c.id === chamberId) || PANTHEON_CHAMBERS[0];
+      tierObj = PANTHEON_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || PANTHEON_DIFFICULTY_TIERS[0];
+    } else {
+      chamber = FORGE_CHAMBERS.find(c => c.id === chamberId) || FORGE_CHAMBERS[0];
+      tierObj = FORGE_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || FORGE_DIFFICULTY_TIERS[0];
+    }
+
+    const baseHp = Math.round(tierObj.minPartyPower * 1.6);
+    const enemies = [];
+
+    if (waveNum === 1) {
+      const namePrefix = dungeonType === 'pantheon' ? `${chamber.god || chamber.name} Sentinel` : 'Cinder Golem';
+      const icon = dungeonType === 'pantheon' ? '🛡️' : '🔥';
+      enemies.push({
+        id: `wave1_e1_${Date.now()}`,
+        name: `${namePrefix} Alpha`,
+        icon,
+        maxHp: Math.round(baseHp * 0.45),
+        hp: Math.round(baseHp * 0.45),
+        power: Math.round(tierObj.minPartyPower * 0.25),
+        isDefeated: false,
+        attackCooldown: 2.0,
+        currentCooldown: 1.0
+      });
+      enemies.push({
+        id: `wave1_e2_${Date.now()}`,
+        name: `${namePrefix} Beta`,
+        icon,
+        maxHp: Math.round(baseHp * 0.45),
+        hp: Math.round(baseHp * 0.45),
+        power: Math.round(tierObj.minPartyPower * 0.25),
+        isDefeated: false,
+        attackCooldown: 2.4,
+        currentCooldown: 2.0
+      });
+    } else if (waveNum === 2) {
+      const namePrefix = dungeonType === 'pantheon' ? `${chamber.god || chamber.name} Guardian` : 'Crucible Automaton';
+      const icon = dungeonType === 'pantheon' ? '⚡' : '⚙️';
+      enemies.push({
+        id: `wave2_e1_${Date.now()}`,
+        name: `Elite ${namePrefix}`,
+        icon,
+        maxHp: Math.round(baseHp * 0.75),
+        hp: Math.round(baseHp * 0.75),
+        power: Math.round(tierObj.minPartyPower * 0.35),
+        isDefeated: false,
+        attackCooldown: 1.8,
+        currentCooldown: 0.8
+      });
+      enemies.push({
+        id: `wave2_e2_${Date.now()}`,
+        name: `${namePrefix} Warden`,
+        icon,
+        maxHp: Math.round(baseHp * 0.65),
+        hp: Math.round(baseHp * 0.65),
+        power: Math.round(tierObj.minPartyPower * 0.3),
+        isDefeated: false,
+        attackCooldown: 2.2,
+        currentCooldown: 1.5
+      });
+    } else {
+      const bossName = dungeonType === 'pantheon' ? `Avatar of ${chamber.god || chamber.name}` : (chamber.bossName || 'Vulcan Titan');
+      const bossIcon = dungeonType === 'pantheon' ? chamber.icon : (chamber.bossIcon || '🌋');
+      enemies.push({
+        id: `wave3_boss_${Date.now()}`,
+        name: bossName,
+        icon: bossIcon,
+        isBoss: true,
+        maxHp: Math.round(baseHp * 1.5),
+        hp: Math.round(baseHp * 1.5),
+        power: Math.round(tierObj.minPartyPower * 0.5),
+        isDefeated: false,
+        attackCooldown: 1.6,
+        currentCooldown: 0.5
+      });
+      enemies.push({
+        id: `wave3_attendant_${Date.now()}`,
+        name: dungeonType === 'pantheon' ? 'High Priest' : 'Forge Overseer',
+        icon: '🔮',
+        maxHp: Math.round(baseHp * 0.5),
+        hp: Math.round(baseHp * 0.5),
+        power: Math.round(tierObj.minPartyPower * 0.28),
+        isDefeated: false,
+        attackCooldown: 2.0,
+        currentCooldown: 1.8
+      });
+    }
+
+    return enemies;
+  }
+
+  startDungeonTrial(dungeonType, chamberId, tierNum = 1) {
+    let tierObj;
+    if (dungeonType === 'pantheon') {
+      tierObj = PANTHEON_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || PANTHEON_DIFFICULTY_TIERS[0];
+    } else {
+      tierObj = FORGE_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || FORGE_DIFFICULTY_TIERS[0];
+    }
+
+    if (this.state.resources.energy < tierObj.energyCost) {
+      throw new Error(`Insufficient Energy! Need ${tierObj.energyCost} ⚡, have ${this.state.resources.energy} ⚡.`);
+    }
+
+    this.state.resources.energy -= tierObj.energyCost;
+    this.save();
+    this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
+
+    const party = this.getPartySpirits();
+    party.forEach(s => {
+      s.currentHp = s.maxHp;
+      s.currentMp = 0;
+      s.shieldHp = 0;
+      s.isFallen = false;
+    });
+
+    const initialSwarm = this.generateDungeonWave(dungeonType, chamberId, tierNum, 1);
+
+    this.state.activeDungeonBattle = {
+      dungeonType,
+      chamberId,
+      tier: tierNum,
+      currentWave: 1,
+      maxWaves: 3,
+      status: 'active',
+      currentSwarm: initialSwarm,
+      loot: null
+    };
+
+    this.emit('dungeonBattleUpdated', this.state.activeDungeonBattle);
+    return this.state.activeDungeonBattle;
+  }
+
+  tickDungeonBattle(deltaSec) {
+    const battle = this.state.activeDungeonBattle;
+    if (!battle || battle.status !== 'active') return;
+
+    const party = this.getPartySpirits();
+    const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
+    const livingEnemies = (battle.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
+
+    // Defeat check
+    if (livingSpirits.length === 0 && party.length > 0) {
+      battle.status = 'defeat';
+      this.emit('dungeonBattleUpdated', battle);
+      this.emit('dungeonBattleDefeat', battle);
+      return;
+    }
+
+    // Wave Clear check
+    if (livingEnemies.length === 0) {
+      if (battle.currentWave < battle.maxWaves) {
+        battle.currentWave += 1;
+        livingSpirits.forEach(s => {
+          s.currentHp = Math.min(s.maxHp, s.currentHp + Math.round(s.maxHp * 0.25));
+        });
+        battle.currentSwarm = this.generateDungeonWave(battle.dungeonType, battle.chamberId, battle.tier, battle.currentWave);
+        this.emit('dungeonBattleUpdated', battle);
+        this.emit('dungeonWaveCleared', { wave: battle.currentWave - 1, nextWave: battle.currentWave });
+        return;
+      } else {
+        this.completeDungeonBattleVictory();
+        return;
+      }
+    }
+
+    const leadEnemy = livingEnemies[0];
+
+    // Spirits attack & accumulate MP
+    for (const spirit of livingSpirits) {
+      const effectivePower = this.getSpiritTotalPower(spirit);
+      const baseDps = Math.max(1, Math.round(effectivePower * 0.45));
+      const damageThisTick = baseDps * deltaSec;
+      leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
+
+      const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
+      let manaBonusMult = 1;
+      for (const b of activeBonuses) {
+        if (b.bonus.manaReplenishBonus) {
+          manaBonusMult += b.bonus.manaReplenishBonus;
+        }
+      }
+      spirit.currentMp = Math.min(100, (spirit.currentMp || 0) + 20 * manaBonusMult * deltaSec);
+
+      if (spirit.currentMp >= 100) {
+        spirit.currentMp = 0;
+        this.procSpiritUltimateForDungeon(spirit, battle);
+      }
+    }
+
+    if (leadEnemy.hp <= 0) {
+      leadEnemy.isDefeated = true;
+      leadEnemy.hp = 0;
+    }
+
+    // Enemies attack living spirits
+    for (const enemy of livingEnemies) {
+      if (enemy.isDefeated || enemy.hp <= 0) continue;
+      enemy.currentCooldown = (enemy.currentCooldown || 0) - deltaSec;
+      if (enemy.currentCooldown <= 0) {
+        enemy.currentCooldown = enemy.attackCooldown || 2.0;
+
+        const targetSpirit = livingSpirits[Math.floor(Math.random() * livingSpirits.length)];
+        if (targetSpirit) {
+          let enemyDamage = Math.max(1, Math.round(enemy.power * (0.8 + Math.random() * 0.4)));
+
+          if (targetSpirit.shieldHp > 0) {
+            const absorbed = Math.min(targetSpirit.shieldHp, enemyDamage);
+            targetSpirit.shieldHp -= absorbed;
+            enemyDamage -= absorbed;
+          }
+
+          targetSpirit.currentHp = Math.max(0, targetSpirit.currentHp - enemyDamage);
+          if (targetSpirit.currentHp <= 0) {
+            targetSpirit.isFallen = true;
+            targetSpirit.currentHp = 0;
+          }
+        }
+      }
+    }
+
+    this.emit('dungeonBattleUpdated', battle);
+  }
+
+  procSpiritUltimateForDungeon(spirit, battle) {
+    const ult = getSpiritUltimate(spirit.speciesId);
+    const livingEnemies = (battle.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
+    const party = this.getPartySpirits();
+    const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
+
+    let totalDamageDealt = 0;
+    let totalHealingDone = 0;
+
+    switch (ult.type) {
+      case 'AOE_DAMAGE': {
+        const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier));
+        for (const enemy of livingEnemies) {
+          enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
+          totalDamageDealt += damagePerEnemy;
+          if (enemy.hp <= 0) {
+            enemy.isDefeated = true;
+            enemy.hp = 0;
+          }
+        }
+        break;
+      }
+      case 'SINGLE_TARGET_BURST': {
+        const primaryTarget = livingEnemies[0];
+        if (primaryTarget) {
+          const burstDamage = Math.max(1, Math.round(spirit.power * ult.multiplier));
+          primaryTarget.hp = Math.max(0, primaryTarget.hp - burstDamage);
+          totalDamageDealt += burstDamage;
+          if (primaryTarget.hp <= 0) {
+            primaryTarget.isDefeated = true;
+            primaryTarget.hp = 0;
+          }
+        }
+        break;
+      }
+      case 'TEAM_HEAL': {
+        const healPerSpirit = Math.max(1, Math.round(spirit.power * ult.multiplier));
+        for (const ally of livingSpirits) {
+          const actualHeal = Math.min(ally.maxHp - ally.currentHp, healPerSpirit);
+          ally.currentHp += actualHeal;
+          totalHealingDone += actualHeal;
+        }
+        break;
+      }
+      case 'TEAM_SHIELD': {
+        const shieldPerSpirit = Math.max(1, Math.round(spirit.power * ult.multiplier));
+        for (const ally of livingSpirits) {
+          ally.shieldHp = (ally.shieldHp || 0) + shieldPerSpirit;
+        }
+        break;
+      }
+      case 'EXECUTE': {
+        const lowestHpEnemy = [...livingEnemies].sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
+        if (lowestHpEnemy) {
+          const isExecuteThreshold = (lowestHpEnemy.hp / lowestHpEnemy.maxHp) <= ult.threshold;
+          const mult = isExecuteThreshold ? ult.multiplier * 2 : ult.multiplier;
+          const execDamage = Math.max(1, Math.round(spirit.power * mult));
+          lowestHpEnemy.hp = Math.max(0, lowestHpEnemy.hp - execDamage);
+          totalDamageDealt += execDamage;
+          if (lowestHpEnemy.hp <= 0) {
+            lowestHpEnemy.isDefeated = true;
+            lowestHpEnemy.hp = 0;
+          }
+        }
+        break;
+      }
+    }
+
+    this.emit('ultimateCast', {
+      spirit,
+      ult,
+      totalDamageDealt,
+      totalHealingDone
+    });
+  }
+
+  manualDungeonStrike() {
+    const battle = this.state.activeDungeonBattle;
+    if (!battle || battle.status !== 'active') return;
+
+    const livingEnemies = (battle.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
+    if (livingEnemies.length === 0) return;
+
+    const leadEnemy = livingEnemies[0];
+    const party = this.getPartySpirits();
+    const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
+
+    const totalPartyPower = livingSpirits.reduce((sum, s) => sum + this.getSpiritTotalPower(s), 0);
+    const tapDamage = Math.max(1, Math.round(totalPartyPower * (0.35 + Math.random() * 0.2)));
+
+    leadEnemy.hp = Math.max(0, leadEnemy.hp - tapDamage);
+    if (leadEnemy.hp <= 0) {
+      leadEnemy.isDefeated = true;
+      leadEnemy.hp = 0;
+    }
+
+    livingSpirits.forEach(s => {
+      s.currentMp = Math.min(100, (s.currentMp || 0) + 10);
+      if (s.currentMp >= 100) {
+        s.currentMp = 0;
+        this.procSpiritUltimateForDungeon(s, battle);
+      }
+    });
+
+    this.emit('dungeonBattleUpdated', battle);
+  }
+
+  completeDungeonBattleVictory() {
+    const battle = this.state.activeDungeonBattle;
+    if (!battle) return;
+
+    battle.status = 'victory';
+
+    let loot;
+    if (battle.dungeonType === 'pantheon') {
+      loot = generateDungeonLoot(battle.chamberId, battle.tier);
+    } else {
+      loot = generateForgeLoot(battle.chamberId, battle.tier);
+    }
+
+    battle.loot = loot;
+
+    if (!this.state.inventory) this.state.inventory = { equipment: [] };
+    if (!Array.isArray(this.state.inventory.equipment)) this.state.inventory.equipment = [];
+
+    if (loot.relics) {
+      loot.relics.forEach(r => this.state.inventory.equipment.push(r));
+    }
+    if (loot.weapons) {
+      loot.weapons.forEach(w => this.state.inventory.equipment.push(w));
+    }
+
+    this.state.resources.spiritShards += loot.shardsGained;
+    this.state.resources.soulEssence += loot.essenceGained;
+    this.state.stats.shardsEarnedTotal += loot.shardsGained;
+    this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+
+    this.getPartySpirits().forEach(s => {
+      s.currentHp = s.maxHp;
+      s.currentMp = 0;
+      s.shieldHp = 0;
+      s.isFallen = false;
+    });
+
+    this.save();
+    this.emit('dungeonBattleVictory', { loot, battle });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('dungeonBattleUpdated', battle);
+  }
+
+  exitDungeonBattle() {
+    this.state.activeDungeonBattle = null;
+    this.getPartySpirits().forEach(s => {
+      s.currentHp = s.maxHp;
+      s.currentMp = 0;
+      s.shieldHp = 0;
+      s.isFallen = false;
+    });
+    this.save();
+    this.emit('dungeonBattleExited');
+  }
+
+  runForgeDungeon(chamberId, tierNum = 1) {
+    const chamber = FORGE_CHAMBERS.find(c => c.id === chamberId);
+    if (!chamber) throw new Error('Invalid Forge Chamber selected!');
+
+    const tierObj = FORGE_DIFFICULTY_TIERS.find(t => t.tier === tierNum);
+    if (!tierObj) throw new Error('Invalid difficulty tier selected!');
+
+    if (this.state.resources.energy < tierObj.energyCost) {
+      throw new Error(`Insufficient Energy! Need ${tierObj.energyCost} ⚡, have ${this.state.resources.energy} ⚡.`);
+    }
+
+    this.state.resources.energy -= tierObj.energyCost;
+    const loot = generateForgeLoot(chamberId, tierNum);
+
+    if (!this.state.inventory) this.state.inventory = { equipment: [] };
+    if (!Array.isArray(this.state.inventory.equipment)) this.state.inventory.equipment = [];
+
+    loot.weapons.forEach(w => this.state.inventory.equipment.push(w));
+
+    this.state.resources.spiritShards += loot.shardsGained;
+    this.state.resources.soulEssence += loot.essenceGained;
+    this.state.stats.shardsEarnedTotal += loot.shardsGained;
+    this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+
+    this.save();
+    this.emit('dungeonCompleted', loot);
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
+
+    return loot;
+  }
 }
 
 export const gameState = new GameStateManager();
+
 
