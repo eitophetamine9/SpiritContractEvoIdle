@@ -9,6 +9,18 @@ import {
   getSpiritUltimate
 } from '../data/spiritsData.js';
 import { getEnemyForStage, getSwarmForStage } from '../data/madnessZoneData.js';
+import { 
+  GREEK_GOD_SETS, 
+  RELIC_SLOT_TYPES, 
+  WEAPON_TYPES, 
+  createRelicInstance, 
+  createWeaponInstance 
+} from '../data/equipmentData.js';
+import { 
+  PANTHEON_CHAMBERS, 
+  PANTHEON_DIFFICULTY_TIERS, 
+  generateDungeonLoot 
+} from '../data/artifactDungeonData.js';
 
 const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
@@ -22,6 +34,7 @@ class GameStateManager {
     this.saveTimer = null;
     this.rafId = null;
     this.lastTickTime = performance.now();
+    this.setBonusCooldowns = {};
   }
 
   /**
@@ -116,6 +129,16 @@ class GameStateManager {
     const starterId = this.generateId();
     const starterSpecies = SPIRIT_SPECIES['cat_spirit'];
     const starterMaxHp = calculateSpiritMaxHp(starterSpecies, 1, starterSpecies.baseRarity);
+    
+    // Starter Equipment: 1 Common Blade + 2 Hades Relics to test 2-pc Hades bonus immediately
+    const starterWeapon = createWeaponInstance({ weaponTypeId: 'sword', rarity: 'COMMON', level: 1 });
+    const starterRelic1 = createRelicInstance({ setId: 'hades', slotTypeId: 'crown', rarity: 'COMMON', level: 1 });
+    const starterRelic2 = createRelicInstance({ setId: 'hades', slotTypeId: 'goblet', rarity: 'COMMON', level: 1 });
+
+    starterWeapon.equippedToSpiritId = starterId;
+    starterRelic1.equippedToSpiritId = starterId;
+    starterRelic2.equippedToSpiritId = starterId;
+
     const starterSpirit = {
       id: starterId,
       speciesId: starterSpecies.id,
@@ -134,7 +157,16 @@ class GameStateManager {
       isEquipped: true,
       canEvolve: false,
       evolutionHistory: [starterSpecies.name],
-      contractedAt: Date.now()
+      contractedAt: Date.now(),
+      weapon: starterWeapon.uid,
+      relics: {
+        crown: starterRelic1.uid,
+        goblet: starterRelic2.uid,
+        feather: null,
+        ring: null,
+        pendant: null,
+        aegis: null
+      }
     };
 
     return {
@@ -147,6 +179,9 @@ class GameStateManager {
         maxEnergy: 60,
         energySecondsAccumulator: 0,
         resonanceTier: 0    // Essence upgrade: permanent +5% power per tier
+      },
+      inventory: {
+        equipment: [starterWeapon, starterRelic1, starterRelic2]
       },
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
@@ -169,7 +204,8 @@ class GameStateManager {
         totalSpiritsContracted: 1,
         totalEvolutions: 0,
         totalEnemiesDefeated: 0,
-        shardsEarnedTotal: 0
+        shardsEarnedTotal: 0,
+        totalDungeonRuns: 0
       }
     };
   }
@@ -242,6 +278,29 @@ class GameStateManager {
         s.customName = species.name;
       }
     });
+
+    // Ensure equipment inventory exists
+    if (!state.inventory || typeof state.inventory !== 'object') {
+      state.inventory = { equipment: [] };
+    }
+    if (!Array.isArray(state.inventory.equipment)) {
+      state.inventory.equipment = [];
+    }
+
+    // Ensure equipment fields on spirits
+    state.spirits.forEach(s => {
+      if (typeof s.weapon === 'undefined') s.weapon = null;
+      if (!s.relics || typeof s.relics !== 'object') {
+        s.relics = { crown: null, goblet: null, feather: null, ring: null, pendant: null, aegis: null };
+      }
+      ['crown', 'goblet', 'feather', 'ring', 'pendant', 'aegis'].forEach(slot => {
+        if (typeof s.relics[slot] === 'undefined') s.relics[slot] = null;
+      });
+    });
+
+    if (typeof state.stats.totalDungeonRuns !== 'number') {
+      state.stats.totalDungeonRuns = 0;
+    }
 
     if (!Array.isArray(state.madnessZone.currentSwarm)) {
       state.madnessZone.currentSwarm = [];
@@ -561,20 +620,41 @@ class GameStateManager {
     // Frontline target enemy
     const leadEnemy = livingEnemies[0];
 
-    // 3. Spirits Attack & Mana Accumulation
+    // 3. Spirits Attack, Mana Accumulation & 4-pc Set Bonus Procs
     for (const spirit of livingSpirits) {
-      // Basic DPS contribution
-      const baseDps = Math.max(1, Math.round(spirit.power * 0.45));
+      // Effective power including weapons, relics, and 2-pc set bonuses
+      const effectivePower = this.getSpiritTotalPower(spirit);
+      const baseDps = Math.max(1, Math.round(effectivePower * 0.45));
       const damageThisTick = baseDps * deltaSec;
       leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
 
-      // Mana Accumulation: ~20 MP per second (Procs Ult in ~5 seconds)
-      spirit.currentMp = Math.min(spirit.maxMp || 100, (spirit.currentMp || 0) + (20 * deltaSec));
+      // Mana Accumulation with Mana Replenish modifiers (Zeus 2pc, Hades 2pc, Apollo 2pc, Pendant relic)
+      const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
+      let manaBonusMult = 1;
+      for (const b of activeBonuses) {
+        if (b.bonus.manaReplenishBonus) {
+          manaBonusMult += b.bonus.manaReplenishBonus;
+        }
+      }
+      const mpGain = 20 * manaBonusMult * deltaSec;
+      spirit.currentMp = Math.min(spirit.maxMp || 100, (spirit.currentMp || 0) + mpGain);
 
       // Trigger Ultimate at 100 MP
       if (spirit.currentMp >= 100) {
         spirit.currentMp = 0;
         this.procSpiritUltimate(spirit);
+      }
+
+      // Check 4-piece Greek God Set Bonus procs
+      for (const b of activeBonuses) {
+        if (b.tier === '4pc') {
+          const cdKey = `${spirit.id}_${b.setId}`;
+          this.setBonusCooldowns[cdKey] = (this.setBonusCooldowns[cdKey] || 0) - deltaSec;
+          if (this.setBonusCooldowns[cdKey] <= 0) {
+            this.setBonusCooldowns[cdKey] = b.bonus.cooldownSec || 30;
+            this.proc4PieceSetBonus(spirit, b);
+          }
+        }
       }
 
       // Check if lead enemy died from basic attack
@@ -587,7 +667,7 @@ class GameStateManager {
     // Keep currentEnemy in sync with lead living enemy
     madnessZone.currentEnemy = livingEnemies.find(e => !e.isDefeated && e.hp > 0) || null;
 
-    // 4. Enemies Fight Back (Counter-attacks on cooldown timers)
+    // 4. Enemies Fight Back (Counter-attacks on cooldown timers with Evasion check)
     for (const enemy of livingEnemies) {
       if (enemy.hp <= 0 || enemy.isDefeated) continue;
 
@@ -598,6 +678,17 @@ class GameStateManager {
         // Counter-attack the lead living spirit
         const targetSpirit = livingSpirits[0];
         if (targetSpirit) {
+          // Check Evasion (Hermes 2pc +15% evasion, Feather relic)
+          const targetBonuses = this.getSpiritActiveSetBonuses(targetSpirit);
+          let evasionChance = 0.05;
+          for (const b of targetBonuses) {
+            if (b.bonus.evasionBonus) evasionChance += b.bonus.evasionBonus;
+          }
+          if (Math.random() < evasionChance) {
+            this.emit('spiritEvaded', { spirit: targetSpirit });
+            continue;
+          }
+
           let enemyDamage = Math.max(1, Math.round(enemy.power * (0.8 + Math.random() * 0.35)));
 
           // Absorb damage with shield first
@@ -818,6 +909,22 @@ class GameStateManager {
       shardsGained,
       essenceGained
     });
+
+    // 35% chance for Overlord Boss to drop a random Greek God Relic
+    if (enemy.isBoss && Math.random() < 0.35) {
+      const godKeys = Object.keys(GREEK_GOD_SETS);
+      const randomGod = godKeys[Math.floor(Math.random() * godKeys.length)];
+      const randomSlot = RELIC_SLOT_TYPES[Math.floor(Math.random() * RELIC_SLOT_TYPES.length)];
+      const rolledRelic = createRelicInstance({
+        setId: randomGod,
+        slotTypeId: randomSlot.id,
+        rarity: Math.random() < 0.65 ? 'UNCOMMON' : 'RARE',
+        level: Math.max(1, Math.min(4, Math.floor(this.state.madnessZone.stage / 25) + 1))
+      });
+      if (!this.state.inventory) this.state.inventory = { equipment: [] };
+      this.state.inventory.equipment.push(rolledRelic);
+      this.emit('relicDropped', rolledRelic);
+    }
 
     // Check if the entire swarm is defeated
     const remaining = (this.state.madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
@@ -1431,6 +1538,336 @@ class GameStateManager {
   generateId() {
     return 'sp_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
   }
+  // =========================================================================
+  // EQUIPMENT, GREEK GOD RELICS & SET BONUSES
+  // =========================================================================
+
+  getSpiritEquippedItems(spiritOrId) {
+    if (!spiritOrId) return { weapon: null, relics: {} };
+    const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
+    if (!spirit) return { weapon: null, relics: {} };
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+    const weapon = spirit.weapon ? equipmentList.find(e => e.uid === spirit.weapon) || null : null;
+    const relics = {};
+    if (spirit.relics) {
+      for (const [slot, uid] of Object.entries(spirit.relics)) {
+        relics[slot] = uid ? equipmentList.find(e => e.uid === uid) || null : null;
+      }
+    }
+    return { weapon, relics };
+  }
+
+  getSpiritActiveSetBonuses(spiritOrId) {
+    if (!spiritOrId) return [];
+    const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
+    if (!spirit || !spirit.relics) return [];
+    const countBySet = {};
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+
+    for (const relicUid of Object.values(spirit.relics)) {
+      if (!relicUid) continue;
+      const relic = equipmentList.find(e => e.uid === relicUid);
+      if (relic && relic.setId) {
+        countBySet[relic.setId] = (countBySet[relic.setId] || 0) + 1;
+      }
+    }
+
+    const activeBonuses = [];
+    for (const [setId, count] of Object.entries(countBySet)) {
+      const godSet = GREEK_GOD_SETS[setId];
+      if (!godSet) continue;
+      if (count >= 2) {
+        activeBonuses.push({
+          setId,
+          godName: godSet.god,
+          tier: '2pc',
+          name: godSet.bonus2pc.name,
+          description: godSet.bonus2pc.description,
+          bonus: godSet.bonus2pc,
+          color: godSet.color,
+          icon: godSet.icon,
+          count
+        });
+      }
+      if (count >= 4) {
+        activeBonuses.push({
+          setId,
+          godName: godSet.god,
+          tier: '4pc',
+          name: godSet.bonus4pc.name,
+          description: godSet.bonus4pc.description,
+          bonus: godSet.bonus4pc,
+          color: godSet.color,
+          icon: godSet.icon,
+          count
+        });
+      }
+    }
+    return activeBonuses;
+  }
+
+  getSpiritTotalPower(spiritOrId) {
+    if (!spiritOrId) return 0;
+    const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
+    if (!spirit) return 0;
+    let power = spirit.power || 0;
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+
+    // Weapon bonus
+    if (spirit.weapon) {
+      const wpn = equipmentList.find(e => e.uid === spirit.weapon);
+      if (wpn && wpn.atkPower) {
+        power += wpn.atkPower;
+      }
+    }
+
+    // Relic bonuses
+    if (spirit.relics) {
+      for (const relicUid of Object.values(spirit.relics)) {
+        if (!relicUid) continue;
+        const relic = equipmentList.find(e => e.uid === relicUid);
+        if (relic && relic.mainStatName === 'Bonus ATK Power') {
+          power += relic.mainStatValue;
+        }
+      }
+    }
+
+    // Active 2-pc damage bonuses (e.g. Hades +10%, Ares +15%, Poseidon +10%)
+    const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
+    let damageMultiplier = 1;
+    for (const b of activeBonuses) {
+      if (b.bonus.damageBonus) {
+        damageMultiplier += b.bonus.damageBonus;
+      }
+    }
+
+    return Math.round(power * damageMultiplier);
+  }
+
+  getTotalPartyPower() {
+    const party = this.getPartySpirits();
+    const basePower = party.reduce((sum, s) => sum + this.getSpiritTotalPower(s), 0);
+    const resonanceBonus = 1 + (this.state.resources.resonanceTier || 0) * 0.05;
+    return Math.round(basePower * resonanceBonus);
+  }
+
+  proc4PieceSetBonus(spirit, setBonusObj) {
+    const { madnessZone } = this.state;
+    const livingEnemies = (madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
+    const party = this.getPartySpirits();
+    const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
+
+    switch (setBonusObj.setId) {
+      case 'hades': {
+        // Underworld Flames: 5% enemy max HP DoT
+        for (const em of livingEnemies) {
+          const dotDamage = Math.max(1, Math.round(em.maxHp * 0.05));
+          em.hp = Math.max(0, em.hp - dotDamage);
+          if (em.hp <= 0) this.onIndividualEnemyKilled(em);
+        }
+        break;
+      }
+      case 'zeus': {
+        // Divine Retribution: 15% instant lightning blast
+        for (const em of livingEnemies) {
+          const strikeDamage = Math.max(1, Math.round(em.maxHp * 0.15));
+          em.hp = Math.max(0, em.hp - strikeDamage);
+          if (em.hp <= 0) this.onIndividualEnemyKilled(em);
+        }
+        break;
+      }
+      case 'poseidon': {
+        // Oceanic Surge: Water Shield (15% max HP)
+        for (const ally of livingSpirits) {
+          ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * 0.15);
+        }
+        break;
+      }
+      case 'hermes': {
+        // Swift Support: 3% max HP per second
+        for (const ally of livingSpirits) {
+          const heal = Math.round(ally.maxHp * 0.03 * 7);
+          ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
+        }
+        break;
+      }
+      case 'ares': {
+        // War of Olympus: Weaken enemy attacks
+        for (const em of livingEnemies) {
+          em.power = Math.max(1, Math.round(em.power * 0.9));
+        }
+        break;
+      }
+      case 'apollo': {
+        // Solar Radiance: heal lowest ally 8% max HP
+        if (livingSpirits.length > 0) {
+          const sorted = [...livingSpirits].sort((a, b) => a.currentHp - b.currentHp);
+          const lowest = sorted[0];
+          lowest.currentHp = Math.min(lowest.maxHp, lowest.currentHp + Math.round(lowest.maxHp * 0.08));
+        }
+        break;
+      }
+      case 'athena': {
+        // Aegis of Olympus: 25% damage reflect buff
+        for (const ally of livingSpirits) {
+          ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * 0.10);
+        }
+        break;
+      }
+      case 'artemis': {
+        // Lunar Piercer: 25% true max HP damage to highest-HP enemy
+        if (livingEnemies.length > 0) {
+          const sorted = [...livingEnemies].sort((a, b) => b.hp - a.hp);
+          const highest = sorted[0];
+          const pierce = Math.max(1, Math.round(highest.maxHp * 0.25));
+          highest.hp = Math.max(0, highest.hp - pierce);
+          if (highest.hp <= 0) this.onIndividualEnemyKilled(highest);
+        }
+        break;
+      }
+    }
+
+    this.emit('setBonusProc', {
+      spirit,
+      godSet: setBonusObj,
+      name: setBonusObj.name,
+      description: setBonusObj.description
+    });
+  }
+
+  equipItem(spiritId, itemUid) {
+    const spirit = this.state.spirits.find(s => s.id === spiritId);
+    if (!spirit) throw new Error('Spirit not found');
+
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+    const item = equipmentList.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Equipment not found in inventory');
+
+    if (item.type === 'weapon') {
+      if (spirit.weapon) {
+        const oldWpn = equipmentList.find(e => e.uid === spirit.weapon);
+        if (oldWpn) oldWpn.equippedToSpiritId = null;
+      }
+      if (item.equippedToSpiritId) {
+        const prevSpirit = this.state.spirits.find(s => s.id === item.equippedToSpiritId);
+        if (prevSpirit && prevSpirit.weapon === item.uid) {
+          prevSpirit.weapon = null;
+        }
+      }
+      spirit.weapon = item.uid;
+      item.equippedToSpiritId = spirit.id;
+    } else if (item.type === 'relic') {
+      const slotType = item.slotTypeId;
+      if (!spirit.relics) {
+        spirit.relics = { crown: null, goblet: null, feather: null, ring: null, pendant: null, aegis: null };
+      }
+      if (spirit.relics[slotType]) {
+        const oldRelic = equipmentList.find(e => e.uid === spirit.relics[slotType]);
+        if (oldRelic) oldRelic.equippedToSpiritId = null;
+      }
+      if (item.equippedToSpiritId) {
+        const prevSpirit = this.state.spirits.find(s => s.id === item.equippedToSpiritId);
+        if (prevSpirit && prevSpirit.relics && prevSpirit.relics[slotType] === item.uid) {
+          prevSpirit.relics[slotType] = null;
+        }
+      }
+      spirit.relics[slotType] = item.uid;
+      item.equippedToSpiritId = spirit.id;
+    }
+
+    this.save();
+    this.emit('equipmentUpdated', { spirit, item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    return { success: true, spirit, item };
+  }
+
+  unequipItem(spiritId, slotType) {
+    const spirit = this.state.spirits.find(s => s.id === spiritId);
+    if (!spirit) throw new Error('Spirit not found');
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+
+    if (slotType === 'weapon') {
+      if (spirit.weapon) {
+        const wpn = equipmentList.find(e => e.uid === spirit.weapon);
+        if (wpn) wpn.equippedToSpiritId = null;
+        spirit.weapon = null;
+      }
+    } else {
+      if (spirit.relics && spirit.relics[slotType]) {
+        const relic = equipmentList.find(e => e.uid === spirit.relics[slotType]);
+        if (relic) relic.equippedToSpiritId = null;
+        spirit.relics[slotType] = null;
+      }
+    }
+
+    this.save();
+    this.emit('equipmentUpdated', { spirit, slotType });
+    this.emit('inventoryUpdated', this.state.inventory);
+    return { success: true, spirit, slotType };
+  }
+
+  dismantleEquipment(itemUid) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
+    const index = this.state.inventory.equipment.findIndex(e => e.uid === itemUid);
+    if (index === -1) throw new Error('Item not found in inventory');
+
+    const item = this.state.inventory.equipment[index];
+    if (item.equippedToSpiritId) {
+      throw new Error('Cannot dismantle an equipped item! Unequip it first.');
+    }
+
+    this.state.inventory.equipment.splice(index, 1);
+    const shardsGained = Math.round(20 * (item.level || 1));
+    this.state.resources.spiritShards += shardsGained;
+
+    this.save();
+    this.emit('equipmentDismantled', { item, shardsGained });
+    this.emit('inventoryUpdated', this.state.inventory);
+    return { success: true, shardsGained };
+  }
+
+  // =========================================================================
+  // ARTIFACT DUNGEON (THE PANTHEON TRIALS)
+  // =========================================================================
+
+  runPantheonTrial(chamberId, tierNum = 1) {
+    const chamber = PANTHEON_CHAMBERS.find(c => c.id === chamberId);
+    if (!chamber) throw new Error('Invalid Pantheon Chamber selected!');
+
+    const tierObj = PANTHEON_DIFFICULTY_TIERS.find(t => t.tier === tierNum);
+    if (!tierObj) throw new Error('Invalid difficulty tier selected!');
+
+    if (this.state.resources.energy < tierObj.energyCost) {
+      throw new Error(`Insufficient Energy! Need ${tierObj.energyCost} ⚡, have ${this.state.resources.energy} ⚡.`);
+    }
+
+    // Deduct energy
+    this.state.resources.energy -= tierObj.energyCost;
+
+    // Generate targeted Greek God loot
+    const loot = generateDungeonLoot(chamberId, tierNum);
+
+    // Store in inventory
+    if (!this.state.inventory) this.state.inventory = { equipment: [] };
+    if (!Array.isArray(this.state.inventory.equipment)) this.state.inventory.equipment = [];
+
+    loot.relics.forEach(r => this.state.inventory.equipment.push(r));
+    loot.weapons.forEach(w => this.state.inventory.equipment.push(w));
+
+    // Award resources
+    this.state.resources.spiritShards += loot.shardsGained;
+    this.state.resources.soulEssence += loot.essenceGained;
+    this.state.stats.shardsEarnedTotal += loot.shardsGained;
+    this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+
+    this.save();
+    this.emit('dungeonCompleted', loot);
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
+
+    return loot;
+  }
 }
 
 export const gameState = new GameStateManager();
+

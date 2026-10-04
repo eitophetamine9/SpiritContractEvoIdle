@@ -1,6 +1,7 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from './pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
+import { GREEK_GOD_SETS, RELIC_SLOT_TYPES } from '../../data/equipmentData.js';
 
 export function showOfflineModal(report, onClaim) {
   const modalRoot = document.getElementById('modal-root');
@@ -488,3 +489,214 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
     modalRoot.innerHTML = '';
   });
 }
+
+/**
+ * Modal to inspect and equip weapons or relics for a spirit
+ */
+export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) return;
+
+  function renderModal() {
+    const spirit = gameState.state.spirits.find(s => s.id === spiritId);
+    if (!spirit) {
+      modalRoot.innerHTML = '';
+      return;
+    }
+
+    const { weapon, relics } = gameState.getSpiritEquippedItems(spirit);
+    const currentItem = slotType === 'weapon' ? weapon : (relics ? relics[slotType] : null);
+    const slotInfo = slotType === 'weapon' 
+      ? { id: 'weapon', name: 'Weapon', icon: '⚔️', desc: 'Main weapon providing raw ATK Power & offensive multipliers' }
+      : (RELIC_SLOT_TYPES.find(s => s.id === slotType) || { id: slotType, name: slotType, icon: '✨', desc: 'Relic slot' });
+
+    const allEquipment = (gameState.state.inventory && gameState.state.inventory.equipment) || [];
+    const availableItems = allEquipment.filter(item => {
+      if (slotType === 'weapon') return item.type === 'weapon';
+      return item.type === 'relic' && item.slotTypeId === slotType;
+    });
+
+    const isCurrentEquipped = !!currentItem;
+
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal-card modal-card-equipment">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 22px;">${slotInfo.icon}</span>
+              <div>
+                <h3 class="modal-title" style="margin: 0; font-size: 15px;">Equip ${slotInfo.name}</h3>
+                <span style="font-size: 11px; color: var(--text-muted);">${spirit.customName} • Lv. ${spirit.level}</span>
+              </div>
+            </div>
+            <button id="btn-close-equip-modal" class="modal-btn-close">✕</button>
+          </div>
+
+          <div style="font-size: 11px; color: var(--text-muted); margin: 6px 0 10px 0; line-height: 1.3;">
+            ${slotInfo.desc}
+          </div>
+
+          <!-- Currently Equipped Item Section -->
+          <div class="equip-section-title">CURRENTLY EQUIPPED</div>
+          ${isCurrentEquipped ? `
+            <div class="equipped-item-card" style="border-color: ${currentItem.color || '#4cd137'};">
+              <div class="equip-card-left">
+                <span class="equip-icon-large">${currentItem.icon}</span>
+                <div class="equip-card-info">
+                  <div class="equip-item-name" style="color: ${currentItem.color || '#fff'};">
+                    ${currentItem.name} <span class="equip-rarity-pill" style="border-color: ${currentItem.color || '#fff'}; color: ${currentItem.color || '#fff'};">${currentItem.rarity}</span>
+                  </div>
+                  <div class="equip-item-stat">
+                    ${currentItem.type === 'weapon' ? `⚡ +${currentItem.atkPower} ATK Power • +${currentItem.critRate}% Crit` : `⚡ +${currentItem.mainStatValue} ${currentItem.mainStatName}`}
+                  </div>
+                  ${currentItem.setId && GREEK_GOD_SETS[currentItem.setId] ? `
+                    <div class="equip-set-tag" style="color: ${GREEK_GOD_SETS[currentItem.setId].accentColor};">
+                      ${GREEK_GOD_SETS[currentItem.setId].icon} ${GREEK_GOD_SETS[currentItem.setId].name} (2pc/4pc Set)
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+              <button class="btn-unequip-slot" id="btn-modal-unequip" data-slot="${slotType}">
+                Unequip
+              </button>
+            </div>
+          ` : `
+            <div class="empty-slot-banner">
+              <span>(No ${slotInfo.name} equipped on ${spirit.customName})</span>
+            </div>
+          `}
+
+          <!-- Available Inventory Items -->
+          <div class="equip-section-title" style="margin-top: 14px;">
+            AVAILABLE IN BAG (${availableItems.length})
+          </div>
+
+          <div class="equip-inventory-scroll">
+            ${availableItems.length === 0 ? `
+              <div class="empty-bag-notice">
+                <p>No other ${slotInfo.name} items in your equipment inventory.</p>
+                <button id="btn-modal-goto-trials" class="btn-goto-dungeon-action">
+                  🏛️ Challenge Pantheon Trials
+                </button>
+              </div>
+            ` : `
+              <div class="equip-items-grid">
+                ${availableItems.map(item => {
+                  const isEquippedToThis = currentItem && currentItem.uid === item.uid;
+                  const equippedToOther = item.equippedToSpiritId && item.equippedToSpiritId !== spirit.id
+                    ? gameState.state.spirits.find(s => s.id === item.equippedToSpiritId)
+                    : null;
+                  const godSet = item.setId ? GREEK_GOD_SETS[item.setId] : null;
+
+                  return `
+                    <div class="inventory-equip-card ${isEquippedToThis ? 'item-active' : ''}" style="border-color: ${item.color || 'var(--border-color)'};">
+                      <div class="equip-card-left">
+                        <span class="equip-icon-box">${item.icon}</span>
+                        <div class="equip-card-info">
+                          <div class="equip-item-name" style="color: ${item.color || '#fff'};">
+                            ${item.name}
+                            <span class="equip-rarity-pill" style="border-color: ${item.color}; color: ${item.color}; font-size: 9px;">${item.rarity}</span>
+                          </div>
+                          <div class="equip-item-stat">
+                            ${item.type === 'weapon' ? `⚡ +${item.atkPower} ATK Power • +${item.critRate}% Crit` : `⚡ +${item.mainStatValue} ${item.mainStatName}`}
+                          </div>
+                          ${godSet ? `
+                            <div class="equip-set-tag" style="color: ${godSet.accentColor}; font-size: 10px;">
+                              ${godSet.icon} ${godSet.name}
+                            </div>
+                          ` : ''}
+                          ${equippedToOther ? `
+                            <div style="font-size: 10px; color: #f39c12; font-style: italic;">
+                              Equipped to ${equippedToOther.customName} (will transfer)
+                            </div>
+                          ` : ''}
+                        </div>
+                      </div>
+
+                      <div class="equip-card-actions">
+                        ${isEquippedToThis ? `
+                          <span class="badge-equipped-tag">EQUIPPED</span>
+                        ` : `
+                          <button class="btn-action-equip" data-equip-uid="${item.uid}">
+                            Equip
+                          </button>
+                          ${!item.equippedToSpiritId ? `
+                            <button class="btn-action-dismantle" data-dismantle-uid="${item.uid}" title="Dismantle for Spirit Shards">
+                              ♻️
+                            </button>
+                          ` : ''}
+                        `}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+
+          <button id="btn-modal-done" class="modal-btn-confirm" style="margin-top: 12px;">
+            Done
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Bind event listeners
+    document.getElementById('btn-close-equip-modal')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      if (onUpdate) onUpdate();
+    });
+
+    document.getElementById('btn-modal-done')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      if (onUpdate) onUpdate();
+    });
+
+    document.getElementById('btn-modal-unequip')?.addEventListener('click', () => {
+      try {
+        gameState.unequipItem(spiritId, slotType);
+        renderModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    modalRoot.querySelectorAll('[data-equip-uid]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const uid = e.currentTarget.getAttribute('data-equip-uid');
+        try {
+          gameState.equipItem(spiritId, uid);
+          renderModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+
+    modalRoot.querySelectorAll('[data-dismantle-uid]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const uid = e.currentTarget.getAttribute('data-dismantle-uid');
+        if (confirm('Dismantle this equipment item for Spirit Shards?')) {
+          try {
+            const res = gameState.dismantleEquipment(uid);
+            alert(`Dismantled equipment! Gained +${res.shardsGained} Spirit Shards.`);
+            renderModal();
+            if (onUpdate) onUpdate();
+          } catch (err) {
+            alert(err.message);
+          }
+        }
+      });
+    });
+
+    document.getElementById('btn-modal-goto-trials')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      document.querySelector('[data-tab="trials"]')?.click();
+    });
+  }
+
+  renderModal();
+}
+

@@ -5,6 +5,7 @@ import {
   updateMadnessCombatTick,
   renderPartyView, 
   renderContractView, 
+  renderDungeonView,
   renderVaultView, 
   renderStatsView,
   renderProfileView,
@@ -64,7 +65,7 @@ function switchTab(tabName) {
   const dockMain = document.getElementById('nav-dock-main');
   const dockMore = document.getElementById('nav-dock-more');
   if (dockMain && dockMore) {
-    if (tabName === 'vault' || tabName === 'index') {
+    if (tabName === 'vault' || tabName === 'index' || tabName === 'trials') {
       dockMain.classList.add('nav-dock-hidden');
       dockMore.classList.remove('nav-dock-hidden');
     } else if (tabName === 'party' || tabName === 'madness' || tabName === 'contract') {
@@ -88,6 +89,9 @@ function renderActiveTab() {
       break;
     case 'contract':
       renderContractView(viewContainer, () => switchTab('index'));
+      break;
+    case 'trials':
+      renderDungeonView(viewContainer);
       break;
     case 'vault':
       renderVaultView(viewContainer);

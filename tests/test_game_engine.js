@@ -192,10 +192,53 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (gameState.state.madnessZone.subStage !== 1) throw new Error('Party wipeout did not reset subStage to 1');
   if (starter.currentHp !== starter.maxHp) throw new Error('Party wipeout did not restore spirits to full HP');
 
+  // 8. Test Equipment, Greek God Relics, Set Bonuses, and Pantheon Trials Dungeon
+  console.log('\n[TEST 8] Testing Equipment, Relics & Pantheon Trials Artifact Dungeon:');
+  const { GREEK_GOD_SETS, PANTHEON_CHAMBERS, PANTHEON_DIFFICULTY_TIERS, createRelicInstance } = await import('../src/data/index.js');
+  console.log(`  Greek God Sets catalog count: ${Object.keys(GREEK_GOD_SETS).length} (Expected 8)`);
+  if (Object.keys(GREEK_GOD_SETS).length !== 8) throw new Error('Expected 8 Greek God Sets');
+
+  // Verify starter equipment and 2-pc Hades set bonus on starter spirit
+  const activeStarterBonuses = gameState.getSpiritActiveSetBonuses(starter);
+  console.log(`  Starter Spirit active set bonuses: ${activeStarterBonuses.map(b => b.name).join(', ')}`);
+  const hasHades2pc = activeStarterBonuses.some(b => b.setId === 'hades' && b.tier === '2pc');
+  if (!hasHades2pc) throw new Error('Starter should have active 2-pc Hades set bonus');
+
+  // Test 4-pc Hades bonus activation by equipping 2 more Hades relics
+  const hadesRing = createRelicInstance({ setId: 'hades', slotTypeId: 'ring', rarity: 'RARE', level: 1 });
+  const hadesAegis = createRelicInstance({ setId: 'hades', slotTypeId: 'aegis', rarity: 'RARE', level: 1 });
+  gameState.state.inventory.equipment.push(hadesRing, hadesAegis);
+
+  gameState.equipItem(starter.id, hadesRing.uid);
+  gameState.equipItem(starter.id, hadesAegis.uid);
+
+  const updatedBonuses = gameState.getSpiritActiveSetBonuses(starter);
+  console.log(`  After equipping 4 Hades relics -> Bonuses: ${updatedBonuses.map(b => b.name).join(', ')}`);
+  const hasHades4pc = updatedBonuses.some(b => b.setId === 'hades' && b.tier === '4pc');
+  if (!hasHades4pc) throw new Error('4-pc Hades bonus (Underworld Flames) should be active with 4 Hades relics equipped');
+
+  // Test Pantheon Trials Artifact Dungeon execution
+  console.log(`  Pantheon Chambers count: ${PANTHEON_CHAMBERS.length} (Expected 8)`);
+  if (PANTHEON_CHAMBERS.length !== 8) throw new Error('Expected 8 Pantheon Chambers');
+
+  const initialEnergy = gameState.state.resources.energy;
+  const initialEquipCount = gameState.state.inventory.equipment.length;
+  console.log(`  Before Dungeon run -> Energy: ${initialEnergy} ⚡ | Inventory items: ${initialEquipCount}`);
+
+  // Run Underworld Crypt Tier 1 (Cost: 10 ⚡)
+  const dungeonResult = gameState.runPantheonTrial('underworld_crypt', 1);
+  console.log(`  Cleared "${dungeonResult.chamber.name}" [${dungeonResult.tier.name}]!`);
+  console.log(`  Loot Earned: ${dungeonResult.relics.length} Relics (${dungeonResult.relics.map(r => r.name).join(', ')}), +${dungeonResult.shardsGained} Shards, +${dungeonResult.essenceGained} Essence`);
+
+  if (gameState.state.resources.energy !== initialEnergy - 10) throw new Error('Dungeon run did not deduct 10 Energy');
+  if (gameState.state.inventory.equipment.length < initialEquipCount + 2) throw new Error('Dungeon relics not added to inventory');
+  if (dungeonResult.relics.some(r => r.setId !== 'hades')) throw new Error('Underworld Crypt should only drop Hades relics');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
   console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
 });
+
 
 

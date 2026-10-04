@@ -5,3 +5,4 @@ export * from './vaultView.js';
 export * from './statsView.js';
 export * from './profileView.js';
 export * from './indexView.js';
+export * from './dungeonView.js';
