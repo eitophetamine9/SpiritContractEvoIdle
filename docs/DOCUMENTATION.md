@@ -211,4 +211,48 @@ The Pantheon Trials provide a dedicated dungeon instance for targeted relic farm
 - **Equipping**: Players can tap any weapon or relic socket in the Party View to inspect the equipped item, unequip it, or swap with any compatible equipment item from inventory.
 - **Dismantling**: Unequipped weapons and relics can be dismantled in the equipment modal to yield bonus Spirit Shards ($20 \times \text{Item Level}$), providing recycling utility for surplus gear.
 
+---
+
+## 9. High-Fantasy UI-Kit Architecture & Hero Pedestal Showcase
+
+### 9.1 Visual Design System & UI-Kit Tokens
+The interface employs a high-fantasy mobile aesthetic inspired by classical RPG UI-Kits:
+- **Typography**: Dual-font typography utilizing Cinzel serif for headings, banners, and deity titles, alongside Outfit sans-serif for numbers, statistics, and tactical gameplay elements.
+- **Metallic Gold Gradients**: Curated linear gradients representing divine craftsmanship (`linear-gradient(135deg, #fff2ad 0%, #d4af37 50%, #99741e 100%)`) with warm specular highlights.
+- **Regal Banner Ribbons**: Deep royal purple and obsidian ribbon containers with cut-corner borders and swallowtail contours.
+- **Segmented Stat Gauges**: Ten-segment micro-meters visualizing Attack Power, Health Points (red-orange glow), and Mana charge (cyan-blue glow).
+
+### 9.2 Hero Pedestal Showcase
+The Party View incorporates a dual-mode layout (Hero Pedestal and Full Roster):
+- **Team Switcher Column**: Vertical stack of five party member medallions featuring active gold borders, level indicators, and evolution alert pips.
+- **Three-Dimensional Glowing Pedestal**: An illuminated isometric stage featuring concentric runic rotation, light ray emanations, and dynamic spirit sprite hovering animation. Ready-to-evolve spirits emit a radiant golden aura.
+- **Spirit Dossier**: Detailed character breakdown showcasing species lineage, total combat power with equipment bonus attribution, and segmented attribute meters.
+- **Rapid Equipment Drawer**: Direct 4x2 gear inspection drawer allowing one-tap equipping, unequipping, and dismantling without navigating away from the party showcase.
+
+### 9.3 Diamond Fast-Travel Hub
+In the Madness Zone combat screen, a diamond-oriented quad-cluster navigation widget enables immediate transitions between Combat, Hero Pedestal, Astral Summons, and the Pantheon Trials.
+
+---
+
+## 10. Audio Engine Architecture & Sound Events
+
+### 10.1 Hybrid Audio Architecture
+The audio engine (`audioManager.js`) provides zero-latency playback using HTML5 Audio and the Web Audio API:
+- **Background Music (BGM)**:
+  - `sanctum_ambient.wav`: Atmospheric minor-key pad with ethereal harmonic arpeggios for Sanctum and Vault navigation.
+  - `battle_madness.wav`: Rhythmic 120 BPM combat pulse with synth bass drive for the Madness Tower.
+  - `trials_pantheon.wav`: Solemn brass and orchestral progression for the Pantheon Trials dungeon.
+- **Sound Effects (SFX)**:
+  - `attack_hit.wav`: Melee impact transient on manual and automated party strikes.
+  - `crit_hit.wav`: Resonant sub-bass critical blow when set bonus passives trigger.
+  - `ultimate_cast.wav`: Ascending energy vortex burst on full 100 MP ultimate release.
+  - `level_up.wav`: Four-note ascending celestial chime.
+  - `evolution_fanfare.wav`: Regal four-chord victory fanfare on successful spirit evolution.
+  - `dungeon_reward.wav`: Sparkling bell chime on artifact dungeon clearance.
+  - `button_tap.wav`: Crisp tactile click on navigation and gear equip.
+
+### 10.2 Lifecycle & User Gesture Compliance
+In accordance with modern browser autoplay policies, audio context initialization and track playback automatically unlock upon the player's first user interaction (touch or click). User audio preferences (mute state, music volume, SFX volume) are persisted in local storage.
+
+
 

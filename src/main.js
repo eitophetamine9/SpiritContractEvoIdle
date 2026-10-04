@@ -1,5 +1,6 @@
 import './style.css';
 import { gameState } from './state/index.js';
+import { audioManager } from './audio/audioManager.js';
 import { 
   renderMadnessView, 
   updateMadnessCombatTick,
@@ -42,6 +43,7 @@ function updateResourcesDisplay() {
 
 function switchTab(tabName) {
   activeTab = tabName;
+  audioManager.handleTabChange(tabName);
 
   const btnTopProfile = document.getElementById('btn-top-profile');
   if (btnTopProfile) {
@@ -189,6 +191,39 @@ gameState.subscribe((eventType, payload, state) => {
 window.addEventListener('DOMContentLoaded', () => {
   const offlineReport = gameState.init();
 
+  // Audio setup
+  audioManager.bindGameStateEvents(gameState);
+  const btnTopAudio = document.getElementById('btn-top-audio');
+  const audioIconSymbol = document.getElementById('audio-icon-symbol');
+
+  const updateAudioUI = () => {
+    if (audioIconSymbol) {
+      audioIconSymbol.textContent = audioManager.isMuted ? '🔇' : '🔊';
+    }
+    if (btnTopAudio) {
+      btnTopAudio.classList.toggle('muted', audioManager.isMuted);
+    }
+  };
+
+  updateAudioUI();
+
+  if (btnTopAudio) {
+    btnTopAudio.addEventListener('click', () => {
+      audioManager.toggleMute();
+      updateAudioUI();
+    });
+  }
+
+  // Resume / Start audio upon first interaction
+  const resumeAudioOnce = () => {
+    audioManager.init();
+    audioManager.handleTabChange(activeTab);
+    document.removeEventListener('click', resumeAudioOnce);
+    document.removeEventListener('touchstart', resumeAudioOnce);
+  };
+  document.addEventListener('click', resumeAudioOnce, { once: true });
+  document.addEventListener('touchstart', resumeAudioOnce, { once: true });
+
   updateResourcesDisplay();
   renderActiveTab();
 
@@ -198,3 +233,4 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+

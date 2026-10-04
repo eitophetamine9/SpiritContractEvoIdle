@@ -8,6 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Spirit Contract Evo Idle - Contract spirits, train AFK, evolve through RNG, and battle corrupted beasts in the Madness Zone." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <title>Spirit Contract Evo | Idle</title>
   </head>
   <body>
@@ -16,12 +19,15 @@
       <header class="app-header">
         <div class="header-top">
           <div class="game-title">
-            <span>⛩️ Spirit Contract Evo</span>
+            <span class="game-title-text">⛩️ Spirit Contract Evo</span>
           </div>
           <div class="header-right-actions">
             <div id="save-status" class="save-indicator">
               <span class="save-dot">●</span> 💾 Saved
             </div>
+            <button id="btn-top-audio" class="header-audio-btn" title="Toggle Sound & Music">
+              <span id="audio-icon-symbol">🔊</span>
+            </button>
             <button id="btn-top-profile" class="header-profile-btn" data-tab="profile" title="Contractor Profile">
               <span class="profile-avatar-icon">🧙‍♂️</span>
               <span class="profile-btn-text">Profile</span>
