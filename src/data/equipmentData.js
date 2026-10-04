@@ -4,12 +4,12 @@
  */
 
 export const RELIC_SLOT_TYPES = [
-  { id: 'crown', name: 'Crown', icon: '👑', desc: 'Symbol of divine authority (HP & MP)' },
-  { id: 'goblet', name: 'Goblet', icon: '🍷', desc: 'Chalice of primordial life (Shield & Healing)' },
-  { id: 'feather', name: 'Feather', icon: '🪶', desc: 'Plume of celestial winds (Evasion & Speed)' },
-  { id: 'ring', name: 'Ring', icon: '💍', desc: 'Band of celestial dominance (ATK & Crit)' },
-  { id: 'pendant', name: 'Pendant', icon: '📿', desc: 'Amulet of astral vigor (Mana Replenish)' },
-  { id: 'aegis', name: 'Aegis', icon: '🛡️', desc: 'Buckler of legendary resolve (Armor & Ult Amp)' }
+  { id: 'headgear', name: 'Headgear', icon: '👑', desc: 'Divine crown granting massive life force (Bonus Max HP)' },
+  { id: 'totem', name: 'Totem', icon: '🗿', desc: 'Ancestral idol granting barrier wards (Shield Strength)' },
+  { id: 'ring', name: 'Ring', icon: '💍', desc: 'Band of celestial dominance (Bonus ATK Power)' },
+  { id: 'necklace', name: 'Necklace', icon: '📿', desc: 'Spiritual choker accelerating mana flow (Mana Replenish)' },
+  { id: 'orb', name: 'Orb', icon: '🔮', desc: 'Arcane sphere magnifying skill power (Ultimate Amplification)' },
+  { id: 'charm', name: 'Charm', icon: '🧿', desc: 'Lucky talisman granting agile evasion (Evasion Rating)' }
 ];
 
 export const WEAPON_TYPES = [
@@ -235,29 +235,29 @@ export function createRelicInstance({ setId, slotTypeId, rarity = 'COMMON', leve
   let mainStatValue = baseStatVal;
 
   switch (slotType.id) {
-    case 'crown':
+    case 'headgear':
       mainStatName = 'Bonus Max HP';
       mainStatValue = baseStatVal * 8;
       break;
-    case 'goblet':
+    case 'totem':
       mainStatName = 'Shield Strength';
       mainStatValue = baseStatVal * 5;
-      break;
-    case 'feather':
-      mainStatName = 'Evasion Rating';
-      mainStatValue = Math.min(25, Math.round(baseStatVal * 0.4));
       break;
     case 'ring':
       mainStatName = 'Bonus ATK Power';
       mainStatValue = baseStatVal * 4;
       break;
-    case 'pendant':
-      mainStatName = 'Mana Gain';
+    case 'necklace':
+      mainStatName = 'Mana Replenish';
       mainStatValue = Math.min(30, Math.round(baseStatVal * 0.5));
       break;
-    case 'aegis':
+    case 'orb':
       mainStatName = 'Ult Amp';
       mainStatValue = Math.min(35, Math.round(baseStatVal * 0.6));
+      break;
+    case 'charm':
+      mainStatName = 'Evasion Rating';
+      mainStatValue = Math.min(25, Math.round(baseStatVal * 0.4));
       break;
   }
 

@@ -1,5 +1,5 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from './pixelBox.js';
-import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
 import { GREEK_GOD_SETS, RELIC_SLOT_TYPES } from '../../data/equipmentData.js';
 
@@ -699,4 +699,363 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
 
   renderModal();
 }
+
+/**
+ * Universal Item Inspection & Equip Modal for Vault
+ */
+export function showItemInspectModal({ item, onUpdate }) {
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot || !item) return;
+
+  const spirits = gameState.state.spirits || [];
+  const partyIds = gameState.state.party || [];
+  const partySpirits = spirits.filter(s => partyIds.includes(s.id));
+  const equippedSpirit = spirits.find(s => s.id === item.equippedToSpiritId);
+
+  const modalEl = document.createElement('div');
+  modalEl.className = 'modal-backdrop';
+
+  const isRelic = item.type === 'relic';
+  const godSet = isRelic ? GREEK_GOD_SETS[item.setId] : null;
+
+  modalEl.innerHTML = `
+    <div class="modal-card modal-card-equipment" style="max-width: 440px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 24px;">${item.icon}</span>
+          <div>
+            <h3 class="modal-title" style="margin: 0; font-size: 16px; color: ${item.color || '#ffd32a'};">
+              ${item.name}
+            </h3>
+            <span style="font-size: 11px; color: var(--text-muted);">
+              ${item.rarity} • Level ${item.level || 1} ${isRelic ? `• ${item.slotName || 'Relic'}` : '• Weapon'}
+            </span>
+          </div>
+        </div>
+        <button id="btn-close-item-inspect" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 14px 16px;">
+        
+        <!-- Stats Section -->
+        <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="font-size: 12px; font-weight: 800; color: #ffd32a; margin-bottom: 6px;">PRIMARY ATTRIBUTES</div>
+          ${isRelic ? `
+            <div style="font-size: 14px; font-weight: 700; color: #fff;">
+              ${item.mainStatName}: <span style="color: #2ed573;">+${item.mainStatValue}</span>
+            </div>
+          ` : `
+            <div style="font-size: 14px; font-weight: 700; color: #fff;">
+              ATK Power: <span style="color: #ff4757;">+${item.atkPower}</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              Crit Rate: +${item.critRate || 5}% • Ult Amp: +${item.ultAmp || 8}%
+            </div>
+          `}
+        </div>
+
+        <!-- Set Bonus Details if Relic -->
+        ${godSet ? `
+          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px; border-left: 3px solid ${godSet.color};">
+            <div style="font-size: 11px; font-weight: 800; color: ${godSet.accentColor}; margin-bottom: 4px;">
+              ${godSet.name} (${godSet.god})
+            </div>
+            <div style="font-size: 11px; color: #ccc; margin-bottom: 4px;">
+              <strong>2-pc:</strong> ${godSet.bonus2pc.description}
+            </div>
+            <div style="font-size: 11px; color: #ccc;">
+              <strong>4-pc:</strong> ${godSet.bonus4pc.description}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Equipped Status & Reassign to Spirit -->
+        <div style="margin-bottom: 14px;">
+          <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 6px;">
+            ${equippedSpirit ? `Equipped To: <span style="color: #2ecc71;">${equippedSpirit.customName}</span>` : 'Status: <span style="color: var(--text-muted);">In Vault (Unequipped)</span>'}
+          </div>
+
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Quick Equip to Active Party Spirit:</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            ${partySpirits.map(sp => {
+              const isEquippedHere = equippedSpirit && equippedSpirit.id === sp.id;
+              return `
+                <button class="btn-preset-sm btn-equip-to-spirit ${isEquippedHere ? 'active' : ''}" data-target-spirit="${sp.id}" style="${isEquippedHere ? 'background: #27ae60; color: #fff;' : ''}">
+                  ${isEquippedHere ? '✓ ' : ''}${sp.customName}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Actions: Unequip / Dismantle -->
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          ${equippedSpirit ? `
+            <button id="btn-unequip-item" class="btn-drawer-action" style="flex: 1; background: rgba(241, 196, 15, 0.2); border-color: #f1c40f; color: #ffd32a;">
+              Unequip
+            </button>
+          ` : `
+            <button id="btn-dismantle-item" class="btn-drawer-action" style="flex: 1; background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675;">
+              Dismantle (+${Math.round(20 * (item.level || 1))} 💎)
+            </button>
+          `}
+          <button id="btn-close-item-done" class="btn-drawer-action" style="flex: 1; background: #34495e; color: #fff;">
+            Done
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  modalRoot.appendChild(modalEl);
+
+  const closeModal = () => {
+    if (modalRoot.contains(modalEl)) {
+      modalRoot.removeChild(modalEl);
+    }
+  };
+
+  modalEl.querySelector('#btn-close-item-inspect')?.addEventListener('click', closeModal);
+  modalEl.querySelector('#btn-close-item-done')?.addEventListener('click', closeModal);
+
+  // Equip to spirit buttons
+  modalEl.querySelectorAll('.btn-equip-to-spirit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetSpiritId = btn.getAttribute('data-target-spirit');
+      try {
+        gameState.equipItem(targetSpiritId, item.uid);
+        closeModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+
+  // Unequip button
+  modalEl.querySelector('#btn-unequip-item')?.addEventListener('click', () => {
+    if (equippedSpirit) {
+      try {
+        gameState.unequipItem(equippedSpirit.id, isRelic ? item.slotTypeId : 'weapon');
+        closeModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  });
+
+  // Dismantle button
+  modalEl.querySelector('#btn-dismantle-item')?.addEventListener('click', () => {
+    if (confirm(`Dismantle ${item.name} for Spirit Shards?`)) {
+      try {
+        const res = gameState.dismantleEquipment(item.uid);
+        alert(`Dismantled ${item.name}! Gained +${res.shardsGained} Spirit Shards.`);
+        closeModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  });
+}
+
+/**
+ * Universal Spirit Management Modal for Vault
+ */
+export function showSpiritModal(spirit, onUpdate) {
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot || !spirit) return;
+
+  function render() {
+    const currentSpirit = gameState.state.spirits.find(s => s.id === spirit.id);
+    if (!currentSpirit) {
+      modalRoot.innerHTML = '';
+      if (onUpdate) onUpdate();
+      return;
+    }
+
+    const species = SPIRIT_SPECIES[currentSpirit.speciesId];
+    const rarity = getRarityInfo(currentSpirit.rarity || (species ? species.baseRarity : 'COMMON'));
+    const partyIds = gameState.state.party || [];
+    const isInParty = partyIds.includes(currentSpirit.id);
+    const reqXp = getXpRequiredForLevel(currentSpirit.level);
+    const isCapped = currentSpirit.level >= (species ? species.levelCap : 99);
+    const xpPercent = isCapped ? 100 : Math.min(100, Math.floor((currentSpirit.xp / reqXp) * 100));
+    const canEvolve = isCapped && species && species.evolutions && species.evolutions.length > 0;
+    const refundShards = 40 * (currentSpirit.tier || 1) + Math.floor((currentSpirit.level || 1) * 3);
+
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal-card modal-card-equipment" style="max-width: 440px;">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">⛩️</span>
+              <div>
+                <h3 class="modal-title" style="margin: 0; font-size: 16px; color: ${rarity.color};">
+                  ${currentSpirit.customName} ${currentSpirit.favorite ? '⭐' : ''}
+                </h3>
+                <span style="font-size: 11px; color: var(--text-muted);">
+                  ${species ? species.name : 'Unknown Species'} • Tier ${currentSpirit.tier || 1}
+                </span>
+              </div>
+            </div>
+            <button id="btn-close-spirit-modal" class="modal-close-btn">&times;</button>
+          </div>
+
+          <div class="modal-body" style="padding: 14px 16px;">
+            <!-- Spirit Visual & Basic Stats -->
+            <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 14px;">
+              <div style="width: 72px; height: 72px; flex-shrink: 0;">
+                ${createSpiritPlaceholderBox(currentSpirit)}
+              </div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                  <span class="rarity-pill ${rarity.name.toLowerCase()}" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
+                    ${rarity.name.toUpperCase()}
+                  </span>
+                  ${isInParty ? '<span style="font-size: 10px; font-weight: 800; background: #27ae60; color: #fff; padding: 2px 6px; border-radius: 4px;">IN PARTY</span>' : '<span style="font-size: 10px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">VAULT RESERVES</span>'}
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: #fff;">
+                  Level ${currentSpirit.level} / ${species ? species.levelCap : 99}
+                </div>
+                <div style="font-size: 12px; font-weight: 800; color: #2ed573; margin-top: 2px;">
+                  ⚡ ${currentSpirit.power.toLocaleString()} Power
+                </div>
+              </div>
+            </div>
+
+            <!-- XP Progress Bar -->
+            <div style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
+                <span>Training Experience</span>
+                <span>${isCapped ? 'MAX LEVEL' : `${Math.floor(currentSpirit.xp)} / ${reqXp} XP (${xpPercent}%)`}</span>
+              </div>
+              <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
+                <div style="width: ${xpPercent}%; height: 100%; background: linear-gradient(90deg, #70a1ff, #00d2ff); border-radius: 4px; transition: width 0.3s ease;"></div>
+              </div>
+            </div>
+
+            <!-- Rename Nickname Input -->
+            <div style="display: flex; gap: 6px; margin-bottom: 14px;">
+              <input type="text" id="input-spirit-rename" value="${currentSpirit.customName}" maxlength="24" style="flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; padding: 6px 10px; font-size: 12px;" />
+              <button id="btn-save-rename" class="btn-preset-sm" style="background: #2f3542; color: #fff; padding: 0 12px; font-size: 11px; font-weight: 700; min-height: 32px;">
+                Rename
+              </button>
+            </div>
+
+            <!-- Evolve Button (if ready) -->
+            ${canEvolve ? `
+              <div style="margin-bottom: 14px; text-align: center;">
+                <button id="btn-modal-evolve" style="width: 100%; min-height: 44px; background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900; font-size: 13px; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(241,196,15,0.5);">
+                  ⚡ ASCEND & EVOLVE SPIRIT ⚡
+                </button>
+              </div>
+            ` : ''}
+
+            <!-- Quick Action Grid: Equip / Unequip, Favorite -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+              ${isInParty ? `
+                <button id="btn-toggle-party-equip" class="btn-drawer-action" style="background: rgba(241, 196, 15, 0.2); border-color: #f1c40f; color: #ffd32a; min-height: 44px;">
+                  Remove from Party
+                </button>
+              ` : `
+                <button id="btn-toggle-party-equip" class="btn-drawer-action" style="background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; color: #2ecc71; min-height: 44px;">
+                  Equip to Party
+                </button>
+              `}
+
+              <button id="btn-toggle-favorite-spirit" class="btn-drawer-action" style="background: rgba(255, 215, 0, 0.15); border-color: #ffd700; color: #ffd700; min-height: 44px;">
+                ${currentSpirit.favorite ? '★ Unfavorite' : '☆ Favorite'}
+              </button>
+            </div>
+
+            <!-- Annul Contract (Release) Button -->
+            <div>
+              <button id="btn-modal-annul-spirit" class="btn-drawer-action" style="width: 100%; min-height: 40px; background: rgba(231, 76, 60, 0.15); border-color: #e74c3c; color: #ff7675; font-size: 11px;">
+                Annul Contract (+${refundShards} Spirit Shards)
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Event handlers
+    const closeModal = () => {
+      modalRoot.innerHTML = '';
+      if (onUpdate) onUpdate();
+    };
+
+    modalRoot.querySelector('#btn-close-spirit-modal')?.addEventListener('click', closeModal);
+
+    // Save rename
+    modalRoot.querySelector('#btn-save-rename')?.addEventListener('click', () => {
+      const input = modalRoot.querySelector('#input-spirit-rename');
+      if (input && input.value) {
+        gameState.renameSpirit(currentSpirit.id, input.value);
+        render();
+      }
+    });
+
+    // Toggle Party Equip
+    modalRoot.querySelector('#btn-toggle-party-equip')?.addEventListener('click', () => {
+      try {
+        if (isInParty) {
+          gameState.unequipSpirit(currentSpirit.id);
+        } else {
+          gameState.equipSpirit(currentSpirit.id);
+        }
+        render();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Toggle Favorite
+    modalRoot.querySelector('#btn-toggle-favorite-spirit')?.addEventListener('click', () => {
+      gameState.toggleFavoriteSpirit(currentSpirit.id);
+      render();
+    });
+
+    // Annul Spirit
+    modalRoot.querySelector('#btn-modal-annul-spirit')?.addEventListener('click', () => {
+      if (isInParty) {
+        alert('Cannot annul contract with an active party Spirit. Unequip it first.');
+        return;
+      }
+      if (currentSpirit.favorite) {
+        alert('This Spirit is marked as Favorite. Remove favorite status first.');
+        return;
+      }
+      if (confirm(`Annul contract with ${currentSpirit.customName}? You will receive +${refundShards} Spirit Shards.`)) {
+        try {
+          const shardsGained = gameState.annulContract(currentSpirit.id);
+          alert(`Annulled contract with ${currentSpirit.customName}! Gained +${shardsGained} Spirit Shards.`);
+          closeModal();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+    });
+
+    // Evolve Spirit
+    modalRoot.querySelector('#btn-modal-evolve')?.addEventListener('click', () => {
+      try {
+        const evoResult = gameState.evolveSpirit(currentSpirit.id);
+        showEvolutionCeremonyModal(evoResult, () => {
+          render();
+        });
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
+  render();
+}
+
+
 

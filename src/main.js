@@ -7,6 +7,7 @@ import {
   renderPartyView, 
   renderContractView, 
   renderDungeonView,
+  renderForgeView,
   renderVaultView, 
   renderStatsView,
   renderProfileView,
@@ -63,19 +64,6 @@ function switchTab(tabName) {
     }
   });
 
-  // Automatically show appropriate dock
-  const dockMain = document.getElementById('nav-dock-main');
-  const dockMore = document.getElementById('nav-dock-more');
-  if (dockMain && dockMore) {
-    if (tabName === 'vault' || tabName === 'index' || tabName === 'trials') {
-      dockMain.classList.add('nav-dock-hidden');
-      dockMore.classList.remove('nav-dock-hidden');
-    } else if (tabName === 'party' || tabName === 'madness' || tabName === 'contract') {
-      dockMain.classList.remove('nav-dock-hidden');
-      dockMore.classList.add('nav-dock-hidden');
-    }
-  }
-
   renderActiveTab();
 }
 
@@ -95,6 +83,9 @@ function renderActiveTab() {
     case 'trials':
       renderDungeonView(viewContainer);
       break;
+    case 'forge':
+      renderForgeView(viewContainer);
+      break;
     case 'vault':
       renderVaultView(viewContainer);
       break;
@@ -110,7 +101,7 @@ function renderActiveTab() {
   updateResourcesDisplay();
 }
 
-// Setup Bottom Navigation listeners
+// Setup Bottom Navigation listeners (1-line unified dock)
 document.querySelectorAll('.nav-tab[data-tab]').forEach(tab => {
   tab.addEventListener('click', (e) => {
     const tabName = e.currentTarget.getAttribute('data-tab');
@@ -119,26 +110,6 @@ document.querySelectorAll('.nav-tab[data-tab]').forEach(tab => {
     }
   });
 });
-
-// Setup More / Back drawer toggles
-const navMoreToggle = document.getElementById('nav-more-toggle');
-const navMoreBack = document.getElementById('nav-more-back');
-const dockMain = document.getElementById('nav-dock-main');
-const dockMore = document.getElementById('nav-dock-more');
-
-if (navMoreToggle && dockMain && dockMore) {
-  navMoreToggle.addEventListener('click', () => {
-    dockMain.classList.add('nav-dock-hidden');
-    dockMore.classList.remove('nav-dock-hidden');
-  });
-}
-
-if (navMoreBack && dockMain && dockMore) {
-  navMoreBack.addEventListener('click', () => {
-    dockMore.classList.add('nav-dock-hidden');
-    dockMain.classList.remove('nav-dock-hidden');
-  });
-}
 
 // Setup Header Profile button
 const btnTopProfile = document.getElementById('btn-top-profile');

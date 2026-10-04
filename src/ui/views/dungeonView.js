@@ -4,13 +4,22 @@
  */
 
 import { gameState } from '../../state/gameState.js';
+import { audioManager } from '../../audio/audioManager.js';
 import { PANTHEON_CHAMBERS, PANTHEON_DIFFICULTY_TIERS } from '../../data/artifactDungeonData.js';
 import { GREEK_GOD_SETS, EQUIPMENT_RARITIES } from '../../data/equipmentData.js';
+import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
+import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 
 let selectedChamberId = 'underworld_crypt';
 let selectedTierNum = 1;
 
 export function renderDungeonView(container) {
+  const battle = gameState.state.activeDungeonBattle;
+  if (battle && battle.dungeonType === 'pantheon') {
+    renderPantheonBattleArena(container, battle);
+    return;
+  }
+
   const state = gameState.state;
   const res = state.resources;
   const partyPower = gameState.getTotalPartyPower();
@@ -157,8 +166,9 @@ export function renderDungeonView(container) {
   if (btnEnter) {
     btnEnter.addEventListener('click', () => {
       try {
-        const loot = gameState.runPantheonTrial(selectedChamberId, selectedTierNum);
-        showDungeonVictoryModal(loot, () => renderDungeonView(container));
+        audioManager.playBgm('battle');
+        gameState.startDungeonTrial('pantheon', selectedChamberId, selectedTierNum);
+        renderDungeonView(container);
       } catch (err) {
         alert(err.message);
       }
@@ -259,4 +269,218 @@ export function showDungeonVictoryModal(loot, onClose) {
       if (onClose) onClose();
     });
   }
+}
+
+function renderPantheonBattleArena(container, battle) {
+  const chamber = PANTHEON_CHAMBERS.find(c => c.id === battle.chamberId) || PANTHEON_CHAMBERS[0];
+  const tier = PANTHEON_DIFFICULTY_TIERS.find(t => t.tier === battle.tier) || PANTHEON_DIFFICULTY_TIERS[0];
+  const party = gameState.getPartySpirits();
+  const swarm = battle.currentSwarm || [];
+  const godName = chamber.god || chamber.godTitle || (chamber.godId && GREEK_GOD_SETS[chamber.godId] ? GREEK_GOD_SETS[chamber.godId].god : null) || chamber.name;
+
+  container.innerHTML = `
+    <div class="pantheon-container trial-battle-container">
+      
+      <!-- Top Trial Combat HUD Header -->
+      <div class="combat-top-hud" style="border-bottom: 2px solid ${chamber.color};">
+        <div class="combat-hud-left">
+          <button id="btn-trial-flee" class="zone-btn-sm" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675;">
+            ◀ Flee
+          </button>
+        </div>
+
+        <div class="combat-vs-banner">
+          <span class="vs-ally-tag" style="background: ${chamber.color}; color: #000; font-weight: 800;">
+            ${chamber.sigil} ${chamber.name}
+          </span>
+          <span class="vs-center-tag" style="background: #f1c40f; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 900;">
+            WAVE ${battle.currentWave}/3
+          </span>
+          <span class="vs-enemy-tag">
+            ${battle.currentWave === 3 ? `AVATAR: ${godName}` : 'GUARDIANS'}
+          </span>
+        </div>
+
+        <div class="combat-hud-right">
+          <span class="hud-speed-btn" style="background: rgba(0,0,0,0.5); font-size: 11px;">⚡ ${tier.energyCost}</span>
+        </div>
+      </div>
+
+      <!-- Combat Banner & Floating Layer -->
+      <div id="trial-combat-banner" class="combat-banner-layer"></div>
+      <div id="damage-popup-layer" class="damage-popup-layer"></div>
+
+      <!-- Dynamic Isometric Battlefield Area -->
+      <div class="isometric-battlefield pantheon-battlefield">
+        
+        <!-- Left Side: Staggered Allied Spirit Formation -->
+        <div class="allied-formation-column">
+          <div class="formation-header-label">ALLIED SPIRIT LINEUP</div>
+          
+          <div class="staggered-party-formation">
+            ${party.map((spirit, idx) => {
+              const species = SPIRIT_SPECIES[spirit.speciesId];
+              const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
+              const maxHp = spirit.maxHp || 100;
+              const curHp = typeof spirit.currentHp === 'number' ? Math.max(0, spirit.currentHp) : maxHp;
+              const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+              const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
+              const isUltReady = mpPct >= 100;
+              const isFallen = spirit.isFallen || curHp <= 0;
+              const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
+
+              return `
+                <div class="spirit-formation-slot slot-active ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="trial-allied-slot-${idx}" style="--stagger-offset: ${(idx % 2) * 12}px;">
+                  <div class="overhead-status-bar">
+                    <span class="overhead-rarity" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
+                      ${rarity.name.toUpperCase()}
+                    </span>
+                    <span class="overhead-level">Lv.${spirit.level}</span>
+                  </div>
+
+                  <div class="spirit-sprite-container">
+                    ${createSpiritPlaceholderBox(spirit, { boxClass: 'formation-spirit-box' })}
+                    ${isUltReady ? '<div class="ult-ready-tag">✨ ULT READY</div>' : ''}
+                    ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
+                    <div class="combat-ground-shadow"></div>
+                  </div>
+
+                  <div class="spirit-hud-bars">
+                    <div class="hud-bar-hp" title="${curHp}/${maxHp} HP">
+                      <div class="hud-hp-fill" id="trial-spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
+                      ${shieldPct > 0 ? `<div class="hud-shield-fill" style="width: ${shieldPct}%;"></div>` : ''}
+                    </div>
+                    <div class="hud-bar-mp" title="${mpPct}/100 MP">
+                      <div class="hud-mp-fill" id="trial-spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Center Combat Clash Point -->
+        <div class="combat-clash-divider">
+          <div class="clash-sparks-icon">⚔️</div>
+        </div>
+
+        <!-- Right Side: Wave Enemies -->
+        <div class="enemy-formation-column">
+          <div class="formation-header-label" style="color: #ff6b81;">
+            ${battle.currentWave === 3 ? `👑 AVATAR OF ${godName.toUpperCase()}` : `DIVINE ATTENDANTS (${swarm.filter(e => !e.isDefeated && e.hp > 0).length}/${swarm.length})`}
+          </div>
+
+          <div class="enemy-swarm-wrapper" id="trial-enemy-swarm-wrapper">
+            ${swarm.map((em, sIdx) => {
+              const isDead = em.isDefeated || em.hp <= 0;
+              const maxHp = em.maxHp || 100;
+              const curHp = typeof em.hp === 'number' ? Math.max(0, em.hp) : maxHp;
+              const emHpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+
+              return `
+                <div class="enemy-swarm-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="trial-enemy-slot-${sIdx}" style="--swarm-stagger: ${(sIdx % 2) * 8}px;">
+                  <div class="enemy-overhead-card">
+                    <div class="enemy-name-row">
+                      <span class="enemy-name-label">${em.name}</span>
+                      ${em.isBoss ? '<span class="boss-crown-badge">👑 GOD AVATAR</span>' : ''}
+                    </div>
+                    <div class="enemy-pwr-label">⚡ ${(em.power || 0).toLocaleString()} PWR</div>
+
+                    <div class="enemy-hp-track">
+                      <div id="trial-enemy-hp-fill-${sIdx}" class="enemy-hp-fill" style="width: ${emHpPct}%;"></div>
+                      <div id="trial-enemy-hp-text-${sIdx}" class="enemy-hp-text">
+                        ${Math.ceil(curHp).toLocaleString()} / ${maxHp.toLocaleString()} HP
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="enemy-sprite-container">
+                    <div class="enemy-placeholder-frame">
+                      ${createEnemyPlaceholderBox(em)}
+                    </div>
+                    <div class="combat-ground-shadow enemy-shadow"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Strike Command Strip -->
+      <div class="combat-action-footer">
+        <button id="btn-trial-strike" class="btn-main-attack" style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
+          <span>⚔️ Divine Strike (Party Attack • Charges +10 MP)</span>
+          <span class="btn-subtext">Clear Wave ${battle.currentWave}/3 to claim targeted ${godName} Relics</span>
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  // Attach Flee listener
+  const btnFlee = container.querySelector('#btn-trial-flee');
+  if (btnFlee) {
+    btnFlee.addEventListener('click', () => {
+      gameState.exitDungeonBattle();
+      renderDungeonView(container);
+    });
+  }
+
+  // Attach Strike listener
+  const btnStrike = container.querySelector('#btn-trial-strike');
+  if (btnStrike) {
+    btnStrike.addEventListener('click', () => {
+      gameState.manualDungeonStrike();
+      renderDungeonView(container);
+    });
+  }
+
+  // Check victory / defeat modal triggers
+  if (battle.status === 'victory' && battle.loot) {
+    showDungeonVictoryModal(battle.loot, () => {
+      gameState.exitDungeonBattle();
+      renderDungeonView(container);
+    });
+  } else if (battle.status === 'defeat') {
+    showPantheonDefeatModal(() => {
+      gameState.exitDungeonBattle();
+      renderDungeonView(container);
+    });
+  }
+}
+
+function showPantheonDefeatModal(onClose) {
+  const modalRoot = document.querySelector('#modal-root');
+  if (!modalRoot) return;
+
+  const modalEl = document.createElement('div');
+  modalEl.className = 'modal-backdrop';
+
+  modalEl.innerHTML = `
+    <div class="pantheon-victory-modal" style="border: 2px solid #e74c3c;">
+      <div class="victory-header" style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.4), #000);">
+        <div class="victory-sigil">💀</div>
+        <div class="victory-title-col">
+          <span class="victory-sub" style="color: #ff7675;">DIVINE TRIAL FAILED</span>
+          <h3 class="victory-name">Party Wiped in Sanctum</h3>
+          <span class="victory-tier-tag">Regroup and upgrade your spirits before challenging this god again</span>
+        </div>
+      </div>
+
+      <div class="victory-body">
+        <button id="btn-trial-defeat-ok" class="btn-claim-dungeon-loot" style="background: #34495e;">
+          Return Safely
+        </button>
+      </div>
+    </div>
+  `;
+
+  modalRoot.appendChild(modalEl);
+  modalEl.querySelector('#btn-trial-defeat-ok').addEventListener('click', () => {
+    modalRoot.removeChild(modalEl);
+    if (onClose) onClose();
+  });
 }

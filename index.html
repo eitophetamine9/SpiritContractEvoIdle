@@ -54,54 +54,38 @@
       <!-- Active Screen View Content -->
       <main id="view-container" class="view-content"></main>
 
-      <!-- Fixed Bottom Navigation (Party left, Madness center, Contract right, More side-drawer) -->
-      <nav class="bottom-nav">
-        <!-- Main Core Dock (Default Visible) -->
-        <div id="nav-dock-main" class="nav-dock-group">
-          <button id="nav-party" class="nav-tab" data-tab="party">
-            <span class="tab-icon">⛩️</span>
-            <span class="tab-label">Party</span>
-            <span id="party-evolve-badge" class="nav-badge" style="display: none;">!</span>
-          </button>
+      <!-- Fixed Bottom Navigation (1-Line Unified Responsive Dock) -->
+      <nav class="bottom-nav" id="bottom-nav-dock">
+        <button id="nav-party" class="nav-tab" data-tab="party" title="Hero Party & Pedestal">
+          <span class="tab-icon">⛩️</span>
+          <span class="tab-label">Hero</span>
+          <span id="party-evolve-badge" class="nav-badge" style="display: none;">!</span>
+        </button>
 
-          <button id="nav-madness" class="nav-tab active nav-tab-center" data-tab="madness">
-            <span class="tab-icon">⚔️</span>
-            <span class="tab-label">Madness</span>
-          </button>
+        <button id="nav-madness" class="nav-tab active" data-tab="madness" title="Madness Zone Combat">
+          <span class="tab-icon">⚔️</span>
+          <span class="tab-label">Madness</span>
+        </button>
 
-          <button id="nav-contract" class="nav-tab" data-tab="contract">
-            <span class="tab-icon">📜</span>
-            <span class="tab-label">Contract</span>
-          </button>
+        <button id="nav-trials" class="nav-tab" data-tab="trials" title="Pantheon Relic Trials">
+          <span class="tab-icon">🏛️</span>
+          <span class="tab-label">Trials</span>
+        </button>
 
-          <button id="nav-more-toggle" class="nav-tab nav-drawer-toggle" title="More Options">
-            <span class="tab-icon">▶</span>
-            <span class="tab-label">More</span>
-          </button>
-        </div>
+        <button id="nav-forge" class="nav-tab" data-tab="forge" title="The Divine Forge (Weapon Dungeon)">
+          <span class="tab-icon">🔨</span>
+          <span class="tab-label">Forge</span>
+        </button>
 
-        <!-- Secondary 'More' Dock (Vault & Index) -->
-        <div id="nav-dock-more" class="nav-dock-group nav-dock-hidden">
-          <button id="nav-more-back" class="nav-tab nav-drawer-back" title="Back to Main">
-            <span class="tab-icon">◀</span>
-            <span class="tab-label">Back</span>
-          </button>
+        <button id="nav-contract" class="nav-tab" data-tab="contract" title="Summon & Contract Altar">
+          <span class="tab-icon">🔮</span>
+          <span class="tab-label">Summon</span>
+        </button>
 
-          <button id="nav-trials" class="nav-tab" data-tab="trials">
-            <span class="tab-icon">🏛️</span>
-            <span class="tab-label">Trials</span>
-          </button>
-
-          <button id="nav-vault" class="nav-tab" data-tab="vault">
-            <span class="tab-icon">🎒</span>
-            <span class="tab-label">Vault</span>
-          </button>
-
-          <button id="nav-index" class="nav-tab" data-tab="index">
-            <span class="tab-icon">📖</span>
-            <span class="tab-label">Index</span>
-          </button>
-        </div>
+        <button id="nav-vault" class="nav-tab" data-tab="vault" title="Vault & Bestiary">
+          <span class="tab-icon">📜</span>
+          <span class="tab-label">Vault</span>
+        </button>
       </nav>
 
       <!-- Modal Injection Layer -->
