@@ -3,6 +3,7 @@ import { getBiomeForStage } from '../../data/biomesData.js';
 import { getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { audioManager } from '../../audio/audioManager.js';
+import { arenaRenderer } from '../../render/arenaRenderer.js';
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
@@ -111,8 +112,11 @@ export function renderMadnessView(container) {
       ` : ''}
 
       <!-- Dynamic Isometric Battlefield Area -->
-      <div class="isometric-battlefield ${biome.themeClass} ${swarm.some(e => e.isBoss) ? 'boss-battlefield' : ''}">
+      <div class="isometric-battlefield ${biome.themeClass} ${swarm.some(e => e.isBoss) ? 'boss-battlefield' : ''}" style="position: relative; overflow: hidden;">
         
+        <!-- 2.5D Isometric Canvas Viewport Background Layer -->
+        <div id="arena-viewport-25d" class="arena-viewport-25d" style="position: absolute; inset: 0; pointer-events: none; z-index: 0; border-radius: 14px; overflow: hidden;"></div>
+
         <!-- Top Battlefield Announcement Banner Layer -->
         <div id="combat-banner-layer" class="combat-banner-layer"></div>
 
@@ -264,6 +268,12 @@ export function renderMadnessView(container) {
     </div>
   `;
 
+  // Initialize 2.5D Isometric Arena Viewport
+  const viewportEl = container.querySelector('#arena-viewport-25d');
+  if (viewportEl) {
+    arenaRenderer.init(viewportEl, { element: biome.element });
+  }
+
   // Attach button event listeners
   const btnPrev = container.querySelector('#btn-prev-stage');
   if (btnPrev) {
@@ -397,8 +407,10 @@ export function renderMadnessView(container) {
 
       if (eventType === 'ultimateCast') {
         showCombatBanner(currentContainer, `✨ ${payload.spirit.customName} casts ${payload.ult.name}!`, 'ult');
+        arenaRenderer.triggerUltimatePulse('#ffd700');
         if (payload.totalDamageDealt > 0) {
           spawnCombatNumber(currentContainer, `${payload.totalDamageDealt} ULT!`, 'ult');
+          arenaRenderer.spawnDamagePopup(null, null, payload.totalDamageDealt, true);
         }
         if (payload.totalHealingDone > 0) {
           spawnCombatNumber(currentContainer, `+${payload.totalHealingDone} HP`, 'heal');
