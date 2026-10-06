@@ -1,4 +1,4 @@
-import { RARITIES, getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
+import { RARITIES, getRarityInfo, SPIRIT_SPECIES, ELEMENTS } from '../../data/spiritsData.js';
 
 /**
  * Creates a distinctly styled CSS placeholder box for a Spirit.
@@ -20,6 +20,8 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
   const boxClass = options.boxClass || '';
   const isCapped = options.isCapped || false;
 
+  const elemKey = (spiritOrSpecies.element || species.element || 'EARTH').toUpperCase();
+  const elemObj = ELEMENTS[elemKey] || ELEMENTS.EARTH;
   const glyph = species.avatarEmoji || '✨';
 
   return `
@@ -27,11 +29,15 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
          data-species="${species.id}" 
          data-tier="${tier}"
          data-rarity="${rarityLower}"
-         title="${species.name} [${rarityInfo.name}]">
+         data-element="${elemKey.toLowerCase()}"
+         title="${species.name} [${rarityInfo.name}] • ${elemObj.name} Element">
       
       <div class="tier-tag">${stars} T${tier}</div>
       <div class="rarity-badge-mini" style="color: ${rarityInfo.color}; border-color: ${rarityInfo.border};">
         ${rarityInfo.name[0]}
+      </div>
+      <div class="element-badge-mini" style="color: ${elemObj.color};" title="${elemObj.name}">
+        ${elemObj.symbol}
       </div>
 
       <div class="pixel-art-slot" data-art-target="spirit-${species.id}">

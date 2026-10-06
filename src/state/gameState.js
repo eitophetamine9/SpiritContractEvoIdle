@@ -6,15 +6,23 @@ import {
   getXpRequiredForLevel, 
   calculateSpiritPower,
   calculateSpiritMaxHp,
-  getSpiritUltimate
+  getSpiritUltimate,
+  getElementalMultiplier,
+  calculatePartyResonance
 } from '../data/spiritsData.js';
 import { getEnemyForStage, getSwarmForStage } from '../data/madnessZoneData.js';
 import { 
   GREEK_GOD_SETS, 
   RELIC_SLOT_TYPES, 
   WEAPON_TYPES, 
+  RELIC_STAR_TIERS,
+  RELIC_SUBSTAT_TYPES,
   createRelicInstance, 
-  createWeaponInstance 
+  createWeaponInstance,
+  enhanceRelicData,
+  ascendRelicData,
+  generateRelicSubstats,
+  calculateRelicMainStat
 } from '../data/equipmentData.js';
 import { 
   PANTHEON_CHAMBERS, 
@@ -164,6 +172,7 @@ class GameStateManager {
       xp: 0,
       tier: 1,
       rarity: starterSpecies.baseRarity,
+      element: starterSpecies.element || 'WIND',
       power: calculateSpiritPower(starterSpecies, 1, starterSpecies.baseRarity),
       maxHp: starterMaxHp,
       currentHp: starterMaxHp,
@@ -192,6 +201,7 @@ class GameStateManager {
       resources: {
         spiritShards: 300, // Enough for 3 summons right away!
         soulEssence: 0,
+        essencesOfTheGods: 0,
         energy: 60,        // Max 60 Energy base
         maxEnergy: 60,
         energySecondsAccumulator: 0,
@@ -244,12 +254,18 @@ class GameStateManager {
       party: loaded.party || []
     };
 
-    // Ensure energy properties exist
+    // Ensure energy & essence properties exist
     if (typeof state.resources.energy !== 'number') {
       state.resources.energy = base.resources.energy;
     }
     if (typeof state.resources.maxEnergy !== 'number') {
       state.resources.maxEnergy = base.resources.maxEnergy;
+    }
+    // Hard cap maxEnergy to 500
+    state.resources.maxEnergy = Math.min(500, Math.max(60, state.resources.maxEnergy));
+
+    if (typeof state.resources.essencesOfTheGods !== 'number') {
+      state.resources.essencesOfTheGods = 0;
     }
     if (typeof state.resources.energySecondsAccumulator !== 'number') {
       state.resources.energySecondsAccumulator = 0;
@@ -271,6 +287,7 @@ class GameStateManager {
       }
       const species = SPIRIT_SPECIES[s.speciesId];
       if (species) {
+        s.element = s.element || species.element || 'EARTH';
         s.power = calculateSpiritPower(species, s.level, s.rarity || species.baseRarity);
         s.maxHp = calculateSpiritMaxHp(species, s.level, s.rarity || species.baseRarity);
         if (typeof s.currentHp !== 'number' || isNaN(s.currentHp) || s.currentHp <= 0) {
@@ -330,7 +347,7 @@ class GameStateManager {
       });
     });
 
-    // Migrate equipment items with legacy slotTypeId
+    // Migrate equipment items with legacy slotTypeId & initialize relic stars/substats
     if (state.inventory && Array.isArray(state.inventory.equipment)) {
       state.inventory.equipment.forEach(item => {
         if (item.type === 'relic') {
@@ -339,6 +356,17 @@ class GameStateManager {
           else if (item.slotTypeId === 'pendant') { item.slotTypeId = 'necklace'; item.slotName = 'Necklace'; item.icon = '📿'; item.mainStatName = 'Mana Replenish'; }
           else if (item.slotTypeId === 'aegis') { item.slotTypeId = 'orb'; item.slotName = 'Orb'; item.icon = '🔮'; item.mainStatName = 'Ult Amp'; }
           else if (item.slotTypeId === 'feather') { item.slotTypeId = 'charm'; item.slotName = 'Charm'; item.icon = '🧿'; item.mainStatName = 'Evasion Rating'; }
+
+          if (!item.stars) {
+            const r = (item.rarity || 'COMMON').toUpperCase();
+            item.stars = r === 'MYTHICAL' ? 6 : r === 'LEGENDARY' ? 5 : r === 'EPIC' ? 4 : 3;
+          }
+          if (!Array.isArray(item.substats)) {
+            item.substats = generateRelicSubstats({ stars: item.stars, mainStatName: item.mainStatName });
+          }
+          if (!item.mainStatValue) {
+            item.mainStatValue = calculateRelicMainStat(item.slotTypeId, item.stars, item.level || 1);
+          }
         }
       });
     }
@@ -684,9 +712,10 @@ class GameStateManager {
 
     // 3. Spirits Attack, Mana Accumulation & 4-pc Set Bonus Procs
     for (const spirit of livingSpirits) {
-      // Effective power including weapons, relics, and 2-pc set bonuses
+      // Effective power including weapons, relics, substats, and 2-pc set bonuses
       const effectivePower = this.getSpiritTotalPower(spirit);
-      const baseDps = Math.max(1, Math.round(effectivePower * 0.45));
+      const elemMult = getElementalMultiplier(spirit.element, leadEnemy.element || 'EARTH');
+      const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * elemMult));
       const damageThisTick = baseDps * deltaSec;
       leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
 
@@ -751,7 +780,8 @@ class GameStateManager {
             continue;
           }
 
-          let enemyDamage = Math.max(1, Math.round(enemy.power * (0.8 + Math.random() * 0.35)));
+          const enemyElemMult = getElementalMultiplier(enemy.element || 'EARTH', targetSpirit.element || 'EARTH');
+          let enemyDamage = Math.max(1, Math.round(enemy.power * enemyElemMult * (0.8 + Math.random() * 0.35)));
 
           // Absorb damage with shield first
           if (targetSpirit.shieldHp > 0) {
@@ -1225,6 +1255,7 @@ class GameStateManager {
         xp: 0,
         tier: 1,
         rarity: rolled.rarityTier,
+        element: species.element || 'EARTH',
         power: calculateSpiritPower(species, 1, rolled.rarityTier),
         maxHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
         currentHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
@@ -1332,6 +1363,7 @@ class GameStateManager {
       xp: 0,
       tier: 1,
       rarity: rolled.rarityTier,
+      element: species.element || 'EARTH',
       power: calculateSpiritPower(species, 1, rolled.rarityTier),
       maxHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
       currentHp: calculateSpiritMaxHp(species, 1, rolled.rarityTier),
@@ -1701,15 +1733,28 @@ class GameStateManager {
       }
     }
 
-    // Relic bonuses
+    // Relic bonuses & Substats
+    let percentAtkBonus = 0;
     if (spirit.relics) {
       for (const relicUid of Object.values(spirit.relics)) {
         if (!relicUid) continue;
         const relic = equipmentList.find(e => e.uid === relicUid);
-        if (relic && relic.mainStatName === 'Bonus ATK Power') {
-          power += relic.mainStatValue;
+        if (relic) {
+          if (relic.mainStatName === 'Bonus ATK Power') {
+            power += (relic.mainStatValue || 0);
+          }
+          if (Array.isArray(relic.substats)) {
+            for (const sub of relic.substats) {
+              if (sub.typeId === 'flat_atk') power += (sub.value || 0);
+              else if (sub.typeId === 'percent_atk') percentAtkBonus += (sub.value || 0);
+            }
+          }
         }
       }
+    }
+
+    if (percentAtkBonus > 0) {
+      power = Math.round(power * (1 + percentAtkBonus / 100));
     }
 
     // Active 2-pc damage bonuses (e.g. Hades +10%, Ares +15%, Poseidon +10%)
@@ -1724,11 +1769,17 @@ class GameStateManager {
     return Math.round(power * damageMultiplier);
   }
 
+  getPartyElementalResonances() {
+    return calculatePartyResonance(this.getPartySpirits());
+  }
+
   getTotalPartyPower() {
     const party = this.getPartySpirits();
     const basePower = party.reduce((sum, s) => sum + this.getSpiritTotalPower(s), 0);
     const resonanceBonus = 1 + (this.state.resources.resonanceTier || 0) * 0.05;
-    return Math.round(basePower * resonanceBonus);
+    const elemResonance = this.getPartyElementalResonances();
+    const elemAtkBonus = 1 + (elemResonance.atkPercent || 0) + (elemResonance.allStatsPercent || 0);
+    return Math.round(basePower * resonanceBonus * elemAtkBonus);
   }
 
   proc4PieceSetBonus(spirit, setBonusObj) {
@@ -1897,13 +1948,161 @@ class GameStateManager {
     }
 
     this.state.inventory.equipment.splice(index, 1);
-    const shardsGained = Math.round(20 * (item.level || 1));
-    this.state.resources.spiritShards += shardsGained;
+
+    let shardsGained = 0;
+    let essencesGained = 0;
+
+    if (item.type === 'relic') {
+      const stars = item.stars || 3;
+      const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+      shardsGained = Math.round(tier.dismantleShards * (1 + (item.level - 1) * 0.15));
+      essencesGained = tier.dismantleEssences + Math.floor((item.level - 1) * 1.5);
+      this.state.resources.spiritShards += shardsGained;
+      this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + essencesGained;
+    } else {
+      // Weapon dismantle
+      shardsGained = Math.round(25 * (item.level || 1));
+      this.state.resources.spiritShards += shardsGained;
+    }
 
     this.save();
-    this.emit('equipmentDismantled', { item, shardsGained });
+    this.emit('equipmentDismantled', { item, shardsGained, essencesGained });
     this.emit('inventoryUpdated', this.state.inventory);
-    return { success: true, shardsGained };
+    this.emit('resourcesUpdated', this.state.resources);
+    return { success: true, shardsGained, essencesGained };
+  }
+
+  enhanceRelic(itemUid) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Relic not found in inventory');
+    if (item.type !== 'relic') throw new Error('Item is not a Relic');
+
+    const stars = item.stars || 3;
+    const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+    if (item.level >= tier.maxLevel) {
+      throw new Error(`Relic has reached maximum enhancement (+${tier.maxLevel})!`);
+    }
+
+    const nextLevel = item.level + 1;
+    const shardCost = Math.round(50 * nextLevel * (stars * 0.4));
+    const isMilestone = nextLevel % 3 === 0;
+    const essenceCost = isMilestone ? Math.round(stars * 2 + nextLevel * 0.5) : 0;
+
+    if (this.state.resources.spiritShards < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost}, have ${this.state.resources.spiritShards}.`);
+    }
+    if (essenceCost > 0 && (this.state.resources.essencesOfTheGods || 0) < essenceCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${essenceCost}, have ${this.state.resources.essencesOfTheGods || 0}.`);
+    }
+
+    this.state.resources.spiritShards -= shardCost;
+    if (essenceCost > 0) {
+      this.state.resources.essencesOfTheGods -= essenceCost;
+    }
+
+    enhanceRelicData(item);
+
+    this.save();
+    this.emit('equipmentUpdated', { item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+    return { success: true, item, shardCost, essenceCost };
+  }
+
+  ascendRelic(itemUid) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Relic not found in inventory');
+    if (item.type !== 'relic') throw new Error('Item is not a Relic');
+    if (item.stars !== 5) throw new Error('Only 5★ Relics can be ascended to 6★!');
+    if (item.level < 15) throw new Error('Relic must be enhanced to +15 before ascending!');
+
+    const essenceGodCost = 100;
+    const soulEssenceCost = 10;
+
+    if ((this.state.resources.essencesOfTheGods || 0) < essenceGodCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${essenceGodCost}, have ${this.state.resources.essencesOfTheGods || 0}.`);
+    }
+    if ((this.state.resources.soulEssence || 0) < soulEssenceCost) {
+      throw new Error(`Insufficient Soul Essence! Need ${soulEssenceCost}, have ${this.state.resources.soulEssence || 0}.`);
+    }
+
+    this.state.resources.essencesOfTheGods -= essenceGodCost;
+    this.state.resources.soulEssence -= soulEssenceCost;
+
+    ascendRelicData(item);
+
+    this.save();
+    this.emit('equipmentUpdated', { item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+    return { success: true, item };
+  }
+
+  upgradeEnergyCapacity() {
+    const res = this.state.resources;
+    const currentMax = res.maxEnergy || 60;
+    if (currentMax >= 500) {
+      throw new Error('Energy capacity is already at the maximum limit of 500 ⚡!');
+    }
+
+    const tierIndex = Math.floor((currentMax - 60) / 20);
+    const costEssence = Math.round(15 * Math.pow(1.18, tierIndex));
+    const costSoul = tierIndex >= 5 ? Math.round(2 + tierIndex * 0.5) : 0;
+
+    if ((res.essencesOfTheGods || 0) < costEssence) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${costEssence}, have ${res.essencesOfTheGods || 0}.`);
+    }
+    if (costSoul > 0 && (res.soulEssence || 0) < costSoul) {
+      throw new Error(`Insufficient Soul Essence! Need ${costSoul}, have ${res.soulEssence || 0}.`);
+    }
+
+    res.essencesOfTheGods -= costEssence;
+    if (costSoul > 0) res.soulEssence -= costSoul;
+
+    res.maxEnergy = Math.min(500, currentMax + 20);
+
+    this.save();
+    this.emit('resourcesUpdated', res);
+    return { success: true, newMaxEnergy: res.maxEnergy, costEssence, costSoul };
+  }
+
+  getSpiritTotalMaxHp(spiritOrId) {
+    if (!spiritOrId) return 100;
+    const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
+    if (!spirit) return 100;
+    let baseHp = spirit.maxHp || 100;
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+    let percentHpBonus = 0;
+
+    if (spirit.relics) {
+      for (const relicUid of Object.values(spirit.relics)) {
+        if (!relicUid) continue;
+        const relic = equipmentList.find(e => e.uid === relicUid);
+        if (relic) {
+          if (relic.mainStatName === 'Bonus Max HP') {
+            baseHp += (relic.mainStatValue || 0);
+          }
+          if (Array.isArray(relic.substats)) {
+            for (const sub of relic.substats) {
+              if (sub.typeId === 'flat_hp') baseHp += (sub.value || 0);
+              else if (sub.typeId === 'percent_hp') percentHpBonus += (sub.value || 0);
+            }
+          }
+        }
+      }
+    }
+
+    const setBonuses = this.getSpiritActiveSetBonuses(spirit);
+    for (const b of setBonuses) {
+      if (b.bonus.maxHpBonus) percentHpBonus += (b.bonus.maxHpBonus * 100);
+    }
+    const resonance = this.getPartyElementalResonances();
+    if (resonance.maxHpPercent) percentHpBonus += (resonance.maxHpPercent * 100);
+    if (resonance.allStatsPercent) percentHpBonus += (resonance.allStatsPercent * 100);
+
+    return Math.round(baseHp * (1 + percentHpBonus / 100));
   }
 
   // =========================================================================

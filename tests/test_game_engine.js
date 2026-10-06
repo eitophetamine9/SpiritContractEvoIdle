@@ -277,6 +277,72 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Toggled engagement: ${isEngaged1} -> ${gameState.state.madnessZone.isEngaged}`);
   if (gameState.state.madnessZone.isEngaged === isEngaged1) throw new Error('Toggle should flip isEngaged state');
 
+  // Test 12: Relic Stars (3★-6★), Substats, Essences of the Gods, and Ascension
+  console.log('\n[TEST 12] Testing Relic Star Tiers (3★-6★), Substats, Essences of the Gods & Ascension:');
+  const relic3Star = createRelicInstance({ setId: 'zeus', slotTypeId: 'ring', stars: 3, level: 1 });
+  const relic4Star = createRelicInstance({ setId: 'poseidon', slotTypeId: 'headgear', stars: 4, level: 1 });
+  const relic5Star = createRelicInstance({ setId: 'ares', slotTypeId: 'totem', stars: 5, level: 15 });
+
+  console.log(`  3★ Relic: ${relic3Star.name} | Subs: ${relic3Star.substats.length} (Max capacity: 3)`);
+  console.log(`  4★ Relic: ${relic4Star.name} | Subs: ${relic4Star.substats.length} (3-4 expected)`);
+  console.log(`  5★ Relic: ${relic5Star.name} | Subs: ${relic5Star.substats.length} (4 expected)`);
+
+  if (relic3Star.stars !== 3 || relic3Star.substats.length > 3) throw new Error('3★ Relic invalid substats capacity');
+  if (relic4Star.stars !== 4 || relic4Star.substats.length < 3) throw new Error('4★ Relic should have 3-4 initial substats');
+  if (relic5Star.stars !== 5 || relic5Star.substats.length !== 4) throw new Error('5★ Relic should have exactly 4 initial substats');
+
+  // Test dismantle producing Essences of the Gods
+  gameState.state.inventory.equipment.push(relic3Star);
+  const dismantleResult = gameState.dismantleEquipment(relic3Star.uid);
+  console.log(`  Dismantled 3★ Relic -> Gained ${dismantleResult.shardsGained} Shards & ${dismantleResult.essencesGained} Essences of the Gods`);
+  if (!dismantleResult.essencesGained || dismantleResult.essencesGained < 5) throw new Error('Dismantling relic must award Essences of the Gods');
+  if ((gameState.state.resources.essencesOfTheGods || 0) < 5) throw new Error('essencesOfTheGods resource not updated');
+
+  // Test 5★ to 6★ Ascension
+  gameState.state.inventory.equipment.push(relic5Star);
+  gameState.state.resources.essencesOfTheGods = 200;
+  gameState.state.resources.soulEssence = 20;
+  const ascendResult = gameState.ascendRelic(relic5Star.uid);
+  console.log(`  Ascended Relic to 6★: ${ascendResult.item.name} | Stars: ${ascendResult.item.stars}★ | Subs count: ${ascendResult.item.substats.length}`);
+  if (ascendResult.item.stars !== 6) throw new Error('Relic should have 6 stars after ascension');
+  if (ascendResult.item.substats.length !== 5) throw new Error('6★ Relic should have 5 substats');
+
+  // Test Energy Capacity upgrade (Cap 500)
+  const initialCap = gameState.state.resources.maxEnergy;
+  gameState.upgradeEnergyCapacity();
+  console.log(`  Energy Capacity upgraded: ${initialCap} ➔ ${gameState.state.resources.maxEnergy} (Cap: 500)`);
+  if (gameState.state.resources.maxEnergy !== initialCap + 20) throw new Error('Energy cap upgrade failed');
+
+  // Test 13: Elemental Affinity Matrix & Matchups
+  console.log('\n[TEST 13] Testing Elemental Affinity Matrix, Matchups & Party Resonance:');
+  const { getElementalMultiplier, calculatePartyResonance } = await import('../src/data/index.js');
+  const fireVsEarth = getElementalMultiplier('FIRE', 'EARTH');
+  const waterVsFire = getElementalMultiplier('WATER', 'FIRE');
+  const lightVsDark = getElementalMultiplier('LIGHT', 'DARK');
+  const darkVsLight = getElementalMultiplier('DARK', 'LIGHT');
+  const earthVsFire = getElementalMultiplier('EARTH', 'FIRE');
+
+  console.log(`  Fire vs Earth: ${fireVsEarth}x (+25% expected)`);
+  console.log(`  Water vs Fire: ${waterVsFire}x (+25% expected)`);
+  console.log(`  Light vs Dark: ${lightVsDark}x (+30% celestial expected)`);
+  console.log(`  Earth vs Fire: ${earthVsFire}x (-15% disadvantage expected)`);
+
+  if (fireVsEarth !== 1.25) throw new Error('Fire should deal 1.25x against Earth');
+  if (waterVsFire !== 1.25) throw new Error('Water should deal 1.25x against Fire');
+  if (lightVsDark !== 1.30) throw new Error('Light vs Dark should be 1.30x');
+  if (earthVsFire !== 0.85) throw new Error('Earth vs Fire should be 0.85x');
+
+  // Verify all 37 spirits have valid element
+  let missingElement = 0;
+  for (const [id, sp] of Object.entries(SPIRIT_SPECIES)) {
+    if (!sp.element) {
+      missingElement++;
+      console.error(`  Missing element on spirit: ${id}`);
+    }
+  }
+  if (missingElement > 0) throw new Error(`Found ${missingElement} spirits with missing element`);
+  console.log(`  Verified all 37 Spirit species have explicit elements (0 missing).`);
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

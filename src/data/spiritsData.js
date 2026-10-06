@@ -27,6 +27,97 @@ export function getRarityInfo(rarity) {
   return RARITIES[key] || RARITIES.COMMON;
 }
 
+/**
+ * Elemental Affinity Matrix:
+ * Fire beats Earth, Earth beats Wind, Wind beats Water, Water beats Fire.
+ * Light and Void (Dark) have mutual celestial opposition (+30%).
+ */
+export const ELEMENTAL_MATCHUPS = {
+  FIRE: { strongAgainst: 'EARTH', weakAgainst: 'WATER' },
+  EARTH: { strongAgainst: 'WIND', weakAgainst: 'FIRE' },
+  WIND: { strongAgainst: 'WATER', weakAgainst: 'EARTH' },
+  WATER: { strongAgainst: 'FIRE', weakAgainst: 'WIND' },
+  LIGHT: { strongAgainst: 'DARK', weakAgainst: null, mutualWith: 'DARK' },
+  DARK: { strongAgainst: 'LIGHT', weakAgainst: null, mutualWith: 'LIGHT' }
+};
+
+export function getElementalMultiplier(atkElement, defElement) {
+  if (!atkElement || !defElement) return 1.0;
+  const atk = (atkElement || '').toUpperCase();
+  const def = (defElement || '').toUpperCase();
+  if (atk === def) return 1.0;
+
+  if ((atk === 'LIGHT' && def === 'DARK') || (atk === 'DARK' && def === 'LIGHT')) {
+    return 1.30; // +30% celestial burst
+  }
+
+  const matchup = ELEMENTAL_MATCHUPS[atk];
+  if (matchup && matchup.strongAgainst === def) {
+    return 1.25; // +25% advantage
+  }
+  if (matchup && matchup.weakAgainst === def) {
+    return 0.85; // -15% disadvantage
+  }
+  return 1.0;
+}
+
+/**
+ * Calculates Elemental Team Resonance Buffs from the active 5-spirit party
+ */
+export function calculatePartyResonance(spirits = []) {
+  const counts = { FIRE: 0, WATER: 0, EARTH: 0, WIND: 0, LIGHT: 0, DARK: 0 };
+  spirits.forEach(s => {
+    if (s && s.element) {
+      const key = s.element.toUpperCase();
+      if (counts[key] !== undefined) counts[key]++;
+    }
+  });
+
+  const buffs = {
+    atkPercent: 0,
+    maxHpPercent: 0,
+    shieldPercent: 0,
+    evasionFlat: 0,
+    critDmgPercent: 0,
+    piercePercent: 0,
+    allStatsPercent: 0,
+    activeLabels: []
+  };
+
+  if (counts.FIRE >= 2) {
+    buffs.atkPercent += 0.12;
+    buffs.activeLabels.push('🔥 Blaze Resonance (+12% ATK)');
+  }
+  if (counts.WATER >= 2) {
+    buffs.maxHpPercent += 0.15;
+    buffs.activeLabels.push('💧 Ocean Resonance (+15% HP)');
+  }
+  if (counts.EARTH >= 2) {
+    buffs.shieldPercent += 0.15;
+    buffs.activeLabels.push('🌿 Gaia Resonance (+15% Shield)');
+  }
+  if (counts.WIND >= 2) {
+    buffs.evasionFlat += 0.10;
+    buffs.activeLabels.push('🌪️ Zephyr Resonance (+10% Evasion)');
+  }
+  if (counts.LIGHT >= 2) {
+    buffs.critDmgPercent += 0.15;
+    buffs.activeLabels.push('✨ Solar Resonance (+15% Crit DMG)');
+  }
+  if (counts.DARK >= 2) {
+    buffs.piercePercent += 0.10;
+    buffs.activeLabels.push('🔮 Nether Resonance (+10% Pierce)');
+  }
+
+  const distinctElements = Object.values(counts).filter(c => c > 0).length;
+  if (distinctElements >= 5) {
+    buffs.allStatsPercent += 0.10;
+    buffs.activeLabels.push('🌈 Prismatic Resonance (+10% All Stats)');
+  }
+
+  return buffs;
+}
+
 export const SPIRIT_SPECIES = {
   // ==========================================
   // COMMON BASE SPIRITS (Cap Level 10)
