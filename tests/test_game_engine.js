@@ -409,6 +409,59 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     }
   }
 
+  // Test 17: Dynamic Wave Progression & Floor Anti-Skip Integrity
+  console.log('\n[TEST 17] Testing Dynamic Wave Progression & Floor Anti-Skip Integrity:');
+  const mz = gameState.state.madnessZone;
+  mz.stage = 1;
+  mz.subStage = 1;
+  mz.unlockedStages = [1];
+  mz.highestStageUnlocked = 1;
+  mz.highestStageCleared = 0;
+  gameState.spawnMadnessEnemy();
+
+  console.log(`  Initial State: Floor ${mz.stage}, Wave ${mz.subStage}/5, Cleared: ${mz.highestStageCleared}`);
+
+  // Test that player CANNOT unlock Floor 2 before clearing Floor 1
+  let unlockBlocked = false;
+  try {
+    gameState.unlockAndEnterStage(2);
+  } catch (err) {
+    unlockBlocked = true;
+    console.log(`  [PASS] Blocked premature Floor 2 unlock: "${err.message}"`);
+  }
+  if (!unlockBlocked) throw new Error('Should not allow unlocking Floor 2 before clearing Floor 1');
+
+  // Test dynamic wave progression (Wave 1 -> Wave 2)
+  mz.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.onSwarmCleared();
+  console.log(`  After clearing Wave 1 -> Current Wave: ${mz.subStage}/5 (Expected 2)`);
+  if (mz.subStage !== 2) throw new Error('Wave should have advanced to 2');
+
+  // Advance through remaining waves to Boss
+  mz.subStage = 5;
+  gameState.spawnMadnessEnemy();
+  mz.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.onSwarmCleared();
+  console.log(`  After defeating Boss -> highestStageCleared: ${mz.highestStageCleared} (Expected 1)`);
+  if (mz.highestStageCleared !== 1) throw new Error('highestStageCleared should be 1 after boss kill');
+
+  // Now unlock Floor 2 with Energy
+  gameState.state.resources.energy = 50;
+  const unlockRes = gameState.unlockAndEnterStage(2);
+  console.log(`  Unlocked Floor 2: Stage is now ${mz.stage}, Wave ${mz.subStage}/5, Energy remaining: ${unlockRes.remainingEnergy}`);
+  if (mz.stage !== 2 || mz.highestStageUnlocked !== 2) throw new Error('Floor 2 should be unlocked and active');
+
+  // Test that player on Floor 1 CANNOT skip to Floor 3
+  gameState.setStage(1);
+  let skipBlocked = false;
+  try {
+    gameState.unlockAndEnterStage(3);
+  } catch (err) {
+    skipBlocked = true;
+    console.log(`  [PASS] Blocked floor skip to Floor 3 while Floor 2 is uncleared: "${err.message}"`);
+  }
+  if (!skipBlocked) throw new Error('Should block skipping Floor 2 to unlock Floor 3');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

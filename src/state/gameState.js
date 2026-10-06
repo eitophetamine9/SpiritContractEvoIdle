@@ -228,7 +228,7 @@ class GameStateManager {
         subStage: 1,
         unlockedStages: [1],      // Floor 1 is unlocked initially
         highestStageUnlocked: 1,
-        highestStageCleared: 1,
+        highestStageCleared: 0,   // 0 floors cleared initially
         autoAdvance: true,
         farmMode: false,
         isEngaged: true,          // Controlled manually: false = standby/paused, true = active combat
@@ -280,12 +280,25 @@ class GameStateManager {
       state.resources.energySecondsAccumulator = 0;
     }
 
-    // Ensure unlocked stages exist
+    // Ensure unlocked stages exist and sanitize floor progression
     if (!Array.isArray(state.madnessZone.unlockedStages) || state.madnessZone.unlockedStages.length === 0) {
       state.madnessZone.unlockedStages = [1];
     }
-    if (!state.madnessZone.highestStageUnlocked) {
-      state.madnessZone.highestStageUnlocked = Math.max(...state.madnessZone.unlockedStages, 1);
+    state.madnessZone.highestStageUnlocked = Math.max(...state.madnessZone.unlockedStages, 1);
+    if (typeof state.madnessZone.highestStageCleared !== 'number') {
+      state.madnessZone.highestStageCleared = 0;
+    }
+    // Prevent corrupted state where highestStageCleared exceeded highestStageUnlocked
+    if (state.madnessZone.highestStageCleared > state.madnessZone.highestStageUnlocked) {
+      state.madnessZone.highestStageCleared = state.madnessZone.highestStageUnlocked;
+    }
+    // Fix dirty save where Floor 1 had highestStageCleared = 1 before defeat
+    if (state.madnessZone.highestStageCleared === 1 && state.madnessZone.highestStageUnlocked === 1 && (state.stats?.totalEnemiesDefeated || 0) < 5) {
+      state.madnessZone.highestStageCleared = 0;
+    }
+    // Ensure current stage is among unlocked stages
+    if (!state.madnessZone.unlockedStages.includes(state.madnessZone.stage)) {
+      state.madnessZone.stage = state.madnessZone.highestStageUnlocked;
     }
 
     // Graceful migration of old spirit species if needed
@@ -1033,9 +1046,21 @@ class GameStateManager {
     // Check if the entire swarm is defeated
     const remaining = (this.state.madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
     if (remaining.length === 0) {
+      this.emit('enemyDefeated', {
+        enemy,
+        shardsGained,
+        essenceGained,
+        isSwarmCleared: true
+      });
       this.onSwarmCleared();
     } else {
       this.state.madnessZone.currentEnemy = remaining[0];
+      this.emit('enemyDefeated', {
+        enemy,
+        shardsGained,
+        essenceGained,
+        isSwarmCleared: false
+      });
     }
   }
 
@@ -1050,7 +1075,7 @@ class GameStateManager {
 
     if (isBossFloor) {
       // Zone Boss Defeated!
-      mz.highestStageCleared = Math.max(mz.highestStageCleared, mz.stage);
+      mz.highestStageCleared = Math.max(mz.highestStageCleared || 0, mz.stage);
 
       // Floor Victory: Revive ALL party spirits to 100% HP!
       const party = this.getPartySpirits();
@@ -1061,26 +1086,25 @@ class GameStateManager {
       });
       this.emit('partyRevived', { reason: 'floor_victory' });
 
-      // Unlock next stage permanently
+      // Check if next stage is already unlocked
       const nextStage = mz.stage + 1;
-      if (!mz.unlockedStages.includes(nextStage)) {
-        mz.unlockedStages.push(nextStage);
-        mz.unlockedStages.sort((a, b) => a - b);
-      }
-      mz.highestStageUnlocked = Math.max(mz.highestStageUnlocked, nextStage);
+      const isNextUnlocked = mz.unlockedStages.includes(nextStage);
 
-      if (mz.autoAdvance && !mz.farmMode) {
+      if (mz.autoAdvance && !mz.farmMode && isNextUnlocked) {
         mz.stage = nextStage;
         mz.subStage = 1;
       } else {
+        // Repeat current stage at Wave 1 (infinite farming) until next stage is unlocked
         mz.subStage = 1;
       }
-      this.emit('floorCleared', { stage: mz.stage });
+      this.emit('floorCleared', { stage: mz.stage, highestCleared: mz.highestStageCleared });
     } else {
+      // Advance to next wave in current floor
       mz.subStage += 1;
     }
 
     this.spawnMadnessEnemy();
+    this.save();
     this.emit('madnessZoneUpdated', mz);
   }
 
@@ -1091,8 +1115,8 @@ class GameStateManager {
     const mz = this.state.madnessZone;
     const stageNum = parseInt(targetStage, 10);
     if (isNaN(stageNum) || stageNum < 1) return;
-    if (stageNum > mz.highestStageUnlocked && !mz.unlockedStages.includes(stageNum)) {
-      throw new Error(`Floor ${stageNum} is not yet unlocked!`);
+    if (!mz.unlockedStages.includes(stageNum)) {
+      throw new Error(`Floor ${stageNum} is not yet unlocked! Defeat previous floor bosses and unlock it first.`);
     }
     mz.stage = stageNum;
     mz.subStage = 1;
@@ -1124,6 +1148,11 @@ class GameStateManager {
       throw new Error(`You must clear Floor ${mz.highestStageUnlocked} before unlocking Floor ${targetStage}!`);
     }
 
+    // STRICT GUARD: Must have actually defeated the boss on highestStageUnlocked!
+    if ((mz.highestStageCleared || 0) < mz.highestStageUnlocked) {
+      throw new Error(`You must defeat the Boss on Floor ${mz.highestStageUnlocked} before unlocking Floor ${targetStage}!`);
+    }
+
     // Energy cost check
     if (res.energy < ENERGY_ENTRY_COST) {
       throw new Error(`Insufficient Energy! Tackling Floor ${targetStage} costs ${ENERGY_ENTRY_COST} ⚡ (Current: ${res.energy} ⚡). Energy recovers 1 per 30s.`);
@@ -1132,6 +1161,7 @@ class GameStateManager {
     // Deduct energy and unlock floor permanently
     res.energy -= ENERGY_ENTRY_COST;
     mz.unlockedStages.push(targetStage);
+    mz.unlockedStages.sort((a, b) => a - b);
     mz.highestStageUnlocked = Math.max(...mz.unlockedStages);
     mz.stage = targetStage;
     mz.subStage = 1;
@@ -1152,17 +1182,6 @@ class GameStateManager {
   toggleFarmMode() {
     this.state.madnessZone.farmMode = !this.state.madnessZone.farmMode;
     this.emit('madnessZoneUpdated', this.state.madnessZone);
-  }
-
-  setStage(stage) {
-    const mz = this.state.madnessZone;
-    if (!mz.unlockedStages.includes(stage)) {
-      throw new Error(`Floor ${stage} is locked! Unlock it with ${ENERGY_ENTRY_COST} ⚡ Energy first.`);
-    }
-    mz.stage = stage;
-    mz.subStage = 1;
-    this.spawnMadnessEnemy();
-    this.emit('madnessZoneUpdated', mz);
   }
 
   /**

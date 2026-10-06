@@ -163,14 +163,12 @@ gameState.subscribe((eventType, payload, state) => {
       setTimeout(() => saveStatusEl.classList.remove('pulse'), 800);
     }
   } else if (eventType === 'enemyDefeated') {
+    updateResourcesDisplay();
+  } else if (eventType === 'madnessZoneUpdated' || eventType === 'stageUnlocked' || eventType === 'floorCleared') {
     if (activeTab === 'madness') {
       renderMadnessView(viewContainer);
     }
     updateResourcesDisplay();
-  } else if (eventType === 'enemySpawned' || eventType === 'swarmSpawned') {
-    if (activeTab === 'madness') {
-      renderMadnessView(viewContainer);
-    }
   } else if (eventType === 'spiritLevelCapped' || eventType === 'partyUpdated') {
     updateResourcesDisplay();
     if (activeTab === 'party') {
