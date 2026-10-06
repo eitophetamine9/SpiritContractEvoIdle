@@ -296,7 +296,7 @@ button:disabled {
   bottom: 0;
   width: 100%;
   max-width: 480px;
-  height: 64px;
+  height: 60px;
   background: rgba(9, 13, 22, 0.96);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -304,9 +304,9 @@ button:disabled {
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   z-index: 50;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 2px;
-  padding: 0 4px;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 1px;
+  padding: 0 2px;
 }
 
 .nav-tab {
@@ -319,7 +319,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 4px 1px;
+  padding: 3px 0;
   min-height: 100%;
   position: relative;
   cursor: pointer;
@@ -327,15 +327,15 @@ button:disabled {
 }
 
 .nav-tab .tab-icon {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.1;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 .nav-tab .tab-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.1px;
   line-height: 1;
 }
 

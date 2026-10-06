@@ -60,6 +60,15 @@ function switchTab(tabName) {
     }
   }
 
+  const btnTopIndex = document.getElementById('btn-top-index');
+  if (btnTopIndex) {
+    if (tabName === 'index') {
+      btnTopIndex.classList.add('active');
+    } else {
+      btnTopIndex.classList.remove('active');
+    }
+  }
+
   // Update active state on bottom nav tabs
   document.querySelectorAll('.nav-tab').forEach(tab => {
     if (tab.getAttribute('data-tab') === tabName) {
@@ -124,6 +133,14 @@ const btnTopProfile = document.getElementById('btn-top-profile');
 if (btnTopProfile) {
   btnTopProfile.addEventListener('click', () => {
     switchTab('profile');
+  });
+}
+
+// Setup Header Index button
+const btnTopIndex = document.getElementById('btn-top-index');
+if (btnTopIndex) {
+  btnTopIndex.addEventListener('click', () => {
+    switchTab('index');
   });
 }
 

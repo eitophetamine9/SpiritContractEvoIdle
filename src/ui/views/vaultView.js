@@ -161,13 +161,18 @@ export function renderVaultView(container) {
             </div>
           </div>
 
-          <div>
-            <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-              <span>📜</span> The Divine Vault
-            </h2>
-            <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
-              Manage your collectible cards: contract spirits, Olympian relics, and sacred weapons.
-            </p>
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
+                <span>📜</span> The Divine Vault
+              </h2>
+              <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
+                Manage your collectible cards: contract spirits, Olympian relics, and sacred weapons.
+              </p>
+            </div>
+            <button id="btn-vault-goto-index" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/40 text-[10px] font-bold cursor-pointer hover:bg-indigo-500/30 flex items-center gap-1 shadow-sm">
+              <span>📖</span> Bestiary Index
+            </button>
           </div>
 
           <!-- 3-Category Navigation Switcher -->
@@ -623,6 +628,14 @@ export function renderVaultView(container) {
       } catch (err) {
         alert(err.message);
       }
+    }
+  });
+
+  // Navigate to Index from Vault
+  container.querySelector('#btn-vault-goto-index')?.addEventListener('click', () => {
+    const navIndex = document.getElementById('nav-index');
+    if (navIndex) {
+      navIndex.click();
     }
   });
 }
