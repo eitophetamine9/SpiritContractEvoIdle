@@ -227,17 +227,25 @@ export function renderVaultView(container) {
             const isEquipped = !!r.equippedToSpiritId;
             const equippedSpirit = isEquipped ? spirits.find(s => s.id === r.equippedToSpiritId) : null;
 
+            const stars = r.stars || 3;
+            const starColors = { 3: '#b2bec3', 4: '#00cec9', 5: '#ffd32a', 6: '#ff4757' };
+            const starColor = starColors[stars] || '#ffd32a';
+
             return `
               <div class="bestiary-tile discovered rarity-${r.rarity.toLowerCase()}" 
                    data-relic-uid="${r.uid}"
-                   style="border-color: ${rarObj.color}; cursor: pointer; background: linear-gradient(180deg, ${r.color || '#8e44ad'}18 0%, rgba(15, 20, 25, 0.95) 100%);">
+                   style="border-color: ${starColor}; cursor: pointer; background: linear-gradient(180deg, ${r.color || '#8e44ad'}18 0%, rgba(15, 20, 25, 0.95) 100%);">
                 
                 <div style="position: absolute; top: 4px; left: 4px; display: flex; gap: 2px; z-index: 2;">
                   <span style="font-size: 11px;">${r.godIcon || '🔱'}</span>
                   ${isEquipped ? `<span style="font-size: 9px; background: rgba(39, 174, 96, 0.85); padding: 1px 3px; border-radius: 2px; color: #fff;">✓</span>` : ''}
                 </div>
 
-                <span class="bestiary-tile-num" style="color: ${rarObj.color};">${r.slotName || 'Relic'}</span>
+                <div style="position: absolute; top: 4px; right: 4px; font-size: 9px; font-weight: 900; color: ${starColor}; z-index: 2;">
+                  ${'★'.repeat(stars)}
+                </div>
+
+                <span class="bestiary-tile-num" style="color: ${rarObj.color};">${r.slotName || 'Relic'} +${r.level || 0}</span>
 
                 <div class="bestiary-tile-art">
                   <span style="font-size: 26px;">${r.icon}</span>

@@ -26,7 +26,9 @@ export function getSwarmForStage(stage, subStage) {
     ? biome.enemyPrefixes 
     : CORRUPTED_PREFIXES;
 
-  const baseScale = Math.pow(1.28, stage - 1);
+  const baseScale = stage <= 5 
+    ? Math.pow(1.28, stage - 1) 
+    : Math.pow(1.28, 4) * Math.pow(1.18, stage - 5);
   const waveScale = 1 + (subStage - 1) * 0.18;
 
   // Rebalanced total shard & essence rewards for the wave
