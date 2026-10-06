@@ -2,6 +2,7 @@
  * The Divine Forge View
  * Dedicated screen for farming 6 weapon archetypes (Blades, Bows, Staves, Claws, Daggers, Mallets)
  * across 4 difficulty tiers through 3-wave forge combat trials.
+ * Enhanced with 2.5D Pixi.js / Canvas Arena Viewport & Tailwind Molten Glassmorphic Design
  */
 
 import { gameState } from '../../state/gameState.js';
@@ -10,6 +11,7 @@ import { FORGE_CHAMBERS, FORGE_DIFFICULTY_TIERS } from '../../data/weaponDungeon
 import { EQUIPMENT_RARITIES } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
+import { arenaRenderer } from '../../render/arenaRenderer.js';
 
 let selectedForgeChamberId = 'bladesmith_sanctum';
 let selectedForgeTierNum = 1;
@@ -47,34 +49,42 @@ function renderForgeChambersStage(container) {
   }
 
   container.innerHTML = `
-    <div class="pantheon-container forge-container">
+    <div class="pantheon-container forge-container flex flex-col gap-4 p-2 sm:p-4 text-white">
       
-      <!-- Top Forge Hero Banner -->
-      <div class="pantheon-hero-banner" style="border-bottom: 2px solid ${chamber.color};">
-        <div class="pantheon-title-col">
-          <div class="pantheon-header-tag" style="background: rgba(230, 126, 34, 0.2); color: #f39c12; border-color: #e67e22;">THE DIVINE FORGE</div>
-          <h2 class="pantheon-title">Sacred Weapon Anvils</h2>
-          <p class="pantheon-subtitle">Forge 6 legendary weapon archetypes by besting Vulcan automatons across 3 combat waves.</p>
-        </div>
+      <!-- Top Forge Hero Banner with Tailwind Molten Glassmorphism -->
+      <div class="pantheon-hero-banner relative overflow-hidden rounded-2xl bg-gradient-to-b from-orange-950/40 via-slate-900/90 to-slate-950 border border-orange-500/30 p-4 shadow-[0_0_30px_rgba(249,115,22,0.15)] backdrop-blur-md" style="border-bottom: 2px solid ${chamber.color};">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="pantheon-title-col">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-orange-500/20 text-orange-300 border border-orange-400/30">
+              🔥 THE DIVINE FORGE
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-amber-200 to-red-200 mt-1">
+              Sacred Weapon Anvils
+            </h2>
+            <p class="text-xs text-slate-400 max-w-lg mt-0.5">
+              Forge 6 legendary weapon archetypes by besting Vulcan automatons across 3 combat waves.
+            </p>
+          </div>
 
-        <div class="pantheon-energy-badge">
-          <span class="energy-icon">⚡</span>
-          <span class="energy-numbers">${res.energy} / ${res.maxEnergy} Energy</span>
+          <div class="pantheon-energy-badge flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-950/80 border border-orange-500/40 shadow-inner self-stretch sm:self-auto justify-end">
+            <span class="energy-icon text-base">⚡</span>
+            <span class="energy-numbers text-xs font-black text-amber-300">${res.energy} / ${res.maxEnergy} Energy</span>
+          </div>
         </div>
       </div>
 
       <!-- Forge Chambers Selector Grid -->
-      <div class="pantheon-chambers-grid forge-chambers-grid">
+      <div class="pantheon-chambers-grid forge-chambers-grid grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         ${FORGE_CHAMBERS.map(c => {
           const isSelected = c.id === selectedForgeChamberId;
           return `
-            <button class="chamber-card ${isSelected ? 'selected' : ''}" data-forge-chamber="${c.id}" style="--chamber-color: ${c.color};">
-              <div class="chamber-sigil" style="background: ${c.color}22; border-color: ${c.color};">
+            <button class="chamber-card relative overflow-hidden rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all duration-200 border cursor-pointer ${isSelected ? 'selected bg-slate-800/90 border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)] scale-[1.02]' : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'}" data-forge-chamber="${c.id}" style="--chamber-color: ${c.color};">
+              <div class="chamber-sigil w-11 h-11 rounded-full flex items-center justify-center text-2xl mb-1.5 shadow-md" style="background: ${c.color}22; border: 1.5px solid ${c.color};">
                 ${c.icon}
               </div>
-              <div class="chamber-info">
-                <span class="chamber-name">${c.name}</span>
-                <span class="chamber-god">${c.bossName}</span>
+              <div class="chamber-info flex flex-col items-center">
+                <span class="chamber-name text-xs font-black text-white leading-tight">${c.name}</span>
+                <span class="chamber-god text-[10px] font-bold text-slate-400 mt-0.5" style="color: ${c.accentColor};">${c.bossName}</span>
               </div>
             </button>
           `;
@@ -82,29 +92,29 @@ function renderForgeChambersStage(container) {
       </div>
 
       <!-- Active Selected Chamber Detail Stage -->
-      <div class="chamber-active-stage" style="border: 2px solid ${chamber.color}; background: linear-gradient(180deg, ${chamber.color}15 0%, rgba(15, 12, 10, 0.95) 100%);">
+      <div class="chamber-active-stage rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border: 2px solid ${chamber.color}; background: linear-gradient(180deg, ${chamber.color}15 0%, rgba(15, 12, 10, 0.95) 100%);">
         
-        <div class="stage-header-row">
-          <div class="stage-sigil-large" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color};">
+        <div class="stage-header-row flex items-start gap-3.5 mb-4">
+          <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg shrink-0" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color}; background: ${chamber.color}25; border: 2px solid ${chamber.color};">
             ${chamber.icon}
           </div>
-          <div class="stage-text-block">
-            <h3 class="stage-name" style="color: ${chamber.accentColor};">${chamber.name}</h3>
-            <span class="stage-god-title">${chamber.title}</span>
-            <p class="stage-lore">${chamber.desc}</p>
+          <div class="stage-text-block flex-1">
+            <h3 class="stage-name text-lg font-black" style="color: ${chamber.accentColor};">${chamber.name}</h3>
+            <span class="stage-god-title text-xs font-bold text-slate-300">${chamber.title}</span>
+            <p class="stage-lore text-xs text-slate-400 mt-1 leading-relaxed">${chamber.desc}</p>
           </div>
         </div>
 
         <!-- Tier Selector Row -->
-        <div class="pantheon-tier-selector">
-          <span class="tier-label">FORGE HEAT DIFFICULTY:</span>
-          <div class="tier-buttons-row">
+        <div class="pantheon-tier-selector mb-4">
+          <div class="tier-label text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">FORGE HEAT DIFFICULTY:</div>
+          <div class="tier-buttons-row grid grid-cols-2 sm:grid-cols-4 gap-2">
             ${FORGE_DIFFICULTY_TIERS.map(t => {
               const isTierActive = t.tier === selectedForgeTierNum;
               return `
-                <button class="btn-tier-select ${isTierActive ? 'active' : ''}" data-forge-tier="${t.tier}">
-                  <span class="tier-btn-name">${t.name}</span>
-                  <span class="tier-btn-cost">${t.energyCost} ⚡</span>
+                <button class="btn-tier-select p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${isTierActive ? 'active bg-orange-500/20 border-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.25)]' : 'bg-slate-950/60 border-slate-800'}" data-forge-tier="${t.tier}">
+                  <span class="tier-btn-name text-xs font-black text-white">${t.name}</span>
+                  <span class="tier-btn-cost text-xs font-bold text-amber-400 mt-1">${t.energyCost} ⚡</span>
                 </button>
               `;
             }).join('')}
@@ -112,14 +122,14 @@ function renderForgeChambersStage(container) {
         </div>
 
         <!-- Trial Action Strip -->
-        <div class="trial-launch-strip">
-          <div class="trial-power-info">
-            <span class="rec-power-tag">Required Power: ⚡ ${tier.minPartyPower.toLocaleString()}</span>
-            <span class="party-power-tag ${powerClass}">Party Power: ⚡ ${partyPower.toLocaleString()} (${powerText})</span>
+        <div class="trial-launch-strip flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
+          <div class="trial-power-info text-xs flex flex-col gap-0.5">
+            <span class="rec-power-tag text-slate-400">Required Power: <strong class="text-white">⚡ ${tier.minPartyPower.toLocaleString()}</strong></span>
+            <span class="party-power-tag ${powerClass} text-slate-400">Party Power: <strong class="text-orange-300">⚡ ${partyPower.toLocaleString()} (${powerText})</strong></span>
           </div>
 
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button id="btn-enter-forge-trial" class="btn-enter-trial" ${canAfford ? '' : 'disabled'} style="flex: 2; background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
+          <div class="flex gap-2 flex-wrap">
+            <button id="btn-enter-forge-trial" class="btn-enter-trial min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'} style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
               <span>⚔️ Enter 3-Wave Forge (${tier.energyCost} ⚡)</span>
             </button>
           </div>
@@ -128,36 +138,36 @@ function renderForgeChambersStage(container) {
       </div>
 
       <!-- Loot Preview & Guaranteed Drops Strip -->
-      <div class="pantheon-loot-preview-strip">
-        <span class="loot-preview-title">FORGE DROPS:</span>
-        <div class="loot-pills-list">
-          <span class="loot-badge">⚔️ ${tier.weaponDropCount}x Targeted ${chamber.name.split(' ')[0]} Weapons</span>
-          <span class="loot-badge">💎 +${tier.shardsReward} Spirit Shards</span>
-          <span class="loot-badge">🔮 +${tier.essenceReward} Soul Essence</span>
-          <span class="loot-badge">🌊 3 Combat Waves (Boss: ${chamber.bossName})</span>
+      <div class="pantheon-loot-preview-strip rounded-xl bg-slate-950/80 border border-slate-800 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <span class="loot-preview-title text-[11px] font-black uppercase tracking-wider text-slate-400">FORGE DROPS:</span>
+        <div class="loot-pills-list flex items-center gap-2 flex-wrap">
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 text-xs font-bold border border-orange-500/30">⚔️ ${tier.weaponDropCount}x Targeted ${chamber.name.split(' ')[0]} Weapons</span>
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">💎 +${tier.shardsReward} Spirit Shards</span>
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30">🔮 +${tier.essenceReward} Soul Essence</span>
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30">🌊 3 Combat Waves (Boss: ${chamber.bossName})</span>
         </div>
       </div>
 
     </div>
   `;
 
-  // Attach Chamber Card Selection listeners
+  // Attach Forge Chamber selection listeners
   container.querySelectorAll('[data-forge-chamber]').forEach(btn => {
     btn.addEventListener('click', () => {
-      selectedForgeChamberId = btn.getAttribute('data-forge-chamber');
+      selectedForgeChamberId = btn.dataset.forgeChamber;
       renderForgeView(container);
     });
   });
 
-  // Attach Tier Selection listeners
+  // Attach Forge Tier selection listeners
   container.querySelectorAll('[data-forge-tier]').forEach(btn => {
     btn.addEventListener('click', () => {
-      selectedForgeTierNum = parseInt(btn.getAttribute('data-forge-tier'), 10);
+      selectedForgeTierNum = parseInt(btn.dataset.forgeTier, 10);
       renderForgeView(container);
     });
   });
 
-  // Attach Enter 3-Wave Forge Trial listener
+  // Attach Enter Trial Battle listener
   const btnEnter = container.querySelector('#btn-enter-forge-trial');
   if (btnEnter) {
     btnEnter.addEventListener('click', () => {
@@ -176,48 +186,44 @@ function renderForgeBattleArena(container, battle) {
   const chamber = FORGE_CHAMBERS.find(c => c.id === battle.chamberId) || FORGE_CHAMBERS[0];
   const tier = FORGE_DIFFICULTY_TIERS.find(t => t.tier === battle.tier) || FORGE_DIFFICULTY_TIERS[0];
   const party = gameState.getPartySpirits();
+  const partyPower = gameState.getTotalPartyPower();
   const swarm = battle.currentSwarm || [];
 
   container.innerHTML = `
-    <div class="pantheon-container forge-battle-container">
+    <div class="trial-battle-container forge-battle-container flex flex-col gap-3 min-h-full text-white">
       
-      <!-- Top Trial Combat HUD Header -->
-      <div class="combat-top-hud" style="border-bottom: 2px solid ${chamber.color};">
-        <div class="combat-hud-left">
-          <button id="btn-forge-flee" class="zone-btn-sm" style="background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675;">
-            ◀ Flee
+      <!-- Top Tactical Combat HUD -->
+      <div class="combat-top-hud flex items-center justify-between p-3 rounded-2xl bg-slate-950/90 border border-orange-500/30 shadow-lg backdrop-blur-md" style="border-bottom: 2px solid ${chamber.color};">
+        <div class="combat-hud-left flex items-center gap-2">
+          <button id="btn-forge-flee" class="hud-flee-btn px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 text-xs font-black transition-all cursor-pointer" title="Surrender and return to anvils">
+            ◀ Leave
           </button>
         </div>
 
-        <div class="combat-vs-banner">
-          <span class="vs-ally-tag" style="background: ${chamber.color}; color: #000; font-weight: 800;">
-            ${chamber.icon} ${chamber.name}
-          </span>
-          <span class="vs-center-tag" style="background: #e67e22; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 900;">
-            WAVE ${battle.currentWave}/3
-          </span>
-          <span class="vs-enemy-tag">
-            ${battle.currentWave === 3 ? `TITAN: ${chamber.bossName}` : 'FORGE GUARDIANS'}
+        <div class="combat-vs-banner flex items-center gap-2">
+          <span class="vs-ally-tag text-xs font-bold text-orange-300">${chamber.icon} ${chamber.name.toUpperCase()}</span>
+          <span class="vs-center-tag text-[10px] text-slate-500">|</span>
+          <span class="vs-enemy-tag text-xs font-black text-white">
+            WAVE ${battle.currentWave}/3: ${battle.currentWave === 3 ? `TITAN: ${chamber.bossName.toUpperCase()}` : 'AUTOMATONS'}
           </span>
         </div>
 
         <div class="combat-hud-right">
-          <span class="hud-speed-btn" style="background: rgba(0,0,0,0.5); font-size: 11px;">⚡ ${tier.energyCost}</span>
+          <span class="hud-speed-btn px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-amber-400">⚡ ${tier.energyCost}</span>
         </div>
       </div>
 
-      <!-- Combat Banner & Floating Layer -->
-      <div id="forge-combat-banner" class="combat-banner-layer"></div>
-      <div id="damage-popup-layer" class="damage-popup-layer"></div>
-
-      <!-- Dynamic Isometric Battlefield Area -->
-      <div class="isometric-battlefield forge-battlefield">
+      <!-- Dynamic 2.5D Isometric Battlefield Area -->
+      <div class="isometric-battlefield forge-battlefield relative overflow-hidden rounded-2xl border border-orange-500/30 bg-slate-950 shadow-2xl min-h-[300px] flex items-center justify-between p-3 sm:p-5" style="border-color: ${chamber.color}44;">
         
-        <!-- Left Side: Allied Spirit Formation -->
-        <div class="allied-formation-column">
-          <div class="formation-header-label">ALLIED SPIRIT LINEUP</div>
+        <!-- 2.5D Isometric Canvas Viewport Layer (Pixi.js / Canvas Engine) -->
+        <div id="arena-viewport-25d" class="arena-viewport-25d absolute inset-0 pointer-events-none z-0 rounded-2xl overflow-hidden"></div>
+
+        <!-- Left Side: Staggered Allied Spirit Formation -->
+        <div class="allied-formation-column relative z-10 flex flex-col gap-2">
+          <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-orange-400">Allied Lineup</div>
           
-          <div class="staggered-party-formation">
+          <div class="staggered-party-formation flex flex-col gap-2">
             ${party.map((spirit, idx) => {
               const species = SPIRIT_SPECIES[spirit.speciesId];
               const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
@@ -230,28 +236,19 @@ function renderForgeBattleArena(container, battle) {
               const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
 
               return `
-                <div class="spirit-formation-slot slot-active ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="forge-allied-slot-${idx}" style="--stagger-offset: ${(idx % 2) * 12}px;">
-                  <div class="overhead-status-bar">
-                    <span class="overhead-rarity" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
-                      ${rarity.name.toUpperCase()}
-                    </span>
-                    <span class="overhead-level">Lv.${spirit.level}</span>
-                  </div>
-
-                  <div class="spirit-sprite-container">
+                <div class="spirit-formation-slot slot-active flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/75 border border-slate-800 ${isUltReady ? 'ult-ready border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : ''} ${isFallen ? 'spirit-fallen opacity-40' : ''}" id="forge-allied-slot-${idx}">
+                  <div class="spirit-sprite-container w-10 h-10 rounded-lg overflow-hidden shrink-0">
                     ${createSpiritPlaceholderBox(spirit, { boxClass: 'formation-spirit-box' })}
-                    ${isUltReady ? '<div class="ult-ready-tag">✨ ULT READY</div>' : ''}
-                    ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
-                    <div class="combat-ground-shadow"></div>
                   </div>
 
-                  <div class="spirit-hud-bars">
-                    <div class="hud-bar-hp" title="${curHp}/${maxHp} HP">
-                      <div class="hud-hp-fill" id="forge-spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
-                      ${shieldPct > 0 ? `<div class="hud-shield-fill" style="width: ${shieldPct}%;"></div>` : ''}
+                  <div class="spirit-hud-bars flex flex-col gap-1 w-20">
+                    <div class="text-[10px] font-black truncate text-white">${spirit.customName}</div>
+                    <div class="hud-bar-hp w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                      <div class="hud-hp-fill h-full bg-emerald-400 rounded-full" id="forge-spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
+                      ${shieldPct > 0 ? `<div class="hud-shield-fill h-full bg-cyan-400" style="width: ${shieldPct}%;"></div>` : ''}
                     </div>
-                    <div class="hud-bar-mp" title="${mpPct}/100 MP">
-                      <div class="hud-mp-fill" id="forge-spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
+                    <div class="hud-bar-mp w-full h-1 bg-slate-900 rounded-full overflow-hidden">
+                      <div class="hud-mp-fill h-full bg-amber-400 rounded-full" id="forge-spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
                     </div>
                   </div>
                 </div>
@@ -261,17 +258,17 @@ function renderForgeBattleArena(container, battle) {
         </div>
 
         <!-- Center Combat Clash Point -->
-        <div class="combat-clash-divider">
+        <div class="combat-clash-divider relative z-10 text-2xl animate-pulse">
           <div class="clash-sparks-icon">⚔️</div>
         </div>
 
         <!-- Right Side: Wave Enemies -->
-        <div class="enemy-formation-column">
-          <div class="formation-header-label" style="color: #ff9f43;">
+        <div class="enemy-formation-column relative z-10 flex flex-col gap-2 items-end">
+          <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-orange-400">
             ${battle.currentWave === 3 ? `👑 ${chamber.bossName.toUpperCase()}` : `FORGE AUTOMATONS (${swarm.filter(e => !e.isDefeated && e.hp > 0).length}/${swarm.length})`}
           </div>
 
-          <div class="enemy-swarm-wrapper" id="forge-enemy-swarm-wrapper">
+          <div class="enemy-swarm-wrapper flex flex-col gap-2" id="forge-enemy-swarm-wrapper">
             ${swarm.map((em, sIdx) => {
               const isDead = em.isDefeated || em.hp <= 0;
               const maxHp = em.maxHp || 100;
@@ -279,27 +276,18 @@ function renderForgeBattleArena(container, battle) {
               const emHpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
 
               return `
-                <div class="enemy-swarm-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="forge-enemy-slot-${sIdx}" style="--swarm-stagger: ${(sIdx % 2) * 8}px;">
-                  <div class="enemy-overhead-card">
-                    <div class="enemy-name-row">
-                      <span class="enemy-name-label">${em.name}</span>
-                      ${em.isBoss ? '<span class="boss-crown-badge">👑 FORGE TITAN</span>' : ''}
-                    </div>
-                    <div class="enemy-pwr-label">⚡ ${(em.power || 0).toLocaleString()} PWR</div>
-
-                    <div class="enemy-hp-track">
-                      <div id="forge-enemy-hp-fill-${sIdx}" class="enemy-hp-fill" style="width: ${emHpPct}%;"></div>
-                      <div id="forge-enemy-hp-text-${sIdx}" class="enemy-hp-text">
-                        ${Math.ceil(curHp).toLocaleString()} / ${maxHp.toLocaleString()} HP
-                      </div>
+                <div class="enemy-swarm-slot flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/75 border border-slate-800 ${em.isBoss ? 'boss-slot border-amber-500' : ''} ${isDead ? 'enemy-defeated opacity-30' : ''}" id="forge-enemy-slot-${sIdx}">
+                  <div class="enemy-overhead-card flex flex-col gap-1 w-20 items-end">
+                    <div class="enemy-name-label text-[10px] font-black truncate text-white">${em.name}</div>
+                    <div class="enemy-hp-track w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                      <div id="forge-enemy-hp-fill-${sIdx}" class="enemy-hp-fill h-full bg-orange-500 rounded-full" style="width: ${emHpPct}%;"></div>
                     </div>
                   </div>
 
-                  <div class="enemy-sprite-container">
+                  <div class="enemy-sprite-container w-10 h-10 rounded-lg overflow-hidden shrink-0">
                     <div class="enemy-placeholder-frame">
                       ${createEnemyPlaceholderBox(em)}
                     </div>
-                    <div class="combat-ground-shadow enemy-shadow"></div>
                   </div>
                 </div>
               `;
@@ -311,14 +299,20 @@ function renderForgeBattleArena(container, battle) {
 
       <!-- Action Strike Command Strip -->
       <div class="combat-action-footer">
-        <button id="btn-forge-strike" class="btn-main-attack" style="background: linear-gradient(135deg, ${chamber.color}, #d35400);">
+        <button id="btn-forge-strike" class="btn-main-attack min-h-[48px] w-full py-3 rounded-2xl font-black text-sm text-slate-950 transition-all cursor-pointer shadow-xl flex flex-col items-center justify-center" style="background: linear-gradient(135deg, ${chamber.color}, #d35400);">
           <span>⚔️ Forge Strike (Party Attack • Charges +10 MP)</span>
-          <span class="btn-subtext">Defeat Wave ${battle.currentWave}/3 to claim targeted ${chamber.name} Weapons</span>
+          <span class="btn-subtext text-[10px] font-bold opacity-80">Defeat Wave ${battle.currentWave}/3 to claim targeted ${chamber.name} Weapons</span>
         </button>
       </div>
 
     </div>
   `;
+
+  // Initialize 2.5D Isometric Arena Viewport Engine
+  const viewportEl = container.querySelector('#arena-viewport-25d');
+  if (viewportEl) {
+    arenaRenderer.init(viewportEl, { mode: 'forge', element: 'FIRE', chamberId: battle.chamberId });
+  }
 
   // Attach Flee listener
   const btnFlee = container.querySelector('#btn-forge-flee');
@@ -334,6 +328,7 @@ function renderForgeBattleArena(container, battle) {
   if (btnStrike) {
     btnStrike.addEventListener('click', () => {
       gameState.manualDungeonStrike();
+      arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
       renderForgeView(container);
     });
   }
@@ -360,56 +355,50 @@ export function showForgeVictoryModal(loot, onClose) {
   modalEl.className = 'modal-backdrop';
 
   modalEl.innerHTML = `
-    <div class="pantheon-victory-modal" style="border: 2px solid #e67e22;">
-      <div class="victory-header" style="background: linear-gradient(135deg, rgba(230, 126, 34, 0.4), #000);">
-        <div class="victory-sigil">🔨</div>
+    <div class="pantheon-victory-modal max-w-lg w-full rounded-2xl bg-slate-900 border overflow-hidden shadow-2xl text-white" style="border: 2px solid #e67e22;">
+      <div class="victory-header p-4 flex items-center gap-3.5" style="background: linear-gradient(135deg, rgba(230, 126, 34, 0.4), #000);">
+        <div class="victory-sigil text-4xl">🔨</div>
         <div class="victory-title-col">
-          <span class="victory-sub" style="color: #f39c12;">FORGE CONQUERED</span>
-          <h3 class="victory-name">${loot.chamber.name} Cleared!</h3>
-          <span class="victory-tier-tag">${loot.tier.name}</span>
+          <span class="victory-sub text-[10px] font-black uppercase tracking-widest text-orange-400">FORGE CONQUERED</span>
+          <h3 class="victory-name text-lg font-black text-white">${loot.chamber.name} Cleared!</h3>
+          <span class="victory-tier-tag text-xs text-slate-300">${loot.tier.name}</span>
         </div>
       </div>
 
-      <div class="victory-body">
-        <div class="spoils-section-header">TARGETED WEAPONS SMELTED:</div>
+      <div class="victory-body p-4 flex flex-col gap-3">
+        <div class="spoils-section-header text-[11px] font-black uppercase tracking-wider text-slate-400">TARGETED WEAPONS SMELTED:</div>
 
-        <div class="awarded-items-grid">
+        <div class="awarded-items-grid grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[45vh] overflow-y-auto pr-1">
           ${loot.weapons.map(w => {
             const rarObj = EQUIPMENT_RARITIES[w.rarity] || EQUIPMENT_RARITIES.COMMON;
             return `
-              <div class="awarded-item-card" style="border: 1px solid ${rarObj.border}; background: rgba(20, 15, 12, 0.95);">
-                <div class="item-header-row">
-                  <span class="item-icon-frame">${w.icon}</span>
+              <div class="awarded-item-card p-2.5 rounded-xl bg-slate-950/80 border flex flex-col gap-1" style="border-color: ${rarObj.border};">
+                <div class="item-header-row flex items-center gap-2">
+                  <span class="item-icon-frame text-xl">${w.icon}</span>
                   <div class="item-name-col">
-                    <span class="item-name" style="color: ${rarObj.color};">${w.name}</span>
-                    <span class="item-rarity-pill" style="color: ${rarObj.color};">${rarObj.name}</span>
+                    <div class="item-name text-xs font-black" style="color: ${rarObj.color};">${w.name}</div>
+                    <span class="item-rarity-pill text-[10px] font-bold" style="color: ${rarObj.color};">${rarObj.name}</span>
                   </div>
                 </div>
-                <div class="item-stat-row">
+                <div class="item-stat-row text-[11px] text-slate-300 flex justify-between">
                   <span class="stat-name">ATK Power:</span>
-                  <span class="stat-val">+${w.atkPower}</span>
+                  <span class="stat-val font-bold text-amber-300">+${w.atkPower}</span>
                 </div>
-                <div class="item-stat-row">
+                <div class="item-stat-row text-[11px] text-slate-300 flex justify-between">
                   <span class="stat-name">Crit Rate:</span>
-                  <span class="stat-val">+${w.critRate}%</span>
+                  <span class="stat-val font-bold text-orange-400">+${w.critRate}%</span>
                 </div>
               </div>
             `;
           }).join('')}
         </div>
 
-        <div class="victory-resources-row">
-          <div class="res-reward-pill">
-            <span class="res-icon">💎</span>
-            <span class="res-amt">+${loot.shardsGained} Spirit Shards</span>
-          </div>
-          <div class="res-reward-pill">
-            <span class="res-icon">🔮</span>
-            <span class="res-amt">+${loot.essenceGained} Soul Essence</span>
-          </div>
+        <div class="victory-resources-row flex items-center gap-2 pt-2 border-t border-slate-800">
+          <span class="res-reward-pill px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">💎 +${loot.shardsGained} Spirit Shards</span>
+          <span class="res-reward-pill px-3 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30">🔮 +${loot.essenceGained} Soul Essence</span>
         </div>
 
-        <button id="btn-claim-forge-loot" class="btn-claim-dungeon-loot" style="background: linear-gradient(135deg, #e67e22, #f39c12);">
+        <button id="btn-claim-forge-loot" class="btn-claim-dungeon-loot min-h-[46px] w-full py-2.5 rounded-xl font-black text-xs text-slate-950 transition-all cursor-pointer shadow-lg" style="background: linear-gradient(135deg, #e67e22, #f39c12);">
           Claim Weapon Spoils & Return
         </button>
       </div>
@@ -432,21 +421,15 @@ function showForgeDefeatModal(onClose) {
   modalEl.className = 'modal-backdrop';
 
   modalEl.innerHTML = `
-    <div class="pantheon-victory-modal" style="border: 2px solid #e74c3c;">
-      <div class="victory-header" style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.4), #000);">
-        <div class="victory-sigil">💀</div>
-        <div class="victory-title-col">
-          <span class="victory-sub" style="color: #ff7675;">HEAT OVERLOAD</span>
-          <h3 class="victory-name">Party Fallen in Forge</h3>
-          <span class="victory-tier-tag">Regroup and upgrade equipment to endure the flames</span>
-        </div>
+    <div class="pantheon-victory-modal max-w-md w-full rounded-2xl bg-slate-900 border border-red-500/50 p-5 shadow-2xl text-white flex flex-col items-center text-center gap-3">
+      <div class="text-3xl">💀</div>
+      <div>
+        <h3 class="text-base font-black text-red-400">HEAT OVERLOAD</h3>
+        <p class="text-xs text-slate-400 mt-1">Party Fallen in Forge. Regroup and upgrade equipment to endure the flames.</p>
       </div>
-
-      <div class="victory-body">
-        <button id="btn-forge-defeat-ok" class="btn-claim-dungeon-loot" style="background: #34495e;">
-          Return Safely
-        </button>
-      </div>
+      <button id="btn-forge-defeat-ok" class="btn-claim-dungeon-loot min-h-[44px] w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer">
+        Return Safely
+      </button>
     </div>
   `;
 

@@ -4966,6 +4966,65 @@ button:disabled {
   margin-top: 14px;
 }
 
+/* ==========================================================================
+   2.5D ARENA VIEWPORT & DUNGEON CHAMBER AMBIENCE
+   ========================================================================== */
+
+.arena-viewport-25d {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.arena-canvas-25d {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 16px;
+}
+
+.isometric-battlefield {
+  position: relative;
+  overflow: hidden;
+  min-height: 280px;
+}
+
+@keyframes runePulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(6, 182, 212, 0.55);
+  }
+}
+
+@keyframes moltenGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.55);
+  }
+}
+
+@keyframes celestialDrift {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0px); }
+}
+
+.pantheon-container .chamber-card.selected {
+  animation: celestialDrift 3s ease-in-out infinite;
+}
+
+.forge-container .chamber-card.selected {
+  animation: moltenGlow 2.5s ease-in-out infinite;
+}
+
+
 
 
 

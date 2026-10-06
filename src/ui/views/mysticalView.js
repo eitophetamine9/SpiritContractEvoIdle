@@ -1,11 +1,11 @@
 /**
  * The Mystical Realm View
  * Dedicated Sanctum for:
- * 1) Sanctuary of the Gods (3-Wave Essence Dungeon farming)
+ * 1) Sanctuary of the Gods (3-Wave Essence Dungeon farming with 2.5D Pixi.js/Canvas Arena)
  * 2) Energy Reservoir Expansion (Scales with 500 hard cap)
  * 3) Grand Astral EXP Potions (Direct spirit leveling)
  * 4) Primordial God Blessings (1-hour timed active buffs)
- * 5) Permanent Astral Resonance
+ * 5) Tailwind CSS glassmorphic aesthetic & glowing astral motifs
  */
 
 import { gameState } from '../../state/gameState.js';
@@ -13,10 +13,11 @@ import { audioManager } from '../../audio/audioManager.js';
 import { ESSENCE_CHAMBERS, ESSENCE_DIFFICULTY_TIERS } from '../../data/essenceDungeonData.js';
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES } from '../../data/spiritsData.js';
+import { arenaRenderer } from '../../render/arenaRenderer.js';
 
 let selectedEssenceChamberId = 'olympian_nexus';
 let selectedEssenceTierNum = 1;
-let activeRealmSection = 'dungeon'; // 'dungeon' | 'potions' | 'blessings' | 'energy'
+let activeRealmSection = 'dungeon'; // 'dungeon' | 'energy' | 'potions' | 'blessings'
 
 export function renderMysticalView(container) {
   const battle = gameState.state.activeDungeonBattle;
@@ -49,49 +50,58 @@ function renderMysticalSanctumScreen(container) {
   const partySpirits = gameState.getPartySpirits();
 
   container.innerHTML = `
-    <div class="mystical-realm-container">
+    <div class="mystical-realm-container flex flex-col gap-4 p-2 sm:p-4 text-white">
       
-      <!-- Top Realm Hero Banner -->
-      <div class="mystical-hero-banner">
-        <div class="mystical-header-info">
-          <div class="realm-badge-tag">SANCTUM OF THE DIVINE</div>
-          <h2 class="realm-title">🌌 The Mystical Realm</h2>
-          <p class="realm-subtitle">Channel Essences of the Gods, brew Grand Astral Elixirs, and invoke primordial blessings.</p>
-        </div>
+      <!-- Top Realm Hero Banner with Tailwind Glassmorphism -->
+      <div class="mystical-hero-banner relative overflow-hidden rounded-2xl bg-gradient-to-b from-cyan-950/50 via-slate-900/90 to-slate-950 border border-cyan-500/30 p-4 shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-md">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="mystical-header-info">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+              ✨ SANCTUM OF THE DIVINE
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-teal-300 to-amber-200 mt-1">
+              🌌 The Mystical Realm
+            </h2>
+            <p class="text-xs text-slate-400 max-w-lg mt-0.5">
+              Channel Essences of the Gods, expand the primordial Energy Vault, brew Grand Astral Elixirs, and invoke divine blessings.
+            </p>
+          </div>
 
-        <div class="realm-currency-strip">
-          <div class="realm-cur-pill" title="Essences of the Gods">
-            <span>💠 Gods:</span>
-            <strong style="color: #00ffff;">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
-          </div>
-          <div class="realm-cur-pill" title="Soul Essence">
-            <span>🔮 Soul:</span>
-            <strong style="color: #9b59b6;">${(res.soulEssence || 0).toLocaleString()}</strong>
-          </div>
-          <div class="realm-cur-pill" title="Energy Capacity">
-            <span>⚡ Energy:</span>
-            <strong style="color: #ffd152;">${res.energy} / ${currentMaxEnergy}</strong>
+          <!-- Currency Strip with glowing capsules -->
+          <div class="flex items-center gap-2 flex-wrap self-stretch sm:self-auto justify-end">
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-cyan-500/30 shadow-inner" title="Essences of the Gods">
+              <span class="text-xs text-cyan-400 font-bold">💠 Gods:</span>
+              <strong class="text-xs text-cyan-300 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
+            </div>
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-purple-500/30 shadow-inner" title="Soul Essence">
+              <span class="text-xs text-purple-400 font-bold">🔮 Soul:</span>
+              <strong class="text-xs text-purple-300 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
+            </div>
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-amber-500/30 shadow-inner" title="Energy Capacity">
+              <span class="text-xs text-amber-400 font-bold">⚡ Energy:</span>
+              <strong class="text-xs text-amber-300 font-black">${res.energy} / ${currentMaxEnergy}</strong>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Realm Navigation Section Tabs -->
-      <div class="realm-nav-tabs">
-        <button class="realm-tab-btn ${activeRealmSection === 'dungeon' ? 'active' : ''}" data-realm-tab="dungeon">
-          🏛️ Sanctuary Trials
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <button class="realm-tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all duration-200 border cursor-pointer ${activeRealmSection === 'dungeon' ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'}" data-realm-tab="dungeon">
+          <span>🏛️</span> Sanctuary Trials
         </button>
-        <button class="realm-tab-btn ${activeRealmSection === 'energy' ? 'active' : ''}" data-realm-tab="energy">
-          ⚡ Energy Vault (${currentMaxEnergy}/500)
+        <button class="realm-tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all duration-200 border cursor-pointer ${activeRealmSection === 'energy' ? 'bg-amber-500/20 text-amber-200 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.25)]' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'}" data-realm-tab="energy">
+          <span>⚡</span> Vault (${currentMaxEnergy}/500)
         </button>
-        <button class="realm-tab-btn ${activeRealmSection === 'potions' ? 'active' : ''}" data-realm-tab="potions">
-          🧪 Grand EXP Pots
+        <button class="realm-tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all duration-200 border cursor-pointer ${activeRealmSection === 'potions' ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)]' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'}" data-realm-tab="potions">
+          <span>🧪</span> Grand EXP Pots
         </button>
-        <button class="realm-tab-btn ${activeRealmSection === 'blessings' ? 'active' : ''}" data-realm-tab="blessings">
-          ✨ Timed Blessings
+        <button class="realm-tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition-all duration-200 border cursor-pointer ${activeRealmSection === 'blessings' ? 'bg-purple-500/20 text-purple-200 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.25)]' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'}" data-realm-tab="blessings">
+          <span>✨</span> Timed Blessings
         </button>
       </div>
 
-      <!-- Active Section Content -->
+      <!-- Active Section Content Container -->
       <div class="realm-section-content">
         ${activeRealmSection === 'dungeon' ? renderDungeonSectionHtml(chamber, tier, canAffordDungeon, partyPower) : ''}
         ${activeRealmSection === 'energy' ? renderEnergySectionHtml(currentMaxEnergy, energyIsCapped, nextEnergyCostEssence, nextEnergyCostSoul, canAffordEnergy) : ''}
@@ -124,53 +134,75 @@ function renderMysticalSanctumScreen(container) {
 
 function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower) {
   return `
-    <div class="essence-dungeon-view">
-      <div class="chamber-intro-box" style="border-left: 4px solid ${chamber.color};">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 24px;">${chamber.icon}</span>
-          <div>
-            <div style="font-size: 15px; font-weight: 900; color: #fff;">${chamber.name}</div>
-            <div style="font-size: 11px; color: ${chamber.accentColor}; font-weight: 700;">${chamber.title} • ${chamber.domain}</div>
+    <div class="flex flex-col gap-4">
+      
+      <!-- Chamber Selection Carousel Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        ${ESSENCE_CHAMBERS.map(c => {
+          const isSelected = c.id === selectedEssenceChamberId;
+          return `
+            <button class="essence-chamber-card relative overflow-hidden rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all duration-200 border cursor-pointer ${isSelected ? 'bg-slate-800/90 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] scale-[1.02]' : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'}" 
+                    data-chamber-id="${c.id}"
+                    style="--ch-color: ${c.color};">
+              <div class="w-11 h-11 rounded-full flex items-center justify-center text-2xl mb-1.5 shadow-md" style="background: ${c.color}22; border: 1.5px solid ${c.color};">
+                ${c.icon}
+              </div>
+              <span class="text-xs font-black text-white leading-tight">${c.name}</span>
+              <span class="text-[10px] font-bold text-slate-400 mt-0.5" style="color: ${c.accentColor};">${c.domain}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- Active Selected Chamber Detail Stage -->
+      <div class="rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border-color: ${chamber.color}66;">
+        <div class="flex items-start gap-3.5 mb-4">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg shrink-0" style="background: ${chamber.color}25; border: 2px solid ${chamber.color};">
+            ${chamber.icon}
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-lg font-black text-white">${chamber.name}</h3>
+              <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider" style="background: ${chamber.color}33; color: ${chamber.accentColor}; border: 1px solid ${chamber.color}66;">
+                ${chamber.domain}
+              </span>
+            </div>
+            <div class="text-xs font-bold text-slate-300 mt-0.5">${chamber.title}</div>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">${chamber.desc}</p>
           </div>
         </div>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">${chamber.desc}</p>
-      </div>
 
-      <!-- Chamber Selector Cards -->
-      <div class="essence-chambers-grid">
-        ${ESSENCE_CHAMBERS.map(c => `
-          <button class="essence-chamber-card ${c.id === selectedEssenceChamberId ? 'active' : ''}" 
-                  data-chamber-id="${c.id}"
-                  style="--ch-color: ${c.color};">
-            <span class="ch-icon">${c.icon}</span>
-            <span class="ch-title">${c.name}</span>
-            <span class="ch-domain">${c.domain}</span>
-          </button>
-        `).join('')}
-      </div>
-
-      <!-- Tier Selection -->
-      <div class="essence-tiers-row">
-        ${ESSENCE_DIFFICULTY_TIERS.map(t => `
-          <button class="essence-tier-btn ${t.tier === selectedEssenceTierNum ? 'active' : ''}" data-tier="${t.tier}">
-            <div class="t-name">Tier ${t.tier}</div>
-            <div class="t-sub">${t.subtitle}</div>
-            <div class="t-cost">⚡ ${t.energyCost}</div>
-          </button>
-        `).join('')}
-      </div>
-
-      <!-- Chamber Rewards & Launch -->
-      <div class="essence-launch-panel">
-        <div class="launch-rewards-meta">
-          <div><strong>Expected Yield:</strong> <span style="color: #00ffff;">💠 ${tier.minGodEssences}–${tier.maxGodEssences} Essences</span> ${tier.soulEssenceReward > 0 ? `+ <span style="color: #9b59b6;">${tier.soulEssenceReward} Soul Essence</span>` : ''} + 💎 ${tier.shardsReward} Shards</div>
-          <div><strong>Rec. Power:</strong> ⚡ ${tier.recommendedPower.toLocaleString()} (Your Party: ${partyPower.toLocaleString()})</div>
+        <!-- Tier Selection Pills -->
+        <div class="mb-4">
+          <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">Sanctuary Heat / Difficulty:</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            ${ESSENCE_DIFFICULTY_TIERS.map(t => {
+              const isActive = t.tier === selectedEssenceTierNum;
+              return `
+                <button class="essence-tier-btn p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${isActive ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]' : 'bg-slate-950/60 border-slate-800'}" data-tier="${t.tier}">
+                  <span class="text-xs font-black text-white">Tier ${t.tier}</span>
+                  <span class="text-[10px] text-slate-400">${t.subtitle}</span>
+                  <span class="text-xs font-bold text-amber-400 mt-1">⚡ ${t.energyCost} Energy</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
         </div>
 
-        <button id="btn-start-essence-trial" class="btn-launch-trial" ${canAfford ? '' : 'disabled'}>
-          ${canAfford ? `⚔️ Challenge 3-Wave Trial (⚡ ${tier.energyCost})` : `⚠️ Need ⚡ ${tier.energyCost} Energy`}
-        </button>
+        <!-- Power Assessment & Launch Strip -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
+          <div class="text-xs flex flex-col gap-0.5">
+            <span class="text-slate-400">Recommended Power: <strong class="text-white">⚡ ${tier.recommendedPower.toLocaleString()}</strong></span>
+            <span class="text-slate-400">Your Party Power: <strong class="text-cyan-300">⚡ ${partyPower.toLocaleString()}</strong></span>
+            <span class="text-cyan-400 font-bold">Yield: 💠 ${tier.minGodEssences}–${tier.maxGodEssences} Essences ${tier.soulEssenceReward > 0 ? `• 🔮 +${tier.soulEssenceReward} Soul` : ''} • 💎 +${tier.shardsReward}</span>
+          </div>
+
+          <button id="btn-start-essence-trial" class="min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});" ${canAfford ? '' : 'disabled'}>
+            ${canAfford ? `⚔️ Challenge 3-Wave Trial (⚡ ${tier.energyCost})` : `⚠️ Need ⚡ ${tier.energyCost} Energy`}
+          </button>
+        </div>
       </div>
+
     </div>
   `;
 }
@@ -179,44 +211,49 @@ function renderEnergySectionHtml(currentMax, isCapped, costEssence, costSoul, ca
   const percent = Math.min(100, Math.round(((currentMax - 60) / (500 - 60)) * 100));
 
   return `
-    <div class="energy-expansion-panel">
-      <div class="expansion-header">
-        <span style="font-size: 32px;">⚡</span>
+    <div class="rounded-2xl border border-amber-500/30 p-5 bg-gradient-to-b from-amber-950/20 via-slate-900/90 to-slate-950 shadow-xl flex flex-col gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-3xl shadow-inner">
+          ⚡
+        </div>
         <div>
-          <h3 style="font-size: 16px; font-weight: 900; color: #ffd152;">Energy Reservoir Expansion</h3>
-          <p style="font-size: 11px; color: var(--text-muted);">Permanently raises your maximum Energy ceiling up to the hard cap of 500 ⚡.</p>
+          <h3 class="text-lg font-black text-amber-300">Energy Reservoir Expansion</h3>
+          <p class="text-xs text-slate-400">Permanently expand your maximum Energy capacity up to the hard cap of 500 ⚡.</p>
         </div>
       </div>
 
-      <div class="energy-meter-container">
-        <div class="meter-labels">
-          <span>Base: 60 ⚡</span>
-          <span style="color: #ffd152; font-weight: 800;">Current: ${currentMax} ⚡</span>
-          <span>Max Cap: 500 ⚡</span>
+      <!-- Energy Gauge Meter -->
+      <div class="rounded-xl bg-slate-950/80 border border-slate-800 p-4 flex flex-col gap-2">
+        <div class="flex justify-between text-xs font-bold">
+          <span class="text-slate-400">Base: 60 ⚡</span>
+          <span class="text-amber-400 text-sm font-black">Current: ${currentMax} / 500 ⚡</span>
+          <span class="text-slate-400">Cap: 500 ⚡</span>
         </div>
-        <div class="energy-meter-track">
-          <div class="energy-meter-fill" style="width: ${percent}%;"></div>
+        <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 shadow-inner">
+          <div class="h-full bg-gradient-to-r from-amber-500 via-orange-400 to-yellow-300 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style="width: ${percent}%;"></div>
         </div>
-        <div style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 4px;">
-          ${isCapped ? '🌟 Maximum Energy Reservoir Limit Reached (500/500)!' : `${500 - currentMax} ⚡ remaining to reach maximum capacity.`}
+        <div class="text-[11px] text-slate-400 text-center">
+          ${isCapped ? '🌟 Maximum Energy Reservoir Limit Reached (500/500)!' : `${500 - currentMax} ⚡ remaining to reach primordial maximum.`}
         </div>
       </div>
 
       ${!isCapped ? `
-        <div class="expansion-upgrade-box">
-          <div style="font-size: 12px; font-weight: 700; color: #fff;">
-            Upgrade to <strong>${currentMax + 20} ⚡</strong> (+20 Max Energy)
+        <div class="rounded-xl border border-amber-500/30 bg-slate-900/60 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>
+            <div class="text-sm font-black text-white">
+              Expand Capacity to <strong class="text-amber-300">${currentMax + 20} ⚡</strong> (+20 Max Energy)
+            </div>
+            <div class="text-xs text-slate-400 mt-0.5">
+              Cost: <span class="text-cyan-300 font-bold">${costEssence} Essences of the Gods</span> ${costSoul > 0 ? `+ <span class="text-purple-300 font-bold">${costSoul} Soul Essence</span>` : ''}
+            </div>
           </div>
-          <div style="font-size: 11px; color: var(--text-muted);">
-            Cost: <span style="color: #00ffff;">${costEssence} Essences of the Gods</span> ${costSoul > 0 ? `+ <span style="color: #9b59b6;">${costSoul} Soul Essence</span>` : ''}
-          </div>
-          <button id="btn-upgrade-energy-cap" class="btn-action-upgrade-cap" ${canAfford ? '' : 'disabled'}>
+          <button id="btn-upgrade-energy-cap" class="min-h-[44px] px-5 py-2.5 rounded-xl font-black text-xs text-slate-950 transition-all cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 hover:to-yellow-200" ${canAfford ? '' : 'disabled'}>
             ${canAfford ? '⚡ Expand Reservoir (+20 Cap)' : '⚠️ Insufficient Essences'}
           </button>
         </div>
       ` : `
-        <div class="cap-reached-banner">
-          <span>🏆 Energy Reservoir is fully awakened at 500 ⚡!</span>
+        <div class="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-center text-xs font-bold text-amber-300">
+          🏆 Energy Reservoir is fully awakened at maximum 500 ⚡ capacity!
         </div>
       `}
     </div>
@@ -231,33 +268,42 @@ function renderPotionsSectionHtml(res, spirits) {
   ];
 
   return `
-    <div class="potions-catalog-panel">
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
-        Feed astral potions to your spirits to rapidly level them up and advance towards evolution caps.
+    <div class="flex flex-col gap-3">
+      <div class="text-xs text-slate-400">
+        Feed concentrated astral potions to rapidly elevate spirit levels and unlock evolution gates:
       </div>
 
-      <div class="potions-grid">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         ${POTIONS.map(pot => {
           const canBuy = res.spiritShards >= pot.shardCost && 
             (res.essencesOfTheGods || 0) >= pot.essenceGodCost &&
             (!pot.soulCost || (res.soulEssence || 0) >= pot.soulCost);
 
           return `
-            <div class="potion-item-card">
-              <div class="potion-icon-box">${pot.icon}</div>
-              <div class="potion-info-col">
-                <div class="potion-name">${pot.name}</div>
-                <div class="potion-xp-tag">+${pot.xp.toLocaleString()} XP</div>
-                <div class="potion-desc">${pot.desc}</div>
-                <div class="potion-cost-row">
-                  <span>💎 ${pot.shardCost}</span>
-                  <span style="color: #00ffff;">💠 ${pot.essenceGodCost}</span>
-                  ${pot.soulCost ? `<span style="color: #9b59b6;">🔮 ${pot.soulCost}</span>` : ''}
+            <div class="rounded-2xl border border-emerald-500/30 bg-slate-900/80 p-4 flex flex-col justify-between gap-3 shadow-lg hover:border-emerald-400/50 transition-all">
+              <div>
+                <div class="flex items-center gap-2.5 mb-2">
+                  <span class="text-3xl">${pot.icon}</span>
+                  <div>
+                    <h4 class="text-sm font-black text-white">${pot.name}</h4>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                      +${pot.xp.toLocaleString()} XP
+                    </span>
+                  </div>
                 </div>
+                <p class="text-xs text-slate-400 leading-relaxed">${pot.desc}</p>
               </div>
-              <button class="btn-use-potion" data-potion-id="${pot.id}" ${canBuy ? '' : 'disabled'}>
-                Brew & Feed
-              </button>
+
+              <div class="pt-2 border-t border-slate-800 flex flex-col gap-2">
+                <div class="text-[11px] text-slate-300">
+                  Cost: 💎 ${pot.shardCost} • <span class="text-cyan-300 font-bold">💠 ${pot.essenceGodCost}</span> ${pot.soulCost ? `• <span class="text-purple-300 font-bold">🔮 ${pot.soulCost}</span>` : ''}
+                </div>
+                <button class="btn-use-potion min-h-[44px] w-full py-2 rounded-xl font-black text-xs text-slate-950 transition-all cursor-pointer shadow disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-400 to-teal-300" 
+                        data-potion-id="${pot.id}" 
+                        ${canBuy ? '' : 'disabled'}>
+                  ${canBuy ? 'Feed Potion to Spirit' : 'Insufficient Materials'}
+                </button>
+              </div>
             </div>
           `;
         }).join('')}
@@ -268,47 +314,56 @@ function renderPotionsSectionHtml(res, spirits) {
 
 function renderBlessingsSectionHtml(res, activeBlessings) {
   const BLESSINGS = [
-    { id: 'blessing_ares', name: 'Blessing of Ares', icon: '⚔️', cost: 15, desc: '+20% Party Damage & +10% Crit Rate for 1 hour.', color: '#ff4757' },
-    { id: 'blessing_athena', name: 'Blessing of Athena', icon: '🛡️', cost: 15, desc: '+25% Max HP & +20% Shield Strength for 1 hour.', color: '#70a1ff' },
-    { id: 'blessing_hermes', name: 'Blessing of Hermes', icon: '🪽', cost: 15, desc: '+30% Shards & Drops in Madness Zone for 1 hour.', color: '#2ed573' }
+    { id: 'ares_blessing', name: 'Blessing of Ares', icon: '⚔️', stat: 'ATK Power +25%', cost: 10, desc: 'Increases all party damage output by +25% for 1 hour.' },
+    { id: 'athena_blessing', name: 'Blessing of Athena', icon: '🛡️', stat: 'Max HP +30%', cost: 10, desc: 'Fortifies all party maximum health by +30% for 1 hour.' },
+    { id: 'zeus_blessing', name: 'Blessing of Zeus', icon: '⚡', stat: 'Crit Rate +20%', cost: 15, desc: 'Electrifies spirit strikes with +20% Critical Hit Chance for 1 hour.' },
+    { id: 'poseidon_blessing', name: 'Blessing of Poseidon', icon: '🌊', stat: 'Shard Yield +35%', cost: 15, desc: 'Surges tidal abundance granting +35% bonus Spirit Shards for 1 hour.' }
   ];
 
   return `
-    <div class="blessings-panel">
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
-        Invoke ancient divine invocations to empower your party with timed 1-hour combat blessings.
+    <div class="flex flex-col gap-3">
+      <div class="text-xs text-slate-400">
+        Invoke 1-hour divine boons from the Greek Gods to supercharge party combat potency:
       </div>
 
-      <div class="blessings-grid">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         ${BLESSINGS.map(b => {
-          const active = activeBlessings[b.id];
+          const active = activeBlessings.find(ab => ab.id === b.id);
           const canAfford = (res.essencesOfTheGods || 0) >= b.cost;
-          const minsRemaining = active ? Math.ceil(active.remainingSec / 60) : 0;
+          const minsRemaining = active ? Math.ceil((active.expiresAt - Date.now()) / (60 * 1000)) : 0;
 
           return `
-            <div class="blessing-card ${active ? 'active-blessing' : ''}" style="--b-color: ${b.color};">
-              <div class="blessing-top">
-                <span style="font-size: 28px;">${b.icon}</span>
-                <div>
-                  <div style="font-size: 14px; font-weight: 800; color: #fff;">${b.name}</div>
-                  <div style="font-size: 10px; color: ${b.color}; font-weight: 700;">1-HOUR TIMED BLESSING</div>
+            <div class="rounded-2xl border p-4 flex flex-col justify-between gap-3 shadow-lg transition-all ${active ? 'bg-purple-950/30 border-purple-400/60 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'bg-slate-900/80 border-slate-800'}">
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-2xl">${b.icon}</span>
+                    <h4 class="text-sm font-black text-white">${b.name}</h4>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                    ${b.stat}
+                  </span>
                 </div>
+                <p class="text-xs text-slate-400 leading-relaxed">${b.desc}</p>
               </div>
 
-              <p style="font-size: 11px; color: var(--text-muted); margin: 8px 0;">${b.desc}</p>
-
-              ${active ? `
-                <div class="blessing-active-status">
-                  <span class="pulse-dot">●</span> Active: ${minsRemaining}m remaining
-                </div>
-              ` : `
-                <div class="blessing-cost-row">
-                  <span>Cost: <strong style="color: #00ffff;">${b.cost} Essences</strong></span>
-                  <button class="btn-invoke-blessing" data-blessing-id="${b.id}" ${canAfford ? '' : 'disabled'}>
-                    Invoke Blessing
+              <div class="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+                ${active ? `
+                  <div class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Active: ${minsRemaining}m left
+                  </div>
+                ` : `
+                  <div class="text-xs text-slate-300">
+                    Cost: <strong class="text-cyan-300">${b.cost} Essences</strong>
+                  </div>
+                  <button class="btn-invoke-blessing min-h-[44px] px-4 py-2 rounded-xl font-black text-xs text-slate-950 transition-all cursor-pointer shadow disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-purple-400 to-pink-300" 
+                          data-blessing-id="${b.id}" 
+                          ${canAfford ? '' : 'disabled'}>
+                    Invoke Boon
                   </button>
-                </div>
-              `}
+                `}
+              </div>
             </div>
           `;
         }).join('')}
@@ -384,28 +439,32 @@ function openPotionSpiritSelector(potionId, container) {
 
   modalRoot.innerHTML = `
     <div class="modal-backdrop">
-      <div class="modal-card">
-        <h3 class="modal-title">🧪 Select Spirit to Feed Potion</h3>
-        <p style="font-size: 11px; color: var(--text-muted); text-align: center;">Choose an active party member to receive the XP surge:</p>
+      <div class="modal-card max-w-md w-full bg-slate-900 border border-emerald-500/40 rounded-2xl p-5 shadow-2xl text-white">
+        <h3 class="text-base font-black text-emerald-300 flex items-center gap-2">
+          🧪 Feed Astral Elixir
+        </h3>
+        <p class="text-xs text-slate-400 mt-1 mb-3">Choose an active party member to receive the XP surge:</p>
         
-        <div style="display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-height: 50vh; overflow-y: auto;">
+        <div class="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
           ${partySpirits.map(s => `
-            <div class="select-spirit-potion-row" data-spirit-id="${s.id}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 44px; height: 44px;">${createSpiritPlaceholderBox(s)}</div>
+            <div class="select-spirit-potion-row flex items-center justify-between p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/40 transition-all cursor-pointer" data-spirit-id="${s.id}">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-lg overflow-hidden shrink-0">${createSpiritPlaceholderBox(s)}</div>
                 <div>
-                  <div style="font-weight: 800; font-size: 13px; color: #fff;">${s.customName}</div>
-                  <div style="font-size: 11px; color: var(--text-muted);">Lv. ${s.level} • ⚡ ${s.power} PWR</div>
+                  <div class="font-black text-sm text-white">${s.customName}</div>
+                  <div class="text-xs text-slate-400">Lv. ${s.level} • ⚡ ${s.power} PWR</div>
                 </div>
               </div>
-              <button class="btn-feed-confirm" style="padding: 6px 12px; background: var(--color-primary); color: #000; border: none; border-radius: 6px; font-weight: 800; cursor: pointer;">
+              <button class="btn-feed-confirm px-3 py-1.5 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-black transition-all cursor-pointer">
                 Feed
               </button>
             </div>
           `).join('')}
         </div>
 
-        <button id="btn-cancel-potion-modal" class="modal-btn-confirm" style="background: rgba(255,255,255,0.15);">Cancel</button>
+        <button id="btn-cancel-potion-modal" class="min-h-[44px] w-full mt-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer">
+          Cancel
+        </button>
       </div>
     </div>
   `;
@@ -414,7 +473,7 @@ function openPotionSpiritSelector(potionId, container) {
     row.addEventListener('click', (e) => {
       const spiritId = e.currentTarget.getAttribute('data-spirit-id');
       try {
-        const result = gameState.buyExpPotion(potionId, spiritId);
+        gameState.buyExpPotion(potionId, spiritId);
         modalRoot.innerHTML = '';
         renderMysticalView(container);
       } catch (err) {
@@ -432,93 +491,156 @@ function renderEssenceBattleArena(container, battle) {
   const chamber = ESSENCE_CHAMBERS.find(c => c.id === battle.chamberId) || ESSENCE_CHAMBERS[0];
   const tierObj = ESSENCE_DIFFICULTY_TIERS.find(t => t.tier === battle.tier) || ESSENCE_DIFFICULTY_TIERS[0];
   const party = gameState.getPartySpirits();
-  const enemies = (battle.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
+  const partyPower = gameState.getTotalPartyPower();
+  const swarm = battle.currentSwarm || [];
+  const livingEnemies = swarm.filter(e => !e.isDefeated && e.hp > 0);
 
   container.innerHTML = `
-    <div class="pantheon-battle-container">
-      <div class="pantheon-battle-header" style="border-bottom: 2px solid ${chamber.color};">
-        <div class="battle-header-info">
-          <div class="trial-tag" style="color: ${chamber.accentColor};">${chamber.name.toUpperCase()}</div>
-          <div class="trial-title">${tierObj.name} • Wave ${battle.currentWave}/3</div>
+    <div class="trial-battle-container flex flex-col gap-3 min-h-full text-white">
+      
+      <!-- Top Combat HUD Header -->
+      <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-950/90 border border-cyan-500/30 shadow-lg backdrop-blur-md" style="border-color: ${chamber.color}66;">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">${chamber.icon}</span>
+          <div>
+            <div class="text-[10px] font-black uppercase tracking-wider" style="color: ${chamber.accentColor};">${chamber.name}</div>
+            <div class="text-sm font-black text-white">${tierObj.name} • Wave ${battle.currentWave}/3</div>
+          </div>
         </div>
 
-        <button id="btn-leave-essence-battle" class="btn-leave-dungeon" title="Forfeit Battle">
+        <button id="btn-leave-essence-battle" class="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 text-xs font-black transition-all cursor-pointer" title="Forfeit Battle">
           ✕ Forfeit
         </button>
       </div>
 
-      <div class="pantheon-battlefield">
-        <div class="dungeon-allies-lineup">
-          ${party.map(spirit => `
-            <div class="dungeon-ally-card ${spirit.isFallen ? 'ally-fallen' : ''}">
-              <div class="ally-sprite-slot">${createSpiritPlaceholderBox(spirit)}</div>
-              <div class="ally-name">${spirit.customName}</div>
-              <div class="bar-track"><div class="bar-fill hp-fill" style="width: ${Math.round((spirit.currentHp / spirit.maxHp) * 100)}%;"></div></div>
-              <div class="bar-track"><div class="bar-fill mp-fill" style="width: ${Math.round((spirit.currentMp / 100) * 100)}%;"></div></div>
-            </div>
-          `).join('')}
+      <!-- Dynamic 2.5D Isometric Battlefield Area -->
+      <div class="isometric-battlefield pantheon-battlefield relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl min-h-[300px] flex items-center justify-between p-3 sm:p-5" style="border-color: ${chamber.color}44;">
+        
+        <!-- 2.5D Isometric Canvas Viewport Layer (Pixi.js / Canvas Engine) -->
+        <div id="arena-viewport-25d" class="arena-viewport-25d absolute inset-0 pointer-events-none z-0 rounded-2xl overflow-hidden"></div>
+
+        <!-- Left Side: Staggered Allied Spirit Formation -->
+        <div class="allied-formation-column relative z-10 flex flex-col gap-2">
+          <div class="text-[10px] font-black uppercase tracking-widest text-cyan-400">Allied Lineup</div>
+          <div class="flex flex-col gap-2">
+            ${party.map((spirit, idx) => {
+              const maxHp = spirit.maxHp || 100;
+              const curHp = typeof spirit.currentHp === 'number' ? Math.max(0, spirit.currentHp) : maxHp;
+              const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+              const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
+              const isUltReady = mpPct >= 100;
+              const isFallen = spirit.isFallen || curHp <= 0;
+
+              return `
+                <div class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/75 border border-slate-800 ${isUltReady ? 'border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : ''} ${isFallen ? 'opacity-40' : ''}">
+                  <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0">${createSpiritPlaceholderBox(spirit)}</div>
+                  <div class="flex flex-col gap-1 w-20">
+                    <div class="text-[10px] font-black truncate text-white">${spirit.customName}</div>
+                    <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-400 rounded-full" style="width: ${hpPct}%;"></div>
+                    </div>
+                    <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
+                      <div class="h-full bg-cyan-400 rounded-full" style="width: ${mpPct}%;"></div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
         </div>
 
-        <div class="battlefield-clash-divider">⚡</div>
-
-        <div class="dungeon-enemies-lineup">
-          ${enemies.map(enemy => `
-            <div class="dungeon-enemy-card">
-              <div class="enemy-sprite-slot">${createEnemyPlaceholderBox(enemy)}</div>
-              <div class="enemy-name" style="color: ${chamber.color};">${enemy.name}</div>
-              <div class="bar-track"><div class="bar-fill hp-fill" style="width: ${Math.round((enemy.hp / enemy.maxHp) * 100)}%;"></div></div>
-            </div>
-          `).join('')}
+        <!-- Center Combat Clash Point -->
+        <div class="relative z-10 text-2xl animate-pulse">
+          ⚔️
         </div>
+
+        <!-- Right Side: Wave Enemies -->
+        <div class="enemy-formation-column relative z-10 flex flex-col gap-2 items-end">
+          <div class="text-[10px] font-black uppercase tracking-widest text-red-400">
+            ${battle.currentWave === 3 ? '👑 Boss Avatar' : `Guardians (${livingEnemies.length}/${swarm.length})`}
+          </div>
+          <div class="flex flex-col gap-2">
+            ${swarm.map(em => {
+              const isDead = em.isDefeated || em.hp <= 0;
+              const maxHp = em.maxHp || 100;
+              const curHp = typeof em.hp === 'number' ? Math.max(0, em.hp) : maxHp;
+              const emHpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+
+              return `
+                <div class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/75 border border-slate-800 ${em.isBoss ? 'border-amber-500' : ''} ${isDead ? 'opacity-30' : ''}">
+                  <div class="flex flex-col gap-1 w-20 items-end">
+                    <div class="text-[10px] font-black truncate text-white" style="color: ${chamber.color};">${em.name}</div>
+                    <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                      <div class="h-full bg-red-400 rounded-full" style="width: ${emHpPct}%;"></div>
+                    </div>
+                  </div>
+                  <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0">${createEnemyPlaceholderBox(em)}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
       </div>
 
       <!-- Victory Modal if Battle Cleared -->
       ${battle.status === 'victory' && battle.loot ? `
-        <div class="dungeon-victory-banner">
-          <div style="font-size: 18px; font-weight: 900; color: #ffd152;">🏆 SANCTUM TRIAL CLEARED!</div>
-          <div style="font-size: 13px; color: #fff; margin: 6px 0;">
-            Earned: <strong style="color: #00ffff;">+${battle.loot.godEssencesGained} Essences of the Gods</strong>, 
-            ${battle.loot.soulEssenceGained > 0 ? `<strong style="color: #9b59b6;">+${battle.loot.soulEssenceGained} Soul Essence</strong>, ` : ''}
-            <strong style="color: #2ed573;">+${battle.loot.shardsGained} Shards</strong>
+        <div class="rounded-2xl border border-amber-400/60 bg-gradient-to-b from-amber-950/40 via-slate-900 to-slate-950 p-4 shadow-2xl flex flex-col items-center text-center gap-2">
+          <div class="text-base font-black text-amber-300">🏆 SANCTUM TRIAL CLEARED!</div>
+          <div class="text-xs text-slate-300">
+            Spoils: <strong class="text-cyan-300">+${battle.loot.godEssencesGained} Essences of the Gods</strong>, 
+            ${battle.loot.soulEssenceGained > 0 ? `<strong class="text-purple-300">+${battle.loot.soulEssenceGained} Soul Essence</strong>, ` : ''}
+            <strong class="text-emerald-300">+${battle.loot.shardsGained} Shards</strong>
           </div>
-          <button id="btn-collect-essence-loot" class="modal-btn-confirm" style="background: linear-gradient(135deg, #00ffff, #00b894); color: #000; font-weight: 900; margin-top: 8px;">
-            Collect to Sanctum
+          <button id="btn-collect-essence-loot" class="min-h-[44px] w-full py-2.5 rounded-xl font-black text-xs text-slate-950 transition-all cursor-pointer shadow bg-gradient-to-r from-cyan-400 to-emerald-300 hover:from-cyan-300 hover:to-emerald-200">
+            Collect Spoils to Sanctum
           </button>
         </div>
       ` : ''}
 
-      <!-- Defeat Modal -->
+      <!-- Defeat Banner -->
       ${battle.status === 'defeat' ? `
-        <div class="dungeon-defeat-banner">
-          <div style="font-size: 18px; font-weight: 900; color: #ff4757;">☠️ TRIAL FAILED</div>
-          <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0;">Your spirits succumbed to the primordial trial.</p>
-          <button id="btn-leave-essence-battle" class="modal-btn-confirm" style="background: rgba(255,255,255,0.2);">
+        <div class="rounded-2xl border border-red-500/40 bg-slate-900 p-4 flex flex-col items-center text-center gap-2">
+          <div class="text-base font-black text-red-400">☠️ TRIAL FAILED</div>
+          <p class="text-xs text-slate-400">Your spirits succumbed to the primordial trial.</p>
+          <button id="btn-leave-essence-battle" class="min-h-[44px] w-full py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold transition-all cursor-pointer">
             Return to Sanctum
           </button>
         </div>
       ` : ''}
 
+      <!-- Attack Strike Footer -->
       ${battle.status === 'active' ? `
-        <div class="dungeon-battle-footer">
-          <button id="btn-essence-strike" class="btn-dungeon-manual-strike">
-            ⚡ Tap Strike (+10 MP)
+        <div class="combat-action-footer">
+          <button id="btn-essence-strike" class="btn-main-attack min-h-[48px] w-full py-3 rounded-2xl font-black text-sm text-slate-950 transition-all cursor-pointer shadow-xl bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 flex flex-col items-center justify-center">
+            <span>⚔️ Divine Strike (Party Attack • Charges +10 MP)</span>
+            <span class="text-[10px] font-bold opacity-80">Wave ${battle.currentWave}/3 • Party Power: ⚡ ${partyPower.toLocaleString()}</span>
           </button>
         </div>
       ` : ''}
+
     </div>
   `;
 
-  document.getElementById('btn-essence-strike')?.addEventListener('click', () => {
+  // Initialize 2.5D Isometric Arena Viewport Engine
+  const viewportEl = container.querySelector('#arena-viewport-25d');
+  if (viewportEl) {
+    arenaRenderer.init(viewportEl, { mode: 'sanctuary', element: 'WATER', chamberId: battle.chamberId });
+  }
+
+  // Event Listeners
+  container.querySelector('#btn-essence-strike')?.addEventListener('click', () => {
     gameState.manualDungeonStrike();
+    arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
     renderMysticalView(container);
   });
 
-  document.getElementById('btn-leave-essence-battle')?.addEventListener('click', () => {
+  container.querySelector('#btn-leave-essence-battle')?.addEventListener('click', () => {
     gameState.exitDungeonBattle();
     renderMysticalView(container);
   });
 
-  document.getElementById('btn-collect-essence-loot')?.addEventListener('click', () => {
+  container.querySelector('#btn-collect-essence-loot')?.addEventListener('click', () => {
     gameState.exitDungeonBattle();
     renderMysticalView(container);
   });

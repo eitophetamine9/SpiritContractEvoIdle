@@ -1,8 +1,12 @@
 /**
  * 2.5D Isometric Arena Viewport Engine
  * Inspired by Seven Deadly Sins Idle & AFK Arena visual stages:
- * - Floating isometric battle dais with layered depth
- * - Parallax celestial ambient particles (matching Biome elemental alignment)
+ * - Floating isometric battle dais with layered 3D depth and mode-specific architectures:
+ *   1) 'pantheon': Olympian white marble dais, golden meander runes, lightning & divine beams.
+ *   2) 'forge': Vulcan obsidian anvil dais, molten magma fissures, rising embers & fire sparks.
+ *   3) 'sanctuary': Astral crystalline dais, rotating celestial rune circles, nebula aurora & stardust.
+ *   4) 'madness': Corrupted void dais with elemental biome resonances.
+ * - Parallax celestial ambient particles (matching Biome/God elemental alignment)
  * - Floating combat numbers & ultimate skill VFX waves
  * - Graceful fallback in non-browser/test environments
  */
@@ -20,17 +24,21 @@ export class ArenaRenderer25D {
     this.width = 460;
     this.height = 240;
     this.stageElement = 'EARTH';
+    this.mode = 'madness'; // 'madness' | 'pantheon' | 'forge' | 'sanctuary'
+    this.chamberId = null;
     this.isInitialized = false;
     this.time = 0;
   }
 
-  init(containerEl, { element = 'EARTH' } = {}) {
+  init(containerEl, { mode = 'madness', element = 'EARTH', chamberId = null } = {}) {
     if (typeof window === 'undefined' || typeof document === 'undefined' || typeof document.createElement !== 'function') return;
     if (!containerEl) return;
 
     this.destroy();
     this.container = containerEl;
+    this.mode = mode || 'madness';
     this.stageElement = (element || 'EARTH').toUpperCase();
+    this.chamberId = chamberId;
 
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'arena-canvas-25d';
@@ -74,29 +82,47 @@ export class ArenaRenderer25D {
   }
 
   initParticles() {
-    const ELEMENT_COLORS = {
-      FIRE: ['#ff4757', '#ffa502', '#ff6b81'],
-      WATER: ['#00d2d3', '#54a0ff', '#2e86de'],
-      EARTH: ['#2ed573', '#7bed9f', '#10ac84'],
-      WIND: ['#ffd32a', '#eccc68', '#f1c40f'],
-      DARK: ['#a55eea', '#8854d0', '#5f27cd'],
-      LIGHT: ['#ffd700', '#ffeaa7', '#ffffff']
-    };
-
-    const palette = ELEMENT_COLORS[this.stageElement] || ELEMENT_COLORS.EARTH;
     this.particles = [];
-    for (let i = 0; i < 35; i++) {
+    const count = this.mode === 'forge' ? 45 : 35;
+
+    // Palette selection based on mode and element
+    let palette;
+    if (this.mode === 'forge') {
+      palette = ['#ff4757', '#ffa502', '#ff6b81', '#ff7f50', '#ffd32a'];
+    } else if (this.mode === 'pantheon') {
+      palette = ['#ffd700', '#f1c40f', '#ffffff', '#e0e0e0', '#00d2d3'];
+    } else if (this.mode === 'sanctuary') {
+      palette = ['#00ffff', '#70a1ff', '#a55eea', '#2ed573', '#ffd700'];
+    } else {
+      const ELEMENT_COLORS = {
+        FIRE: ['#ff4757', '#ffa502', '#ff6b81'],
+        WATER: ['#00d2d3', '#54a0ff', '#2e86de'],
+        EARTH: ['#2ed573', '#7bed9f', '#10ac84'],
+        WIND: ['#ffd32a', '#eccc68', '#f1c40f'],
+        DARK: ['#a55eea', '#8854d0', '#5f27cd'],
+        LIGHT: ['#ffd700', '#ffeaa7', '#ffffff']
+      };
+      palette = ELEMENT_COLORS[this.stageElement] || ELEMENT_COLORS.EARTH;
+    }
+
+    for (let i = 0; i < count; i++) {
       this.particles.push({
         x: Math.random() * this.width,
         y: Math.random() * this.height,
-        radius: 1.5 + Math.random() * 2.5,
+        radius: (this.mode === 'forge' ? 1.0 : 1.5) + Math.random() * 2.5,
         color: palette[Math.floor(Math.random() * palette.length)],
-        speedX: -0.3 + Math.random() * 0.6,
-        speedY: -0.4 - Math.random() * 0.8,
+        speedX: -0.4 + Math.random() * 0.8,
+        speedY: (this.mode === 'forge' ? -0.8 : -0.4) - Math.random() * 0.8,
         alpha: 0.2 + Math.random() * 0.6,
         pulseSpeed: 0.02 + Math.random() * 0.03
       });
     }
+  }
+
+  setMode(mode, element = 'EARTH') {
+    this.mode = mode || 'madness';
+    this.stageElement = (element || 'EARTH').toUpperCase();
+    this.initParticles();
   }
 
   setElement(element) {
@@ -112,7 +138,7 @@ export class ArenaRenderer25D {
       y: y || this.height * 0.5,
       alpha: 1.0,
       scale: isCrit ? 1.4 : 1.0,
-      color: isCrit ? '#ff4757' : '#ffd32a',
+      color: isCrit ? '#ff4757' : (this.mode === 'forge' ? '#ff7f50' : '#ffd32a'),
       vy: -1.5
     };
     this.popups.push(popup);
@@ -131,7 +157,7 @@ export class ArenaRenderer25D {
   }
 
   triggerUltimatePulse(color = '#ffd700') {
-    if (!this.canvas) return;
+    if (!this.canvas || !this.container) return;
     const flashEl = document.createElement('div');
     flashEl.style.position = 'absolute';
     flashEl.style.inset = '0';
@@ -172,11 +198,199 @@ export class ArenaRenderer25D {
     const rx = w * 0.44; // horizontal radius
     const ry = h * 0.28; // vertical perspective compression
 
-    // Platform Lower Extrusion / 3D Depth
+    if (this.mode === 'pantheon') {
+      this.drawPantheonDais(ctx, centerX, centerY, rx, ry);
+    } else if (this.mode === 'forge') {
+      this.drawForgeDais(ctx, centerX, centerY, rx, ry);
+    } else if (this.mode === 'sanctuary') {
+      this.drawSanctuaryDais(ctx, centerX, centerY, rx, ry);
+    } else {
+      this.drawMadnessDais(ctx, centerX, centerY, rx, ry);
+    }
+
+    // 2. Parallax Ambient Particles
+    this.renderParticles(ctx, w, h);
+
+    // 3. Floating Damage Popups
+    this.renderPopups(ctx);
+  }
+
+  // --- DAIS RENDERING PER MODE ---
+
+  drawPantheonDais(ctx, cx, cy, rx, ry) {
+    // Olympian White/Gold Marble Dais
+    // Lower 3D Extrusion
     ctx.beginPath();
-    ctx.ellipse(centerX, centerY + 14, rx, ry, 0, 0, Math.PI);
-    ctx.lineTo(centerX - rx, centerY);
-    ctx.ellipse(centerX, centerY, rx, ry, 0, Math.PI, 0, true);
+    ctx.ellipse(cx, cy + 16, rx, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - rx, cy);
+    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fillStyle = '#1c1b18';
+    ctx.fill();
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Surface Marble
+    const surfaceGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx);
+    surfaceGrad.addColorStop(0, '#36342d');
+    surfaceGrad.addColorStop(0.7, '#24221c');
+    surfaceGrad.addColorStop(1, '#151411');
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = surfaceGrad;
+    ctx.fill();
+
+    // Golden Meander Outer Rim
+    ctx.strokeStyle = '#f1c40f';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Inner Sacred Olympian Circle
+    const pulse = 0.5 + 0.5 * Math.sin(this.time * 2);
+    ctx.strokeStyle = `rgba(241, 196, 15, ${0.25 + 0.25 * pulse})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx * 0.75, ry * 0.75, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Central Greek Cross Inscription
+    ctx.strokeStyle = 'rgba(255, 215, 0, 0.2)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx - rx * 0.5, cy);
+    ctx.lineTo(cx + rx * 0.5, cy);
+    ctx.moveTo(cx, cy - ry * 0.5);
+    ctx.lineTo(cx, cy + ry * 0.5);
+    ctx.stroke();
+  }
+
+  drawForgeDais(ctx, cx, cy, rx, ry) {
+    // Vulcan Obsidian Anvil Dais with Molten Magma Fissures
+    // Lower 3D Extrusion (Molten glow at base)
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 18, rx, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - rx, cy);
+    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fillStyle = '#1f0d06';
+    ctx.fill();
+    ctx.strokeStyle = '#e67e22';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Surface Obsidian
+    const surfaceGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx);
+    surfaceGrad.addColorStop(0, '#2d150b');
+    surfaceGrad.addColorStop(0.65, '#190d07');
+    surfaceGrad.addColorStop(1, '#0e0604');
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = surfaceGrad;
+    ctx.fill();
+
+    // Molten Rim Glow
+    const pulse = 0.6 + 0.4 * Math.sin(this.time * 3);
+    ctx.strokeStyle = '#ff793f';
+    ctx.lineWidth = 2.2;
+    ctx.shadowColor = '#ff523d';
+    ctx.shadowBlur = 12 * pulse;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Glowing Lava Fissure Cracks across Dais
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 121, 63, ${0.4 + 0.3 * pulse})`;
+    ctx.lineWidth = 1.8;
+    ctx.shadowColor = '#ff523d';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    // Left fissure
+    ctx.moveTo(cx - rx * 0.6, cy + ry * 0.2);
+    ctx.lineTo(cx - rx * 0.2, cy - ry * 0.1);
+    ctx.lineTo(cx + rx * 0.1, cy + ry * 0.3);
+    ctx.lineTo(cx + rx * 0.65, cy - ry * 0.2);
+    // Transverse crack
+    ctx.moveTo(cx - rx * 0.1, cy - ry * 0.5);
+    ctx.lineTo(cx + rx * 0.05, cy);
+    ctx.lineTo(cx - rx * 0.15, cy + ry * 0.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawSanctuaryDais(ctx, cx, cy, rx, ry) {
+    // Astral Crystalline Dais with Celestial Rune Ring
+    // Lower 3D Extrusion
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 16, rx, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - rx, cy);
+    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fillStyle = '#0a141d';
+    ctx.fill();
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Surface Celestial Crystal
+    const surfaceGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx);
+    surfaceGrad.addColorStop(0, '#102e3b');
+    surfaceGrad.addColorStop(0.65, '#0b1d28');
+    surfaceGrad.addColorStop(1, '#050d13');
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = surfaceGrad;
+    ctx.fill();
+
+    // Astral Cyan Rim Glow
+    const pulse = 0.5 + 0.5 * Math.sin(this.time * 2.2);
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#00d2d3';
+    ctx.shadowBlur = 10 * pulse;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Rotating Astral Rune Circle
+    const angle = this.time * 0.25;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1, ry / rx); // Apply perspective compression to rotating runes
+    ctx.rotate(angle);
+
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.25)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(0, 0, rx * 0.65, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 4 Cardinal Star Nodes
+    for (let i = 0; i < 4; i++) {
+      const a = (i * Math.PI) / 2;
+      const px = Math.cos(a) * (rx * 0.65);
+      const py = Math.sin(a) * (rx * 0.65);
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#00ffff';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  drawMadnessDais(ctx, cx, cy, rx, ry) {
+    // Default Biome / Madness Stone Platform
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 14, rx, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - rx, cy);
+    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
     ctx.closePath();
     ctx.fillStyle = '#101712';
     ctx.fill();
@@ -184,18 +398,16 @@ export class ArenaRenderer25D {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Platform Surface Gradient
-    const surfaceGrad = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, rx);
+    const surfaceGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx);
     surfaceGrad.addColorStop(0, '#1c2820');
     surfaceGrad.addColorStop(0.7, '#131e17');
     surfaceGrad.addColorStop(1, '#0b130e');
 
     ctx.beginPath();
-    ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
     ctx.fillStyle = surfaceGrad;
     ctx.fill();
 
-    // Glowing Rune Outer Rim
     const ELEMENT_ACCENTS = {
       FIRE: '#ff4757',
       WATER: '#00cec9',
@@ -210,21 +422,19 @@ export class ArenaRenderer25D {
     ctx.shadowColor = rimColor;
     ctx.shadowBlur = 8;
     ctx.stroke();
-    ctx.shadowBlur = 0; // reset blur
+    ctx.shadowBlur = 0;
 
-    // Isometric Grid Inscriptions on Dais Surface
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    // Longitudinal axis
-    ctx.moveTo(centerX - rx * 0.7, centerY);
-    ctx.lineTo(centerX + rx * 0.7, centerY);
-    // Transverse axis
-    ctx.moveTo(centerX, centerY - ry * 0.7);
-    ctx.lineTo(centerX, centerY + ry * 0.7);
+    ctx.moveTo(cx - rx * 0.7, cy);
+    ctx.lineTo(cx + rx * 0.7, cy);
+    ctx.moveTo(cx, cy - ry * 0.7);
+    ctx.lineTo(cx, cy + ry * 0.7);
     ctx.stroke();
+  }
 
-    // 2. Parallax Ambient Elemental Particles
+  renderParticles(ctx, w, h) {
     this.particles.forEach(p => {
       p.x += p.speedX;
       p.y += p.speedY;
@@ -246,8 +456,9 @@ export class ArenaRenderer25D {
     });
     ctx.globalAlpha = 1.0;
     ctx.shadowBlur = 0;
+  }
 
-    // 3. Floating Damage Popups
+  renderPopups(ctx) {
     this.popups.forEach(pop => {
       ctx.save();
       ctx.globalAlpha = Math.max(0, Math.min(1, pop.alpha));
