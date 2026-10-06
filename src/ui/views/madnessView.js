@@ -3,6 +3,7 @@ import { getBiomeForStage } from '../../data/biomesData.js';
 import { getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { audioManager } from '../../audio/audioManager.js';
+import { arenaRenderer } from '../../render/arenaRenderer.js';
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
@@ -13,7 +14,7 @@ export function renderMadnessView(container) {
   const mz = state.madnessZone;
   const res = state.resources;
   let swarm = (mz.currentSwarm && mz.currentSwarm.length > 0) ? mz.currentSwarm : (mz.currentEnemy ? [mz.currentEnemy] : []);
-  if (!swarm || swarm.length === 0 || swarm.every(e => e.isDefeated || e.hp <= 0)) {
+  if (!swarm || swarm.length === 0) {
     gameState.spawnMadnessEnemy();
     swarm = gameState.state.madnessZone.currentSwarm || [];
   }
@@ -39,7 +40,9 @@ export function renderMadnessView(container) {
 
   const nextStageNum = mz.highestStageUnlocked + 1;
   const canAffordNext = res.energy >= ENERGY_ENTRY_COST;
-  const isCurrentStageBossCleared = mz.highestStageCleared >= mz.stage;
+  const hasClearedHighestUnlocked = (mz.highestStageCleared || 0) >= mz.highestStageUnlocked;
+  const isAtFrontierStage = mz.stage === mz.highestStageUnlocked;
+  const showUnlockBanner = isAtFrontierStage && hasClearedHighestUnlocked;
   const livingEnemiesCount = swarm.filter(e => !e.isDefeated && e.hp > 0).length;
 
   container.innerHTML = `
@@ -85,19 +88,19 @@ export function renderMadnessView(container) {
           <button id="btn-prev-stage" class="zone-btn-sm" ${mz.stage <= 1 ? 'disabled' : ''}>◀ Prev</button>
           ${mz.stage < mz.highestStageUnlocked ? `
             <button id="btn-next-stage" class="zone-btn-sm">Next ▶</button>
-          ` : (mz.highestStageCleared >= mz.stage ? `
+          ` : (hasClearedHighestUnlocked ? `
             <button id="btn-unlock-next-floor" class="zone-btn-sm" style="background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900;" ${canAffordNext ? '' : 'disabled'}>
               Unlock F${nextStageNum} (10 ⚡)
             </button>
           ` : `
-            <button id="btn-next-stage" class="zone-btn-sm" disabled>Next ▶</button>
+            <button id="btn-next-stage" class="zone-btn-sm" disabled title="Defeat Boss on Floor ${mz.stage} first">Next ▶</button>
           `)}
           <button id="btn-trials-shortcut" class="zone-btn-sm" style="background: rgba(241, 196, 15, 0.18); border-color: #f1c40f; color: #ffd32a; font-weight: 800;" title="Challenge Pantheon Trials to farm Greek God Relics">🏛️ Trials</button>
         </div>
       </div>
 
-      <!-- Unlock Next Floor Banner (If Boss Cleared) -->
-      ${isCurrentStageBossCleared ? `
+      <!-- Unlock Next Floor Banner (Only When Boss of Highest Unlocked Floor is Defeated) -->
+      ${showUnlockBanner ? `
         <div class="floor-unlock-banner">
           <div style="display: flex; flex-direction: column;">
             <span style="font-size: 13px; font-weight: 800; color: #fff;">Floor ${nextStageNum} (Locked)</span>
@@ -111,8 +114,11 @@ export function renderMadnessView(container) {
       ` : ''}
 
       <!-- Dynamic Isometric Battlefield Area -->
-      <div class="isometric-battlefield ${biome.themeClass} ${swarm.some(e => e.isBoss) ? 'boss-battlefield' : ''}">
+      <div class="isometric-battlefield ${biome.themeClass} ${swarm.some(e => e.isBoss) ? 'boss-battlefield' : ''}" style="position: relative; overflow: hidden;">
         
+        <!-- 2.5D Isometric Canvas Viewport Background Layer -->
+        <div id="arena-viewport-25d" class="arena-viewport-25d" style="position: absolute; inset: 0; pointer-events: none; z-index: 0; border-radius: 14px; overflow: hidden;"></div>
+
         <!-- Top Battlefield Announcement Banner Layer -->
         <div id="combat-banner-layer" class="combat-banner-layer"></div>
 
@@ -264,13 +270,21 @@ export function renderMadnessView(container) {
     </div>
   `;
 
+  // Initialize 2.5D Isometric Arena Viewport
+  const viewportEl = container.querySelector('#arena-viewport-25d');
+  if (viewportEl) {
+    arenaRenderer.init(viewportEl, { element: biome.element });
+  }
+
   // Attach button event listeners
   const btnPrev = container.querySelector('#btn-prev-stage');
   if (btnPrev) {
     btnPrev.addEventListener('click', () => {
       try {
-        gameState.setStage(gameState.state.madnessZone.stage - 1);
-        renderMadnessView(container);
+        if (gameState.state.madnessZone.stage > 1) {
+          gameState.setStage(gameState.state.madnessZone.stage - 1);
+          renderMadnessView(container);
+        }
       } catch (err) {
         alert(err.message);
       }
@@ -281,8 +295,10 @@ export function renderMadnessView(container) {
   if (btnNext) {
     btnNext.addEventListener('click', () => {
       try {
-        gameState.setStage(gameState.state.madnessZone.stage + 1);
-        renderMadnessView(container);
+        if (gameState.state.madnessZone.stage < gameState.state.madnessZone.highestStageUnlocked) {
+          gameState.setStage(gameState.state.madnessZone.stage + 1);
+          renderMadnessView(container);
+        }
       } catch (err) {
         alert(err.message);
       }
@@ -296,9 +312,8 @@ export function renderMadnessView(container) {
     });
   }
 
-  const btnUnlockNext = container.querySelector('#btn-unlock-next-floor');
-  if (btnUnlockNext) {
-    btnUnlockNext.addEventListener('click', () => {
+  container.querySelectorAll('#btn-unlock-next-floor').forEach(btn => {
+    btn.addEventListener('click', () => {
       try {
         gameState.unlockAndEnterStage(nextStageNum);
         renderMadnessView(container);
@@ -306,7 +321,7 @@ export function renderMadnessView(container) {
         alert(err.message);
       }
     });
-  }
+  });
 
   const btnEngage = container.querySelector('#btn-toggle-engage');
   if (btnEngage) {
@@ -397,8 +412,10 @@ export function renderMadnessView(container) {
 
       if (eventType === 'ultimateCast') {
         showCombatBanner(currentContainer, `✨ ${payload.spirit.customName} casts ${payload.ult.name}!`, 'ult');
+        arenaRenderer.triggerUltimatePulse('#ffd700');
         if (payload.totalDamageDealt > 0) {
           spawnCombatNumber(currentContainer, `${payload.totalDamageDealt} ULT!`, 'ult');
+          arenaRenderer.spawnDamagePopup(null, null, payload.totalDamageDealt, true);
         }
         if (payload.totalHealingDone > 0) {
           spawnCombatNumber(currentContainer, `+${payload.totalHealingDone} HP`, 'heal');

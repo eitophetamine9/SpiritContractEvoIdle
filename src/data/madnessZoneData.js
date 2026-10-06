@@ -26,7 +26,9 @@ export function getSwarmForStage(stage, subStage) {
     ? biome.enemyPrefixes 
     : CORRUPTED_PREFIXES;
 
-  const baseScale = Math.pow(1.28, stage - 1);
+  const baseScale = stage <= 5 
+    ? Math.pow(1.28, stage - 1) 
+    : Math.pow(1.28, 4) * Math.pow(1.18, stage - 5);
   const waveScale = 1 + (subStage - 1) * 0.18;
 
   // Rebalanced total shard & essence rewards for the wave
@@ -53,6 +55,7 @@ export function getSwarmForStage(stage, subStage) {
       id: `boss_${stage}_${subStage}_0`,
       name: bossTitle,
       isBoss: true,
+      element: biome.element || 'EARTH',
       power: bossPower,
       maxHp: bossMaxHp,
       hp: bossMaxHp,
@@ -67,6 +70,7 @@ export function getSwarmForStage(stage, subStage) {
       id: `guard_${stage}_${subStage}_1`,
       name: `${guardPrefix} Royal Sentinel`,
       isBoss: false,
+      element: biome.element || 'EARTH',
       power: guardPower,
       maxHp: guardMaxHp,
       hp: guardMaxHp,
@@ -81,6 +85,7 @@ export function getSwarmForStage(stage, subStage) {
       id: `guard_${stage}_${subStage}_2`,
       name: `${guardPrefix} Void Vanguard`,
       isBoss: false,
+      element: biome.element || 'EARTH',
       power: guardPower,
       maxHp: guardMaxHp,
       hp: guardMaxHp,
@@ -124,6 +129,7 @@ export function getSwarmForStage(stage, subStage) {
       id: `mob_${stage}_${subStage}_${i}`,
       name,
       isBoss: false,
+      element: biome.element || 'EARTH',
       power: mobPower,
       maxHp: mobMaxHp,
       hp: mobMaxHp,

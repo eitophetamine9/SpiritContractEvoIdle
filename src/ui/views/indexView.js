@@ -104,6 +104,16 @@ export function renderIndexView(container) {
     </div>
   `;
 
+  // Enable mouse wheel horizontal scrolling on filter slider
+  container.querySelectorAll('.index-filter-scroll').forEach(slider => {
+    slider.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        slider.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+  });
+
   // Attach filter event listeners
   container.querySelectorAll('.index-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {

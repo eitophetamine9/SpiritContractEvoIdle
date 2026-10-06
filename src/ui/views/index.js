@@ -7,3 +7,4 @@ export * from './profileView.js';
 export * from './indexView.js';
 export * from './dungeonView.js';
 export * from './forgeView.js';
+export * from './mysticalView.js';

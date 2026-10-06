@@ -215,51 +215,249 @@ export const EQUIPMENT_RARITIES = {
   COMMON: { name: 'Common', multiplier: 1.0, color: '#bdc3c7', border: '#7f8c8d' },
   UNCOMMON: { name: 'Uncommon', multiplier: 1.25, color: '#2ecc71', border: '#27ae60' },
   RARE: { name: 'Rare', multiplier: 1.6, color: '#3498db', border: '#2980b9' },
-  EPIC: { name: 'Epic', multiplier: 2.1, color: '#9b59b6', border: '#8e44ad' },
-  LEGENDARY: { name: 'Legendary', multiplier: 2.8, color: '#f39c12', border: '#d35400' },
-  MYTHICAL: { name: 'Mythical', multiplier: 3.8, color: '#e74c3c', border: '#c0392b' }
+  EPIC: { name: 'Epic', multiplier: 2.2, color: '#9b59b6', border: '#8e44ad' },
+  LEGENDARY: { name: 'Legendary', multiplier: 3.2, color: '#f39c12', border: '#d35400' },
+  MYTHICAL: { name: 'Mythical', multiplier: 4.5, color: '#00ffff', border: '#00d2d3' }
 };
 
 /**
- * Generates a unique Relic instance
+ * 3★ to 6★ Relic Star Tiers
  */
-export function createRelicInstance({ setId, slotTypeId, rarity = 'COMMON', level = 1 }) {
+export const RELIC_STAR_TIERS = {
+  3: {
+    stars: 3,
+    label: 'Adept',
+    multiplier: 1.5,
+    maxLevel: 9,
+    minInitialSubs: 1,
+    maxInitialSubs: 2,
+    maxSubCapacity: 3,
+    color: '#3498db',
+    dismantleEssences: 5,
+    dismantleShards: 50
+  },
+  4: {
+    stars: 4,
+    label: 'Master',
+    multiplier: 2.2,
+    maxLevel: 12,
+    minInitialSubs: 3,
+    maxInitialSubs: 4,
+    maxSubCapacity: 4,
+    color: '#9b59b6',
+    dismantleEssences: 15,
+    dismantleShards: 150
+  },
+  5: {
+    stars: 5,
+    label: 'Divine',
+    multiplier: 3.2,
+    maxLevel: 15,
+    minInitialSubs: 4,
+    maxInitialSubs: 4,
+    maxSubCapacity: 4,
+    color: '#f39c12',
+    dismantleEssences: 40,
+    dismantleShards: 400
+  },
+  6: {
+    stars: 6,
+    label: 'Ascended',
+    multiplier: 4.5,
+    maxLevel: 15,
+    minInitialSubs: 5,
+    maxInitialSubs: 5,
+    maxSubCapacity: 5,
+    color: '#00ffff',
+    dismantleEssences: 100,
+    dismantleShards: 1000
+  }
+};
+
+/**
+ * Relic Substat Catalog
+ */
+export const RELIC_SUBSTAT_TYPES = [
+  { id: 'flat_atk', name: 'Bonus ATK', isPercent: false, min: 15, max: 45, icon: '⚔️' },
+  { id: 'flat_hp', name: 'Bonus Max HP', isPercent: false, min: 80, max: 220, icon: '❤️' },
+  { id: 'flat_shield', name: 'Shield Strength', isPercent: false, min: 40, max: 120, icon: '🛡️' },
+  { id: 'percent_atk', name: 'ATK %', isPercent: true, min: 3.0, max: 7.0, icon: '💥' },
+  { id: 'percent_hp', name: 'HP %', isPercent: true, min: 3.5, max: 8.0, icon: '💚' },
+  { id: 'crit_rate', name: 'Crit Rate %', isPercent: true, min: 2.0, max: 5.0, icon: '🎯' },
+  { id: 'crit_dmg', name: 'Crit DMG %', isPercent: true, min: 6.0, max: 14.0, icon: '⚡' },
+  { id: 'mana_regen', name: 'Mana Replenish %', isPercent: true, min: 3.0, max: 6.5, icon: '🔮' },
+  { id: 'ult_amp', name: 'Ult Amp %', isPercent: true, min: 4.0, max: 8.5, icon: '✨' },
+  { id: 'evasion', name: 'Evasion %', isPercent: true, min: 2.0, max: 4.5, icon: '💨' },
+  { id: 'pierce', name: 'Armor Pierce %', isPercent: true, min: 3.0, max: 6.0, icon: '🗡️' }
+];
+
+/**
+ * Rolls a random single substat instance
+ */
+function rollSingleSubstat(subType) {
+  const raw = subType.min + Math.random() * (subType.max - subType.min);
+  const value = subType.isPercent ? parseFloat(raw.toFixed(1)) : Math.round(raw);
+  return {
+    typeId: subType.id,
+    name: subType.name,
+    isPercent: subType.isPercent,
+    icon: subType.icon,
+    value,
+    rolls: 1
+  };
+}
+
+/**
+ * Generates initial substats based on star tier (3★ to 6★)
+ */
+export function generateRelicSubstats({ stars = 3, mainStatName = '' } = {}) {
+  const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+  const targetCount = tier.minInitialSubs === tier.maxInitialSubs
+    ? tier.minInitialSubs
+    : tier.minInitialSubs + Math.floor(Math.random() * (tier.maxInitialSubs - tier.minInitialSubs + 1));
+
+  // Filter out substats that duplicate the main stat
+  const availablePool = RELIC_SUBSTAT_TYPES.filter(s => {
+    if (mainStatName.includes('HP') && (s.id === 'flat_hp' || s.id === 'percent_hp')) return false;
+    if (mainStatName.includes('ATK') && (s.id === 'flat_atk' || s.id === 'percent_atk')) return false;
+    if (mainStatName.includes('Shield') && s.id === 'flat_shield') return false;
+    if (mainStatName.includes('Mana') && s.id === 'mana_regen') return false;
+    if (mainStatName.includes('Ult') && s.id === 'ult_amp') return false;
+    if (mainStatName.includes('Evasion') && s.id === 'evasion') return false;
+    return true;
+  });
+
+  const shuffled = [...availablePool].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, Math.min(targetCount, tier.maxSubCapacity));
+  return picked.map(rollSingleSubstat);
+}
+
+/**
+ * Enhances a relic by 1 level (up to maxLevel), unlocking or upgrading substats at milestone levels
+ */
+export function enhanceRelicData(relic) {
+  const stars = relic.stars || 3;
+  const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+  if (relic.level >= tier.maxLevel) {
+    throw new Error(`Relic is already at maximum enhancement level (+${tier.maxLevel})!`);
+  }
+
+  relic.level += 1;
+
+  // Milestone triggers at +3, +6, +9, +12, +15
+  if (relic.level % 3 === 0) {
+    if (!Array.isArray(relic.substats)) relic.substats = [];
+
+    if (relic.substats.length < tier.maxSubCapacity) {
+      // Unlock new substat
+      const usedIds = relic.substats.map(s => s.typeId);
+      const remainingPool = RELIC_SUBSTAT_TYPES.filter(s => !usedIds.includes(s.id));
+      if (remainingPool.length > 0) {
+        const picked = remainingPool[Math.floor(Math.random() * remainingPool.length)];
+        relic.substats.push(rollSingleSubstat(picked));
+      }
+    } else {
+      // Upgrade random existing substat
+      const idx = Math.floor(Math.random() * relic.substats.length);
+      const targetSub = relic.substats[idx];
+      const subType = RELIC_SUBSTAT_TYPES.find(s => s.id === targetSub.typeId);
+      if (subType) {
+        const addRaw = subType.min + Math.random() * (subType.max - subType.min);
+        const addVal = subType.isPercent ? parseFloat(addRaw.toFixed(1)) : Math.round(addRaw);
+        targetSub.value = subType.isPercent ? parseFloat((targetSub.value + addVal).toFixed(1)) : targetSub.value + addVal;
+        targetSub.rolls = (targetSub.rolls || 1) + 1;
+      }
+    }
+  }
+
+  // Recalculate main stat
+  relic.mainStatValue = calculateRelicMainStat(relic.slotTypeId, stars, relic.level);
+  return relic;
+}
+
+/**
+ * Calculates Relic main stat based on slot, stars, and level
+ */
+export function calculateRelicMainStat(slotTypeId, stars = 3, level = 1) {
+  const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+  const baseStatVal = Math.round(18 * tier.multiplier * (1 + (level - 1) * 0.12));
+
+  switch (slotTypeId) {
+    case 'headgear': return baseStatVal * 8; // Bonus Max HP
+    case 'totem': return baseStatVal * 5;    // Shield Strength
+    case 'ring': return baseStatVal * 4;     // Bonus ATK Power
+    case 'necklace': return Math.min(45, Math.round(baseStatVal * 0.5)); // Mana Replenish %
+    case 'orb': return Math.min(50, Math.round(baseStatVal * 0.6));      // Ult Amp %
+    case 'charm': return Math.min(35, Math.round(baseStatVal * 0.4));    // Evasion %
+    default: return baseStatVal * 4;
+  }
+}
+
+/**
+ * Ascends a 5★ Relic to 6★
+ */
+export function ascendRelicData(relic) {
+  if (relic.stars !== 5) {
+    throw new Error('Only 5★ Relics can be ascended to 6★!');
+  }
+  if (relic.level < 15) {
+    throw new Error('Relic must be enhanced to +15 before ascending!');
+  }
+
+  relic.stars = 6;
+  relic.rarity = 'MYTHICAL';
+  relic.name = `Ascended ${relic.name.replace(/^Ascended\s+/, '')}`;
+
+  // Unlock 5th substat slot
+  if (!Array.isArray(relic.substats)) relic.substats = [];
+  const usedIds = relic.substats.map(s => s.typeId);
+  const remainingPool = RELIC_SUBSTAT_TYPES.filter(s => !usedIds.includes(s.id));
+  if (remainingPool.length > 0) {
+    const picked = remainingPool[Math.floor(Math.random() * remainingPool.length)];
+    relic.substats.push(rollSingleSubstat(picked));
+  }
+
+  // Recalculate main stat with 6★ multiplier
+  relic.mainStatValue = calculateRelicMainStat(relic.slotTypeId, 6, relic.level);
+  return relic;
+}
+
+/**
+ * Generates a unique Relic instance (3★ to 6★)
+ */
+export function createRelicInstance({ setId, slotTypeId, rarity = 'COMMON', stars, level = 1 }) {
   const godSet = GREEK_GOD_SETS[setId] || GREEK_GOD_SETS.hades;
   const slotType = RELIC_SLOT_TYPES.find(s => s.id === slotTypeId) || RELIC_SLOT_TYPES[0];
-  const rarityObj = EQUIPMENT_RARITIES[rarity] || EQUIPMENT_RARITIES.COMMON;
 
-  // Base stat calculations
-  const baseStatVal = Math.round(15 * rarityObj.multiplier * (1 + (level - 1) * 0.15));
-
-  let mainStatName = 'Bonus Power';
-  let mainStatValue = baseStatVal;
-
-  switch (slotType.id) {
-    case 'headgear':
-      mainStatName = 'Bonus Max HP';
-      mainStatValue = baseStatVal * 8;
-      break;
-    case 'totem':
-      mainStatName = 'Shield Strength';
-      mainStatValue = baseStatVal * 5;
-      break;
-    case 'ring':
-      mainStatName = 'Bonus ATK Power';
-      mainStatValue = baseStatVal * 4;
-      break;
-    case 'necklace':
-      mainStatName = 'Mana Replenish';
-      mainStatValue = Math.min(30, Math.round(baseStatVal * 0.5));
-      break;
-    case 'orb':
-      mainStatName = 'Ult Amp';
-      mainStatValue = Math.min(35, Math.round(baseStatVal * 0.6));
-      break;
-    case 'charm':
-      mainStatName = 'Evasion Rating';
-      mainStatValue = Math.min(25, Math.round(baseStatVal * 0.4));
-      break;
+  // Resolve star rating (3★ base, up to 6★)
+  let resolvedStars = stars;
+  if (!resolvedStars) {
+    const rUpper = (rarity || 'COMMON').toUpperCase();
+    if (rUpper === 'MYTHICAL' || rUpper === 'TRANSCENDENT') resolvedStars = 6;
+    else if (rUpper === 'LEGENDARY') resolvedStars = 5;
+    else if (rUpper === 'EPIC') resolvedStars = 4;
+    else resolvedStars = 3;
   }
+  resolvedStars = Math.max(3, Math.min(6, resolvedStars));
+
+  const starTier = RELIC_STAR_TIERS[resolvedStars];
+  let mainStatName = 'Bonus Power';
+  switch (slotType.id) {
+    case 'headgear': mainStatName = 'Bonus Max HP'; break;
+    case 'totem': mainStatName = 'Shield Strength'; break;
+    case 'ring': mainStatName = 'Bonus ATK Power'; break;
+    case 'necklace': mainStatName = 'Mana Replenish'; break;
+    case 'orb': mainStatName = 'Ult Amp'; break;
+    case 'charm': mainStatName = 'Evasion Rating'; break;
+  }
+
+  const mainStatValue = calculateRelicMainStat(slotType.id, resolvedStars, level);
+  const substats = generateRelicSubstats({ stars: resolvedStars, mainStatName });
+
+  const rarityName = resolvedStars === 6 ? 'Mythical'
+    : resolvedStars === 5 ? 'Legendary'
+    : resolvedStars === 4 ? 'Epic'
+    : 'Rare';
 
   return {
     uid: `relic_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -268,13 +466,15 @@ export function createRelicInstance({ setId, slotTypeId, rarity = 'COMMON', leve
     setName: godSet.name,
     slotTypeId: slotType.id,
     slotName: slotType.name,
-    name: `${godSet.god}'s ${slotType.name}`,
+    name: resolvedStars === 6 ? `Ascended ${godSet.god}'s ${slotType.name}` : `${godSet.god}'s ${slotType.name}`,
     icon: slotType.icon,
     godIcon: godSet.icon,
-    rarity,
+    stars: resolvedStars,
+    rarity: rarityName.toUpperCase(),
     level,
     mainStatName,
     mainStatValue,
+    substats,
     color: godSet.color,
     accentColor: godSet.accentColor,
     equippedToSpiritId: null

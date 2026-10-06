@@ -4,3 +4,4 @@ export * from './biomesData.js';
 export * from './equipmentData.js';
 export * from './artifactDungeonData.js';
 export * from './weaponDungeonData.js';
+export * from './essenceDungeonData.js';

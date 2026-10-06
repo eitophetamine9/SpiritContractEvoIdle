@@ -228,47 +228,96 @@ The Divine Forge provides a standalone dungeon instance dedicated to forging spe
   - **Celestial Forge (Tier 4)**: Costs 18 Energy. Recommended Power: 10,000 PWR. Drops 3 targeted weapons.
 - **Combat Arena**: Features 3 waves of combat (Forge Minions, Elite Automatons, and the Colossus Forge Master) before awarding weapon loot.
 
-### 8.5 Equipment Management & Dismantling
-- **Equipping**: Players can tap any weapon or relic socket in the Party View or Vault to inspect the item, equip it to active party members, or unequip it.
-- **Dismantling**: Unequipped weapons and relics can be dismantled in the inspection modal to yield bonus Spirit Shards ($20 \times \text{Item Level}$), providing recycling utility for surplus gear.
+### 8.5 Relic Star Tiers (3★-6★), Substats & Ascension
+- **Star Ratings (3★ to 6★)**:
+  - **3★ Relics**: Drop with 1-2 random substats (max capacity: 3).
+  - **4★ Relics**: Drop with 2-3 random substats (max capacity: 4).
+  - **5★ Relics**: Drop with 3-4 random substats (max capacity: 4).
+  - **6★ Ascended Relics**: Attainable only via Ascension at Level 15; unlocks a 5th empowered substat slot with divine multiplier.
+- **Random Substat Pool**:
+  - `Crit Chance` (+1.5% to +4.0%)
+  - `Crit Damage` (+8.0% to +20.0%)
+  - `Attack Power %` (+3.0% to +8.0%)
+  - `Health %` (+4.0% to +10.0%)
+  - `Attack Speed %` (+2.0% to +6.0%)
+  - `Flat ATK` (+15 to +50)
+  - `Flat HP` (+80 to +250)
+- **Enhancement & Ascension Engine**:
+  - Relics enhance from +1 to +15 using Spirit Shards and Essences of the Gods. Every 3 levels (+3, +6, +9, +12, +15), an existing substat is rolled for a major enhancement upgrade.
+  - At +15, 5★ relics can undergo **Divine Ascension** consuming 50 Essences of the Gods, elevating them to 6★ with golden prismatic borders and unlocking the 5th substat.
+- **Dismantling**: Unequipped relics and weapons can be dismantled to reclaim Spirit Shards and Essences of the Gods.
 
 ---
 
-## 9. High-Fantasy UI-Kit Architecture & Mystical Interface
+## 9. The Sanctuary of the Gods & Mystical Realm
 
-### 9.1 Visual Design System & Mystical Aesthetics
-The interface employs a celestial dark fantasy aesthetic designed to eliminate blandness and provide visual depth:
-- **Celestial Astral Canvas**: Deep cosmic background featuring radial gradients, twinkling starlight layers, and celestial dust glows.
-- **Metallic Gold Filigree**: Curated linear gradients representing divine craftsmanship (`linear-gradient(135deg, #fff2ad 0%, #d4af37 50%, #99741e 100%)`) with warm specular highlights and beveled inner shadows.
-- **Regal Banner Ribbons**: Deep royal purple and obsidian ribbon containers with cut-corner borders and swallowtail contours.
-- **Arcane Strike Seal**: Engraved golden medallion button with runic outer borders, sunburst inner rays, and pulsing arcane center replacing standard flat attack buttons.
-- **Segmented Stat Gauges**: Ten-segment micro-meters visualizing Attack Power, Health Points (crimson-orange glow), and Mana charge (cyan-blue glow).
+The Mystical Realm (`mysticalView.js`) represents the celestial core for essence harvesting, elixir consumption, and divine favor:
+- **Essence Chambers**:
+  1. **Olympian Nexus**: Drops Essences of the Gods with lightning affinity.
+  2. **Titan Depths**: Drops Essences of the Gods with primordial stone affinity.
+  3. **Celestial Core**: Drops high-yield Essences of the Gods and bonus Soul Essence.
+  4. **Primordial Abyss**: High-difficulty chamber yielding massive quantities of Essences of the Gods.
+- **Astral EXP Potions**:
+  - **Lesser Astral Elixir**: Grants +10,000 XP (Costs 100 Shards & 5 Essences).
+  - **Greater Astral Elixir**: Grants +50,000 XP (Costs 400 Shards & 20 Essences).
+  - **Supreme Astral Elixir**: Grants +200,000 XP (Costs 1,200 Shards & 50 Essences).
+  - **Transcendent Astral Elixir**: Grants +1,000,000 XP (Costs 4,500 Shards & 150 Essences).
+- **Timed 1-Hour Combat Blessings**:
+  - Players can activate divine blessings that persist across all game modes for 1 hour:
+    - **Blessing of Ares**: +20% Total Party Damage.
+    - **Blessing of Athena**: +25% Shield Strength & +10% Damage.
+    - **Blessing of Hermes**: +15% Party Attack Speed & Evasion.
+    - **Blessing of Apollo**: +20% Healing & Ultimate Power.
+    - **Blessing of Zeus**: +25% Mana Replenish Rate & Lightning Shock.
+    - **Blessing of Poseidon**: +15% Damage & Tidal Water Shield.
+    - **Blessing of Hades**: +15% Critical Damage & Lifesteal.
+    - **Blessing of Artemis**: +15% Critical Strike Chance.
 
-### 9.2 Unified 1-Line Mobile Navigation Dock
-The primary bottom navigation bar is constructed as a responsive 6-column single-line dock fitting mobile screens without wrapping, multi-row stacking, or dual-dock toggles:
+---
+
+## 10. Multi-Banner Gacha Altar & Milestones
+
+The Contract Altar (`contractView.js`) features multi-banner rate-ups and milestone rewards:
+- **Multi-Banner Carousel**:
+  - **Solaris Rate-Up Banner**: Elevated odds for Light/Solar celestial spirits.
+  - **Primordial Sanctum Banner**: Rate-up for Earth & Dark behemoths.
+  - **Olympian Pantheon Banner**: Rate-up for mythological and warrior spirits.
+  - **Standard Astral Banner**: Balanced collection pool across all 47 spirit species.
+- **Bulk Summoning**: Instant 1x, 10x, and 30x multi-pulls with celebratory rare fanfare.
+- **Summoner Level & Milestone Tracks**: Every contract grants Summoner XP. Achieving summon count milestones (10, 20, 30, 50, 100 pulls) awards bonus Shards, Essences, and Astral Elixirs.
+
+---
+
+## 11. High-Fantasy UI Architecture & 2.5D Viewports
+
+### 11.1 Pixi.js 2.5D Isometric Rendering Engine
+The arena viewport engine (`arenaRenderer.js`) is integrated across the Madness Zone, Pantheon Trials, The Divine Forge, and the Mystical Realm:
+- **Pixi.js (v8.x) WebGL Canvas**: Hardware-accelerated rendering featuring dynamic isometric planes, runic circles, elemental weather effects (embers, rain, leaves, lightning), and grounded character shadows.
+- **GSAP Tweens & Camera Dynamics**: Smooth combat lunges, ultimate activation pulses, screen-shake transients, and floating combat text.
+
+### 11.2 The Divine Vault (TCG Card Collection)
+The Vault (`vaultView.js`) implements a collectible card layout:
+- **3 Distinct Categories**: Dedicated tabs for ⛩️ Spirits, 🔱 Relics, and ⚔️ Weapons.
+- **Custom Filter Sliders**: Utilizes `.index-filter-scroll` matching the Bestiary Index, featuring the signature glowing green scrollbar thumb (`#27ae60`), mouse-wheel horizontal scrolling, and horizontal scroll position retention across re-renders.
+- **Bulk Annulment**: Multi-select mode with visual red checkbox indicators (`✓`), Commons/Uncommons quick-select buttons, and a "Select All (Filtered)" action with favorite and party protection.
+- **In-Line Customization**: Instant star favorite locking and custom spirit renaming.
+
+### 11.3 Unified 8-Column Mobile Navigation Dock
+The primary bottom navigation bar is constructed as a responsive 8-column single-line dock fitting mobile screens with zero horizontal overflow:
 - **Hero**: Active party formation, pedestal showcase, and equipment sockets.
-- **Tower**: Madness Zone tower combat, stage selector, and wave progress.
+- **Tower**: Madness Zone 2.5D tower combat and wave progression.
 - **Trials**: The Pantheon Trials relic dungeon and 3-wave god battles.
 - **Forge**: The Divine Forge weapon dungeon and chamber selection.
-- **Summon**: Spirit Shard and Soul Essence contract altars.
-- **Vault**: Unified Bestiary-style inventory for Spirits, Relics, and Weapons.
-
-### 9.3 Manual Battle Engagement Controls
-To prevent screen hijacking when navigating outside the Madness Zone:
-- **Battle Engagement Toggle**: Players can toggle combat between Engaged (active automated strikes and progression) and Standby (paused combat timer without screen forcing).
-- **Navigation Safety**: Floor cleared transitions and party wipeout resets strictly verify that the Madness Zone view is active before updating the screen, preventing background events from disrupting inventory or summoning workflows.
-
-### 9.4 Unified Bestiary-Style Vault & Inventory
-The Vault implements a compact tile grid matching the Terraria-style Bestiary layout:
-- **Category Switcher**: Instant switching between Spirits, Relics, and Weapons.
-- **Compact Cards**: Rarity borders, level and power indicators, and equipped status tags.
-- **Interactive Modals**: One-tap inspection to view complete attributes, equip, unequip, favorite, rename, evolve, or dismantle.
+- **Realm**: The Sanctuary of the Gods, essence chambers, EXP potions, and blessings.
+- **Summon**: Multi-banner contract altar and summoner milestones.
+- **Vault**: TCG Card Collection for Spirits, Relics, and Weapons.
+- **Index**: Terraria-style Spirit Bestiary Compendium.
 
 ---
 
-## 10. Audio Engine Architecture & Sound Events
+## 12. Audio Engine Architecture & Sound Events
 
-### 10.1 Hybrid Audio Architecture
+### 12.1 Hybrid Audio Architecture
 The audio engine (`audioManager.js`) provides zero-latency playback using HTML5 Audio and the Web Audio API:
 - **Background Music (BGM)**:
   - `sanctum_ambient.wav`: Atmospheric minor-key pad with ethereal harmonic arpeggios for Sanctum and Vault navigation.
@@ -283,7 +332,7 @@ The audio engine (`audioManager.js`) provides zero-latency playback using HTML5 
   - `dungeon_reward.wav`: Sparkling bell chime on artifact dungeon clearance.
   - `button_tap.wav`: Crisp tactile click on navigation and gear equip.
 
-### 10.2 Lifecycle & User Gesture Compliance
+### 12.2 Lifecycle & User Gesture Compliance
 In accordance with modern browser autoplay policies, audio context initialization and track playback automatically unlock upon the player's first user interaction (touch or click). User audio preferences (mute state, music volume, SFX volume) are persisted in local storage.
 
 

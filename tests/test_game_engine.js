@@ -277,6 +277,191 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Toggled engagement: ${isEngaged1} -> ${gameState.state.madnessZone.isEngaged}`);
   if (gameState.state.madnessZone.isEngaged === isEngaged1) throw new Error('Toggle should flip isEngaged state');
 
+  // Test 12: Relic Stars (3★-6★), Substats, Essences of the Gods, and Ascension
+  console.log('\n[TEST 12] Testing Relic Star Tiers (3★-6★), Substats, Essences of the Gods & Ascension:');
+  const relic3Star = createRelicInstance({ setId: 'zeus', slotTypeId: 'ring', stars: 3, level: 1 });
+  const relic4Star = createRelicInstance({ setId: 'poseidon', slotTypeId: 'headgear', stars: 4, level: 1 });
+  const relic5Star = createRelicInstance({ setId: 'ares', slotTypeId: 'totem', stars: 5, level: 15 });
+
+  console.log(`  3★ Relic: ${relic3Star.name} | Subs: ${relic3Star.substats.length} (Max capacity: 3)`);
+  console.log(`  4★ Relic: ${relic4Star.name} | Subs: ${relic4Star.substats.length} (3-4 expected)`);
+  console.log(`  5★ Relic: ${relic5Star.name} | Subs: ${relic5Star.substats.length} (4 expected)`);
+
+  if (relic3Star.stars !== 3 || relic3Star.substats.length > 3) throw new Error('3★ Relic invalid substats capacity');
+  if (relic4Star.stars !== 4 || relic4Star.substats.length < 3) throw new Error('4★ Relic should have 3-4 initial substats');
+  if (relic5Star.stars !== 5 || relic5Star.substats.length !== 4) throw new Error('5★ Relic should have exactly 4 initial substats');
+
+  // Test dismantle producing Essences of the Gods
+  gameState.state.inventory.equipment.push(relic3Star);
+  const dismantleResult = gameState.dismantleEquipment(relic3Star.uid);
+  console.log(`  Dismantled 3★ Relic -> Gained ${dismantleResult.shardsGained} Shards & ${dismantleResult.essencesGained} Essences of the Gods`);
+  if (!dismantleResult.essencesGained || dismantleResult.essencesGained < 5) throw new Error('Dismantling relic must award Essences of the Gods');
+  if ((gameState.state.resources.essencesOfTheGods || 0) < 5) throw new Error('essencesOfTheGods resource not updated');
+
+  // Test 5★ to 6★ Ascension
+  gameState.state.inventory.equipment.push(relic5Star);
+  gameState.state.resources.essencesOfTheGods = 200;
+  gameState.state.resources.soulEssence = 20;
+  const ascendResult = gameState.ascendRelic(relic5Star.uid);
+  console.log(`  Ascended Relic to 6★: ${ascendResult.item.name} | Stars: ${ascendResult.item.stars}★ | Subs count: ${ascendResult.item.substats.length}`);
+  if (ascendResult.item.stars !== 6) throw new Error('Relic should have 6 stars after ascension');
+  if (ascendResult.item.substats.length !== 5) throw new Error('6★ Relic should have 5 substats');
+
+  // Test Energy Capacity upgrade (Cap 500)
+  const initialCap = gameState.state.resources.maxEnergy;
+  gameState.upgradeEnergyCapacity();
+  console.log(`  Energy Capacity upgraded: ${initialCap} ➔ ${gameState.state.resources.maxEnergy} (Cap: 500)`);
+  if (gameState.state.resources.maxEnergy !== initialCap + 20) throw new Error('Energy cap upgrade failed');
+
+  // Test 13: Elemental Affinity Matrix & Matchups
+  console.log('\n[TEST 13] Testing Elemental Affinity Matrix, Matchups & Party Resonance:');
+  const { getElementalMultiplier, calculatePartyResonance } = await import('../src/data/index.js');
+  const fireVsEarth = getElementalMultiplier('FIRE', 'EARTH');
+  const waterVsFire = getElementalMultiplier('WATER', 'FIRE');
+  const lightVsDark = getElementalMultiplier('LIGHT', 'DARK');
+  const darkVsLight = getElementalMultiplier('DARK', 'LIGHT');
+  const earthVsFire = getElementalMultiplier('EARTH', 'FIRE');
+
+  console.log(`  Fire vs Earth: ${fireVsEarth}x (+25% expected)`);
+  console.log(`  Water vs Fire: ${waterVsFire}x (+25% expected)`);
+  console.log(`  Light vs Dark: ${lightVsDark}x (+30% celestial expected)`);
+  console.log(`  Earth vs Fire: ${earthVsFire}x (-15% disadvantage expected)`);
+
+  if (fireVsEarth !== 1.25) throw new Error('Fire should deal 1.25x against Earth');
+  if (waterVsFire !== 1.25) throw new Error('Water should deal 1.25x against Fire');
+  if (lightVsDark !== 1.30) throw new Error('Light vs Dark should be 1.30x');
+  if (earthVsFire !== 0.85) throw new Error('Earth vs Fire should be 0.85x');
+
+  // Verify all 37 spirits have valid element
+  let missingElement = 0;
+  for (const [id, sp] of Object.entries(SPIRIT_SPECIES)) {
+    if (!sp.element) {
+      missingElement++;
+      console.error(`  Missing element on spirit: ${id}`);
+    }
+  }
+  if (missingElement > 0) throw new Error(`Found ${missingElement} spirits with missing element`);
+  console.log(`  Verified all ${Object.keys(SPIRIT_SPECIES).length} Spirit species have explicit elements (0 missing).`);
+
+  // Test 14: Sanctuary of the Gods & Mystical Realm Features
+  console.log('\n[TEST 14] Testing Sanctuary of the Gods & Mystical Realm:');
+  const { ESSENCE_CHAMBERS, ESSENCE_DIFFICULTY_TIERS } = await import('../src/data/index.js');
+  console.log(`  Essence Chambers count: ${ESSENCE_CHAMBERS.length} (Expected 4)`);
+  if (ESSENCE_CHAMBERS.length !== 4) throw new Error('Expected 4 Essence Chambers');
+
+  gameState.state.resources.energy = 50;
+  const essenceDungeonResult = gameState.runEssenceDungeon('olympian_nexus', 1);
+  console.log(`  Cleared "Olympian Nexus" [Tier 1]! Gained ${essenceDungeonResult.essencesAwarded} Essences of the Gods & ${essenceDungeonResult.soulEssenceAwarded} Soul Essence.`);
+  if (essenceDungeonResult.essencesAwarded <= 0) throw new Error('Should award Essences of the Gods');
+
+  // Test EXP Potions
+  const testSpirit = gameState.state.spirits[0];
+  const preXp = testSpirit.xp;
+  gameState.state.resources.spiritShards = 1000;
+  gameState.state.resources.essencesOfTheGods = 50;
+  gameState.buyExpPotion(testSpirit.id, 'lesser_elixir');
+  console.log(`  Used Lesser Astral Elixir on ${testSpirit.customName}: XP ${preXp} -> ${testSpirit.xp} (+10,000 XP)`);
+  if (testSpirit.xp < preXp + 10000 && testSpirit.level === 1) throw new Error('EXP potion failed to grant XP');
+
+  // Test Combat Blessings
+  gameState.applyTemporaryBlessing('blessing_ares');
+  const activeBlessings = gameState.getActiveBlessings();
+  const activeCount = Object.keys(activeBlessings).length;
+  console.log(`  Applied "Blessing of Ares": Active blessings count = ${activeCount}`);
+  if (activeCount === 0 || !activeBlessings.blessing_ares) throw new Error('Ares blessing not active');
+
+  // Test 15: Celestial Spirits, Multi-Banner Summoning & Milestones
+  console.log('\n[TEST 15] Testing Multi-Banner Summoning, 30x Bulk Contracts & Milestones:');
+  const { BANNER_CONFIGS } = await import('../src/data/index.js');
+  console.log(`  Banner catalog count: ${BANNER_CONFIGS.length} (Expected >= 3)`);
+  if (BANNER_CONFIGS.length < 3) throw new Error('Expected at least 3 banner configurations');
+
+  gameState.state.resources.spiritShards = 5000;
+  const initialSpiritCount = gameState.state.spirits.length;
+  const pullResult = gameState.contractSpirit(30, 'solaris_rate_up');
+  console.log(`  Performed 30x Contract on Solaris Rate-Up! Received ${pullResult.length} spirits.`);
+  if (pullResult.length !== 30) throw new Error('Expected 30 spirits from 30x pull');
+  if (gameState.state.spirits.length !== initialSpiritCount + 30) throw new Error('Spirit collection count mismatch');
+  console.log(`  Summon Level: ${gameState.state.stats.summonLevel} | Summon XP: ${gameState.state.stats.summonXp}`);
+  if (gameState.state.stats.summonLevel < 2) throw new Error('Summon Level should have increased');
+
+  // Test 16: Spirit Annulment & Bulk Annulment System
+  console.log('\n[TEST 16] Testing Spirit Annulment & Bulk Annulment System:');
+  const nonPartySpirits = gameState.state.spirits.filter(s => !gameState.state.party.includes(s.id));
+  if (nonPartySpirits.length >= 2) {
+    const spiritToAnnul = nonPartySpirits[0];
+    const prevShards = gameState.state.resources.spiritShards;
+    const annulShards = gameState.annulContract(spiritToAnnul.id);
+    console.log(`  Annulled contract with "${spiritToAnnul.customName}": Gained +${annulShards} Shards`);
+    if (gameState.state.resources.spiritShards !== prevShards + annulShards) {
+      throw new Error('Spirit shards balance mismatch after annulment');
+    }
+
+    // Test bulk annulment with favorite and party protection
+    const remainingNonParty = gameState.state.spirits.filter(s => !gameState.state.party.includes(s.id));
+    if (remainingNonParty.length >= 2) {
+      remainingNonParty[0].favorite = true; // Mark one as favorite
+      const targetIds = [remainingNonParty[0].id, remainingNonParty[1].id, gameState.state.party[0]];
+      const bulkRes = gameState.bulkAnnulContracts(targetIds);
+      console.log(`  Bulk annul attempted on 3 targets (1 fav, 1 party, 1 normal) -> Annulled: ${bulkRes.annulledCount}, Shards: +${bulkRes.totalShardsGained}`);
+      if (bulkRes.annulledCount !== 1) throw new Error('Bulk annul should skip favorite and active party spirits');
+      if (bulkRes.totalShardsGained <= 0) throw new Error('Bulk annul should award shards for valid spirits');
+    }
+  }
+
+  // Test 17: Dynamic Wave Progression & Floor Anti-Skip Integrity
+  console.log('\n[TEST 17] Testing Dynamic Wave Progression & Floor Anti-Skip Integrity:');
+  const mz = gameState.state.madnessZone;
+  mz.stage = 1;
+  mz.subStage = 1;
+  mz.unlockedStages = [1];
+  mz.highestStageUnlocked = 1;
+  mz.highestStageCleared = 0;
+  gameState.spawnMadnessEnemy();
+
+  console.log(`  Initial State: Floor ${mz.stage}, Wave ${mz.subStage}/5, Cleared: ${mz.highestStageCleared}`);
+
+  // Test that player CANNOT unlock Floor 2 before clearing Floor 1
+  let unlockBlocked = false;
+  try {
+    gameState.unlockAndEnterStage(2);
+  } catch (err) {
+    unlockBlocked = true;
+    console.log(`  [PASS] Blocked premature Floor 2 unlock: "${err.message}"`);
+  }
+  if (!unlockBlocked) throw new Error('Should not allow unlocking Floor 2 before clearing Floor 1');
+
+  // Test dynamic wave progression (Wave 1 -> Wave 2)
+  mz.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.onSwarmCleared();
+  console.log(`  After clearing Wave 1 -> Current Wave: ${mz.subStage}/5 (Expected 2)`);
+  if (mz.subStage !== 2) throw new Error('Wave should have advanced to 2');
+
+  // Advance through remaining waves to Boss
+  mz.subStage = 5;
+  gameState.spawnMadnessEnemy();
+  mz.currentSwarm.forEach(e => { e.hp = 0; e.isDefeated = true; });
+  gameState.onSwarmCleared();
+  console.log(`  After defeating Boss -> highestStageCleared: ${mz.highestStageCleared} (Expected 1)`);
+  if (mz.highestStageCleared !== 1) throw new Error('highestStageCleared should be 1 after boss kill');
+
+  // Now unlock Floor 2 with Energy
+  gameState.state.resources.energy = 50;
+  const unlockRes = gameState.unlockAndEnterStage(2);
+  console.log(`  Unlocked Floor 2: Stage is now ${mz.stage}, Wave ${mz.subStage}/5, Energy remaining: ${unlockRes.remainingEnergy}`);
+  if (mz.stage !== 2 || mz.highestStageUnlocked !== 2) throw new Error('Floor 2 should be unlocked and active');
+
+  // Test that player on Floor 1 CANNOT skip to Floor 3
+  gameState.setStage(1);
+  let skipBlocked = false;
+  try {
+    gameState.unlockAndEnterStage(3);
+  } catch (err) {
+    skipBlocked = true;
+    console.log(`  [PASS] Blocked floor skip to Floor 3 while Floor 2 is uncleared: "${err.message}"`);
+  }
+  if (!skipBlocked) throw new Error('Should block skipping Floor 2 to unlock Floor 3');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

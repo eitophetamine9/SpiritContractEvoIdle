@@ -17,12 +17,18 @@ A mobile-first, dark fantasy Idle RPG built with vanilla JavaScript, modern CSS,
 
 ## Technology Stack
 
-- **Core**: Vanilla JavaScript (ES modules) with a decoupled reactive pub/sub state manager.
-- **Styling**: Vanilla CSS utilizing dark fantasy design tokens, responsive viewport constraints, and custom-styled scrollbars.
-- **Build & Development Tooling**: Vite with PWA plugin support (vite-plugin-pwa).
-- **Storage**: Local persistence engine with automatic periodic saving and JSON backup export/import capabilities.
-- **Testing**: Native Node.js test runners validating mathematical balancing, summon probability curves, and UI components.
-- **Mobile Constraints**: Strict touch-first architecture (minimum 44px touch targets, zero sticky hover states, tactile active transforms).
+- **Core Engine & Architecture**: Vanilla JavaScript (ES2022+ Modules) built upon an asynchronous, reactive EventEmitter state machine (`GameStateManager`) with zero external runtime framework overhead.
+- **2.5D Graphics & Viewport Rendering**:
+  - **Pixi.js (v8.x)**: Powers real-time 2.5D isometric viewports with WebGL hardware acceleration, dynamic atmospheric layers, elemental particle emitters, floating holographic altars, and staggered combat shadows.
+  - **GSAP (GreenSock Animation Platform)**: Procedural combat tweens, ultimate impact shockwaves, screen shakes, and floating combat text physics.
+  - **HTML5 Canvas & 3D CSS**: Smooth isometric perspective grids and multi-depth visual layering.
+- **Styling & Design System**:
+  - **Vanilla CSS**: Custom dark fantasy design tokens (`style.css`), Terraria-inspired bestiary frames, and `.index-filter-scroll` glowing emerald scrollbars (`#27ae60`).
+  - **TailwindCSS**: Glassmorphic UI containers (`backdrop-blur`), high-density responsive grids, and flexible layouts.
+- **Audio Engine**: Web Audio API & HTML5 Audio (`audioManager.js`) delivering zero-latency procedural SFX triggers, multi-channel BGM crossfading, user-gesture autoplay compliance, and persisted volume preferences.
+- **Build & Development Tooling**: Vite with PWA plugin (`vite-plugin-pwa`) supporting offline caching, instant Hot Module Replacement (HMR), and lightweight tree-shaken bundles.
+- **Storage & Offline Engine**: Local persistence with auto-saving every 15s, import/export backup tooling, and offline progress simulation capped at 24 hours.
+- **Automated Testing Suite**: Native Node.js test suite with 17 automated tests validating combat loops, relic set math, gacha distribution curves, evolution horizons, and UI rendering integrity.
 
 ---
 
@@ -77,56 +83,58 @@ npm run test:prob
 
 ## Current Working Features
 
-### 1. Contract Altar & Summoning
-- **Spirit Shard Contracts**: Harvest shards from battle to contract base spirits across multiple rarity tiers.
-- **Soul Essence Astral Contracts**: Premium contracts funded by boss victories, guaranteeing higher-tier summons.
-- **Sanctum Upgrades**: Rebalanced shop offering permanent party resonance, energy cap expansions, and training elixirs.
+### 1. Contract Altar & Multi-Banner Summoning
+- **Multi-Banner Carousel**: Cycle across Solaris Rate-Up, Primordial Sanctum, Olympian Pantheon, and Standard Astral banners.
+- **Bulk Contracts**: Pull 1x, 10x, or 30x contracts simultaneously with rare pull animations.
+- **Summoner Level & Milestone Tracks**: Earn Summon XP with every pull to unlock tiered reward milestones (shards, god essences, and astral elixirs).
 
 ### 2. Active Party & AFK Training
 - **5-Slot Formation**: Equip up to 5 spirits from your vault to fight together and share training experience.
-- **24-Hour Offline Engine**: Offline gains capped at 24 hours with balanced diminishing return curves, rewarding active play while preventing overnight progression breaks.
-- **Evolution Alerts**: Real-time visual badge indicators when equipped spirits reach their level cap.
+- **24-Hour Offline Engine**: Offline gains capped at 24 hours with balanced diminishing return curves, rewarding active play while preventing progression breaks.
+- **Elemental Affinities**: 6-element matrix (Fire, Water, Earth, Wind, Light, Dark) with damage advantages and party elemental resonance bonuses.
+- **Evolution Ceremony**: Weighted branching evolutions at level caps with real-time badge alerts.
 
 ### 3. Madness Zone & Biome Tower
+- **2.5D Isometric Viewport**: Pixi.js WebGL canvas rendering dynamic biome environments, atmospheric weather, and particle effects.
 - **Wave-Based Encounters**: 5 waves per floor with corrupted enemies, elite champions, and floor overlord bosses.
-- **Energy System**: Floor unlocking costs 10 Energy; completed floors are permanently free to replay.
+- **Dynamic Floor Progression**: Defeating the wave 5 boss dynamically clears the floor; previous floors are permanently free to replay.
+- **Anti-Skip Protection**: Enforces legitimate progression—higher floors cannot be unlocked without defeating previous floor bosses.
 - **Tactical Speed**: Toggle between 1X and 2X combat speeds.
-- **Biome Scaling**: Dynamic enemy power, health, and shard rewards scaling across 6 distinct environmental biomes and looping enchanted tiers.
 
-### 4. Vault Management
-- **Live Search**: Instant keyword filtering by species name or custom nickname.
-- **Bulk Annulment**: Multi-select mode with quick presets to release duplicate spirits for shard refunds.
-- **Favorite Locking**: Protect high-value spirits from accidental annulment.
-- **Custom Nicknaming**: Personalize individual spirits across all views.
-- **Custom Scrollbars**: Dark fantasy emerald-and-obsidian scrollbars replacing raw browser bars.
+### 4. The Divine Vault (TCG Card Collection)
+- **3 Distinct Sections**: Dedicated tabs for ⛩️ Spirits, 🔱 Relics, and ⚔️ Weapons presented in a card collection aesthetic.
+- **Custom Filter Sliders**: Identical `.index-filter-scroll` sliders matching the Bestiary Index with emerald glowing scrollbars, mouse-wheel panning, and scroll retention.
+- **Bulk Annulment**: Multi-select mode with checkmark badges (`✓`), Commons/Uncommons presets, and a "Select All (Filtered)" batch action.
+- **Safety & Customization**: Star favorite locking prevents accidental releases; in-line spirit renaming customizes cards on the fly.
 
-### 5. Terraria-Style Spirit Bestiary
-- **Compact Tile Grid**: Numbered tiles (#001 to #037) with rarity borders.
+### 5. Terraria-Style Spirit Bestiary Index
+- **Compact Tile Grid**: Numbered tiles (#001 to #047) with rarity borders.
 - **Mystery Silhouettes**: Undiscovered creatures remain masked until contracted or evolved.
 - **Inspect Modal**: Click any tile to inspect full creature art, base statistics, lore, and discoverable evolution trees.
+- **Omnipresent Navigation**: Dedicated tab on the 8-column bottom dock, top header, and vault view.
 
-### 6. Contractor Profile & Hall of Fame
-- **Top-Right Header Access**: One-tap contractor profile button from any screen.
-### 7. Two-Way Combat & Spirit Ultimates
-- **Allied Health & Mana**: Spirits possess dedicated HP and MP pools. Basic attacks accumulate Mana; reaching 100 MP triggers species-specific Ultimate abilities (damage bursts, AoE sweeps, team heals, shields, and executes).
-- **Corrupted Enemy Swarms**: Battles feature multi-unit swarms with staggered counter-attack timers, culminating in Overlord Bosses accompanied by Royal Guards.
-- **Floor Recovery & Wipeout Safety**: Boss clearance instantly revives all party members to 100% HP; full wipeouts reset cleanly to Wave 1 with zero progression or item loss.
-
-### 8. Weapons, Greek God Relics & The Pantheon Trials
-- **Seven Equipment Sockets**: Each spirit equips 1 Weapon and 6 Relics (Headgear, Totem, Ring, Necklace, Orb, Charm).
+### 6. Relic System (3★-6★), Substats & Ascension
+- **Seven Equipment Sockets**: 1 Weapon and 6 Relics (Headgear, Totem, Ring, Necklace, Orb, Charm).
+- **Relic Star Tiers**: 3★ through 6★ star ratings rolling 1 to 4 randomized substats (Crit Chance, Crit Damage, ATK%, HP%, Speed, Flat Stats).
+- **Enhancement & Ascension**: Upgrade relics up to +15 and ascend maxed 5★ relics into glowing 6★ relics using Essences of the Gods.
 - **Eight Olympian God Sets**: Complete 2-piece and 4-piece set bonuses for Hades, Zeus, Poseidon, Hermes, Ares, Apollo, Athena, and Artemis.
-- **The Pantheon Trials (Artifact Dungeon)**: 8 dedicated deity chambers across 4 difficulty tiers featuring 3-wave combat encounters (Sentinels, Guardians, and the Olympian God Avatar Boss) for targeted relic farming.
-- **Equipment Management**: Rapid inspection, 1-tap equipping to active party spirits, and dismantling of surplus gear into Spirit Shards.
 
-### 9. The Divine Forge (Dedicated Weapon Dungeon)
-- **Six Weapon Chambers**: Standalone dungeon featuring Bladesmith Sanctum, Archers Grove, Arcane Spire, Behemoth Den, Shadow Armory, and Titans Anvil.
+### 7. The Pantheon Trials (Artifact Dungeon)
+- **8 Deity Chambers**: Dedicated Olympian chambers across 4 difficulty tiers featuring 3-wave encounters (Sentinels, Guardians, and Olympian God Avatar Bosses).
+- **Loot Yields**: Targeted god relics, spirit shards, and god essences.
+
+### 8. The Divine Forge (Weapon Dungeon)
+- **Six Weapon Chambers**: Dedicated forge instances for Blades, Bows, Staves, Claws, Daggers, and Mallets.
 - **Four Difficulty Tiers**: Apprentice, Artisan, Master, and Celestial forges with 3-wave battles dropping specialized weapons.
 
-### 10. Mystical UI & Unified Navigation
-- **1-Line Bottom Navigation Dock**: High-density 6-column single-line dock (Hero, Tower, Trials, Forge, Summon, Vault) built specifically for mobile screens without horizontal clipping or wrapping.
-- **Bestiary-Style Vault**: Unified grid with category switching across Spirits, Relics, and Weapons, complete with instant filtering, bulk annulment, and inspection modals.
+### 9. The Sanctuary of the Gods & Mystical Realm
+- **Essence Chambers**: Olympian Nexus, Titan Depths, Celestial Core, and Primordial Abyss dropping Essences of the Gods and Soul Essence.
+- **Astral EXP Potions**: Lesser, Greater, Supreme, and Transcendent Elixirs providing instant XP injections to catch up new spirits.
+- **Timed Combat Blessings**: 1-hour divine blessings from all 8 Olympian gods providing temporary party buffs (Damage, Crit, Defense, Speed, Mana Replenish).
+
+### 10. Unified 8-Column Mobile Navigation Dock
+- **Single-Line High-Density Dock**: `Hero`, `Tower`, `Trials`, `Forge`, `Realm`, `Summon`, `Vault`, and `Index` built specifically for mobile screens with zero horizontal overflow or wrapping.
 - **Manual Battle Engagement Controls**: Standby and Engaged combat states prevent screen-forcing or hijacking when viewing other menus.
-- **Mystical Visual Overhaul**: Deep astral cosmic backgrounds, ornate gold filigree borders, violet swallowtail banners, and the Arcane Strike Seal.
 
 ### 11. Integrated Audio Engine
 - **Background Music**: Dynamic looping atmospheric themes for Astral Sanctum, Madness Tower combat, Pantheon Trials, and The Divine Forge.

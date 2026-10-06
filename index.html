@@ -28,6 +28,10 @@
             <button id="btn-top-audio" class="header-audio-btn" title="Toggle Sound & Music">
               <span id="audio-icon-symbol">🔊</span>
             </button>
+            <button id="btn-top-index" class="header-profile-btn" data-tab="index" title="Spirit Bestiary & Lineages">
+              <span class="profile-avatar-icon">📖</span>
+              <span class="profile-btn-text">Index</span>
+            </button>
             <button id="btn-top-profile" class="header-profile-btn" data-tab="profile" title="Contractor Profile">
               <span class="profile-avatar-icon">🧙‍♂️</span>
               <span class="profile-btn-text">Profile</span>
@@ -47,6 +51,10 @@
           <div class="resource-pill essence-pill">
             <span class="resource-label">🔮 Essence:</span>
             <span id="res-essence" class="resource-val">0</span>
+          </div>
+          <div class="resource-pill god-essence-pill" title="Essences of the Gods (Dismantled Relics & Sanctuary Dungeon)">
+            <span class="resource-label">✨ Gods:</span>
+            <span id="res-god-essences" class="resource-val">0</span>
           </div>
         </div>
       </header>
@@ -77,14 +85,24 @@
           <span class="tab-label">Forge</span>
         </button>
 
+        <button id="nav-mystical" class="nav-tab" data-tab="mystical" title="The Mystical Realm & Sanctuary of the Gods">
+          <span class="tab-icon">✨</span>
+          <span class="tab-label">Realm</span>
+        </button>
+
         <button id="nav-contract" class="nav-tab" data-tab="contract" title="Summon & Contract Altar">
           <span class="tab-icon">🔮</span>
           <span class="tab-label">Summon</span>
         </button>
 
-        <button id="nav-vault" class="nav-tab" data-tab="vault" title="Vault & Bestiary">
+        <button id="nav-vault" class="nav-tab" data-tab="vault" title="Vault & Card Collection">
           <span class="tab-icon">📜</span>
           <span class="tab-label">Vault</span>
+        </button>
+
+        <button id="nav-index" class="nav-tab" data-tab="index" title="Bestiary & Evolution Compendium">
+          <span class="tab-icon">📖</span>
+          <span class="tab-label">Index</span>
         </button>
       </nav>
 

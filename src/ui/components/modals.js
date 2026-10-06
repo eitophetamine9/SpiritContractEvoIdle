@@ -703,162 +703,256 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
 /**
  * Universal Item Inspection & Equip Modal for Vault
  */
+/**
+ * Universal Item Inspection, Enhance & Equip Modal for Vault
+ */
 export function showItemInspectModal({ item, onUpdate }) {
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot || !item) return;
 
-  const spirits = gameState.state.spirits || [];
-  const partyIds = gameState.state.party || [];
-  const partySpirits = spirits.filter(s => partyIds.includes(s.id));
-  const equippedSpirit = spirits.find(s => s.id === item.equippedToSpiritId);
+  function renderModal() {
+    const currentItem = (gameState.state.inventory?.equipment || []).find(e => e.uid === item.uid) || item;
+    const spirits = gameState.state.spirits || [];
+    const partyIds = gameState.state.party || [];
+    const partySpirits = spirits.filter(s => partyIds.includes(s.id));
+    const equippedSpirit = spirits.find(s => s.id === currentItem.equippedToSpiritId);
 
-  const modalEl = document.createElement('div');
-  modalEl.className = 'modal-backdrop';
+    const isRelic = currentItem.type === 'relic';
+    const stars = currentItem.stars || 3;
+    const godSet = isRelic ? GREEK_GOD_SETS[currentItem.setId] : null;
 
-  const isRelic = item.type === 'relic';
-  const godSet = isRelic ? GREEK_GOD_SETS[item.setId] : null;
+    const starColors = {
+      3: '#b2bec3',
+      4: '#00cec9',
+      5: '#ffd32a',
+      6: '#ff4757'
+    };
+    const starLabel = '★'.repeat(stars);
+    const starColor = starColors[stars] || '#ffd32a';
 
-  modalEl.innerHTML = `
-    <div class="modal-card modal-card-equipment" style="max-width: 440px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 24px;">${item.icon}</span>
-          <div>
-            <h3 class="modal-title" style="margin: 0; font-size: 16px; color: ${item.color || '#ffd32a'};">
-              ${item.name}
-            </h3>
-            <span style="font-size: 11px; color: var(--text-muted);">
-              ${item.rarity} • Level ${item.level || 1} ${isRelic ? `• ${item.slotName || 'Relic'}` : '• Weapon'}
-            </span>
-          </div>
-        </div>
-        <button id="btn-close-item-inspect" class="modal-close-btn">&times;</button>
-      </div>
+    const nextLevel = (currentItem.level || 0) + 1;
+    const shardCost = Math.round(50 * nextLevel * (stars * 0.4));
+    const isMilestone = nextLevel % 3 === 0;
+    const essenceCost = isMilestone ? Math.round(stars * 2 + nextLevel * 0.5) : 0;
+    const canEnhance = isRelic && (currentItem.level || 0) < 15;
+    const canAscend = isRelic && stars === 5 && (currentItem.level || 0) >= 15;
 
-      <div class="modal-body" style="padding: 14px 16px;">
-        
-        <!-- Stats Section -->
-        <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08);">
-          <div style="font-size: 12px; font-weight: 800; color: #ffd32a; margin-bottom: 6px;">PRIMARY ATTRIBUTES</div>
-          ${isRelic ? `
-            <div style="font-size: 14px; font-weight: 700; color: #fff;">
-              ${item.mainStatName}: <span style="color: #2ed573;">+${item.mainStatValue}</span>
-            </div>
-          ` : `
-            <div style="font-size: 14px; font-weight: 700; color: #fff;">
-              ATK Power: <span style="color: #ff4757;">+${item.atkPower}</span>
-            </div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
-              Crit Rate: +${item.critRate || 5}% • Ult Amp: +${item.ultAmp || 8}%
-            </div>
-          `}
-        </div>
+    const dismantleEssences = isRelic ? (stars === 3 ? 5 : stars === 4 ? 15 : stars === 5 ? 40 : 100) : 0;
+    const dismantleShards = Math.round(20 * (currentItem.level || 1) + stars * 10);
 
-        <!-- Set Bonus Details if Relic -->
-        ${godSet ? `
-          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px; border-left: 3px solid ${godSet.color};">
-            <div style="font-size: 11px; font-weight: 800; color: ${godSet.accentColor}; margin-bottom: 4px;">
-              ${godSet.name} (${godSet.god})
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal-card modal-card-equipment" style="max-width: 450px;">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 26px;">${currentItem.icon}</span>
+              <div>
+                <h3 class="modal-title" style="margin: 0; font-size: 16px; color: ${currentItem.color || '#ffd32a'};">
+                  ${currentItem.name}
+                </h3>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                  <span style="font-size: 13px; font-weight: 900; color: ${starColor}; letter-spacing: 1px;">
+                    ${starLabel}
+                  </span>
+                  <span style="font-size: 11px; color: var(--text-muted);">
+                    • +${currentItem.level || 0}/15 ${isRelic ? `• ${currentItem.slotName || 'Relic'}` : '• Weapon'}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div style="font-size: 11px; color: #ccc; margin-bottom: 4px;">
-              <strong>2-pc:</strong> ${godSet.bonus2pc.description}
-            </div>
-            <div style="font-size: 11px; color: #ccc;">
-              <strong>4-pc:</strong> ${godSet.bonus4pc.description}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- Equipped Status & Reassign to Spirit -->
-        <div style="margin-bottom: 14px;">
-          <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 6px;">
-            ${equippedSpirit ? `Equipped To: <span style="color: #2ecc71;">${equippedSpirit.customName}</span>` : 'Status: <span style="color: var(--text-muted);">In Vault (Unequipped)</span>'}
+            <button id="btn-close-item-inspect" class="modal-close-btn">&times;</button>
           </div>
 
-          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Quick Equip to Active Party Spirit:</div>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            ${partySpirits.map(sp => {
-              const isEquippedHere = equippedSpirit && equippedSpirit.id === sp.id;
-              return `
-                <button class="btn-preset-sm btn-equip-to-spirit ${isEquippedHere ? 'active' : ''}" data-target-spirit="${sp.id}" style="${isEquippedHere ? 'background: #27ae60; color: #fff;' : ''}">
-                  ${isEquippedHere ? '✓ ' : ''}${sp.customName}
+          <div class="modal-body" style="padding: 14px 16px;">
+            
+            <!-- Primary Stats Section -->
+            <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="font-size: 11px; font-weight: 800; color: #ffd32a; margin-bottom: 6px;">PRIMARY ATTRIBUTES</div>
+              ${isRelic ? `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 14px; font-weight: 700; color: #fff;">${currentItem.mainStatName}</span>
+                  <span style="font-size: 15px; font-weight: 900; color: #2ed573;">+${currentItem.mainStatValue}</span>
+                </div>
+              ` : `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 14px; font-weight: 700; color: #fff;">ATK Power</span>
+                  <span style="font-size: 15px; font-weight: 900; color: #ff4757;">+${currentItem.atkPower}</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                  Crit Rate: +${currentItem.critRate || 5}% • Ult Amp: +${currentItem.ultAmp || 8}%
+                </div>
+              `}
+            </div>
+
+            <!-- Substats Section (For Relics) -->
+            ${isRelic && currentItem.substats && currentItem.substats.length > 0 ? `
+              <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="font-size: 11px; font-weight: 800; color: #70a1ff; margin-bottom: 6px;">
+                  SUBSTATS (${currentItem.substats.length}/${stars === 6 ? 5 : stars === 5 ? 4 : stars === 4 ? 4 : 3})
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  ${currentItem.substats.map(sub => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 6px; background: rgba(255,255,255,0.04); border-radius: 4px;">
+                      <span style="color: #dfe4ea;">• ${sub.name}</span>
+                      <span style="font-weight: 800; color: #2ed573;">+${sub.value}${sub.isPercent ? '%' : ''}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Set Bonus Details if Relic -->
+            ${godSet ? `
+              <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 10px; border-left: 3px solid ${godSet.color};">
+                <div style="font-size: 11px; font-weight: 800; color: ${godSet.accentColor}; margin-bottom: 4px;">
+                  ${godSet.name} (${godSet.god})
+                </div>
+                <div style="font-size: 11px; color: #ccc; margin-bottom: 3px;">
+                  <strong>2-pc:</strong> ${godSet.bonus2pc.description}
+                </div>
+                <div style="font-size: 11px; color: #ccc;">
+                  <strong>4-pc:</strong> ${godSet.bonus4pc.description}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Relic Enhancement & Ascension Buttons -->
+            ${isRelic ? `
+              <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+                ${canEnhance ? `
+                  <button id="btn-enhance-relic" class="btn-drawer-action" style="flex: 1; background: linear-gradient(135deg, #f39c12, #d35400); color: #fff; font-weight: 800; min-height: 42px;">
+                    ⚡ Enhance (+${nextLevel})<br>
+                    <span style="font-size: 10px; opacity: 0.9;">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                  </button>
+                ` : `
+                  <div style="flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: #2ecc71; padding: 10px; background: rgba(46,204,113,0.1); border-radius: 6px;">
+                    ✓ Max Enhancement (+15)
+                  </div>
+                `}
+
+                ${canAscend ? `
+                  <button id="btn-ascend-relic" class="btn-drawer-action" style="flex: 1; background: linear-gradient(135deg, #e74c3c, #8e44ad); color: #fff; font-weight: 900; min-height: 42px;">
+                    👑 Ascend to 6★<br>
+                    <span style="font-size: 10px; opacity: 0.9;">100 ✨ • 10 🔮</span>
+                  </button>
+                ` : ''}
+              </div>
+            ` : ''}
+
+            <!-- Equipped Status & Reassign to Spirit -->
+            <div style="margin-bottom: 12px;">
+              <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 6px;">
+                ${equippedSpirit ? `Equipped To: <span style="color: #2ecc71;">${equippedSpirit.customName}</span>` : 'Status: <span style="color: var(--text-muted);">In Vault (Unequipped)</span>'}
+              </div>
+
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Quick Equip to Active Party Spirit:</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                ${partySpirits.map(sp => {
+                  const isEquippedHere = equippedSpirit && equippedSpirit.id === sp.id;
+                  return `
+                    <button class="btn-preset-sm btn-equip-to-spirit ${isEquippedHere ? 'active' : ''}" data-target-spirit="${sp.id}" style="${isEquippedHere ? 'background: #27ae60; color: #fff;' : ''}">
+                      ${isEquippedHere ? '✓ ' : ''}${sp.customName}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+
+            <!-- Actions: Unequip / Dismantle -->
+            <div style="display: flex; gap: 8px; margin-top: 14px;">
+              ${equippedSpirit ? `
+                <button id="btn-unequip-item" class="btn-drawer-action" style="flex: 1; background: rgba(241, 196, 15, 0.2); border-color: #f1c40f; color: #ffd32a;">
+                  Unequip
                 </button>
-              `;
-            }).join('')}
+              ` : `
+                <button id="btn-dismantle-item" class="btn-drawer-action" style="flex: 1; background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675;">
+                  Dismantle (+${dismantleShards} 💎${dismantleEssences > 0 ? ` +${dismantleEssences} ✨` : ''})
+                </button>
+              `}
+              <button id="btn-close-item-done" class="btn-drawer-action" style="flex: 1; background: #34495e; color: #fff;">
+                Done
+              </button>
+            </div>
+
           </div>
         </div>
-
-        <!-- Actions: Unequip / Dismantle -->
-        <div style="display: flex; gap: 8px; margin-top: 16px;">
-          ${equippedSpirit ? `
-            <button id="btn-unequip-item" class="btn-drawer-action" style="flex: 1; background: rgba(241, 196, 15, 0.2); border-color: #f1c40f; color: #ffd32a;">
-              Unequip
-            </button>
-          ` : `
-            <button id="btn-dismantle-item" class="btn-drawer-action" style="flex: 1; background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675;">
-              Dismantle (+${Math.round(20 * (item.level || 1))} 💎)
-            </button>
-          `}
-          <button id="btn-close-item-done" class="btn-drawer-action" style="flex: 1; background: #34495e; color: #fff;">
-            Done
-          </button>
-        </div>
-
       </div>
-    </div>
-  `;
+    `;
 
-  modalRoot.appendChild(modalEl);
+    const closeModal = () => {
+      modalRoot.innerHTML = '';
+      if (onUpdate) onUpdate();
+    };
 
-  const closeModal = () => {
-    if (modalRoot.contains(modalEl)) {
-      modalRoot.removeChild(modalEl);
-    }
-  };
+    modalRoot.querySelector('#btn-close-item-inspect')?.addEventListener('click', closeModal);
+    modalRoot.querySelector('#btn-close-item-done')?.addEventListener('click', closeModal);
 
-  modalEl.querySelector('#btn-close-item-inspect')?.addEventListener('click', closeModal);
-  modalEl.querySelector('#btn-close-item-done')?.addEventListener('click', closeModal);
-
-  // Equip to spirit buttons
-  modalEl.querySelectorAll('.btn-equip-to-spirit').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetSpiritId = btn.getAttribute('data-target-spirit');
+    // Enhance Relic
+    modalRoot.querySelector('#btn-enhance-relic')?.addEventListener('click', () => {
       try {
-        gameState.equipItem(targetSpiritId, item.uid);
-        closeModal();
+        const res = gameState.enhanceRelic(currentItem.uid);
+        renderModal();
         if (onUpdate) onUpdate();
       } catch (err) {
         alert(err.message);
       }
     });
-  });
 
-  // Unequip button
-  modalEl.querySelector('#btn-unequip-item')?.addEventListener('click', () => {
-    if (equippedSpirit) {
+    // Ascend Relic
+    modalRoot.querySelector('#btn-ascend-relic')?.addEventListener('click', () => {
       try {
-        gameState.unequipItem(equippedSpirit.id, isRelic ? item.slotTypeId : 'weapon');
-        closeModal();
+        const res = gameState.ascendRelic(currentItem.uid);
+        alert(`🌟 Ascended ${currentItem.name} to 6★! Unlocked 5th Substat slot!`);
+        renderModal();
         if (onUpdate) onUpdate();
       } catch (err) {
         alert(err.message);
       }
-    }
-  });
+    });
 
-  // Dismantle button
-  modalEl.querySelector('#btn-dismantle-item')?.addEventListener('click', () => {
-    if (confirm(`Dismantle ${item.name} for Spirit Shards?`)) {
-      try {
-        const res = gameState.dismantleEquipment(item.uid);
-        alert(`Dismantled ${item.name}! Gained +${res.shardsGained} Spirit Shards.`);
-        closeModal();
-        if (onUpdate) onUpdate();
-      } catch (err) {
-        alert(err.message);
+    // Equip to spirit buttons
+    modalRoot.querySelectorAll('.btn-equip-to-spirit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetSpiritId = btn.getAttribute('data-target-spirit');
+        try {
+          gameState.equipItem(targetSpiritId, currentItem.uid);
+          closeModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
+
+    // Unequip button
+    modalRoot.querySelector('#btn-unequip-item')?.addEventListener('click', () => {
+      if (equippedSpirit) {
+        try {
+          gameState.unequipItem(equippedSpirit.id, isRelic ? currentItem.slotTypeId : 'weapon');
+          closeModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
       }
-    }
-  });
+    });
+
+    // Dismantle button
+    modalRoot.querySelector('#btn-dismantle-item')?.addEventListener('click', () => {
+      if (confirm(`Dismantle ${currentItem.name}?\nYou will gain +${dismantleShards} Spirit Shards${dismantleEssences > 0 ? ` and +${dismantleEssences} Essences of the Gods` : ''}.`)) {
+        try {
+          const res = gameState.dismantleEquipment(currentItem.uid);
+          alert(`Dismantled ${currentItem.name}!\nGained +${res.shardsGained} Shards${res.essencesOfTheGodsGained ? ` and +${res.essencesOfTheGodsGained} Essences of the Gods` : ''}.`);
+          closeModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+    });
+  }
+
+  renderModal();
 }
 
 /**

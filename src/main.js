@@ -8,6 +8,7 @@ import {
   renderContractView, 
   renderDungeonView,
   renderForgeView,
+  renderMysticalView,
   renderVaultView, 
   renderStatsView,
   renderProfileView,
@@ -19,6 +20,7 @@ let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
 const resShardsEl = document.getElementById('res-shards');
 const resEssenceEl = document.getElementById('res-essence');
+const resGodEssencesEl = document.getElementById('res-god-essences');
 const resEnergyEl = document.getElementById('res-energy');
 const saveStatusEl = document.getElementById('save-status');
 const partyEvolveBadgeEl = document.getElementById('party-evolve-badge');
@@ -33,6 +35,9 @@ function updateResourcesDisplay() {
   }
   if (resEssenceEl) {
     resEssenceEl.textContent = gameState.state.resources.soulEssence.toLocaleString();
+  }
+  if (resGodEssencesEl) {
+    resGodEssencesEl.textContent = (gameState.state.resources.essencesOfTheGods || 0).toLocaleString();
   }
 
   // Update Party Evolve Badge if any spirit is ready to evolve
@@ -52,6 +57,15 @@ function switchTab(tabName) {
       btnTopProfile.classList.add('active');
     } else {
       btnTopProfile.classList.remove('active');
+    }
+  }
+
+  const btnTopIndex = document.getElementById('btn-top-index');
+  if (btnTopIndex) {
+    if (tabName === 'index') {
+      btnTopIndex.classList.add('active');
+    } else {
+      btnTopIndex.classList.remove('active');
     }
   }
 
@@ -86,6 +100,9 @@ function renderActiveTab() {
     case 'forge':
       renderForgeView(viewContainer);
       break;
+    case 'mystical':
+      renderMysticalView(viewContainer);
+      break;
     case 'vault':
       renderVaultView(viewContainer);
       break;
@@ -119,6 +136,14 @@ if (btnTopProfile) {
   });
 }
 
+// Setup Header Index button
+const btnTopIndex = document.getElementById('btn-top-index');
+if (btnTopIndex) {
+  btnTopIndex.addEventListener('click', () => {
+    switchTab('index');
+  });
+}
+
 // Subscribe to Game State updates
 gameState.subscribe((eventType, payload, state) => {
   if (eventType === 'tick') {
@@ -138,14 +163,12 @@ gameState.subscribe((eventType, payload, state) => {
       setTimeout(() => saveStatusEl.classList.remove('pulse'), 800);
     }
   } else if (eventType === 'enemyDefeated') {
+    updateResourcesDisplay();
+  } else if (eventType === 'madnessZoneUpdated' || eventType === 'stageUnlocked' || eventType === 'floorCleared') {
     if (activeTab === 'madness') {
       renderMadnessView(viewContainer);
     }
     updateResourcesDisplay();
-  } else if (eventType === 'enemySpawned' || eventType === 'swarmSpawned') {
-    if (activeTab === 'madness') {
-      renderMadnessView(viewContainer);
-    }
   } else if (eventType === 'spiritLevelCapped' || eventType === 'partyUpdated') {
     updateResourcesDisplay();
     if (activeTab === 'party') {
