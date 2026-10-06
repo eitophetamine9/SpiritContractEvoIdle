@@ -1,6 +1,15 @@
 # Spirit Contract Evo | Idle
 
-A mobile-first, dark fantasy Idle RPG built with vanilla JavaScript, modern CSS, and Vite. Players bind ancient spirits through sacred contracts, train them continuously in the astral plane, unlock branching evolutions, and challenge corrupted horrors across procedural tower biomes in the Madness Zone.
+> **A mobile-first, dark fantasy Idle RPG built with vanilla JavaScript, Pixi.js 2.5D viewports, and reactive state management.**
+
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES2022+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Pixi.js](https://img.shields.io/badge/Pixi.js-8.x-E72264?style=for-the-badge&logo=webgl&logoColor=white)](https://pixijs.com/)
+[![GSAP](https://img.shields.io/badge/GSAP-3.x-88CE02?style=for-the-badge&logo=greensock&logoColor=white)](https://greensock.com/gsap/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![PWA](https://img.shields.io/badge/PWA-Offline%20Ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](#production-build--pwa-preview)
+[![Architecture](https://img.shields.io/badge/Architecture-Reactive%20Pub%2FSub-blueviolet?style=for-the-badge)](#technology-stack)
+[![Tests](https://img.shields.io/badge/Tests-17%20Passed-2ED573?style=for-the-badge)](#running-test-suites)
 
 ---
 
