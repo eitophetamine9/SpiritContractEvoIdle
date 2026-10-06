@@ -38,8 +38,8 @@ console.log('--- TESTING UI COMPONENTS & LOGIC ---');
 // 1. Verify Bestiary Data and Deterministic Indexing
 const speciesList = Object.values(SPIRIT_SPECIES);
 console.log(`Total Spirit Species in Bestiary: ${speciesList.length}`);
-if (speciesList.length !== 37) {
-  throw new Error(`Expected 37 species, got ${speciesList.length}`);
+if (speciesList.length !== 47) {
+  throw new Error(`Expected 47 species, got ${speciesList.length}`);
 }
 
 // 2. Verify Bestiary Grid Generation

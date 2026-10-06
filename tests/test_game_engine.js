@@ -341,7 +341,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     }
   }
   if (missingElement > 0) throw new Error(`Found ${missingElement} spirits with missing element`);
-  console.log(`  Verified all 37 Spirit species have explicit elements (0 missing).`);
+  console.log(`  Verified all ${Object.keys(SPIRIT_SPECIES).length} Spirit species have explicit elements (0 missing).`);
 
   // Test 14: Sanctuary of the Gods & Mystical Realm Features
   console.log('\n[TEST 14] Testing Sanctuary of the Gods & Mystical Realm:');
@@ -369,6 +369,26 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   const activeCount = Object.keys(activeBlessings).length;
   console.log(`  Applied "Blessing of Ares": Active blessings count = ${activeCount}`);
   if (activeCount === 0 || !activeBlessings.blessing_ares) throw new Error('Ares blessing not active');
+
+  // Test 15: Celestial Spirits, Multi-Banner Summoning & Milestones
+  console.log('\n[TEST 15] Testing Multi-Banner Summoning, 30x Bulk Contracts & Milestones:');
+  const { BANNER_CONFIGS } = await import('../src/data/index.js');
+  console.log(`  Banner catalog count: ${BANNER_CONFIGS.length} (Expected >= 3)`);
+  if (BANNER_CONFIGS.length < 3) throw new Error('Expected at least 3 banner configurations');
+
+  gameState.state.resources.spiritShards = 5000;
+  const initialSpiritCount = gameState.state.spirits.length;
+  const pullResult = gameState.contractSpirit(30, 'solaris_rate_up');
+  console.log(`  Performed 30x Contract on Solaris Rate-Up! Received ${pullResult.length} spirits.`);
+  if (pullResult.length !== 30) throw new Error('Expected 30 spirits from 30x pull');
+  if (gameState.state.spirits.length !== initialSpiritCount + 30) throw new Error('Spirit collection count mismatch');
+  console.log(`  Summon Level: ${gameState.state.stats.summonLevel} | Summon XP: ${gameState.state.stats.summonXp}`);
+  if (gameState.state.stats.summonLevel < 2) throw new Error('Summon Level should have increased');
+
+  // Claim 20-pull milestone
+  const milestoneReward = gameState.claimSummonMilestone(20);
+  console.log(`  Claimed 20-Summon Milestone: ${milestoneReward.desc}`);
+  if (!gameState.state.stats.claimedSummonMilestones.includes(20)) throw new Error('Milestone 20 should be marked claimed');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

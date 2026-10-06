@@ -718,6 +718,160 @@ export const SPIRIT_SPECIES = {
     accentColor: '#fc5c65',
     description: 'The supreme conqueror of all madness and realities; all creation kneels before his blade.',
     evolutions: []
+  },
+
+  // ==========================================
+  // CELESTIAL ROSTER (New Mythical & Transcendent Line)
+  // ==========================================
+  'solaris_lion_pride': {
+    id: 'solaris_lion_pride',
+    name: 'Solaris, Lion Sin of Pride',
+    baseRarity: 'MYTHICAL',
+    element: 'LIGHT',
+    tier: 1,
+    levelCap: 60,
+    basePower: 260,
+    growthRate: 0.42,
+    avatarEmoji: '🦁☀️',
+    accentColor: '#f39c12',
+    description: 'A colossal solar warrior radiating blinding divine heat. Commands primordial sunshine and cleaves darkness with the sacred axe.',
+    evolutions: [
+      { targetSpeciesId: 'solaris_the_one', probability: 1.0, requiredLevel: 60 }
+    ]
+  },
+  'solaris_the_one': {
+    id: 'solaris_the_one',
+    name: 'Solaris, The One Ultimate',
+    baseRarity: 'TRANSCENDENT',
+    element: 'LIGHT',
+    tier: 2,
+    levelCap: 100,
+    basePower: 450,
+    growthRate: 0.55,
+    avatarEmoji: '☀️👑',
+    accentColor: '#ffd700',
+    description: 'At high noon, Solaris becomes an invincible avatar of zenith solar supremacy, incinerating all earthly sorrow.',
+    evolutions: []
+  },
+  'gelda_ashes_empress': {
+    id: 'gelda_ashes_empress',
+    name: 'Gelda, Thousand Ashes Empress',
+    baseRarity: 'MYTHICAL',
+    element: 'DARK',
+    tier: 1,
+    levelCap: 60,
+    basePower: 250,
+    growthRate: 0.40,
+    avatarEmoji: '👑🩸',
+    accentColor: '#9b59b6',
+    description: 'Sovereign of the scorched nether realms, commanding crimson flames born from a thousand fallen empires.',
+    evolutions: [
+      { targetSpeciesId: 'gelda_blood_sovereign', probability: 1.0, requiredLevel: 60 }
+    ]
+  },
+  'gelda_blood_sovereign': {
+    id: 'gelda_blood_sovereign',
+    name: 'Gelda, Sanguine Sovereign',
+    baseRarity: 'TRANSCENDENT',
+    element: 'DARK',
+    tier: 2,
+    levelCap: 100,
+    basePower: 440,
+    growthRate: 0.52,
+    avatarEmoji: '🩸🖤',
+    accentColor: '#e74c3c',
+    description: 'Transcended vampire monarch with absolute dominion over lifeblood, shadows, and Stygian infernos.',
+    evolutions: []
+  },
+  'astraea_valkyrie': {
+    id: 'astraea_valkyrie',
+    name: 'Astraea, Star-Forged Valkyrie',
+    baseRarity: 'LEGENDARY',
+    element: 'WIND',
+    tier: 1,
+    levelCap: 50,
+    basePower: 160,
+    growthRate: 0.32,
+    avatarEmoji: '🪽⭐',
+    accentColor: '#00d2d3',
+    description: 'Winged Valkyrie forging crystalline constellations with each piercing gale and celestial strike.',
+    evolutions: [
+      { targetSpeciesId: 'astraea_celestial_queen', probability: 1.0, requiredLevel: 50 }
+    ]
+  },
+  'astraea_celestial_queen': {
+    id: 'astraea_celestial_queen',
+    name: 'Astraea, Celestial Queen',
+    baseRarity: 'MYTHICAL',
+    element: 'WIND',
+    tier: 2,
+    levelCap: 80,
+    basePower: 280,
+    growthRate: 0.44,
+    avatarEmoji: '⭐👑',
+    accentColor: '#54a0ff',
+    description: 'Ascended queen reigning over astral tempests, aurora curtains, and stellar nebulae.',
+    evolutions: []
+  },
+  'leviathan_behemoth': {
+    id: 'leviathan_behemoth',
+    name: 'Leviathan, Tidal Behemoth',
+    baseRarity: 'LEGENDARY',
+    element: 'WATER',
+    tier: 1,
+    levelCap: 50,
+    basePower: 155,
+    growthRate: 0.31,
+    avatarEmoji: '🐋🌊',
+    accentColor: '#2e86de',
+    description: 'Ancient leviathan ruling the uncharted abyss, whose breath stirs cataclysmic tidal waves.',
+    evolutions: [
+      { targetSpeciesId: 'leviathan_abyssal_primordial', probability: 1.0, requiredLevel: 50 }
+    ]
+  },
+  'leviathan_abyssal_primordial': {
+    id: 'leviathan_abyssal_primordial',
+    name: 'Leviathan, Primordial Ocean',
+    baseRarity: 'MYTHICAL',
+    element: 'WATER',
+    tier: 2,
+    levelCap: 80,
+    basePower: 275,
+    growthRate: 0.43,
+    avatarEmoji: '🌊🔱',
+    accentColor: '#10ac84',
+    description: 'The primal ocean itself in sentient colossal form, devouring all discord in crushing whirlpools.',
+    evolutions: []
+  },
+  'baphomet_voidbinder': {
+    id: 'baphomet_voidbinder',
+    name: 'Baphomet, Nether Voidbinder',
+    baseRarity: 'EPIC',
+    element: 'DARK',
+    tier: 1,
+    levelCap: 40,
+    basePower: 110,
+    growthRate: 0.26,
+    avatarEmoji: '🐐🔮',
+    accentColor: '#5f27cd',
+    description: 'Horned occult binder channeling ethereal void seals, dark hexes, and nether rifts.',
+    evolutions: [
+      { targetSpeciesId: 'baphomet_archdemon_lord', probability: 1.0, requiredLevel: 40 }
+    ]
+  },
+  'baphomet_archdemon_lord': {
+    id: 'baphomet_archdemon_lord',
+    name: 'Baphomet, Archdemon Overlord',
+    baseRarity: 'LEGENDARY',
+    element: 'DARK',
+    tier: 2,
+    levelCap: 60,
+    basePower: 175,
+    growthRate: 0.35,
+    avatarEmoji: '🔱💀',
+    accentColor: '#341f97',
+    description: 'Ascended demon monarch wielding cataclysmic dark sorceries and obsidian throne authority.',
+    evolutions: []
   }
 };
 
@@ -784,6 +938,159 @@ export function rollAstralContractSpirit() {
   const pool = CONTRACT_POOLS_BY_RARITY[selectedRarity];
   const speciesId = pool[Math.floor(Math.random() * pool.length)];
   return { speciesId, rarityTier: selectedRarity };
+}
+
+/**
+ * Multi-Banner Summon Altars (Dedicated Rate-Up Hero Banners)
+ * Modeled after high-tier hero summon parchments
+ */
+export const BANNER_CONFIGS = [
+  {
+    id: 'solaris_rate_up',
+    name: 'The Lion Sin of Pride Solaris Rate-Up',
+    shortName: 'Solaris Rate-Up',
+    subtitle: 'Instantly summon a Mythical Hero: Solaris, Lion Sin of Pride!',
+    characterName: 'Solaris, Lion Sin of Pride',
+    characterTitle: 'Sun Deity of Unyielding Splendor',
+    featuredSpeciesId: 'solaris_lion_pride',
+    element: 'LIGHT',
+    icon: '🦁',
+    bannerTheme: 'solar',
+    accentColor: '#f39c12',
+    bgGradient: 'radial-gradient(circle at 50% 35%, rgba(243, 156, 18, 0.45) 0%, rgba(20, 10, 5, 0.95) 75%)',
+    timerText: '4d 12h 9m left',
+    odds: [
+      { rarity: 'COMMON', weight: 54.0 },
+      { rarity: 'UNCOMMON', weight: 28.0 },
+      { rarity: 'RARE', weight: 11.0 },
+      { rarity: 'EPIC', weight: 4.5 },
+      { rarity: 'LEGENDARY', weight: 1.7 },
+      { rarity: 'MYTHICAL', weight: 0.8 }
+    ],
+    rateUpBonus: {
+      MYTHICAL: 'solaris_lion_pride',
+      rateUpShare: 0.60
+    }
+  },
+  {
+    id: 'gelda_rate_up',
+    name: 'Thousand Ashes Gelda Rate-Up',
+    shortName: 'Gelda Rate-Up',
+    subtitle: 'Instantly summon a Mythical Hero: Gelda, Thousand Ashes Empress!',
+    characterName: 'Gelda, Thousand Ashes Empress',
+    characterTitle: 'Empress of Blood & Cinder',
+    featuredSpeciesId: 'gelda_ashes_empress',
+    element: 'DARK',
+    icon: '👑',
+    bannerTheme: 'void',
+    accentColor: '#9b59b6',
+    bgGradient: 'radial-gradient(circle at 50% 35%, rgba(155, 89, 182, 0.45) 0%, rgba(15, 5, 25, 0.95) 75%)',
+    timerText: '4d 12h 9m left',
+    odds: [
+      { rarity: 'COMMON', weight: 54.0 },
+      { rarity: 'UNCOMMON', weight: 28.0 },
+      { rarity: 'RARE', weight: 11.0 },
+      { rarity: 'EPIC', weight: 4.5 },
+      { rarity: 'LEGENDARY', weight: 1.7 },
+      { rarity: 'MYTHICAL', weight: 0.8 }
+    ],
+    rateUpBonus: {
+      MYTHICAL: 'gelda_ashes_empress',
+      rateUpShare: 0.60
+    }
+  },
+  {
+    id: 'celestial_conflux',
+    name: 'Celestial Conflux: Astraea & Leviathan',
+    shortName: 'Celestial Conflux',
+    subtitle: 'High rate-up for Astraea Valkyrie and Leviathan Behemoth!',
+    characterName: 'Astraea & Leviathan',
+    characterTitle: 'Guardians of Heaven & Deepsea',
+    featuredSpeciesId: 'astraea_valkyrie',
+    element: 'WIND',
+    icon: '🪽',
+    bannerTheme: 'astral',
+    accentColor: '#00d2d3',
+    bgGradient: 'radial-gradient(circle at 50% 35%, rgba(0, 210, 211, 0.35) 0%, rgba(5, 15, 25, 0.95) 75%)',
+    timerText: '6d 18h 30m left',
+    odds: [
+      { rarity: 'COMMON', weight: 54.0 },
+      { rarity: 'UNCOMMON', weight: 27.5 },
+      { rarity: 'RARE', weight: 11.0 },
+      { rarity: 'EPIC', weight: 4.5 },
+      { rarity: 'LEGENDARY', weight: 2.5 },
+      { rarity: 'MYTHICAL', weight: 0.5 }
+    ],
+    rateUpBonus: {
+      LEGENDARY: ['astraea_valkyrie', 'leviathan_behemoth'],
+      rateUpShare: 0.65
+    }
+  },
+  {
+    id: 'standard',
+    name: 'Holy Knight Astral Altar',
+    shortName: 'Standard Altar',
+    subtitle: 'Permanent Astral Summon Altar with all wandering spirits.',
+    characterName: 'Wandering Astral Spirits',
+    characterTitle: 'Permanent Pantheon Pool',
+    featuredSpeciesId: 'fallen_warrior_spirit',
+    element: 'LIGHT',
+    icon: '⚔️',
+    bannerTheme: 'standard',
+    accentColor: '#f1c40f',
+    bgGradient: 'radial-gradient(circle at 50% 35%, rgba(241, 196, 15, 0.3) 0%, rgba(20, 20, 20, 0.95) 75%)',
+    timerText: 'Permanent',
+    odds: [
+      { rarity: 'COMMON', weight: 56.0 },
+      { rarity: 'UNCOMMON', weight: 27.0 },
+      { rarity: 'RARE', weight: 11.0 },
+      { rarity: 'EPIC', weight: 4.5 },
+      { rarity: 'LEGENDARY', weight: 1.2 },
+      { rarity: 'MYTHICAL', weight: 0.3 }
+    ]
+  }
+];
+
+export function rollBannerContractSpirit(bannerId = 'solaris_rate_up') {
+  const banner = BANNER_CONFIGS.find(b => b.id === bannerId) || BANNER_CONFIGS[0];
+  const roll = Math.random() * 100;
+  let running = 0;
+  let selectedRarity = 'COMMON';
+
+  for (const entry of banner.odds) {
+    running += entry.weight;
+    if (roll <= running) {
+      selectedRarity = entry.rarity;
+      break;
+    }
+  }
+
+  // Rate-up check
+  if (banner.rateUpBonus && banner.rateUpBonus[selectedRarity]) {
+    const rateUpTarget = banner.rateUpBonus[selectedRarity];
+    if (Math.random() < banner.rateUpBonus.rateUpShare) {
+      if (Array.isArray(rateUpTarget)) {
+        const picked = rateUpTarget[Math.floor(Math.random() * rateUpTarget.length)];
+        return { speciesId: picked, rarityTier: selectedRarity };
+      } else {
+        return { speciesId: rateUpTarget, rarityTier: selectedRarity };
+      }
+    }
+  }
+
+  // Standard pool for rarity
+  const pool = CONTRACT_POOLS_BY_RARITY[selectedRarity];
+  if (pool && pool.length > 0) {
+    const speciesId = pool[Math.floor(Math.random() * pool.length)];
+    return { speciesId, rarityTier: selectedRarity };
+  }
+
+  if (selectedRarity === 'MYTHICAL') {
+    const mythicals = ['solaris_lion_pride', 'gelda_ashes_empress'];
+    return { speciesId: mythicals[Math.floor(Math.random() * mythicals.length)], rarityTier: 'MYTHICAL' };
+  }
+
+  return { speciesId: 'fallen_warrior_spirit', rarityTier: 'LEGENDARY' };
 }
 
 /**
@@ -1070,6 +1377,73 @@ export const SPIRIT_ULTIMATES = {
     name: 'Oblivion Cataclysm Slice',
     description: 'Transcendent abyssal blade that shatters the battlefield for 10.5x AOE damage.',
     multiplier: 10.5,
+    type: 'AOE_DAMAGE'
+  },
+
+  // Celestial Roster Ultimates
+  'solaris_lion_pride': {
+    name: 'Cruel Sun: Flare Immolation',
+    description: 'Manifests a miniature blazing star dealing 6.5x AOE solar fire damage.',
+    multiplier: 6.5,
+    type: 'AOE_DAMAGE'
+  },
+  'solaris_the_one': {
+    name: 'The One: Divine Slash Escanor',
+    description: 'Invincible zenith slash that cleaves all dimensions for 12.0x devastating AOE damage.',
+    multiplier: 12.0,
+    type: 'AOE_DAMAGE'
+  },
+  'gelda_ashes_empress': {
+    name: 'Thousand Ashes Crimson Gale',
+    description: 'Unleashes an incinerating whirlwind of dark ash dealing 5.8x AOE damage with 25% lifesteal.',
+    multiplier: 5.8,
+    healPercent: 25,
+    type: 'AOE_DAMAGE_AND_HEAL'
+  },
+  'gelda_blood_sovereign': {
+    name: 'Sanguine Eclipse Dominion',
+    description: 'Awakens primordial blood moon dealing 10.0x AOE damage and restoring party HP by 35%.',
+    multiplier: 10.0,
+    healPercent: 35,
+    type: 'AOE_DAMAGE_AND_HEAL'
+  },
+  'astraea_valkyrie': {
+    name: 'Starfall Gale Lance',
+    description: 'Rains astral javelins across enemy lines dealing 4.8x AOE damage.',
+    multiplier: 4.8,
+    type: 'AOE_DAMAGE'
+  },
+  'astraea_celestial_queen': {
+    name: 'Supernova Aurora Constellation',
+    description: 'Cascades shimmering nebulae dealing 8.2x AOE damage and shielding all allies for 20%.',
+    multiplier: 8.2,
+    shieldPercent: 20,
+    type: 'AOE_DAMAGE'
+  },
+  'leviathan_behemoth': {
+    name: 'Cataclysmic Tidal Surge',
+    description: 'Submerges the arena under abyssal tides dealing 4.5x AOE damage and granting 25% shield.',
+    multiplier: 4.5,
+    shieldPercent: 25,
+    type: 'AOE_DAMAGE'
+  },
+  'leviathan_abyssal_primordial': {
+    name: 'Primordial Sunken Abyss',
+    description: 'Crushes enemy ranks with trench pressure dealing 8.0x AOE damage and granting 30% shield.',
+    multiplier: 8.0,
+    shieldPercent: 30,
+    type: 'AOE_DAMAGE'
+  },
+  'baphomet_voidbinder': {
+    name: 'Nether Sigil Hex',
+    description: 'Channels abyssal occult runes dealing 4.0x damage.',
+    multiplier: 4.0,
+    type: 'DAMAGE'
+  },
+  'baphomet_archdemon_lord': {
+    name: 'Obsidian Annihilation Rift',
+    description: 'Opens a nether rift that tears enemy swarms apart for 6.2x AOE damage.',
+    multiplier: 6.2,
     type: 'AOE_DAMAGE'
   }
 };

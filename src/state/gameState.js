@@ -1,8 +1,10 @@
 import { 
   SPIRIT_SPECIES, 
   CONTRACT_POOLS_BY_RARITY,
+  BANNER_CONFIGS,
   rollContractSpirit,
   rollAstralContractSpirit,
+  rollBannerContractSpirit,
   getXpRequiredForLevel, 
   calculateSpiritPower,
   calculateSpiritMaxHp,
@@ -1241,9 +1243,20 @@ class GameStateManager {
    * Contracting random Spirits (Gacha / Summoning)
    * Supports Common, Uncommon, Rare, Epic, Legendary pulls
    */
-  contractSpirit(count = 1) {
+  getSummonLevelReqXp(level = 1) {
+    return Math.round(200 * Math.pow(Math.max(1, level), 1.35));
+  }
+
+  /**
+   * Contracting random Spirits (Gacha / Summoning)
+   * Supports Multi-Banner (Solaris Rate-Up, Gelda Rate-Up, Celestial Conflux, Standard)
+   * Supports 1x, 10x, and 30x pulls with summon level XP progression
+   */
+  contractSpirit(count = 1, bannerId = 'standard') {
     const singleCost = 100;
-    const totalCost = count === 10 ? 950 : singleCost * count;
+    let totalCost = singleCost * count;
+    if (count === 10) totalCost = 950;
+    if (count === 30) totalCost = 2700; // 10% discount for 30x contract
 
     if (this.state.resources.spiritShards < totalCost) {
       throw new Error(`Insufficient Spirit Shards! Need ${totalCost}, have ${this.state.resources.spiritShards}.`);
@@ -1254,8 +1267,10 @@ class GameStateManager {
     const newSpirits = [];
 
     for (let i = 0; i < count; i++) {
-      const rolled = rollContractSpirit();
-      const species = SPIRIT_SPECIES[rolled.speciesId];
+      const rolled = (!bannerId || bannerId === 'standard') 
+        ? rollContractSpirit() 
+        : rollBannerContractSpirit(bannerId);
+      const species = SPIRIT_SPECIES[rolled.speciesId] || SPIRIT_SPECIES['fallen_warrior_spirit'];
 
       const spirit = {
         id: this.generateId(),
@@ -1263,7 +1278,7 @@ class GameStateManager {
         customName: species.name,
         level: 1,
         xp: 0,
-        tier: 1,
+        tier: species.tier || 1,
         rarity: rolled.rarityTier,
         element: species.element || 'EARTH',
         power: calculateSpiritPower(species, 1, rolled.rarityTier),
@@ -1290,11 +1305,88 @@ class GameStateManager {
       this.markSpeciesDiscovered(species.id);
     }
 
-    this.state.stats.totalSpiritsContracted += count;
+    // Summon Level XP Progression
+    if (!this.state.stats) this.state.stats = {};
+    const gainedXp = count * 25;
+    this.state.stats.summonXp = (this.state.stats.summonXp || 0) + gainedXp;
+    this.state.stats.summonLevel = this.state.stats.summonLevel || 1;
+    let reqXp = this.getSummonLevelReqXp(this.state.stats.summonLevel);
+
+    while (this.state.stats.summonXp >= reqXp) {
+      this.state.stats.summonXp -= reqXp;
+      this.state.stats.summonLevel += 1;
+      reqXp = this.getSummonLevelReqXp(this.state.stats.summonLevel);
+      this.emit('summonLevelUp', { level: this.state.stats.summonLevel });
+    }
+
+    this.state.stats.totalSpiritsContracted = (this.state.stats.totalSpiritsContracted || 0) + count;
+    this.state.stats.totalBannerSummons = (this.state.stats.totalBannerSummons || 0) + count;
     this.save();
 
-    this.emit('spiritsContracted', { spirits: newSpirits, cost: totalCost });
+    this.emit('spiritsContracted', { spirits: newSpirits, cost: totalCost, bannerId });
+    this.emit('resourcesUpdated', this.state.resources);
     return newSpirits;
+  }
+
+  claimSummonMilestone(milestoneCount) {
+    if (!this.state.stats.claimedSummonMilestones) this.state.stats.claimedSummonMilestones = [];
+    if (this.state.stats.claimedSummonMilestones.includes(milestoneCount)) {
+      throw new Error('Milestone reward already claimed!');
+    }
+    const total = this.state.stats.totalBannerSummons || this.state.stats.totalSpiritsContracted || 0;
+    if (total < milestoneCount) {
+      throw new Error(`Need ${milestoneCount} total summons! Currently at ${total}.`);
+    }
+
+    const MILESTONE_REWARDS = {
+      20: { shards: 500, essences: 20, desc: '500 Shards & 20 Essences of the Gods' },
+      50: { shards: 1200, essences: 50, desc: '1,200 Shards & 50 Essences of the Gods' },
+      100: { soulEssence: 10, essences: 100, desc: '10 Soul Essence & 100 Essences of the Gods' },
+      200: { speciesId: 'astraea_valkyrie', desc: 'Guaranteed Legendary Hero: Astraea, Star-Forged Valkyrie' },
+      500: { speciesId: 'solaris_lion_pride', desc: 'Guaranteed Mythical Hero: Solaris, Lion Sin of Pride' },
+      1000: { speciesId: 'solaris_the_one', desc: 'Transcendent Hero: Solaris, The One Ultimate' }
+    };
+
+    const reward = MILESTONE_REWARDS[milestoneCount];
+    if (!reward) throw new Error('Invalid milestone tier!');
+
+    if (reward.shards) this.state.resources.spiritShards += reward.shards;
+    if (reward.essences) this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + reward.essences;
+    if (reward.soulEssence) this.state.resources.soulEssence = (this.state.resources.soulEssence || 0) + reward.soulEssence;
+    if (reward.speciesId) {
+      const species = SPIRIT_SPECIES[reward.speciesId];
+      if (species) {
+        const spirit = {
+          id: this.generateId(),
+          speciesId: species.id,
+          customName: species.name,
+          level: 1,
+          xp: 0,
+          tier: species.tier || 1,
+          rarity: species.baseRarity,
+          element: species.element || 'LIGHT',
+          power: calculateSpiritPower(species, 1, species.baseRarity),
+          maxHp: calculateSpiritMaxHp(species, 1, species.baseRarity),
+          currentHp: calculateSpiritMaxHp(species, 1, species.baseRarity),
+          maxMp: 100,
+          currentMp: 0,
+          shieldHp: 0,
+          isFallen: false,
+          isEquipped: false,
+          canEvolve: false,
+          evolutionHistory: [species.name],
+          contractedAt: Date.now()
+        };
+        this.state.spirits.unshift(spirit);
+        this.markSpeciesDiscovered(species.id);
+      }
+    }
+
+    this.state.stats.claimedSummonMilestones.push(milestoneCount);
+    this.save();
+    this.emit('milestoneClaimed', { milestoneCount, reward });
+    this.emit('resourcesUpdated', this.state.resources);
+    return reward;
   }
 
   /**
