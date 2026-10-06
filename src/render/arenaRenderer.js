@@ -93,6 +93,8 @@ export class ArenaRenderer25D {
       palette = ['#ffd700', '#f1c40f', '#ffffff', '#e0e0e0', '#00d2d3'];
     } else if (this.mode === 'sanctuary') {
       palette = ['#00ffff', '#70a1ff', '#a55eea', '#2ed573', '#ffd700'];
+    } else if (this.mode === 'vault') {
+      palette = ['#70a1ff', '#a55eea', '#ffd700', '#2ed573', '#00ffff', '#ffffff'];
     } else {
       const ELEMENT_COLORS = {
         FIRE: ['#ff4757', '#ffa502', '#ff6b81'],
@@ -204,6 +206,8 @@ export class ArenaRenderer25D {
       this.drawForgeDais(ctx, centerX, centerY, rx, ry);
     } else if (this.mode === 'sanctuary') {
       this.drawSanctuaryDais(ctx, centerX, centerY, rx, ry);
+    } else if (this.mode === 'vault') {
+      this.drawVaultDais(ctx, centerX, centerY, rx, ry);
     } else {
       this.drawMadnessDais(ctx, centerX, centerY, rx, ry);
     }
@@ -380,6 +384,67 @@ export class ArenaRenderer25D {
       ctx.fillStyle = '#00ffff';
       ctx.shadowColor = '#00ffff';
       ctx.shadowBlur = 6;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  drawVaultDais(ctx, cx, cy, rx, ry) {
+    // Arcane Holographic Card Deck Dais
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 14, rx, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - rx, cy);
+    ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fillStyle = '#0c1020';
+    ctx.fill();
+    ctx.strokeStyle = '#5f27cd';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Prismatic / Holographic Surface Gradient
+    const surfaceGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, rx);
+    surfaceGrad.addColorStop(0, '#1a1d36');
+    surfaceGrad.addColorStop(0.6, '#0f1224');
+    surfaceGrad.addColorStop(1, '#080a14');
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = surfaceGrad;
+    ctx.fill();
+
+    // Prismatic Iridescent Rim Glow
+    const pulse = 0.5 + 0.5 * Math.sin(this.time * 2.5);
+    ctx.strokeStyle = '#70a1ff';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#5352ed';
+    ctx.shadowBlur = 12 * pulse;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Holographic Foil Inscriptions
+    const angle = this.time * 0.15;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1, ry / rx);
+    ctx.rotate(angle);
+
+    ctx.strokeStyle = 'rgba(255, 215, 0, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, rx * 0.55, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 6 Elemental Card Nodes around rim
+    for (let i = 0; i < 6; i++) {
+      const a = (i * Math.PI) / 3;
+      const px = Math.cos(a) * (rx * 0.55);
+      const py = Math.sin(a) * (rx * 0.55);
+      ctx.beginPath();
+      ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd32a';
+      ctx.shadowColor = '#ffd32a';
+      ctx.shadowBlur = 5;
       ctx.fill();
     }
     ctx.restore();

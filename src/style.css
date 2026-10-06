@@ -86,20 +86,20 @@ body {
   justify-content: center;
 }
 
-/* Base button minimum touch target: 44px (strictly mobile friendly) */
+/* Base button minimum touch target: 40px (strictly mobile friendly) */
 button {
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  min-height: 44px;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 40px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 6px 12px;
   transition: transform 0.08s ease, filter 0.08s ease;
 }
 

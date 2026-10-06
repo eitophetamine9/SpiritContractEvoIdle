@@ -42,43 +42,43 @@ export function renderDungeonView(container) {
   }
 
   container.innerHTML = `
-    <div class="pantheon-container flex flex-col gap-4 p-2 sm:p-4 text-white">
+    <div class="pantheon-container flex flex-col gap-3 p-2 text-white">
       
-      <!-- Top Dungeon Hero Banner with Tailwind Glassmorphism -->
-      <div class="pantheon-hero-banner relative overflow-hidden rounded-2xl bg-gradient-to-b from-amber-950/40 via-slate-900/90 to-slate-950 border border-amber-500/30 p-4 shadow-[0_0_30px_rgba(245,158,11,0.15)] backdrop-blur-md" style="border-bottom: 2px solid ${selectedChamber.color};">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <!-- Top Dungeon Hero Banner -->
+      <div class="pantheon-hero-banner relative overflow-hidden rounded-xl bg-gradient-to-b from-amber-950/40 via-slate-900/90 to-slate-950 border border-amber-500/30 p-3 shadow-md backdrop-blur-md" style="border-bottom: 2px solid ${selectedChamber.color};">
+        <div class="flex items-center justify-between gap-2">
           <div class="pantheon-title-col">
-            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">
               ⚡ THE PANTHEON TRIALS
             </div>
-            <h2 class="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-100 to-orange-200 mt-1">
+            <h2 class="text-sm sm:text-base font-extrabold text-white mt-0.5">
               Divine Artifact Chambers
             </h2>
-            <p class="text-xs text-slate-400 max-w-lg mt-0.5">
-              Challenge Greek God Avatars to earn targeted 6-piece Relic Sets & Weapons across 4 trial difficulties.
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Challenge Greek God Avatars to earn targeted 6-piece Relic Sets & Weapons.
             </p>
           </div>
 
-          <div class="pantheon-energy-badge flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-950/80 border border-amber-500/40 shadow-inner self-stretch sm:self-auto justify-end">
-            <span class="energy-icon text-base">⚡</span>
-            <span class="energy-numbers text-xs font-black text-amber-300">${res.energy} / ${res.maxEnergy} Energy</span>
+          <div class="pantheon-energy-badge flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-950/80 border border-amber-500/40 text-[11px] shrink-0">
+            <span class="text-amber-400 font-bold">⚡</span>
+            <span class="font-extrabold text-amber-300">${res.energy} / ${res.maxEnergy}</span>
           </div>
         </div>
       </div>
 
-      <!-- Chamber Selection Carousel / Grid -->
-      <div class="pantheon-chambers-grid grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <!-- Chamber Selection Grid -->
+      <div class="pantheon-chambers-grid grid grid-cols-2 gap-2">
         ${PANTHEON_CHAMBERS.map(c => {
           const isSelected = c.id === selectedChamberId;
           const gSet = GREEK_GOD_SETS[c.godId];
           return `
-            <button class="chamber-card relative overflow-hidden rounded-xl p-3 flex flex-col items-center justify-center text-center transition-all duration-200 border cursor-pointer ${isSelected ? 'selected bg-slate-800/90 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02]' : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'}" data-chamber="${c.id}" style="--chamber-color: ${c.color};">
-              <div class="chamber-sigil w-11 h-11 rounded-full flex items-center justify-center text-2xl mb-1.5 shadow-md" style="background: ${c.color}22; border: 1.5px solid ${c.color};">
+            <button class="chamber-card relative overflow-hidden rounded-xl p-2.5 flex items-center gap-2 text-left transition-all border cursor-pointer ${isSelected ? 'selected bg-slate-800/90 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'bg-slate-900/60 border-slate-800'}" data-chamber="${c.id}" style="--chamber-color: ${c.color};">
+              <div class="chamber-sigil w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 shadow-sm" style="background: ${c.color}22; border: 1px solid ${c.color};">
                 ${c.sigil}
               </div>
-              <div class="chamber-info flex flex-col items-center">
-                <span class="chamber-name text-xs font-black text-white leading-tight">${c.name}</span>
-                <span class="chamber-god text-[10px] font-bold text-slate-400 mt-0.5" style="color: ${c.accentColor};">${gSet ? gSet.god : ''} Set</span>
+              <div class="chamber-info min-w-0 flex-1">
+                <span class="chamber-name text-xs font-bold text-white truncate block">${c.name}</span>
+                <span class="chamber-god text-[10px] font-semibold truncate block" style="color: ${c.accentColor};">${gSet ? gSet.god : ''} Set</span>
               </div>
             </button>
           `;
