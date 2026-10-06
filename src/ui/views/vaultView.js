@@ -23,6 +23,8 @@ let activeSubFilter = 'ALL'; // Element for spirits, Slot for relics, Archetype 
 let searchQuery = '';
 let isBulkMode = false;
 let selectedForBulk = new Set();
+let rarityScrollLeft = 0;
+let subScrollLeft = 0;
 
 export function renderVaultView(container) {
   const state = gameState.state;
@@ -207,29 +209,34 @@ export function renderVaultView(container) {
         ` : ''}
       </div>
 
-      <!-- Rarity Filter Chips -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <!-- Custom Rarity Filter Slider (Same as Index Bestiary) -->
+      <div id="vault-rarity-scroll" class="index-filter-scroll" style="padding-bottom: 6px;">
         ${rarityTiers.map(tier => {
           const info = tier === 'ALL' || tier === 'FAVORITES' ? { color: '#ffffff' } : getRarityInfo(tier);
           const isActive = activeRarityFilter === tier;
           return `
-            <button class="vault-rarity-chip shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${isActive ? 'bg-slate-800 border-indigo-400 text-white shadow-sm' : 'bg-slate-950/70 border-slate-800 text-slate-400'}" 
-                    data-tier="${tier}">
+            <button class="index-filter-btn vault-rarity-chip ${isActive ? 'active' : ''}" 
+                    data-tier="${tier}"
+                    style="${isActive && tier !== 'ALL' && tier !== 'FAVORITES' ? `border-color: ${info.color}; color: ${info.color};` : ''}">
               ${tier === 'FAVORITES' ? '⭐ Favorites' : tier}
             </button>
           `;
         }).join('')}
       </div>
 
-      <!-- Secondary Category Filter (Element / Slot / Archetype) -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[10px]">
-        <span class="text-slate-500 font-bold shrink-0">Filter:</span>
+      <!-- Custom Element / Category Sub-Filter Slider (Same as Index Bestiary) -->
+      <div id="vault-sub-scroll" class="index-filter-scroll" style="padding-bottom: 6px; margin-top: 2px;">
         ${(activeCategory === 'spirits' ? spiritElements : activeCategory === 'relics' ? relicSlots : weaponArchetypes).map(sub => {
           const isActive = activeSubFilter.toUpperCase() === sub.toUpperCase();
+          const elemIcons = {
+            FIRE: '🔥 Fire', WATER: '💧 Water', EARTH: '🌿 Earth',
+            WIND: '⚡ Wind', LIGHT: '☀️ Light', DARK: '🌑 Dark', ALL: 'All'
+          };
+          const label = activeCategory === 'spirits' ? (elemIcons[sub] || sub) : sub;
           return `
-            <button class="vault-sub-chip shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border transition-all cursor-pointer ${isActive ? 'bg-indigo-500/25 border-indigo-400 text-indigo-200' : 'bg-slate-900 border-slate-800 text-slate-400'}" 
+            <button class="index-filter-btn vault-sub-chip ${isActive ? 'active' : ''}" 
                     data-sub="${sub}">
-              ${sub}
+              ${label}
             </button>
           `;
         }).join('')}
@@ -239,11 +246,12 @@ export function renderVaultView(container) {
       ${isBulkMode && activeCategory === 'spirits' ? `
         <div class="rounded-xl border border-red-500/30 bg-slate-900/90 p-2.5 flex items-center justify-between gap-2">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <button id="btn-select-commons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700">Commons</button>
-            <button id="btn-select-uncommons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700">Uncommons</button>
-            <button id="btn-clear-selection" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-400">Clear</button>
+            <button id="btn-select-commons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Commons</button>
+            <button id="btn-select-uncommons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Uncommons</button>
+            <button id="btn-select-all-filtered" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Select All</button>
+            <button id="btn-clear-selection" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-400 hover:text-white cursor-pointer">Clear</button>
           </div>
-          <button id="btn-execute-bulk" class="px-3 py-1.5 rounded-lg text-xs font-extrabold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40" ${selectedForBulk.size === 0 ? 'disabled' : ''}>
+          <button id="btn-execute-bulk" class="px-3 py-1.5 rounded-lg text-xs font-extrabold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 cursor-pointer" ${selectedForBulk.size === 0 ? 'disabled' : ''}>
             Annul ${selectedForBulk.size} (+${bulkShardsRefund} 💎)
           </button>
         </div>
@@ -272,9 +280,18 @@ export function renderVaultView(container) {
             const elemColor = ELEM_COLORS[elem] || '#2ed573';
 
             return `
-              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01] ${isSelected ? 'ring-2 ring-red-500' : ''}" 
+              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01] ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
                    style="border-color: ${rarity.color}66;" 
                    data-spirit-id="${s.id}">
+                
+                <!-- Bulk Selection Indicator Overlay -->
+                ${isBulkMode ? `
+                  <div class="absolute top-2 left-2 z-30 flex items-center justify-center">
+                    <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-red-500 text-white shadow-sm' : 'bg-slate-950/80 border border-slate-600 text-transparent'}">
+                      ✓
+                    </span>
+                  </div>
+                ` : ''}
                 
                 <!-- Card Header Strip -->
                 <div class="flex items-center justify-between gap-1 mb-1.5">
@@ -474,6 +491,29 @@ export function renderVaultView(container) {
     renderVaultView(container);
   });
 
+  // Restore and track scroll positions for custom filter sliders
+  const rarityScrollEl = container.querySelector('#vault-rarity-scroll');
+  const subScrollEl = container.querySelector('#vault-sub-scroll');
+  if (rarityScrollEl && rarityScrollLeft > 0) rarityScrollEl.scrollLeft = rarityScrollLeft;
+  if (subScrollEl && subScrollLeft > 0) subScrollEl.scrollLeft = subScrollLeft;
+
+  rarityScrollEl?.addEventListener('scroll', () => {
+    rarityScrollLeft = rarityScrollEl.scrollLeft;
+  });
+  subScrollEl?.addEventListener('scroll', () => {
+    subScrollLeft = subScrollEl.scrollLeft;
+  });
+
+  // Enable mouse wheel horizontal scrolling on filter sliders
+  container.querySelectorAll('.index-filter-scroll').forEach(slider => {
+    slider.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        slider.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+  });
+
   // Bind Rarity Filters
   container.querySelectorAll('.vault-rarity-chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -498,6 +538,9 @@ export function renderVaultView(container) {
       const sp = spirits.find(s => s.id === spId);
       if (sp) {
         sp.favorite = !sp.favorite;
+        if (sp.favorite && selectedForBulk.has(spId)) {
+          selectedForBulk.delete(spId);
+        }
         gameState.save();
         renderVaultView(container);
       }
@@ -556,6 +599,11 @@ export function renderVaultView(container) {
           alert('Cannot select an active party spirit for annulment.');
           return;
         }
+        const sp = spirits.find(s => s.id === spId);
+        if (sp?.favorite) {
+          alert('This Spirit is marked as Favorite! Unfavorite it first before selecting it for annulment.');
+          return;
+        }
         if (selectedForBulk.has(spId)) selectedForBulk.delete(spId);
         else selectedForBulk.add(spId);
         renderVaultView(container);
@@ -611,6 +659,15 @@ export function renderVaultView(container) {
     renderVaultView(container);
   });
 
+  container.querySelector('#btn-select-all-filtered')?.addEventListener('click', () => {
+    filteredSpirits.forEach(s => {
+      if (!partyIds.includes(s.id) && !s.favorite) {
+        selectedForBulk.add(s.id);
+      }
+    });
+    renderVaultView(container);
+  });
+
   container.querySelector('#btn-clear-selection')?.addEventListener('click', () => {
     selectedForBulk.clear();
     renderVaultView(container);
@@ -621,7 +678,13 @@ export function renderVaultView(container) {
     if (confirm(`Annul contract with ${selectedForBulk.size} selected Spirits? You will receive +${bulkShardsRefund} Spirit Shards.`)) {
       try {
         const res = gameState.bulkAnnulContracts(Array.from(selectedForBulk));
-        alert(`Successfully annulled contracts with ${res.annulledCount} Spirits! Gained +${res.totalShardsGained} Spirit Shards.`);
+        const annulledCount = res.annulledCount ?? res.count ?? 0;
+        const shardsGained = res.totalShardsGained ?? res.shardsGained ?? 0;
+        if (annulledCount === 0) {
+          alert('No spirits could be annulled. Selected spirits may be active party members or marked as favorite.');
+        } else {
+          alert(`Successfully annulled contracts with ${annulledCount} Spirits! Gained +${shardsGained} Spirit Shards.`);
+        }
         selectedForBulk.clear();
         isBulkMode = false;
         renderVaultView(container);

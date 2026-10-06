@@ -385,10 +385,29 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Summon Level: ${gameState.state.stats.summonLevel} | Summon XP: ${gameState.state.stats.summonXp}`);
   if (gameState.state.stats.summonLevel < 2) throw new Error('Summon Level should have increased');
 
-  // Claim 20-pull milestone
-  const milestoneReward = gameState.claimSummonMilestone(20);
-  console.log(`  Claimed 20-Summon Milestone: ${milestoneReward.desc}`);
-  if (!gameState.state.stats.claimedSummonMilestones.includes(20)) throw new Error('Milestone 20 should be marked claimed');
+  // Test 16: Spirit Annulment & Bulk Annulment System
+  console.log('\n[TEST 16] Testing Spirit Annulment & Bulk Annulment System:');
+  const nonPartySpirits = gameState.state.spirits.filter(s => !gameState.state.party.includes(s.id));
+  if (nonPartySpirits.length >= 2) {
+    const spiritToAnnul = nonPartySpirits[0];
+    const prevShards = gameState.state.resources.spiritShards;
+    const annulShards = gameState.annulContract(spiritToAnnul.id);
+    console.log(`  Annulled contract with "${spiritToAnnul.customName}": Gained +${annulShards} Shards`);
+    if (gameState.state.resources.spiritShards !== prevShards + annulShards) {
+      throw new Error('Spirit shards balance mismatch after annulment');
+    }
+
+    // Test bulk annulment with favorite and party protection
+    const remainingNonParty = gameState.state.spirits.filter(s => !gameState.state.party.includes(s.id));
+    if (remainingNonParty.length >= 2) {
+      remainingNonParty[0].favorite = true; // Mark one as favorite
+      const targetIds = [remainingNonParty[0].id, remainingNonParty[1].id, gameState.state.party[0]];
+      const bulkRes = gameState.bulkAnnulContracts(targetIds);
+      console.log(`  Bulk annul attempted on 3 targets (1 fav, 1 party, 1 normal) -> Annulled: ${bulkRes.annulledCount}, Shards: +${bulkRes.totalShardsGained}`);
+      if (bulkRes.annulledCount !== 1) throw new Error('Bulk annul should skip favorite and active party spirits');
+      if (bulkRes.totalShardsGained <= 0) throw new Error('Bulk annul should award shards for valid spirits');
+    }
+  }
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

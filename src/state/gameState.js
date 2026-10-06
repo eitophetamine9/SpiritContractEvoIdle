@@ -1659,7 +1659,9 @@ class GameStateManager {
   }
 
   bulkAnnulSpirits(spiritIds) {
-    if (!Array.isArray(spiritIds) || spiritIds.length === 0) return { count: 0, shardsGained: 0 };
+    if (!Array.isArray(spiritIds) || spiritIds.length === 0) {
+      return { count: 0, shardsGained: 0, annulledCount: 0, totalShardsGained: 0 };
+    }
 
     let count = 0;
     let totalShardsGained = 0;
@@ -1684,7 +1686,16 @@ class GameStateManager {
     this.state.resources.spiritShards += totalShardsGained;
     this.save();
     this.emit('spiritsBulkAnnulled', { count, shardsGained: totalShardsGained });
-    return { count, shardsGained: totalShardsGained };
+    return {
+      count,
+      shardsGained: totalShardsGained,
+      annulledCount: count,
+      totalShardsGained: totalShardsGained
+    };
+  }
+
+  bulkAnnulContracts(spiritIds) {
+    return this.bulkAnnulSpirits(spiritIds);
   }
 
   // =========================================================================

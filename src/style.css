@@ -2672,14 +2672,17 @@ button:disabled {
 
 .index-filter-scroll {
   display: flex;
+  align-items: center;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
 }
 
 .index-filter-btn {
-  min-height: 44px;
+  min-height: 36px;
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 800;
@@ -2688,6 +2691,15 @@ button:disabled {
   color: var(--text-muted);
   border-radius: 8px;
   white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.index-filter-btn:hover {
+  border-color: rgba(39, 174, 96, 0.6);
+  color: #ffffff;
 }
 
 .index-filter-btn.active {
