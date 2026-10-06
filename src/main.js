@@ -8,6 +8,7 @@ import {
   renderContractView, 
   renderDungeonView,
   renderForgeView,
+  renderMysticalView,
   renderVaultView, 
   renderStatsView,
   renderProfileView,
@@ -19,6 +20,7 @@ let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
 const resShardsEl = document.getElementById('res-shards');
 const resEssenceEl = document.getElementById('res-essence');
+const resGodEssencesEl = document.getElementById('res-god-essences');
 const resEnergyEl = document.getElementById('res-energy');
 const saveStatusEl = document.getElementById('save-status');
 const partyEvolveBadgeEl = document.getElementById('party-evolve-badge');
@@ -33,6 +35,9 @@ function updateResourcesDisplay() {
   }
   if (resEssenceEl) {
     resEssenceEl.textContent = gameState.state.resources.soulEssence.toLocaleString();
+  }
+  if (resGodEssencesEl) {
+    resGodEssencesEl.textContent = (gameState.state.resources.essencesOfTheGods || 0).toLocaleString();
   }
 
   // Update Party Evolve Badge if any spirit is ready to evolve
@@ -85,6 +90,9 @@ function renderActiveTab() {
       break;
     case 'forge':
       renderForgeView(viewContainer);
+      break;
+    case 'mystical':
+      renderMysticalView(viewContainer);
       break;
     case 'vault':
       renderVaultView(viewContainer);

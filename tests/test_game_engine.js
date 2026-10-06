@@ -343,6 +343,33 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (missingElement > 0) throw new Error(`Found ${missingElement} spirits with missing element`);
   console.log(`  Verified all 37 Spirit species have explicit elements (0 missing).`);
 
+  // Test 14: Sanctuary of the Gods & Mystical Realm Features
+  console.log('\n[TEST 14] Testing Sanctuary of the Gods & Mystical Realm:');
+  const { ESSENCE_CHAMBERS, ESSENCE_DIFFICULTY_TIERS } = await import('../src/data/index.js');
+  console.log(`  Essence Chambers count: ${ESSENCE_CHAMBERS.length} (Expected 4)`);
+  if (ESSENCE_CHAMBERS.length !== 4) throw new Error('Expected 4 Essence Chambers');
+
+  gameState.state.resources.energy = 50;
+  const essenceDungeonResult = gameState.runEssenceDungeon('olympian_nexus', 1);
+  console.log(`  Cleared "Olympian Nexus" [Tier 1]! Gained ${essenceDungeonResult.essencesAwarded} Essences of the Gods & ${essenceDungeonResult.soulEssenceAwarded} Soul Essence.`);
+  if (essenceDungeonResult.essencesAwarded <= 0) throw new Error('Should award Essences of the Gods');
+
+  // Test EXP Potions
+  const testSpirit = gameState.state.spirits[0];
+  const preXp = testSpirit.xp;
+  gameState.state.resources.spiritShards = 1000;
+  gameState.state.resources.essencesOfTheGods = 50;
+  gameState.buyExpPotion(testSpirit.id, 'lesser_elixir');
+  console.log(`  Used Lesser Astral Elixir on ${testSpirit.customName}: XP ${preXp} -> ${testSpirit.xp} (+10,000 XP)`);
+  if (testSpirit.xp < preXp + 10000 && testSpirit.level === 1) throw new Error('EXP potion failed to grant XP');
+
+  // Test Combat Blessings
+  gameState.applyTemporaryBlessing('blessing_ares');
+  const activeBlessings = gameState.getActiveBlessings();
+  const activeCount = Object.keys(activeBlessings).length;
+  console.log(`  Applied "Blessing of Ares": Active blessings count = ${activeCount}`);
+  if (activeCount === 0 || !activeBlessings.blessing_ares) throw new Error('Ares blessing not active');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

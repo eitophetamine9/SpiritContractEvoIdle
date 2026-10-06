@@ -34,6 +34,11 @@ import {
   FORGE_DIFFICULTY_TIERS, 
   generateForgeLoot 
 } from '../data/weaponDungeonData.js';
+import { 
+  ESSENCE_CHAMBERS, 
+  ESSENCE_DIFFICULTY_TIERS, 
+  generateEssenceLoot 
+} from '../data/essenceDungeonData.js';
 
 const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
@@ -211,6 +216,7 @@ class GameStateManager {
         equipment: [starterWeapon, starterRelic1, starterRelic2]
       },
       activeDungeonBattle: null,
+      activeBlessings: {}, // Temporary 1-hour spirit blessings
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
       hallOfFame: [starterId], // Max 5 showcase spirits
@@ -250,6 +256,7 @@ class GameStateManager {
       resources: { ...base.resources, ...(loaded.resources || {}) },
       madnessZone: { ...base.madnessZone, ...(loaded.madnessZone || {}) },
       stats: { ...base.stats, ...(loaded.stats || {}) },
+      activeBlessings: loaded.activeBlessings && typeof loaded.activeBlessings === 'object' ? loaded.activeBlessings : {},
       spirits: loaded.spirits || [],
       party: loaded.party || []
     };
@@ -446,6 +453,9 @@ class GameStateManager {
 
         // Real-time Energy Regeneration (1 per 30s)
         this.tickEnergyRegen(secondsPassed);
+
+        // Tick temporary spirit blessings
+        this.tickBlessings();
 
         this.emit('secondTick', { seconds: secondsPassed });
       }
@@ -2157,6 +2167,9 @@ class GameStateManager {
     if (dungeonType === 'pantheon') {
       chamber = PANTHEON_CHAMBERS.find(c => c.id === chamberId) || PANTHEON_CHAMBERS[0];
       tierObj = PANTHEON_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || PANTHEON_DIFFICULTY_TIERS[0];
+    } else if (dungeonType === 'essence') {
+      chamber = ESSENCE_CHAMBERS.find(c => c.id === chamberId) || ESSENCE_CHAMBERS[0];
+      tierObj = ESSENCE_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || ESSENCE_DIFFICULTY_TIERS[0];
     } else {
       chamber = FORGE_CHAMBERS.find(c => c.id === chamberId) || FORGE_CHAMBERS[0];
       tierObj = FORGE_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || FORGE_DIFFICULTY_TIERS[0];
@@ -2168,12 +2181,13 @@ class GameStateManager {
     const enemies = [];
 
     if (waveNum === 1) {
-      const namePrefix = dungeonType === 'pantheon' ? `${targetGod} Sentinel` : 'Cinder Golem';
-      const icon = dungeonType === 'pantheon' ? '🛡️' : '🔥';
+      const namePrefix = dungeonType === 'pantheon' ? `${targetGod} Sentinel` : dungeonType === 'essence' ? `${chamber.name} Sentinel` : 'Cinder Golem';
+      const icon = dungeonType === 'pantheon' ? '🛡️' : dungeonType === 'essence' ? '💠' : '🔥';
       enemies.push({
         id: `wave1_e1_${Date.now()}`,
         name: `${namePrefix} Alpha`,
         icon,
+        element: chamber.element || 'LIGHT',
         maxHp: Math.max(50, Math.round(baseHp * 0.45)),
         hp: Math.max(50, Math.round(baseHp * 0.45)),
         power: Math.max(10, Math.round(targetPower * 0.25)),
@@ -2185,6 +2199,7 @@ class GameStateManager {
         id: `wave1_e2_${Date.now()}`,
         name: `${namePrefix} Beta`,
         icon,
+        element: chamber.element || 'LIGHT',
         maxHp: Math.max(50, Math.round(baseHp * 0.45)),
         hp: Math.max(50, Math.round(baseHp * 0.45)),
         power: Math.max(10, Math.round(targetPower * 0.25)),
@@ -2193,12 +2208,13 @@ class GameStateManager {
         currentCooldown: 2.0
       });
     } else if (waveNum === 2) {
-      const namePrefix = dungeonType === 'pantheon' ? `${targetGod} Guardian` : 'Crucible Automaton';
-      const icon = dungeonType === 'pantheon' ? '⚡' : '⚙️';
+      const namePrefix = dungeonType === 'pantheon' ? `${targetGod} Guardian` : dungeonType === 'essence' ? `${chamber.name} Warden` : 'Crucible Automaton';
+      const icon = dungeonType === 'pantheon' ? '⚡' : dungeonType === 'essence' ? '✨' : '⚙️';
       enemies.push({
         id: `wave2_e1_${Date.now()}`,
         name: `Elite ${namePrefix}`,
         icon,
+        element: chamber.element || 'LIGHT',
         maxHp: Math.max(80, Math.round(baseHp * 0.75)),
         hp: Math.max(80, Math.round(baseHp * 0.75)),
         power: Math.max(15, Math.round(targetPower * 0.35)),
@@ -2210,6 +2226,7 @@ class GameStateManager {
         id: `wave2_e2_${Date.now()}`,
         name: `${namePrefix} Warden`,
         icon,
+        element: chamber.element || 'LIGHT',
         maxHp: Math.max(70, Math.round(baseHp * 0.65)),
         hp: Math.max(70, Math.round(baseHp * 0.65)),
         power: Math.max(12, Math.round(targetPower * 0.3)),
@@ -2218,12 +2235,13 @@ class GameStateManager {
         currentCooldown: 1.5
       });
     } else {
-      const bossName = dungeonType === 'pantheon' ? `Avatar of ${targetGod}` : (chamber.bossName || 'Vulcan Titan');
-      const bossIcon = dungeonType === 'pantheon' ? (chamber.sigil || chamber.icon || '🔱') : (chamber.bossIcon || '🌋');
+      const bossName = dungeonType === 'pantheon' ? `Avatar of ${targetGod}` : dungeonType === 'essence' ? (chamber.bossName || `${chamber.name} Overlord`) : (chamber.bossName || 'Vulcan Titan');
+      const bossIcon = dungeonType === 'pantheon' ? (chamber.sigil || chamber.icon || '🔱') : dungeonType === 'essence' ? (chamber.bossIcon || '👑') : (chamber.bossIcon || '🌋');
       enemies.push({
         id: `wave3_boss_${Date.now()}`,
         name: bossName,
         icon: bossIcon,
+        element: chamber.element || 'LIGHT',
         isBoss: true,
         maxHp: Math.max(150, Math.round(baseHp * 1.5)),
         hp: Math.max(150, Math.round(baseHp * 1.5)),
@@ -2234,8 +2252,9 @@ class GameStateManager {
       });
       enemies.push({
         id: `wave3_attendant_${Date.now()}`,
-        name: dungeonType === 'pantheon' ? 'Temple High Priest' : 'Forge Overseer',
+        name: dungeonType === 'pantheon' ? 'Temple High Priest' : dungeonType === 'essence' ? 'Essence Core Primordial' : 'Forge Overseer',
         icon: '🔮',
+        element: chamber.element || 'LIGHT',
         maxHp: Math.max(50, Math.round(baseHp * 0.5)),
         hp: Math.max(50, Math.round(baseHp * 0.5)),
         power: Math.max(10, Math.round(targetPower * 0.28)),
@@ -2252,6 +2271,8 @@ class GameStateManager {
     let tierObj;
     if (dungeonType === 'pantheon') {
       tierObj = PANTHEON_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || PANTHEON_DIFFICULTY_TIERS[0];
+    } else if (dungeonType === 'essence') {
+      tierObj = ESSENCE_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || ESSENCE_DIFFICULTY_TIERS[0];
     } else {
       tierObj = FORGE_DIFFICULTY_TIERS.find(t => t.tier === tierNum) || FORGE_DIFFICULTY_TIERS[0];
     }
@@ -2496,6 +2517,8 @@ class GameStateManager {
     let loot;
     if (battle.dungeonType === 'pantheon') {
       loot = generateDungeonLoot(battle.chamberId, battle.tier);
+    } else if (battle.dungeonType === 'essence') {
+      loot = generateEssenceLoot(battle.chamberId, battle.tier);
     } else {
       loot = generateForgeLoot(battle.chamberId, battle.tier);
     }
@@ -2511,9 +2534,16 @@ class GameStateManager {
     if (loot.weapons) {
       loot.weapons.forEach(w => this.state.inventory.equipment.push(w));
     }
+    if (loot.godEssencesGained) {
+      this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + loot.godEssencesGained;
+    }
+    if (loot.soulEssenceGained) {
+      this.state.resources.soulEssence += loot.soulEssenceGained;
+    } else if (loot.essenceGained) {
+      this.state.resources.soulEssence += loot.essenceGained;
+    }
 
     this.state.resources.spiritShards += loot.shardsGained;
-    this.state.resources.soulEssence += loot.essenceGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
 
@@ -2527,7 +2557,162 @@ class GameStateManager {
     this.save();
     this.emit('dungeonBattleVictory', { loot, battle });
     this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
     this.emit('dungeonBattleUpdated', battle);
+  }
+
+  runEssenceDungeon(chamberId, tierNum = 1) {
+    const chamber = ESSENCE_CHAMBERS.find(c => c.id === chamberId);
+    if (!chamber) throw new Error('Invalid Essence Chamber selected!');
+
+    const tierObj = ESSENCE_DIFFICULTY_TIERS.find(t => t.tier === tierNum);
+    if (!tierObj) throw new Error('Invalid difficulty tier selected!');
+
+    if (this.state.resources.energy < tierObj.energyCost) {
+      throw new Error(`Insufficient Energy! Need ${tierObj.energyCost} ⚡, have ${this.state.resources.energy} ⚡.`);
+    }
+
+    this.state.resources.energy -= tierObj.energyCost;
+    const loot = generateEssenceLoot(chamberId, tierNum);
+
+    this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + loot.godEssencesGained;
+    this.state.resources.soulEssence += loot.soulEssenceGained;
+    this.state.resources.spiritShards += loot.shardsGained;
+    this.state.stats.shardsEarnedTotal += loot.shardsGained;
+    this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+
+    this.save();
+    this.emit('dungeonCompleted', loot);
+    this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return loot;
+  }
+
+  applyTemporaryBlessing(blessingId) {
+    const BLESSINGS = {
+      blessing_ares: { id: 'blessing_ares', name: 'Blessing of Ares', icon: '⚔️', cost: 15, durationSec: 3600, desc: '+20% Party DMG & +10% Crit Rate' },
+      blessing_athena: { id: 'blessing_athena', name: 'Blessing of Athena', icon: '🛡️', cost: 15, durationSec: 3600, desc: '+25% Max HP & +20% Shield' },
+      blessing_hermes: { id: 'blessing_hermes', name: 'Blessing of Hermes', icon: '🪽', cost: 15, durationSec: 3600, desc: '+30% Shards & Drops in Madness Zone' }
+    };
+
+    const b = BLESSINGS[blessingId];
+    if (!b) throw new Error('Invalid Blessing selected!');
+
+    if ((this.state.resources.essencesOfTheGods || 0) < b.cost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${b.cost} 💠, have ${this.state.resources.essencesOfTheGods || 0} 💠.`);
+    }
+
+    this.state.resources.essencesOfTheGods -= b.cost;
+    if (!this.state.activeBlessings) this.state.activeBlessings = {};
+    this.state.activeBlessings[blessingId] = {
+      id: b.id,
+      name: b.name,
+      icon: b.icon,
+      expiresAt: Date.now() + b.durationSec * 1000
+    };
+
+    this.save();
+    this.emit('blessingsUpdated', this.state.activeBlessings);
+    this.emit('resourcesUpdated', this.state.resources);
+    return { success: true, blessing: this.state.activeBlessings[blessingId] };
+  }
+
+  getActiveBlessings() {
+    const now = Date.now();
+    const active = {};
+    if (this.state.activeBlessings) {
+      for (const [id, b] of Object.entries(this.state.activeBlessings)) {
+        if (b.expiresAt > now) {
+          active[id] = { ...b, remainingSec: Math.round((b.expiresAt - now) / 1000) };
+        }
+      }
+    }
+    return active;
+  }
+
+  tickBlessings() {
+    if (!this.state.activeBlessings) return;
+    const now = Date.now();
+    let changed = false;
+    for (const [id, b] of Object.entries(this.state.activeBlessings)) {
+      if (b.expiresAt <= now) {
+        delete this.state.activeBlessings[id];
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.emit('blessingsUpdated', this.state.activeBlessings);
+    }
+  }
+
+  addExperienceToSpirit(spirit, gainedXp) {
+    if (!spirit || gainedXp <= 0) return 0;
+    const species = SPIRIT_SPECIES[spirit.speciesId];
+    if (!species) return 0;
+
+    const initialLevel = spirit.level;
+    spirit.xp = (spirit.xp || 0) + gainedXp;
+    let reqXp = getXpRequiredForLevel(spirit.level);
+
+    while (spirit.xp >= reqXp && spirit.level < (species.levelCap || 100)) {
+      spirit.xp -= reqXp;
+      spirit.level += 1;
+      spirit.power = calculateSpiritPower(species, spirit.level, spirit.rarity);
+      const newMaxHp = calculateSpiritMaxHp(species, spirit.level, spirit.rarity);
+      const hpBonus = newMaxHp - (spirit.maxHp || newMaxHp);
+      spirit.maxHp = newMaxHp;
+      spirit.currentHp = Math.min(spirit.maxHp, (spirit.currentHp || newMaxHp) + Math.max(0, hpBonus));
+      spirit.isFallen = false;
+
+      if (spirit.level >= (species.levelCap || 100)) {
+        spirit.xp = reqXp;
+        if (species.evolutions && species.evolutions.length > 0) {
+          spirit.canEvolve = true;
+        }
+        this.emit('spiritLevelCapped', spirit);
+        break;
+      }
+
+      this.emit('spiritLeveledUp', spirit);
+      reqXp = getXpRequiredForLevel(spirit.level);
+    }
+
+    return spirit.level - initialLevel;
+  }
+
+  buyExpPotion(arg1, arg2) {
+    const POTIONS = {
+      lesser_elixir: { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 50, essenceGodCost: 2, soulEssenceCost: 0 },
+      grand_elixir: { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 200, essenceGodCost: 8, soulEssenceCost: 0 },
+      divine_ambrosia: { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 800, essenceGodCost: 25, soulEssenceCost: 2 }
+    };
+
+    const potionId = POTIONS[arg1] ? arg1 : arg2;
+    const targetSpiritId = POTIONS[arg1] ? arg2 : arg1;
+
+    const pot = POTIONS[potionId];
+    if (!pot) throw new Error('Invalid EXP Potion!');
+
+    const spirit = this.state.spirits.find(s => s.id === targetSpiritId);
+    if (!spirit) throw new Error('Target Spirit not found in collection!');
+
+    const res = this.state.resources;
+    if (res.spiritShards < pot.shardCost) throw new Error(`Insufficient Shards! Need ${pot.shardCost}.`);
+    if ((res.essencesOfTheGods || 0) < pot.essenceGodCost) throw new Error(`Insufficient Essences of the Gods! Need ${pot.essenceGodCost}.`);
+    if ((res.soulEssence || 0) < pot.soulEssenceCost) throw new Error(`Insufficient Soul Essence! Need ${pot.soulEssenceCost}.`);
+
+    res.spiritShards -= pot.shardCost;
+    res.essencesOfTheGods -= pot.essenceGodCost;
+    res.soulEssence -= pot.soulEssenceCost;
+
+    const initialLevel = spirit.level;
+    this.addExperienceToSpirit(spirit, pot.xp);
+    this.save();
+    this.emit('spiritLeveled', { spirit, levelUps: spirit.level - initialLevel });
+    this.emit('resourcesUpdated', res);
+
+    return { success: true, spirit, xpGained: pot.xp, levelUps: spirit.level - initialLevel };
   }
 
   exitDungeonBattle() {
@@ -2572,6 +2757,39 @@ class GameStateManager {
     this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
 
     return loot;
+  }
+
+  runEssenceDungeon(chamberId, tierNum = 1) {
+    const chamber = ESSENCE_CHAMBERS.find(c => c.id === chamberId);
+    if (!chamber) throw new Error('Invalid Essence Chamber selected!');
+
+    const tierObj = ESSENCE_DIFFICULTY_TIERS.find(t => t.tier === tierNum);
+    if (!tierObj) throw new Error('Invalid difficulty tier selected!');
+
+    if (this.state.resources.energy < tierObj.energyCost) {
+      throw new Error(`Insufficient Energy! Need ${tierObj.energyCost} ⚡, have ${this.state.resources.energy} ⚡.`);
+    }
+
+    this.state.resources.energy -= tierObj.energyCost;
+    const loot = generateEssenceLoot(chamberId, tierNum);
+
+    this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + loot.godEssencesGained;
+    this.state.resources.soulEssence = (this.state.resources.soulEssence || 0) + loot.soulEssenceGained;
+    this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + loot.shardsGained;
+
+    this.state.stats.shardsEarnedTotal += loot.shardsGained;
+    this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+
+    this.save();
+    this.emit('dungeonCompleted', loot);
+    this.emit('resourcesUpdated', this.state.resources);
+    this.emit('energyGained', { current: this.state.resources.energy, max: this.state.resources.maxEnergy });
+
+    return {
+      ...loot,
+      essencesAwarded: loot.godEssencesGained,
+      soulEssenceAwarded: loot.soulEssenceGained
+    };
   }
 }
 
