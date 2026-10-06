@@ -337,7 +337,10 @@ function renderBlessingsSectionHtml(res, activeBlessings) {
 
       <div class="flex flex-col gap-2">
         ${BLESSINGS.map(b => {
-          const active = activeBlessings.find(ab => ab.id === b.id);
+          const key = `blessing_${b.id.replace('_blessing', '')}`;
+          const active = activeBlessings ? (Array.isArray(activeBlessings) 
+            ? activeBlessings.find(ab => ab.id === b.id || ab.id === key) 
+            : (activeBlessings[b.id] || activeBlessings[key])) : null;
           const canAfford = (res.essencesOfTheGods || 0) >= b.cost;
           const minsRemaining = active ? Math.ceil((active.expiresAt - Date.now()) / (60 * 1000)) : 0;
 

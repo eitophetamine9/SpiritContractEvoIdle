@@ -2682,13 +2682,24 @@ class GameStateManager {
   }
 
   applyTemporaryBlessing(blessingId) {
+    const ALIASES = {
+      ares_blessing: 'blessing_ares',
+      athena_blessing: 'blessing_athena',
+      hermes_blessing: 'blessing_hermes',
+      zeus_blessing: 'blessing_zeus',
+      poseidon_blessing: 'blessing_poseidon'
+    };
+    const key = ALIASES[blessingId] || blessingId;
+
     const BLESSINGS = {
-      blessing_ares: { id: 'blessing_ares', name: 'Blessing of Ares', icon: '⚔️', cost: 15, durationSec: 3600, desc: '+20% Party DMG & +10% Crit Rate' },
-      blessing_athena: { id: 'blessing_athena', name: 'Blessing of Athena', icon: '🛡️', cost: 15, durationSec: 3600, desc: '+25% Max HP & +20% Shield' },
-      blessing_hermes: { id: 'blessing_hermes', name: 'Blessing of Hermes', icon: '🪽', cost: 15, durationSec: 3600, desc: '+30% Shards & Drops in Madness Zone' }
+      blessing_ares: { id: 'blessing_ares', name: 'Blessing of Ares', icon: '⚔️', cost: 10, durationSec: 3600, desc: '+20% Party DMG & +10% Crit Rate' },
+      blessing_athena: { id: 'blessing_athena', name: 'Blessing of Athena', icon: '🛡️', cost: 10, durationSec: 3600, desc: '+25% Max HP & +20% Shield' },
+      blessing_hermes: { id: 'blessing_hermes', name: 'Blessing of Hermes', icon: '🪽', cost: 10, durationSec: 3600, desc: '+30% Shards & Drops in Madness Zone' },
+      blessing_zeus: { id: 'blessing_zeus', name: 'Blessing of Zeus', icon: '⚡', cost: 15, durationSec: 3600, desc: '+20% Crit Rate & +15% Lightning Surge' },
+      blessing_poseidon: { id: 'blessing_poseidon', name: 'Blessing of Poseidon', icon: '🌊', cost: 15, durationSec: 3600, desc: '+35% Tidal Shard Abundance' }
     };
 
-    const b = BLESSINGS[blessingId];
+    const b = BLESSINGS[key];
     if (!b) throw new Error('Invalid Blessing selected!');
 
     if ((this.state.resources.essencesOfTheGods || 0) < b.cost) {
@@ -2697,7 +2708,7 @@ class GameStateManager {
 
     this.state.resources.essencesOfTheGods -= b.cost;
     if (!this.state.activeBlessings) this.state.activeBlessings = {};
-    this.state.activeBlessings[blessingId] = {
+    this.state.activeBlessings[key] = {
       id: b.id,
       name: b.name,
       icon: b.icon,
