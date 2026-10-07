@@ -9,7 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](#production-build--pwa-preview)
 [![Architecture](https://img.shields.io/badge/Architecture-Reactive%20Pub%2FSub-blueviolet?style=for-the-badge)](#technology-stack)
-[![Tests](https://img.shields.io/badge/Tests-20%20Passed-2ED573?style=for-the-badge)](#running-test-suites)
+[![Tests](https://img.shields.io/badge/Tests-21%20Passed-2ED573?style=for-the-badge)](#running-test-suites)
 
 ---
 
@@ -20,6 +20,7 @@
 - **Spirit Ascension System (★1 to ★7)**: Duplicate spirit copies can be ascended up to ★7 using Astral Essences, granting stacking +12% stat bonuses per tier (up to +84%) along with high-impact milestone perks (+15 starting MP, +20% ultimate DMG, +10% Crit Rate, +25% Crit DMG, and golden card borders).
 - **Celestial Constellations (Zodiac Trees)**: Spend 🔮 Astral Essences to permanently illuminate star nodes in Draco, Phoenix, and Pegasus constellations, boosting offense, defenses, energy capacity, and essence yields.
 - **Astral Expeditions & Transmutation**: Dispatch idle spirits into cosmic fissures for passive resource foraging with +25% elemental synergy bonuses, and utilize the anti-oversaturation Transmutation Circle to convert excess shards into pure Astral Essence.
+- **Bulk Annul & Bulk Dismantle**: Batch-manage your card collection in the Divine Vault with one-click filtering (Commons, Uncommons, 3★/4★ stars) to bulk-annul spirits or bulk-dismantle relics and weapons for Spirit Shards and Essences of the Gods, protected by active-party and favorite locking.
 - **Isometric Combat Arena**: Staggered allied party formations face off against corrupted beasts with real-time health bars, damage popups, dynamic attack lunges, and adjustable battle speeds.
 - **Tower Biome Climbs**: Progress through over 100 floors spanning distinct environments, from mystical swamps and frozen crags to dark gothic castles, before entering looping enchanted tiers.
 - **Bestiary Discovery Compendium**: Inspired by classic bestiary grids, track every discovered spirit species, inspect their lore, and uncover mystery silhouettes as you expand your collection.

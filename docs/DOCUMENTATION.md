@@ -412,6 +412,28 @@ $$\text{God Essence Cost} = 10 \text{ 💠}$$
 $$\text{Reward} = 1 \text{ 🔮 Astral Essence}$$
 The escalation counter resets daily at midnight.
 
+---
+
+## 15. The Divine Vault: Bulk Management & Dismantle Engine
+
+### 15.1 Unified Collection Management
+The Divine Vault provides streamlined bulk operations across all three collectible item categories:
+- **⛩️ Spirits (Bulk Annul)**: Release unwanted spirits back into the ether to reclaim Spirit Shards.
+- **🔱 Relics (Bulk Dismantle)**: Deconstruct excess Greek God relics into Spirit Shards and Essences of the Gods.
+- **⚔️ Weapons (Bulk Dismantle)**: Smelt obsolete forged weapons into Spirit Shards.
+
+### 15.2 Bulk Filter Profiles & Safety Protocols
+- **Contextual Filtering**:
+  - **Spirits**: Quick-select `Commons` and `Uncommons`.
+  - **Relics**: Quick-select `3★ Stars` and `4★ Stars`.
+  - **Weapons**: Quick-select `Commons` and `Uncommons`.
+  - **Global Filters**: `Select All` (respects current rarity and slot/element filters) and `Clear`.
+- **Locking Safety Guarantees**:
+  - **Active Party & Equipped Gear**: Spirits in the 5-member party or equipment currently worn by any spirit (`equippedToSpiritId`) cannot be selected for bulk operations.
+  - **Favorite Locking**: Any item with `favorite: true` is permanently protected from bulk actions; toggling a favorite immediately purges the item from the selection set.
+- **Dynamic Yield Preview**: Displays real-time estimated returns (💎 Spirit Shards and 💠 Essences of the Gods) prior to confirming the transaction.
+
+
 
 
 
