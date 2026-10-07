@@ -590,6 +590,61 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Claimed Starlight Fissure rewards: +${claimRes.astralGained} 🔮 Astral, +${claimRes.godsGained} 💠 Gods, +${claimRes.shardsGained} 💎 Shards (Element Match: ${claimRes.hasElementMatch})`);
   if (gameState.state.expeditions.starlight_fissure !== null) throw new Error('Expedition fissure should be cleared after claim');
 
+  // 21. Test Bulk Dismantle for Artifacts (Relics) and Weapons
+  console.log('\n[TEST 21] Testing Bulk Dismantle for Artifacts (Relics) and Weapons:');
+  const dummyRelic3 = { uid: 'relic_bulk_3star', type: 'relic', stars: 3, level: 1, name: 'Bronze Helm' };
+  const dummyRelic4 = { uid: 'relic_bulk_4star', type: 'relic', stars: 4, level: 2, name: 'Silver Aegis' };
+  const dummyRelicEquipped = { uid: 'relic_bulk_eq', type: 'relic', stars: 3, level: 1, equippedToSpiritId: 'starter_spirit_1' };
+  const dummyRelicFav = { uid: 'relic_bulk_fav', type: 'relic', stars: 3, level: 1, favorite: true };
+
+  const dummyWeaponCommon = { uid: 'wep_bulk_com', type: 'weapon', rarity: 'COMMON', level: 1, name: 'Iron Sword' };
+  const dummyWeaponEquipped = { uid: 'wep_bulk_eq', type: 'weapon', rarity: 'COMMON', level: 1, equippedToSpiritId: 'starter_spirit_1' };
+  const dummyWeaponFav = { uid: 'wep_bulk_fav', type: 'weapon', rarity: 'COMMON', level: 1, favorite: true };
+
+  gameState.state.inventory.equipment.push(
+    dummyRelic3, dummyRelic4, dummyRelicEquipped, dummyRelicFav,
+    dummyWeaponCommon, dummyWeaponEquipped, dummyWeaponFav
+  );
+
+  const prevShards = gameState.state.resources.spiritShards;
+  const prevGodEssences = gameState.state.resources.essencesOfTheGods;
+
+  // Attempt to bulk dismantle all 7 items
+  const bulkRes = gameState.bulkDismantleEquipment([
+    'relic_bulk_3star', 'relic_bulk_4star', 'relic_bulk_eq', 'relic_bulk_fav',
+    'wep_bulk_com', 'wep_bulk_eq', 'wep_bulk_fav'
+  ]);
+
+  console.log(`  Bulk Dismantled: ${bulkRes.count} items, +${bulkRes.shardsGained} Shards, +${bulkRes.essencesGained} Gods Essences`);
+
+  // Only 3 items should have been dismantled (the non-equipped, non-favorited ones)
+  if (bulkRes.count !== 3) throw new Error(`Expected 3 items dismantled, got ${bulkRes.count}`);
+  
+  // Verify inventory removal and safety retention
+  const eqUids = gameState.state.inventory.equipment.map(e => e.uid);
+  if (eqUids.includes('relic_bulk_3star') || eqUids.includes('relic_bulk_4star') || eqUids.includes('wep_bulk_com')) {
+    throw new Error('Dismantled items were not removed from equipment inventory');
+  }
+  if (!eqUids.includes('relic_bulk_eq') || !eqUids.includes('relic_bulk_fav')) {
+    throw new Error('Equipped or favorited relics should NOT have been dismantled');
+  }
+  if (!eqUids.includes('wep_bulk_eq') || !eqUids.includes('wep_bulk_fav')) {
+    throw new Error('Equipped or favorited weapons should NOT have been dismantled');
+  }
+
+  // Verify resource gains
+  if (gameState.state.resources.spiritShards !== prevShards + bulkRes.shardsGained) {
+    throw new Error('Spirit shards were not accurately updated after bulk dismantle');
+  }
+  if (gameState.state.resources.essencesOfTheGods !== prevGodEssences + bulkRes.essencesGained) {
+    throw new Error('God essences were not accurately updated after bulk dismantle');
+  }
+
+  // Verify alias function gameState.bulkDismantle()
+  const aliasRes = gameState.bulkDismantle([]);
+  if (aliasRes.count !== 0) throw new Error('bulkDismantle alias failed');
+  console.log('  [PASS] Bulk dismantle equipment successfully validated!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

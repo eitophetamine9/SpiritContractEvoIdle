@@ -2523,6 +2523,57 @@ class GameStateManager {
     return { success: true, shardsGained, essencesGained };
   }
 
+  bulkDismantleEquipment(itemUids) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment) || !Array.isArray(itemUids) || itemUids.length === 0) {
+      return { count: 0, shardsGained: 0, essencesGained: 0 };
+    }
+
+    let count = 0;
+    let totalShardsGained = 0;
+    let totalEssencesGained = 0;
+    const uidsToDismantle = new Set(itemUids);
+
+    const remainingEquipment = [];
+    for (const item of this.state.inventory.equipment) {
+      if (uidsToDismantle.has(item.uid) && !item.equippedToSpiritId && !item.favorite) {
+        let shardsGained = 0;
+        let essencesGained = 0;
+        if (item.type === 'relic') {
+          const stars = item.stars || 3;
+          const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+          shardsGained = Math.round(tier.dismantleShards * (1 + (item.level - 1) * 0.15));
+          essencesGained = tier.dismantleEssences + Math.floor((item.level - 1) * 1.5);
+        } else {
+          shardsGained = Math.round(25 * (item.level || 1));
+        }
+        totalShardsGained += shardsGained;
+        totalEssencesGained += essencesGained;
+        count++;
+      } else {
+        remainingEquipment.push(item);
+      }
+    }
+
+    this.state.inventory.equipment = remainingEquipment;
+    this.state.resources.spiritShards += totalShardsGained;
+    this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + totalEssencesGained;
+
+    this.save();
+    this.emit('equipmentBulkDismantled', { count, shardsGained: totalShardsGained, essencesGained: totalEssencesGained });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return {
+      count,
+      shardsGained: totalShardsGained,
+      essencesGained: totalEssencesGained
+    };
+  }
+
+  bulkDismantle(itemUids) {
+    return this.bulkDismantleEquipment(itemUids);
+  }
+
   enhanceRelic(itemUid) {
     if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
     const item = this.state.inventory.equipment.find(e => e.uid === itemUid);

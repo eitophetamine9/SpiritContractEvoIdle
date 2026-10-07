@@ -12,7 +12,7 @@
 import { gameState } from '../../state/gameState.js';
 import { audioManager } from '../../audio/audioManager.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
-import { EQUIPMENT_RARITIES, GREEK_GOD_SETS } from '../../data/equipmentData.js';
+import { EQUIPMENT_RARITIES, GREEK_GOD_SETS, RELIC_STAR_TIERS } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showSpiritModal, showItemInspectModal } from '../components/modals.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
@@ -128,10 +128,26 @@ export function renderVaultView(container) {
   const weaponArchetypes = ['ALL', 'Blade', 'Bow', 'Staff', 'Claws', 'Daggers', 'Mallet'];
 
   let bulkShardsRefund = 0;
-  selectedForBulk.forEach(id => {
-    const sp = spirits.find(s => s.id === id);
-    if (sp) {
-      bulkShardsRefund += 40 * (sp.tier || 1) + Math.floor((sp.level || 1) * 3);
+  let bulkEssencesRefund = 0;
+  selectedForBulk.forEach(idOrUid => {
+    if (activeCategory === 'spirits') {
+      const sp = spirits.find(s => s.id === idOrUid);
+      if (sp) {
+        bulkShardsRefund += 40 * (sp.tier || 1) + Math.floor((sp.level || 1) * 3);
+      }
+    } else if (activeCategory === 'relics') {
+      const r = relics.find(it => it.uid === idOrUid);
+      if (r) {
+        const stars = r.stars || 3;
+        const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+        bulkShardsRefund += Math.round(tier.dismantleShards * (1 + (r.level - 1) * 0.15));
+        bulkEssencesRefund += tier.dismantleEssences + Math.floor((r.level - 1) * 1.5);
+      }
+    } else if (activeCategory === 'weapons') {
+      const w = weapons.find(it => it.uid === idOrUid);
+      if (w) {
+        bulkShardsRefund += Math.round(25 * (w.level || 1));
+      }
     }
   });
 
@@ -202,11 +218,9 @@ export function renderVaultView(container) {
           ${searchQuery ? `<button id="btn-clear-search" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">✕</button>` : ''}
         </div>
 
-        ${activeCategory === 'spirits' ? `
-          <button id="btn-toggle-bulk" class="min-h-[34px] px-3 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer ${isBulkMode ? 'bg-red-500/20 border-red-400 text-red-300' : 'bg-slate-900/80 border-slate-700 text-slate-300'}">
-            ${isBulkMode ? 'Done' : '📦 Bulk Annul'}
-          </button>
-        ` : ''}
+        <button id="btn-toggle-bulk" class="min-h-[34px] px-3 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer ${isBulkMode ? 'bg-red-500/20 border-red-400 text-red-300' : 'bg-slate-900/80 border-slate-700 text-slate-300'}">
+          ${isBulkMode ? 'Done' : (activeCategory === 'spirits' ? '📦 Bulk Annul' : '🔨 Bulk Dismantle')}
+        </button>
       </div>
 
       <!-- Custom Rarity Filter Slider (Same as Index Bestiary) -->
@@ -242,17 +256,28 @@ export function renderVaultView(container) {
         }).join('')}
       </div>
 
-      <!-- Bulk Actions Strip (Spirits Only) -->
-      ${isBulkMode && activeCategory === 'spirits' ? `
+      <!-- Bulk Actions Strip -->
+      ${isBulkMode ? `
         <div class="rounded-xl border border-red-500/30 bg-slate-900/90 p-2.5 flex items-center justify-between gap-2">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <button id="btn-select-commons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Commons</button>
-            <button id="btn-select-uncommons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Uncommons</button>
+            ${activeCategory === 'spirits' ? `
+              <button id="btn-select-commons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Commons</button>
+              <button id="btn-select-uncommons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Uncommons</button>
+            ` : activeCategory === 'relics' ? `
+              <button id="btn-select-3star" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">3★ Stars</button>
+              <button id="btn-select-4star" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">4★ Stars</button>
+            ` : `
+              <button id="btn-select-commons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Commons</button>
+              <button id="btn-select-uncommons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Uncommons</button>
+            `}
             <button id="btn-select-all-filtered" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Select All</button>
             <button id="btn-clear-selection" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-400 hover:text-white cursor-pointer">Clear</button>
           </div>
           <button id="btn-execute-bulk" class="px-3 py-1.5 rounded-lg text-xs font-extrabold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 cursor-pointer" ${selectedForBulk.size === 0 ? 'disabled' : ''}>
-            Annul ${selectedForBulk.size} (+${bulkShardsRefund} 💎)
+            ${activeCategory === 'spirits'
+              ? `Annul ${selectedForBulk.size} (+${bulkShardsRefund} 💎)`
+              : `Dismantle ${selectedForBulk.size} (+${bulkShardsRefund} 💎${bulkEssencesRefund > 0 ? ` +${bulkEssencesRefund} 💠` : ''})`
+            }
           </button>
         </div>
       ` : ''}
@@ -353,15 +378,25 @@ export function renderVaultView(container) {
           ` : filteredRelics.map(r => {
             const rarObj = EQUIPMENT_RARITIES[r.rarity] || EQUIPMENT_RARITIES.COMMON;
             const isEquipped = !!r.equippedToSpiritId;
+            const isSelected = selectedForBulk.has(r.uid);
             const equippedSpirit = isEquipped ? spirits.find(s => s.id === r.equippedToSpiritId) : null;
             const stars = r.stars || 3;
             const starColors = { 3: '#b2bec3', 4: '#00cec9', 5: '#ffd32a', 6: '#ff4757' };
             const starColor = starColors[stars] || '#ffd32a';
 
             return `
-              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01]" 
+              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01] ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
                    style="border-color: ${starColor}66;" 
                    data-relic-uid="${r.uid}">
+                
+                <!-- Bulk Selection Indicator Overlay -->
+                ${isBulkMode ? `
+                  <div class="absolute top-2 left-2 z-30 flex items-center justify-center">
+                    <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-red-500 text-white shadow-sm' : 'bg-slate-950/80 border border-slate-600 text-transparent'}">
+                      ✓
+                    </span>
+                  </div>
+                ` : ''}
                 
                 <!-- Card Header -->
                 <div class="flex items-center justify-between gap-1 mb-1.5">
@@ -410,12 +445,22 @@ export function renderVaultView(container) {
           ` : filteredWeapons.map(w => {
             const rarObj = EQUIPMENT_RARITIES[w.rarity] || EQUIPMENT_RARITIES.COMMON;
             const isEquipped = !!w.equippedToSpiritId;
+            const isSelected = selectedForBulk.has(w.uid);
             const equippedSpirit = isEquipped ? spirits.find(s => s.id === w.equippedToSpiritId) : null;
 
             return `
-              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01]" 
+              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01] ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
                    style="border-color: ${rarObj.color}66;" 
                    data-weapon-uid="${w.uid}">
+                
+                <!-- Bulk Selection Indicator Overlay -->
+                ${isBulkMode ? `
+                  <div class="absolute top-2 left-2 z-30 flex items-center justify-center">
+                    <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-red-500 text-white shadow-sm' : 'bg-slate-950/80 border border-slate-600 text-transparent'}">
+                      ✓
+                    </span>
+                  </div>
+                ` : ''}
                 
                 <!-- Card Header -->
                 <div class="flex items-center justify-between gap-1 mb-1.5">
@@ -560,6 +605,9 @@ export function renderVaultView(container) {
       const r = relics.find(it => it.uid === uid);
       if (r) {
         r.favorite = !r.favorite;
+        if (r.favorite && selectedForBulk.has(uid)) {
+          selectedForBulk.delete(uid);
+        }
         gameState.save();
         renderVaultView(container);
       }
@@ -574,6 +622,9 @@ export function renderVaultView(container) {
       const w = weapons.find(it => it.uid === uid);
       if (w) {
         w.favorite = !w.favorite;
+        if (w.favorite && selectedForBulk.has(uid)) {
+          selectedForBulk.delete(uid);
+        }
         gameState.save();
         renderVaultView(container);
       }
@@ -624,6 +675,21 @@ export function renderVaultView(container) {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-card-fav')) return;
       const uid = card.dataset.relicUid;
+      if (isBulkMode) {
+        const relic = relics.find(r => r.uid === uid);
+        if (relic?.equippedToSpiritId) {
+          alert('Cannot dismantle an equipped Relic. Unequip it first.');
+          return;
+        }
+        if (relic?.favorite) {
+          alert('This Relic is marked as Favorite! Unfavorite it first before selecting it for dismantle.');
+          return;
+        }
+        if (selectedForBulk.has(uid)) selectedForBulk.delete(uid);
+        else selectedForBulk.add(uid);
+        renderVaultView(container);
+        return;
+      }
       const relic = relics.find(r => r.uid === uid);
       if (relic) showItemInspectModal({ item: relic, onUpdate: () => renderVaultView(container) });
     });
@@ -634,6 +700,21 @@ export function renderVaultView(container) {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-card-fav')) return;
       const uid = card.dataset.weaponUid;
+      if (isBulkMode) {
+        const weapon = weapons.find(w => w.uid === uid);
+        if (weapon?.equippedToSpiritId) {
+          alert('Cannot dismantle an equipped Weapon. Unequip it first.');
+          return;
+        }
+        if (weapon?.favorite) {
+          alert('This Weapon is marked as Favorite! Unfavorite it first before selecting it for dismantle.');
+          return;
+        }
+        if (selectedForBulk.has(uid)) selectedForBulk.delete(uid);
+        else selectedForBulk.add(uid);
+        renderVaultView(container);
+        return;
+      }
       const weapon = weapons.find(w => w.uid === uid);
       if (weapon) showItemInspectModal({ item: weapon, onUpdate: () => renderVaultView(container) });
     });
@@ -647,29 +728,81 @@ export function renderVaultView(container) {
   });
 
   container.querySelector('#btn-select-commons')?.addEventListener('click', () => {
-    spirits.forEach(s => {
-      if (!partyIds.includes(s.id) && !s.favorite && (s.rarity || 'COMMON').toUpperCase() === 'COMMON') {
-        selectedForBulk.add(s.id);
-      }
-    });
+    if (activeCategory === 'spirits') {
+      spirits.forEach(s => {
+        if (!partyIds.includes(s.id) && !s.favorite && (s.rarity || 'COMMON').toUpperCase() === 'COMMON') {
+          selectedForBulk.add(s.id);
+        }
+      });
+    } else if (activeCategory === 'weapons') {
+      weapons.forEach(w => {
+        if (!w.equippedToSpiritId && !w.favorite && (w.rarity || 'COMMON').toUpperCase() === 'COMMON') {
+          selectedForBulk.add(w.uid);
+        }
+      });
+    }
     renderVaultView(container);
   });
 
   container.querySelector('#btn-select-uncommons')?.addEventListener('click', () => {
-    spirits.forEach(s => {
-      if (!partyIds.includes(s.id) && !s.favorite && (s.rarity || 'COMMON').toUpperCase() === 'UNCOMMON') {
-        selectedForBulk.add(s.id);
-      }
-    });
+    if (activeCategory === 'spirits') {
+      spirits.forEach(s => {
+        if (!partyIds.includes(s.id) && !s.favorite && (s.rarity || 'COMMON').toUpperCase() === 'UNCOMMON') {
+          selectedForBulk.add(s.id);
+        }
+      });
+    } else if (activeCategory === 'weapons') {
+      weapons.forEach(w => {
+        if (!w.equippedToSpiritId && !w.favorite && (w.rarity || 'COMMON').toUpperCase() === 'UNCOMMON') {
+          selectedForBulk.add(w.uid);
+        }
+      });
+    }
+    renderVaultView(container);
+  });
+
+  container.querySelector('#btn-select-3star')?.addEventListener('click', () => {
+    if (activeCategory === 'relics') {
+      relics.forEach(r => {
+        if (!r.equippedToSpiritId && !r.favorite && (r.stars || 3) === 3) {
+          selectedForBulk.add(r.uid);
+        }
+      });
+    }
+    renderVaultView(container);
+  });
+
+  container.querySelector('#btn-select-4star')?.addEventListener('click', () => {
+    if (activeCategory === 'relics') {
+      relics.forEach(r => {
+        if (!r.equippedToSpiritId && !r.favorite && (r.stars || 3) === 4) {
+          selectedForBulk.add(r.uid);
+        }
+      });
+    }
     renderVaultView(container);
   });
 
   container.querySelector('#btn-select-all-filtered')?.addEventListener('click', () => {
-    filteredSpirits.forEach(s => {
-      if (!partyIds.includes(s.id) && !s.favorite) {
-        selectedForBulk.add(s.id);
-      }
-    });
+    if (activeCategory === 'spirits') {
+      filteredSpirits.forEach(s => {
+        if (!partyIds.includes(s.id) && !s.favorite) {
+          selectedForBulk.add(s.id);
+        }
+      });
+    } else if (activeCategory === 'relics') {
+      filteredRelics.forEach(r => {
+        if (!r.equippedToSpiritId && !r.favorite) {
+          selectedForBulk.add(r.uid);
+        }
+      });
+    } else if (activeCategory === 'weapons') {
+      filteredWeapons.forEach(w => {
+        if (!w.equippedToSpiritId && !w.favorite) {
+          selectedForBulk.add(w.uid);
+        }
+      });
+    }
     renderVaultView(container);
   });
 
@@ -680,21 +813,44 @@ export function renderVaultView(container) {
 
   container.querySelector('#btn-execute-bulk')?.addEventListener('click', () => {
     if (selectedForBulk.size === 0) return;
-    if (confirm(`Annul contract with ${selectedForBulk.size} selected Spirits? You will receive +${bulkShardsRefund} Spirit Shards.`)) {
-      try {
-        const res = gameState.bulkAnnulContracts(Array.from(selectedForBulk));
-        const annulledCount = res.annulledCount ?? res.count ?? 0;
-        const shardsGained = res.totalShardsGained ?? res.shardsGained ?? 0;
-        if (annulledCount === 0) {
-          alert('No spirits could be annulled. Selected spirits may be active party members or marked as favorite.');
-        } else {
-          alert(`Successfully annulled contracts with ${annulledCount} Spirits! Gained +${shardsGained} Spirit Shards.`);
+    if (activeCategory === 'spirits') {
+      if (confirm(`Annul contract with ${selectedForBulk.size} selected Spirits? You will receive +${bulkShardsRefund} Spirit Shards.`)) {
+        try {
+          const res = gameState.bulkAnnulContracts(Array.from(selectedForBulk));
+          const annulledCount = res.annulledCount ?? res.count ?? 0;
+          const shardsGained = res.totalShardsGained ?? res.shardsGained ?? 0;
+          if (annulledCount === 0) {
+            alert('No spirits could be annulled. Selected spirits may be active party members or marked as favorite.');
+          } else {
+            alert(`Successfully annulled contracts with ${annulledCount} Spirits! Gained +${shardsGained} Spirit Shards.`);
+          }
+          selectedForBulk.clear();
+          isBulkMode = false;
+          renderVaultView(container);
+        } catch (err) {
+          alert(err.message);
         }
-        selectedForBulk.clear();
-        isBulkMode = false;
-        renderVaultView(container);
-      } catch (err) {
-        alert(err.message);
+      }
+    } else {
+      const typeLabel = activeCategory === 'relics' ? 'Relics' : 'Weapons';
+      const yieldText = `+${bulkShardsRefund} Spirit Shards${bulkEssencesRefund > 0 ? ` and +${bulkEssencesRefund} Essences of the Gods` : ''}`;
+      if (confirm(`Dismantle ${selectedForBulk.size} selected ${typeLabel}? You will receive ${yieldText}.`)) {
+        try {
+          const res = gameState.bulkDismantleEquipment(Array.from(selectedForBulk));
+          const count = res.count ?? 0;
+          const shards = res.shardsGained ?? 0;
+          const essences = res.essencesGained ?? 0;
+          if (count === 0) {
+            alert(`No ${typeLabel.toLowerCase()} could be dismantled. Selected items may be equipped or marked as favorite.`);
+          } else {
+            alert(`Successfully dismantled ${count} ${typeLabel}! Gained +${shards} Spirit Shards${essences > 0 ? ` and +${essences} Essences of the Gods` : ''}.`);
+          }
+          selectedForBulk.clear();
+          isBulkMode = false;
+          renderVaultView(container);
+        } catch (err) {
+          alert(err.message);
+        }
       }
     }
   });
