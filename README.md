@@ -9,7 +9,6 @@
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](#production-build--pwa-preview)
 [![Architecture](https://img.shields.io/badge/Architecture-Reactive%20Pub%2FSub-blueviolet?style=for-the-badge)](#technology-stack)
-[![Tests](https://img.shields.io/badge/Tests-21%20Passed-2ED573?style=for-the-badge)](#running-test-suites)
 
 ---
 
