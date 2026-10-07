@@ -68,8 +68,8 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     recommendedPower: 2500,
     minGodEssences: 15,
     maxGodEssences: 25,
-    soulEssenceReward: 0,
-    shardsReward: 120
+    soulEssenceReward: 1,
+    shardsReward: 30
   },
   {
     tier: 2,
@@ -80,8 +80,8 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     recommendedPower: 10000,
     minGodEssences: 40,
     maxGodEssences: 60,
-    soulEssenceReward: 1,
-    shardsReward: 250
+    soulEssenceReward: 2,
+    shardsReward: 60
   },
   {
     tier: 3,
@@ -92,8 +92,8 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     recommendedPower: 45000,
     minGodEssences: 100,
     maxGodEssences: 140,
-    soulEssenceReward: 3,
-    shardsReward: 600
+    soulEssenceReward: 4,
+    shardsReward: 120
   },
   {
     tier: 4,
@@ -105,7 +105,7 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     minGodEssences: 250,
     maxGodEssences: 350,
     soulEssenceReward: 8,
-    shardsReward: 1500
+    shardsReward: 250
   }
 ];
 

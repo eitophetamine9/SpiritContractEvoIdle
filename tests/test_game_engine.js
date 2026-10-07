@@ -354,14 +354,19 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Cleared "Olympian Nexus" [Tier 1]! Gained ${essenceDungeonResult.essencesAwarded} Essences of the Gods & ${essenceDungeonResult.soulEssenceAwarded} Soul Essence.`);
   if (essenceDungeonResult.essencesAwarded <= 0) throw new Error('Should award Essences of the Gods');
 
-  // Test EXP Potions
+  // Test EXP Potions (0 Shards, consumes 1 Astral Essence + 5 God Essences)
   const testSpirit = gameState.state.spirits[0];
   const preXp = testSpirit.xp;
   gameState.state.resources.spiritShards = 1000;
   gameState.state.resources.essencesOfTheGods = 50;
+  gameState.state.resources.soulEssence = 20;
+  const initialShards = gameState.state.resources.spiritShards;
+  const initialAstral = gameState.state.resources.soulEssence;
   gameState.buyExpPotion(testSpirit.id, 'lesser_elixir');
   console.log(`  Used Lesser Astral Elixir on ${testSpirit.customName}: XP ${preXp} -> ${testSpirit.xp} (+10,000 XP)`);
   if (testSpirit.xp < preXp + 10000 && testSpirit.level === 1) throw new Error('EXP potion failed to grant XP');
+  if (gameState.state.resources.spiritShards !== initialShards) throw new Error('EXP potion should NOT consume regular shards!');
+  if (gameState.state.resources.soulEssence !== initialAstral - 1) throw new Error('EXP potion should consume 1 Astral Essence!');
 
   // Test Combat Blessings
   gameState.applyTemporaryBlessing('blessing_ares');

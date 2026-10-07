@@ -656,8 +656,12 @@ class GameStateManager {
 
     const sampleEnemy = getEnemyForStage(farmStage, 3);
     const killTimeSec = Math.max(2, (sampleEnemy.power / Math.max(1, partyPower)) * 4);
-    const estimatedKills = Math.floor(cappedSeconds / killTimeSec);
-    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.25);
+    // Soft-cap diminishing returns past 4 hours (14,400 sec)
+    const effectiveSeconds = cappedSeconds <= 14400 
+      ? cappedSeconds 
+      : 14400 + (cappedSeconds - 14400) * 0.5;
+    const estimatedKills = Math.floor(effectiveSeconds / killTimeSec);
+    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.20);
     const maxOfflineEssence = Math.min(12, Math.floor(cappedSeconds / 7200));
     const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 60));
 
@@ -2181,13 +2185,13 @@ class GameStateManager {
 
     const tierIndex = Math.floor((currentMax - 60) / 20);
     const costEssence = Math.round(15 * Math.pow(1.18, tierIndex));
-    const costSoul = tierIndex >= 5 ? Math.round(2 + tierIndex * 0.5) : 0;
+    const costSoul = 1 + Math.floor(tierIndex * 0.75); // Linear Astral Essence cost from Tier 1
 
     if ((res.essencesOfTheGods || 0) < costEssence) {
       throw new Error(`Insufficient Essences of the Gods! Need ${costEssence}, have ${res.essencesOfTheGods || 0}.`);
     }
     if (costSoul > 0 && (res.soulEssence || 0) < costSoul) {
-      throw new Error(`Insufficient Soul Essence! Need ${costSoul}, have ${res.soulEssence || 0}.`);
+      throw new Error(`Insufficient Astral Essence! Need ${costSoul} 🔮, have ${res.soulEssence || 0} 🔮.`);
     }
 
     res.essencesOfTheGods -= costEssence;
@@ -2816,9 +2820,9 @@ class GameStateManager {
 
   buyExpPotion(arg1, arg2) {
     const POTIONS = {
-      lesser_elixir: { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 50, essenceGodCost: 2, soulEssenceCost: 0 },
-      grand_elixir: { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 200, essenceGodCost: 8, soulEssenceCost: 0 },
-      divine_ambrosia: { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 800, essenceGodCost: 25, soulEssenceCost: 2 }
+      lesser_elixir: { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 0, essenceGodCost: 5, soulEssenceCost: 1 },
+      grand_elixir: { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 0, essenceGodCost: 15, soulEssenceCost: 3 },
+      divine_ambrosia: { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 0, essenceGodCost: 40, soulEssenceCost: 10 }
     };
 
     const potionId = POTIONS[arg1] ? arg1 : arg2;
@@ -2831,13 +2835,11 @@ class GameStateManager {
     if (!spirit) throw new Error('Target Spirit not found in collection!');
 
     const res = this.state.resources;
-    if (res.spiritShards < pot.shardCost) throw new Error(`Insufficient Shards! Need ${pot.shardCost}.`);
-    if ((res.essencesOfTheGods || 0) < pot.essenceGodCost) throw new Error(`Insufficient Essences of the Gods! Need ${pot.essenceGodCost}.`);
-    if ((res.soulEssence || 0) < pot.soulEssenceCost) throw new Error(`Insufficient Soul Essence! Need ${pot.soulEssenceCost}.`);
+    if ((res.soulEssence || 0) < pot.soulEssenceCost) throw new Error(`Insufficient Astral Essence! Need ${pot.soulEssenceCost} 🔮, have ${res.soulEssence || 0} 🔮.`);
+    if ((res.essencesOfTheGods || 0) < pot.essenceGodCost) throw new Error(`Insufficient Essences of the Gods! Need ${pot.essenceGodCost} 💠, have ${res.essencesOfTheGods || 0} 💠.`);
 
-    res.spiritShards -= pot.shardCost;
-    res.essencesOfTheGods -= pot.essenceGodCost;
-    res.soulEssence -= pot.soulEssenceCost;
+    if (pot.soulEssenceCost > 0) res.soulEssence -= pot.soulEssenceCost;
+    if (pot.essenceGodCost > 0) res.essencesOfTheGods -= pot.essenceGodCost;
 
     const initialLevel = spirit.level;
     this.addExperienceToSpirit(spirit, pot.xp);

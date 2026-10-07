@@ -43,7 +43,7 @@ function renderMysticalSanctumScreen(container) {
   const energyIsCapped = currentMaxEnergy >= 500;
   const tierIndex = Math.floor((currentMaxEnergy - 60) / 20);
   const nextEnergyCostEssence = Math.round(15 * Math.pow(1.18, tierIndex));
-  const nextEnergyCostSoul = tierIndex >= 5 ? Math.round(2 + tierIndex * 0.5) : 0;
+  const nextEnergyCostSoul = 1 + Math.floor(tierIndex * 0.75);
   const canAffordEnergy = !energyIsCapped && (res.essencesOfTheGods || 0) >= nextEnergyCostEssence && (res.soulEssence || 0) >= nextEnergyCostSoul;
 
   const activeBlessings = gameState.getActiveBlessings();
@@ -66,8 +66,8 @@ function renderMysticalSanctumScreen(container) {
                 <span class="text-cyan-400 font-bold">💠 Gods:</span>
                 <strong class="text-cyan-200 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
               </div>
-              <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 border border-purple-500/30 text-[11px]" title="Soul Essence">
-                <span class="text-purple-400 font-bold">🔮 Soul:</span>
+              <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 border border-purple-500/30 text-[11px]" title="Astral Essence">
+                <span class="text-purple-400 font-bold">🔮 Astral:</span>
                 <strong class="text-purple-200 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
               </div>
               <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 border border-amber-500/30 text-[11px]" title="Energy Capacity">
@@ -79,10 +79,10 @@ function renderMysticalSanctumScreen(container) {
 
           <div>
             <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-              <span>🌌</span> The Mystical Realm
+              <span>🌌</span> The Astral Realm
             </h2>
             <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
-              Channel Essences of the Gods, expand Energy Vault, brew EXP Elixirs, and invoke divine blessings.
+              Harness Astral Essences & Essences of the Gods to brew elixirs, ascend spirits, and invoke cosmic blessings.
             </p>
           </div>
         </div>
@@ -272,9 +272,9 @@ function renderEnergySectionHtml(currentMax, isCapped, costEssence, costSoul, ca
 
 function renderPotionsSectionHtml(res, spirits) {
   const POTIONS = [
-    { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 50, essenceGodCost: 2, desc: 'Brewed elixir granting +10,000 Spirit XP.' },
-    { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 200, essenceGodCost: 8, desc: 'Concentrated starlight granting +50,000 Spirit XP.' },
-    { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 800, essenceGodCost: 25, soulCost: 2, desc: 'Nectar of the gods granting +250,000 Spirit XP.' }
+    { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, astralCost: 1, essenceGodCost: 5, desc: 'Brewed elixir granting +10,000 Spirit XP.' },
+    { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, astralCost: 3, essenceGodCost: 15, desc: 'Concentrated starlight granting +50,000 Spirit XP.' },
+    { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, astralCost: 10, essenceGodCost: 40, desc: 'Nectar of the gods granting +250,000 Spirit XP.' }
   ];
 
   return `
@@ -285,9 +285,8 @@ function renderPotionsSectionHtml(res, spirits) {
 
       <div class="flex flex-col gap-2">
         ${POTIONS.map(pot => {
-          const canBuy = res.spiritShards >= pot.shardCost && 
-            (res.essencesOfTheGods || 0) >= pot.essenceGodCost &&
-            (!pot.soulCost || (res.soulEssence || 0) >= pot.soulCost);
+          const canBuy = (res.soulEssence || 0) >= pot.astralCost && 
+            (res.essencesOfTheGods || 0) >= pot.essenceGodCost;
 
           return `
             <div class="rounded-xl border border-emerald-500/30 bg-slate-900/80 p-3 flex items-center justify-between gap-2.5 shadow-sm">
@@ -303,7 +302,7 @@ function renderPotionsSectionHtml(res, spirits) {
                     </span>
                   </div>
                   <div class="text-[10px] text-slate-400 mt-0.5">
-                    Cost: 💎 ${pot.shardCost} • <span class="text-cyan-300 font-bold">💠 ${pot.essenceGodCost}</span> ${pot.soulCost ? `• <span class="text-purple-300 font-bold">🔮 ${pot.soulCost}</span>` : ''}
+                    Cost: <span class="text-purple-300 font-bold">🔮 ${pot.astralCost} Astral</span> • <span class="text-cyan-300 font-bold">💠 ${pot.essenceGodCost} Gods</span>
                   </div>
                 </div>
               </div>
