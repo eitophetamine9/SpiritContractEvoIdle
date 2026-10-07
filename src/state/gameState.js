@@ -2,6 +2,7 @@ import {
   SPIRIT_SPECIES, 
   CONTRACT_POOLS_BY_RARITY,
   BANNER_CONFIGS,
+  ASCENSION_CONFIG,
   rollContractSpirit,
   rollAstralContractSpirit,
   rollBannerContractSpirit,
@@ -309,9 +310,10 @@ class GameStateManager {
       }
       const species = SPIRIT_SPECIES[s.speciesId];
       if (species) {
+        s.ascensionLevel = s.ascensionLevel || 0;
         s.element = s.element || species.element || 'EARTH';
-        s.power = calculateSpiritPower(species, s.level, s.rarity || species.baseRarity);
-        s.maxHp = calculateSpiritMaxHp(species, s.level, s.rarity || species.baseRarity);
+        s.power = calculateSpiritPower(species, s.level, s.rarity || species.baseRarity, s.ascensionLevel);
+        s.maxHp = calculateSpiritMaxHp(species, s.level, s.rarity || species.baseRarity, s.ascensionLevel);
         if (typeof s.currentHp !== 'number' || isNaN(s.currentHp) || s.currentHp <= 0) {
           s.currentHp = s.maxHp;
         } else {
@@ -319,7 +321,7 @@ class GameStateManager {
         }
         s.maxMp = 100;
         if (typeof s.currentMp !== 'number' || isNaN(s.currentMp)) {
-          s.currentMp = 0;
+          s.currentMp = (s.ascensionLevel >= 3) ? 15 : 0;
         } else {
           s.currentMp = Math.max(0, Math.min(100, s.currentMp));
         }
@@ -717,7 +719,7 @@ class GameStateManager {
       madnessZone.subStage = 1;
       party.forEach(s => {
         s.currentHp = s.maxHp;
-        s.currentMp = 0;
+        s.currentMp = (s.ascensionLevel >= 3) ? 15 : 0;
         s.shieldHp = 0;
         s.isFallen = false;
       });
@@ -850,10 +852,11 @@ class GameStateManager {
 
     let totalDamageDealt = 0;
     let totalHealingDone = 0;
+    const ascUltMult = (spirit.ascensionLevel >= 5) ? 1.20 : 1.0;
 
     switch (ult.type) {
       case 'AOE_DAMAGE': {
-        const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier));
+        const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier * ascUltMult));
         for (const enemy of livingEnemies) {
           enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
           totalDamageDealt += damagePerEnemy;
@@ -866,7 +869,7 @@ class GameStateManager {
       case 'DAMAGE': {
         if (livingEnemies.length > 0) {
           const target = livingEnemies[0];
-          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier));
+          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier * ascUltMult));
           target.hp = Math.max(0, target.hp - damage);
           totalDamageDealt = damage;
           if (target.hp <= 0) {
@@ -879,7 +882,7 @@ class GameStateManager {
         if (livingEnemies.length > 0) {
           const sorted = [...livingEnemies].sort((a, b) => a.hp - b.hp);
           const target = sorted[0];
-          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier));
+          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier * ascUltMult));
           target.hp = Math.max(0, target.hp - damage);
           totalDamageDealt = damage;
           if (target.hp <= 0) {
@@ -1231,12 +1234,13 @@ class GameStateManager {
     spirit.level = 1; // Resets to Lv 1 of new Tier for high-ceiling AFK progression
     spirit.xp = 0;
     spirit.canEvolve = false;
+    spirit.ascensionLevel = spirit.ascensionLevel || 0;
     spirit.rarity = chosenBranch.rarity || nextSpecies.baseRarity;
-    spirit.power = calculateSpiritPower(nextSpecies, spirit.level, spirit.rarity);
-    spirit.maxHp = calculateSpiritMaxHp(nextSpecies, spirit.level, spirit.rarity);
+    spirit.power = calculateSpiritPower(nextSpecies, spirit.level, spirit.rarity, spirit.ascensionLevel);
+    spirit.maxHp = calculateSpiritMaxHp(nextSpecies, spirit.level, spirit.rarity, spirit.ascensionLevel);
     spirit.currentHp = spirit.maxHp;
     spirit.maxMp = 100;
-    spirit.currentMp = 0;
+    spirit.currentMp = (spirit.ascensionLevel >= 3) ? 15 : 0;
     spirit.shieldHp = 0;
     spirit.isFallen = false;
     spirit.evolutionHistory.push(nextSpecies.name);
@@ -1625,8 +1629,121 @@ class GameStateManager {
   }
 
   // =========================================================================
-  // VAULT & SPIRIT MANAGEMENT QoL (Annul, Bulk Annul, Rename, Favorite)
+  // VAULT & SPIRIT MANAGEMENT QoL (Ascension ★1-7, Annul, Bulk Annul, Rename, Favorite)
   // =========================================================================
+
+  /**
+   * Returns unequipped, non-favorite duplicate spirits sharing speciesId with target spirit
+   */
+  getEligibleAscensionDuplicates(spiritId) {
+    const target = this.state.spirits.find(s => s.id === spiritId);
+    if (!target) return [];
+    return this.state.spirits.filter(s => 
+      s.id !== target.id &&
+      s.speciesId === target.speciesId &&
+      !this.state.party.includes(s.id) &&
+      !s.favorite
+    );
+  }
+
+  /**
+   * Ascend Spirit to next Star Tier (★1 through ★7)
+   * Consumes matching duplicate copies + Astral Essences
+   * Grants stacking +12% stats per tier up to +84% at ★7
+   */
+  ascendSpirit(targetSpiritId, duplicateSpiritIds = []) {
+    const target = this.state.spirits.find(s => s.id === targetSpiritId);
+    if (!target) throw new Error('Target spirit not found in collection!');
+
+    target.ascensionLevel = target.ascensionLevel || 0;
+    if (target.ascensionLevel >= 7) {
+      throw new Error(`${target.customName} has already attained maximum Ascension (★7)!`);
+    }
+
+    const nextTier = target.ascensionLevel + 1;
+    const config = ASCENSION_CONFIG.find(c => c.tier === nextTier) || ASCENSION_CONFIG[target.ascensionLevel];
+    if (!config) throw new Error('Ascension configuration not found!');
+
+    if (!Array.isArray(duplicateSpiritIds) || duplicateSpiritIds.length !== config.duplicates) {
+      throw new Error(`Ascension to ★${nextTier} requires exactly ${config.duplicates} duplicate copy(ies). Selected: ${duplicateSpiritIds ? duplicateSpiritIds.length : 0}.`);
+    }
+
+    const res = this.state.resources;
+    if ((res.soulEssence || 0) < config.astralCost) {
+      throw new Error(`Insufficient Astral Essence! Need ${config.astralCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+
+    // Validate duplicate spirits
+    for (const dupId of duplicateSpiritIds) {
+      if (dupId === targetSpiritId) {
+        throw new Error('A spirit cannot consume itself as a duplicate copy!');
+      }
+      const dup = this.state.spirits.find(s => s.id === dupId);
+      if (!dup) {
+        throw new Error(`Duplicate spirit with ID ${dupId} not found in collection!`);
+      }
+      if (dup.speciesId !== target.speciesId) {
+        throw new Error(`Duplicate spirit ${dup.customName} must be of the same species (${target.speciesId})!`);
+      }
+      if (this.state.party.includes(dupId)) {
+        throw new Error(`Cannot sacrifice ${dup.customName} while they are in your active party. Unequip first!`);
+      }
+      if (dup.favorite) {
+        throw new Error(`Cannot sacrifice ${dup.customName} while marked as Favorite. Remove favorite first!`);
+      }
+    }
+
+    // Deduct Astral Essence
+    res.soulEssence -= config.astralCost;
+
+    // Remove duplicates and unequip any gear into inventory
+    for (const dupId of duplicateSpiritIds) {
+      const dupIndex = this.state.spirits.findIndex(s => s.id === dupId);
+      if (dupIndex !== -1) {
+        const dup = this.state.spirits[dupIndex];
+        if (dup.weapon) {
+          const weapon = (this.state.inventory?.equipment || []).find(e => e.uid === dup.weapon);
+          if (weapon) weapon.equippedToSpiritId = null;
+        }
+        if (dup.relics) {
+          for (const relicUid of Object.values(dup.relics)) {
+            if (relicUid) {
+              const relic = (this.state.inventory?.equipment || []).find(e => e.uid === relicUid);
+              if (relic) relic.equippedToSpiritId = null;
+            }
+          }
+        }
+        this.state.spirits.splice(dupIndex, 1);
+      }
+    }
+
+    // Elevate target spirit
+    target.ascensionLevel = nextTier;
+    const species = SPIRIT_SPECIES[target.speciesId];
+    if (species) {
+      target.power = calculateSpiritPower(species, target.level, target.rarity, target.ascensionLevel);
+      target.maxHp = calculateSpiritMaxHp(species, target.level, target.rarity, target.ascensionLevel);
+      target.currentHp = target.maxHp;
+      if (target.ascensionLevel >= 3 && target.currentMp < 15) {
+        target.currentMp = 15;
+      }
+    }
+
+    this.state.stats.totalAscensions = (this.state.stats.totalAscensions || 0) + 1;
+    this.save();
+
+    this.emit('spiritAscended', { spirit: target, newTier: nextTier, config });
+    this.emit('resourcesUpdated', res);
+    this.emit('partyUpdated', this.getPartySpirits());
+
+    return {
+      success: true,
+      spirit: target,
+      newTier: nextTier,
+      bonusPercent: config.bonusPercent,
+      perk: config.perk
+    };
+  }
 
   toggleFavoriteSpirit(spiritId) {
     const spirit = this.state.spirits.find(s => s.id === spiritId);
@@ -2414,7 +2531,7 @@ class GameStateManager {
     const party = this.getPartySpirits();
     party.forEach(s => {
       s.currentHp = s.maxHp;
-      s.currentMp = 0;
+      s.currentMp = (s.ascensionLevel >= 3) ? 15 : 0;
       s.shieldHp = 0;
       s.isFallen = false;
     });

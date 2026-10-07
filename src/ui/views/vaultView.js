@@ -300,6 +300,11 @@ export function renderVaultView(container) {
                       ${elem}
                     </span>
                     <span class="text-[9px] font-extrabold text-slate-400">Lv.${s.level}</span>
+                    ${(s.ascensionLevel || 0) > 0 ? `
+                      <span class="px-1 py-0.2 rounded text-[8px] font-black ${s.ascensionLevel === 7 ? 'bg-amber-400/30 text-yellow-300 border border-yellow-400 shadow-[0_0_6px_rgba(253,224,71,0.5)]' : 'bg-purple-500/25 text-purple-200 border border-purple-400/40'}">
+                        ★${s.ascensionLevel}${s.ascensionLevel === 7 ? ' MAX' : ''}
+                      </span>
+                    ` : ''}
                   </div>
 
                   <div class="flex items-center gap-1">

@@ -467,6 +467,57 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   if (!skipBlocked) throw new Error('Should block skipping Floor 2 to unlock Floor 3');
 
+  // Test 18: Spirit Ascension System (★1 to ★7) with Duplicates & Astral Essence
+  console.log('\n[TEST 18] Testing Spirit Ascension System (★1 to ★7):');
+  const baseCat = gameState.state.spirits.find(s => s.speciesId === 'cat_spirit');
+  if (!baseCat) throw new Error('Base cat spirit not found for ascension test');
+
+  // Create a duplicate cat spirit
+  const dupCatId = gameState.generateId();
+  const dupCat = {
+    id: dupCatId,
+    speciesId: 'cat_spirit',
+    customName: 'Duplicate Cat',
+    level: 1,
+    xp: 0,
+    tier: 1,
+    rarity: 'COMMON',
+    element: 'EARTH',
+    power: 10,
+    maxHp: 100,
+    currentHp: 100,
+    isFallen: false,
+    isEquipped: false,
+    favorite: false
+  };
+  gameState.state.spirits.push(dupCat);
+
+  // Check eligible duplicates
+  const eligibleDups = gameState.getEligibleAscensionDuplicates(baseCat.id);
+  console.log(`  Found ${eligibleDups.length} eligible duplicate(s) for ${baseCat.customName}`);
+  if (eligibleDups.length === 0) throw new Error('Should find at least 1 eligible duplicate');
+
+  // Verify failure when insufficient Astral Essence
+  gameState.state.resources.soulEssence = 0;
+  let essenceBlocked = false;
+  try {
+    gameState.ascendSpirit(baseCat.id, [dupCatId]);
+  } catch (err) {
+    essenceBlocked = true;
+    console.log(`  [PASS] Blocked ascension without Astral Essence: "${err.message}"`);
+  }
+  if (!essenceBlocked) throw new Error('Should block ascension when lacking Astral Essence');
+
+  // Now fund Astral Essence and perform Ascension ★1
+  gameState.state.resources.soulEssence = 10;
+  const preAscPower = baseCat.power;
+  const ascRes = gameState.ascendSpirit(baseCat.id, [dupCatId]);
+  console.log(`  Ascended ${baseCat.customName} to ★${ascRes.newTier}! Power: ${preAscPower} -> ${baseCat.power} (+${ascRes.bonusPercent}% stats)`);
+  if (baseCat.ascensionLevel !== 1) throw new Error('Ascension level should be 1');
+  if (baseCat.power <= preAscPower) throw new Error('Ascension should boost spirit power');
+  if (gameState.state.spirits.some(s => s.id === dupCatId)) throw new Error('Duplicate spirit should be consumed upon ascension');
+  if (gameState.state.resources.soulEssence !== 9) throw new Error('Should deduct 1 Astral Essence');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
