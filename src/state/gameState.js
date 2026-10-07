@@ -42,6 +42,11 @@ import {
   ESSENCE_DIFFICULTY_TIERS, 
   generateEssenceLoot 
 } from '../data/essenceDungeonData.js';
+import { 
+  CONSTELLATIONS_CONFIG, 
+  EXPEDITIONS_CONFIG, 
+  TRANSMUTATION_CONFIG 
+} from '../data/astralRealmData.js';
 
 const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
@@ -220,6 +225,10 @@ class GameStateManager {
       },
       activeDungeonBattle: null,
       activeBlessings: {}, // Temporary 1-hour spirit blessings
+      constellations: { draco: 0, phoenix: 0, pegasus: 0 },
+      expeditions: {},
+      transmutationsToday: 0,
+      lastTransmutationDate: new Date().toDateString(),
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
       hallOfFame: [starterId], // Max 5 showcase spirits
@@ -279,6 +288,19 @@ class GameStateManager {
     }
     if (typeof state.resources.energySecondsAccumulator !== 'number') {
       state.resources.energySecondsAccumulator = 0;
+    }
+
+    if (!state.constellations || typeof state.constellations !== 'object') {
+      state.constellations = { draco: 0, phoenix: 0, pegasus: 0 };
+    }
+    if (!state.expeditions || typeof state.expeditions !== 'object') {
+      state.expeditions = {};
+    }
+    if (typeof state.transmutationsToday !== 'number') {
+      state.transmutationsToday = 0;
+    }
+    if (typeof state.lastTransmutationDate !== 'string') {
+      state.lastTransmutationDate = new Date().toDateString();
     }
 
     // Ensure unlocked stages exist and sanitize floor progression
@@ -506,10 +528,13 @@ class GameStateManager {
       return;
     }
 
+    const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+    const effectiveInterval = ENERGY_REGEN_INTERVAL_SEC / (1 + ((constBonuses.energyRegenBonus || 0) / 100));
+
     res.energySecondsAccumulator += secondsPassed;
-    while (res.energySecondsAccumulator >= ENERGY_REGEN_INTERVAL_SEC && res.energy < res.maxEnergy) {
+    while (res.energySecondsAccumulator >= effectiveInterval && res.energy < res.maxEnergy) {
       res.energy += 1;
-      res.energySecondsAccumulator -= ENERGY_REGEN_INTERVAL_SEC;
+      res.energySecondsAccumulator -= effectiveInterval;
       this.emit('energyGained', { current: res.energy, max: res.maxEnergy });
     }
   }
@@ -523,7 +548,9 @@ class GameStateManager {
     if (partySpirits.length === 0) return;
 
     // Base XP per second scales with highest stage cleared
-    const xpPerSec = this.getXpGainRate();
+    const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+    const afkMult = 1 + ((constBonuses.afkXpBonus || 0) / 100);
+    const xpPerSec = this.getXpGainRate() * afkMult;
     const gainedXp = xpPerSec * deltaSec;
 
     let stateChanged = false;
@@ -717,10 +744,12 @@ class GameStateManager {
     // 1. Check for Party Wipeout (All party members fallen)
     if (livingSpirits.length === 0 && party.length > 0) {
       madnessZone.subStage = 1;
+      const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+      const initShieldPct = (constBonuses.initialShieldPercent || 0) / 100;
       party.forEach(s => {
         s.currentHp = s.maxHp;
         s.currentMp = (s.ascensionLevel >= 3) ? 15 : 0;
-        s.shieldHp = 0;
+        s.shieldHp = Math.round(s.maxHp * initShieldPct);
         s.isFallen = false;
       });
       this.spawnMadnessEnemy();
@@ -814,6 +843,12 @@ class GameStateManager {
           const enemyElemMult = getElementalMultiplier(enemy.element || 'EARTH', targetSpirit.element || 'EARTH');
           let enemyDamage = Math.max(1, Math.round(enemy.power * enemyElemMult * (0.8 + Math.random() * 0.35)));
 
+          // Constellation damage mitigation (Phoenix: Eternal Avatar)
+          const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+          if (constBonuses.damageMitigationPercent) {
+            enemyDamage = Math.max(1, Math.round(enemyDamage * (1 - constBonuses.damageMitigationPercent / 100)));
+          }
+
           // Absorb damage with shield first
           if (targetSpirit.shieldHp > 0) {
             const absorb = Math.min(targetSpirit.shieldHp, enemyDamage);
@@ -852,7 +887,9 @@ class GameStateManager {
 
     let totalDamageDealt = 0;
     let totalHealingDone = 0;
-    const ascUltMult = (spirit.ascensionLevel >= 5) ? 1.20 : 1.0;
+    const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+    const ultAmpMult = 1 + ((constBonuses.ultAmp || 0) / 100);
+    const ascUltMult = ((spirit.ascensionLevel >= 5) ? 1.20 : 1.0) * ultAmpMult;
 
     switch (ult.type) {
       case 'AOE_DAMAGE': {
@@ -1021,7 +1058,13 @@ class GameStateManager {
     enemy.hp = 0;
 
     const shardsGained = enemy.shardReward || 0;
-    const essenceGained = enemy.essenceReward || 0;
+    let essenceGained = enemy.essenceReward || 0;
+    if (enemy.isBoss) {
+      const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+      if (constBonuses.bonusAstralDropChance && Math.random() < (constBonuses.bonusAstralDropChance / 100)) {
+        essenceGained += 1;
+      }
+    }
 
     this.state.resources.spiritShards += shardsGained;
     this.state.resources.soulEssence += essenceGained;
@@ -1086,10 +1129,12 @@ class GameStateManager {
 
       // Floor Victory: Revive ALL party spirits to 100% HP!
       const party = this.getPartySpirits();
+      const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+      const initShieldPct = (constBonuses.initialShieldPercent || 0) / 100;
       party.forEach(s => {
         s.currentHp = s.maxHp;
         s.isFallen = false;
-        s.shieldHp = 0;
+        s.shieldHp = Math.round(s.maxHp * initShieldPct);
       });
       this.emit('partyRevived', { reason: 'floor_victory' });
 
@@ -1745,6 +1790,253 @@ class GameStateManager {
     };
   }
 
+  // =========================================================================
+  // CELESTIAL CONSTELLATIONS (Zodiac Passive System)
+  // =========================================================================
+
+  getConstellationBonuses() {
+    const bonuses = {
+      partyAtkPercent: 0,
+      critRate: 0,
+      critDamage: 0,
+      ultAmp: 0,
+      partyHpPercent: 0,
+      initialShieldPercent: 0,
+      healingReceivedPercent: 0,
+      damageMitigationPercent: 0,
+      energyRegenBonus: 0,
+      maxEnergyBonus: 0,
+      bonusAstralDropChance: 0,
+      afkXpBonus: 0,
+      bonusGodEssencesPercent: 0
+    };
+
+    if (!this.state || !this.state.constellations) return bonuses;
+
+    for (const [cId, level] of Object.entries(this.state.constellations)) {
+      const config = CONSTELLATIONS_CONFIG[cId];
+      if (!config) continue;
+      for (let node = 1; node <= level; node++) {
+        const star = config.stars.find(s => s.node === node);
+        if (star && star.bonus) {
+          for (const [key, val] of Object.entries(star.bonus)) {
+            bonuses[key] = (bonuses[key] || 0) + val;
+          }
+        }
+      }
+    }
+
+    return bonuses;
+  }
+
+  unlockConstellationStar(constellationId) {
+    const config = CONSTELLATIONS_CONFIG[constellationId];
+    if (!config) throw new Error('Invalid Celestial Constellation!');
+
+    const currentLevel = (this.state.constellations && this.state.constellations[constellationId]) || 0;
+    if (currentLevel >= 5) {
+      throw new Error(`${config.name} constellation is already fully illuminated!`);
+    }
+
+    const nextNode = currentLevel + 1;
+    const star = config.stars.find(s => s.node === nextNode);
+    if (!star) throw new Error('Star node configuration not found!');
+
+    const res = this.state.resources;
+    if ((res.soulEssence || 0) < star.cost) {
+      throw new Error(`Insufficient Astral Essence! Need ${star.cost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+
+    res.soulEssence -= star.cost;
+    this.state.constellations[constellationId] = nextNode;
+    if (star.bonus && star.bonus.maxEnergyBonus) {
+      res.maxEnergy = (res.maxEnergy || 100) + star.bonus.maxEnergyBonus;
+      res.energy = Math.min(res.maxEnergy, res.energy + star.bonus.maxEnergyBonus);
+    }
+    this.save();
+
+    this.emit('constellationUpdated', { constellationId, newLevel: nextNode, star });
+    this.emit('resourcesUpdated', res);
+    this.emit('partyUpdated', this.getPartySpirits());
+
+    return { success: true, constellationId, newLevel: nextNode, star };
+  }
+
+  // =========================================================================
+  // ASTRAL EXPEDITIONS (Idle Spirit Dispatch)
+  // =========================================================================
+
+  getEligibleExpeditionSpirits() {
+    const partyIds = new Set(this.state.party || []);
+    const expeditionIds = new Set();
+    for (const exp of Object.values(this.state.expeditions || {})) {
+      if (exp && exp.active && Array.isArray(exp.spiritIds)) {
+        exp.spiritIds.forEach(id => expeditionIds.add(id));
+      }
+    }
+    return (this.state.spirits || []).filter(s => !partyIds.has(s.id) && !expeditionIds.has(s.id));
+  }
+
+  dispatchExpedition(fissureId, spiritIds = []) {
+    const fissure = EXPEDITIONS_CONFIG.find(f => f.id === fissureId);
+    if (!fissure) throw new Error('Invalid Expedition Fissure!');
+
+    const activeExp = this.state.expeditions[fissureId];
+    if (activeExp && activeExp.active) {
+      throw new Error('An expedition is already in progress in this fissure!');
+    }
+
+    if (!Array.isArray(spiritIds) || spiritIds.length !== fissure.requiredSpirits) {
+      throw new Error(`This expedition requires exactly ${fissure.requiredSpirits} spirit(s). Selected: ${spiritIds.length}.`);
+    }
+
+    // Validate selected spirits
+    const allExpeditionSpiritIds = new Set();
+    for (const exp of Object.values(this.state.expeditions || {})) {
+      if (exp && exp.active && Array.isArray(exp.spiritIds)) {
+        exp.spiritIds.forEach(id => allExpeditionSpiritIds.add(id));
+      }
+    }
+
+    for (const id of spiritIds) {
+      const spirit = this.state.spirits.find(s => s.id === id);
+      if (!spirit) throw new Error(`Spirit ${id} not found in collection!`);
+      const spiritName = spirit.customName || (SPIRIT_SPECIES[spirit.speciesId]?.name) || spirit.id;
+      if (this.state.party.includes(id)) {
+        throw new Error(`Cannot dispatch ${spiritName} while in active combat party!`);
+      }
+      if (allExpeditionSpiritIds.has(id)) {
+        throw new Error(`Cannot dispatch ${spiritName} while already on another expedition!`);
+      }
+    }
+
+    this.state.expeditions[fissureId] = {
+      fissureId,
+      spiritIds: [...spiritIds],
+      startTime: Date.now(),
+      durationSec: fissure.durationSec,
+      active: true
+    };
+
+    this.save();
+    this.emit('expeditionStarted', this.state.expeditions[fissureId]);
+    return { success: true, expedition: this.state.expeditions[fissureId] };
+  }
+
+  claimExpeditionRewards(fissureId) {
+    const fissure = EXPEDITIONS_CONFIG.find(f => f.id === fissureId);
+    if (!fissure) throw new Error('Invalid Expedition Fissure!');
+
+    const exp = this.state.expeditions[fissureId];
+    if (!exp || !exp.active) {
+      throw new Error('No active expedition found for this fissure!');
+    }
+
+    const elapsedSec = (Date.now() - exp.startTime) / 1000;
+    if (elapsedSec < exp.durationSec) {
+      const remainMin = Math.ceil((exp.durationSec - elapsedSec) / 60);
+      throw new Error(`Expedition is still ongoing! Time remaining: ${remainMin} minute(s).`);
+    }
+
+    // Check elemental synergy bonus
+    let hasElementMatch = false;
+    for (const sId of exp.spiritIds) {
+      const sp = this.state.spirits.find(s => s.id === sId);
+      if (sp && sp.element === fissure.recommendedElement) {
+        hasElementMatch = true;
+        break;
+      }
+    }
+
+    const mult = hasElementMatch ? 1.25 : 1.0;
+    const astralGained = Math.round((fissure.rewards.minAstral + Math.random() * (fissure.rewards.maxAstral - fissure.rewards.minAstral)) * mult);
+    const godsGained = Math.round((fissure.rewards.minGods + Math.random() * (fissure.rewards.maxGods - fissure.rewards.minGods)) * mult);
+    const shardsGained = Math.round(fissure.rewards.shards * mult);
+
+    this.state.resources.soulEssence = (this.state.resources.soulEssence || 0) + astralGained;
+    this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + godsGained;
+    this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + shardsGained;
+
+    let relicGained = null;
+    if (fissure.rewards.dropRelicChance && Math.random() < fissure.rewards.dropRelicChance) {
+      const godKeys = Object.keys(GREEK_GOD_SETS);
+      const randomGod = godKeys[Math.floor(Math.random() * godKeys.length)];
+      const randomSlot = RELIC_SLOT_TYPES[Math.floor(Math.random() * RELIC_SLOT_TYPES.length)];
+      relicGained = createRelicInstance({
+        setId: randomGod,
+        slotTypeId: randomSlot.id,
+        rarity: Math.random() < 0.7 ? 'RARE' : 'EPIC',
+        level: 1
+      });
+      this.state.inventory.equipment.push(relicGained);
+    }
+
+    this.state.expeditions[fissureId] = null;
+    this.save();
+
+    const rewards = {
+      astralGained,
+      godsGained,
+      shardsGained,
+      relicGained,
+      hasElementMatch
+    };
+
+    this.emit('expeditionClaimed', { fissureId, rewards });
+    this.emit('resourcesUpdated', this.state.resources);
+    if (relicGained) this.emit('inventoryUpdated', this.state.inventory);
+
+    return rewards;
+  }
+
+  // =========================================================================
+  // ASTRAL TRANSMUTATION CIRCLE (Anti-Oversaturation Currency Exchange)
+  // =========================================================================
+
+  transmuteShardsToAstralEssence() {
+    const today = new Date().toDateString();
+    if (this.state.lastTransmutationDate !== today) {
+      this.state.lastTransmutationDate = today;
+      this.state.transmutationsToday = 0;
+    }
+
+    const currentCount = this.state.transmutationsToday || 0;
+    // Anti-oversaturation scaling: 1000 base + 250 per transmutation today
+    const shardCost = TRANSMUTATION_CONFIG.shardCost + currentCount * 250;
+    const godCost = TRANSMUTATION_CONFIG.godEssenceCost;
+
+    const res = this.state.resources;
+    if ((res.spiritShards || 0) < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost.toLocaleString()} 💎 (Have: ${res.spiritShards.toLocaleString()} 💎).`);
+    }
+    if ((res.essencesOfTheGods || 0) < godCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${godCost} 💠 (Have: ${res.essencesOfTheGods || 0} 💠).`);
+    }
+
+    res.spiritShards -= shardCost;
+    res.essencesOfTheGods -= godCost;
+    res.soulEssence = (res.soulEssence || 0) + TRANSMUTATION_CONFIG.astralEssenceReward;
+
+    this.state.transmutationsToday = currentCount + 1;
+    this.save();
+
+    this.emit('transmutationCompleted', {
+      shardCost,
+      godCost,
+      astralGained: TRANSMUTATION_CONFIG.astralEssenceReward,
+      transmutationsToday: this.state.transmutationsToday
+    });
+    this.emit('resourcesUpdated', res);
+
+    return {
+      success: true,
+      astralGained: TRANSMUTATION_CONFIG.astralEssenceReward,
+      shardCost,
+      godCost,
+      transmutationsToday: this.state.transmutationsToday
+    };
+  }
+
   toggleFavoriteSpirit(spiritId) {
     const spirit = this.state.spirits.find(s => s.id === spiritId);
     if (!spirit) return false;
@@ -2017,6 +2309,12 @@ class GameStateManager {
       if (b.bonus.damageBonus) {
         damageMultiplier += b.bonus.damageBonus;
       }
+    }
+
+    // Celestial Constellation bonuses (Draco)
+    const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+    if (constBonuses.partyAtkPercent) {
+      damageMultiplier += (constBonuses.partyAtkPercent / 100);
     }
 
     return Math.round(power * damageMultiplier);
@@ -2354,6 +2652,8 @@ class GameStateManager {
     const resonance = this.getPartyElementalResonances();
     if (resonance.maxHpPercent) percentHpBonus += (resonance.maxHpPercent * 100);
     if (resonance.allStatsPercent) percentHpBonus += (resonance.allStatsPercent * 100);
+    const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+    if (constBonuses.partyHpPercent) percentHpBonus += constBonuses.partyHpPercent;
 
     return Math.round(baseHp * (1 + percentHpBonus / 100));
   }
@@ -2817,6 +3117,10 @@ class GameStateManager {
 
     this.state.resources.energy -= tierObj.energyCost;
     const loot = generateEssenceLoot(chamberId, tierNum);
+    const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+    if (constBonuses.bonusGodEssencesPercent) {
+      loot.godEssencesGained = Math.round(loot.godEssencesGained * (1 + constBonuses.bonusGodEssencesPercent / 100));
+    }
 
     this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + loot.godEssencesGained;
     this.state.resources.soulEssence += loot.soulEssenceGained;
@@ -3024,6 +3328,10 @@ class GameStateManager {
 
     this.state.resources.energy -= tierObj.energyCost;
     const loot = generateEssenceLoot(chamberId, tierNum);
+    const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
+    if (constBonuses.bonusGodEssencesPercent) {
+      loot.godEssencesGained = Math.round(loot.godEssencesGained * (1 + constBonuses.bonusGodEssencesPercent / 100));
+    }
 
     this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + loot.godEssencesGained;
     this.state.resources.soulEssence = (this.state.resources.soulEssence || 0) + loot.soulEssenceGained;

@@ -335,5 +335,83 @@ The audio engine (`audioManager.js`) provides zero-latency playback using HTML5 
 ### 12.2 Lifecycle & User Gesture Compliance
 In accordance with modern browser autoplay policies, audio context initialization and track playback automatically unlock upon the player's first user interaction (touch or click). User audio preferences (mute state, music volume, SFX volume) are persisted in local storage.
 
+---
+
+## 13. Spirit Ascension System (★1 to ★7)
+
+### 13.1 Overview & Mathematical Scaling
+The Spirit Ascension System allows players to utilize duplicate copies of spirits obtained from contract pulls to permanently augment a target spirit's stats and unlock milestone combat traits.
+
+Base stat scaling follows:
+$$\text{Effective Base Stat} = \text{Base Stat} \times (1 + \text{Ascension Level} \times 0.12)$$
+
+| Ascension Tier | Duplicates Required | Astral Essence Cost | Stat Multiplier | Combat Trait Unlocked | Visual Treatment |
+| :---: | :---: | :---: | :---: | :--- | :--- |
+| ★1 | 1 Copy | 1 🔮 | +12% Total Stats | — | Bronze Star Badge (`★1`) |
+| ★2 | 1 Copy | 1 🔮 | +24% Total Stats | — | Silver Star Badge (`★2`) |
+| ★3 | 2 Copies | 2 🔮 | +36% Total Stats | **Celestial Quickening**: Spirit enters combat with +15 starting MP | Gold Star Badge (`★3`) |
+| ★4 | 2 Copies | 3 🔮 | +48% Total Stats | — | Gold Star Badge (`★4`) |
+| ★5 | 3 Copies | 4 🔮 | +60% Total Stats | **Divine Surge**: Ultimate Skill damage/effect amplified by +20% | Emerald Star Badge (`★5`) |
+| ★6 | 3 Copies | 5 🔮 | +72% Total Stats | — | Amethyst Star Badge (`★6`) |
+| ★7 (MAX) | 4 Copies | 8 🔮 | +84% Total Stats | **Sovereign Focus**: +10% Critical Hit Chance, +25% Critical Hit Damage | Glowing Golden Frame + (`★7 MAX`) |
+
+### 13.2 Ascension Rules & Evolution Preservation
+1. **Species Match**: Duplicate spirits must belong to the exact same species identifier (e.g. `cat_spirit`).
+2. **Locking Protections**: Spirits marked as favorites or currently equipped in the active 5-slot combat party are protected and ineligible for sacrifice.
+3. **Evolution Horizon Inheritance**: When a spirit evolves, its `ascensionLevel` and all associated combat perks are permanently carried forward to the evolved species form.
+
+---
+
+## 14. Astral Realm Overhaul & Expansion
+
+### 14.1 Pure Astral Currency Economy
+The Astral Realm has been decoupled from standard Spirit Shards:
+- **🔮 Astral Essences (`soulEssence`)**: Rare catalysts harvested from Essence Dungeons, Constellation milestones, Expeditions, and the Transmutation Circle.
+- **💠 Essences of the Gods (`essencesOfTheGods`)**: Divine reagents awarded from Pantheon Trials, Sanctuary Dungeons, and relic dismantling.
+- **Zero-Shard Rule**: Upgrading Energy Capacity, brewing Astral EXP Elixirs, and invoking Divine Blessings require exclusively 🔮 and 💠, completely eliminating shard sink pressure in the sanctum.
+
+### 14.2 Celestial Constellations (Zodiac Passive Trees)
+Players can permanently illuminate 5 star nodes across 3 Zodiac Constellations using 🔮 Astral Essences:
+
+#### 1. Draco (The Dragon of Fury - Offensive Tree)
+- **Node 1 (Dragon Claw)**: +4% All Spirit ATK Power (Cost: 2 🔮)
+- **Node 2 (Scaled Vigor)**: +6% All Spirit ATK Power (Cost: 3 🔮)
+- **Node 3 (Draconic Focus)**: +5% Critical Hit Chance (Cost: 5 🔮)
+- **Node 4 (Infernal Wrath)**: +15% Critical Hit Damage (Cost: 8 🔮)
+- **Node 5 (Dragon Sovereign)**: +20% Ultimate Skill Amplification (Cost: 12 🔮)
+
+#### 2. Phoenix (The Immortal Flame - Vitality & Defense Tree)
+- **Node 1 (Kindled Spark)**: +5% All Spirit Max HP (Cost: 2 🔮)
+- **Node 2 (Blazing Plume)**: +8% All Spirit Max HP (Cost: 3 🔮)
+- **Node 3 (Aegis of Ashes)**: +10% Max HP Initial Shield on combat start/wave clear (Cost: 5 🔮)
+- **Node 4 (Solar Rebirth)**: +15% Healing & Regeneration (Cost: 8 🔮)
+- **Node 5 (Eternal Avatar)**: +10% Permanent Damage Mitigation (Cost: 12 🔮)
+
+#### 3. Pegasus (The Harbinger of Starlight - Velocity & Utility Tree)
+- **Node 1 (Zephyr Stride)**: +10% Faster Natural Energy Regen Interval (Cost: 2 🔮)
+- **Node 2 (Aether Hooves)**: +20 Max Energy Vault Capacity (Cost: 3 🔮)
+- **Node 3 (Cosmic Siphon)**: +25% Chance for Extra 🔮 Astral Drop from Overlord Bosses (Cost: 5 🔮)
+- **Node 4 (Astral Swiftness)**: +20% Idle AFK Training Experience (Cost: 8 🔮)
+- **Node 5 (Celestial Emissary)**: +25% Bonus 💠 God Essences from Trials (Cost: 12 🔮)
+
+### 14.3 Astral Expeditions (Idle Spirit Dispatch)
+Idle spirits not in the active combat party can be dispatched into cosmic rifts for idle foraging:
+
+| Fissure ID | Name | Duration | Team Size | Element Affinity | Base Loot Yields |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| `starlight_fissure` | Starlight Fissure | 2 Hours | 1 Spirit | WIND | 1–2 🔮 Astral, 15–25 💠 Gods, 100 💎 Shards |
+| `nebula_abyss` | Nebula Abyss | 6 Hours | 2 Spirits | WATER | 3–5 🔮 Astral, 35–55 💠 Gods, 300 💎 Shards, 50% Relic Drop |
+| `primordial_void` | Primordial Void | 12 Hours | 3 Spirits | LIGHT | 8–12 🔮 Astral, 80–120 💠 Gods, 800 💎 Shards, 100% Relic Drop |
+
+- **Elemental Synergy**: Including at least 1 spirit matching the fissure's recommended affinity applies a **1.25x (+25%) multiplier** to all generated rewards.
+
+### 14.4 Astral Transmutation Circle (Anti-Oversaturation Protocol)
+To ensure late-game economy health and prevent hyper-inflation of Spirit Shards:
+$$\text{Shard Cost} = 1,000 + (\text{Transmutations Today} \times 250) \text{ 💎}$$
+$$\text{God Essence Cost} = 10 \text{ 💠}$$
+$$\text{Reward} = 1 \text{ 🔮 Astral Essence}$$
+The escalation counter resets daily at midnight.
+
+
 
 
