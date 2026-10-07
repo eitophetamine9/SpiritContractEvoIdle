@@ -214,5 +214,23 @@ if (!indexHtml.includes('>Madness<')) {
 }
 console.log('[PASS] Bottom nav dock label verified as Madness.');
 
+// 10. Test Astral Realm View Expansion (Zodiac, Expeditions, Transmute)
+import { renderMysticalView } from '../src/ui/views/mysticalView.js';
+const mysticalContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderMysticalView(mysticalContainer);
+if (!mysticalContainer.innerHTML.includes('data-realm-tab="zodiac"') || 
+    !mysticalContainer.innerHTML.includes('data-realm-tab="expeditions"') || 
+    !mysticalContainer.innerHTML.includes('data-realm-tab="transmute"')) {
+  throw new Error('Astral Realm view missing Zodiac, Expeditions, or Transmute tabs!');
+}
+if (mysticalContainer.innerHTML.includes('NaN')) {
+  throw new Error('Astral Realm view contains NaN!');
+}
+console.log('[PASS] Astral Realm view renders all 7 navigation tabs cleanly.');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

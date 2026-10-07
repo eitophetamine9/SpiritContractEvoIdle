@@ -9,7 +9,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Ready-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](#production-build--pwa-preview)
 [![Architecture](https://img.shields.io/badge/Architecture-Reactive%20Pub%2FSub-blueviolet?style=for-the-badge)](#technology-stack)
-[![Tests](https://img.shields.io/badge/Tests-17%20Passed-2ED573?style=for-the-badge)](#running-test-suites)
+[![Tests](https://img.shields.io/badge/Tests-21%20Passed-2ED573?style=for-the-badge)](#running-test-suites)
 
 ---
 
@@ -17,6 +17,10 @@
 
 - **Tactical Idle Progression**: Your equipped spirits meditate and gain experience in real time, whether you are actively battling or away from the game.
 - **RNG-Driven Evolution Branches**: Every spirit species has multiple evolutionary branches. When a spirit reaches its level cap, its evolution ceremony rolls against weighted probability tables for rare and high-tier ascensions.
+- **Spirit Ascension System (★1 to ★7)**: Duplicate spirit copies can be ascended up to ★7 using Astral Essences, granting stacking +12% stat bonuses per tier (up to +84%) along with high-impact milestone perks (+15 starting MP, +20% ultimate DMG, +10% Crit Rate, +25% Crit DMG, and golden card borders).
+- **Celestial Constellations (Zodiac Trees)**: Spend 🔮 Astral Essences to permanently illuminate star nodes in Draco, Phoenix, and Pegasus constellations, boosting offense, defenses, energy capacity, and essence yields.
+- **Astral Expeditions & Transmutation**: Dispatch idle spirits into cosmic fissures for passive resource foraging with +25% elemental synergy bonuses, and utilize the anti-oversaturation Transmutation Circle to convert excess shards into pure Astral Essence.
+- **Bulk Annul & Bulk Dismantle**: Batch-manage your card collection in the Divine Vault with one-click filtering (Commons, Uncommons, 3★/4★ stars) to bulk-annul spirits or bulk-dismantle relics and weapons for Spirit Shards and Essences of the Gods, protected by active-party and favorite locking.
 - **Isometric Combat Arena**: Staggered allied party formations face off against corrupted beasts with real-time health bars, damage popups, dynamic attack lunges, and adjustable battle speeds.
 - **Tower Biome Climbs**: Progress through over 100 floors spanning distinct environments, from mystical swamps and frozen crags to dark gothic castles, before entering looping enchanted tiers.
 - **Bestiary Discovery Compendium**: Inspired by classic bestiary grids, track every discovered spirit species, inspect their lore, and uncover mystery silhouettes as you expand your collection.
@@ -37,7 +41,6 @@
 - **Audio Engine**: Web Audio API & HTML5 Audio (`audioManager.js`) delivering zero-latency procedural SFX triggers, multi-channel BGM crossfading, user-gesture autoplay compliance, and persisted volume preferences.
 - **Build & Development Tooling**: Vite with PWA plugin (`vite-plugin-pwa`) supporting offline caching, instant Hot Module Replacement (HMR), and lightweight tree-shaken bundles.
 - **Storage & Offline Engine**: Local persistence with auto-saving every 15s, import/export backup tooling, and offline progress simulation capped at 24 hours.
-- **Automated Testing Suite**: Native Node.js test suite with 17 automated tests validating combat loops, relic set math, gacha distribution curves, evolution horizons, and UI rendering integrity.
 
 ---
 
@@ -136,16 +139,29 @@ npm run test:prob
 - **Six Weapon Chambers**: Dedicated forge instances for Blades, Bows, Staves, Claws, Daggers, and Mallets.
 - **Four Difficulty Tiers**: Apprentice, Artisan, Master, and Celestial forges with 3-wave battles dropping specialized weapons.
 
-### 9. The Sanctuary of the Gods & Mystical Realm
-- **Essence Chambers**: Olympian Nexus, Titan Depths, Celestial Core, and Primordial Abyss dropping Essences of the Gods and Soul Essence.
-- **Astral EXP Potions**: Lesser, Greater, Supreme, and Transcendent Elixirs providing instant XP injections to catch up new spirits.
-- **Timed Combat Blessings**: 1-hour divine blessings from all 8 Olympian gods providing temporary party buffs (Damage, Crit, Defense, Speed, Mana Replenish).
+### 9. The Sanctuary of the Gods & Astral Realm Expansion
+- **Primary Astral Currencies**: The Astral Realm runs entirely on **🔮 Astral Essences** and **💠 Essences of the Gods**—zero regular shards required for Sanctum upgrades, energy expansion, or elixirs.
+- **Essence Dungeon (Sanctuary of the Gods)**: 4 chambers (Olympian Nexus, Titan Depths, Celestial Core, Primordial Abyss) across 4 tiers with 2.5D Arena Viewport battles yielding guaranteed 🔮 and 💠 drops.
+- **Celestial Constellations (Zodiac Trees)**: Spend 🔮 Astral Essences to permanently unlock nodes in Draco (ATK/Crit/Ult), Phoenix (HP/Shield/Mitigation), and Pegasus (Speed/Energy/Loot) constellation trees.
+- **Astral Expeditions (Idle Spirit Dispatch)**: Dispatch non-party idle spirits into Starlight Fissure (2h), Nebula Abyss (6h), and Primordial Void (12h) for passive resource harvesting with a +25% elemental synergy bonus.
+- **Astral Transmutation Circle (Anti-Oversaturation)**: Convert 1,000 Spirit Shards + 10 Essences of the Gods into 1 Astral Essence, with daily escalating costs (+250 shards/use per day, resetting at midnight) to prevent economic hyper-inflation.
+- **Astral EXP Potions**: Lesser, Grand, and Divine Ambrosia elixirs for rapid spirit power leveling.
+- **Timed Combat Blessings**: 1-hour divine blessings from Olympian deities for high-impact party buffs.
 
-### 10. Unified 8-Column Mobile Navigation Dock
-- **Single-Line High-Density Dock**: `Hero`, `Tower`, `Trials`, `Forge`, `Realm`, `Summon`, `Vault`, and `Index` built specifically for mobile screens with zero horizontal overflow or wrapping.
+### 10. Spirit Ascension System (★1 to ★7)
+- **Duplicate Spirit Consumption**: Consume duplicate copies of the same species + 🔮 Astral Essences to ascend spirits from ★1 to ★7.
+- **Stacking Stat Multipliers**: Each ascension star grants a permanent +12% base stat bonus (up to +84% at ★7).
+- **Combat Milestone Perks**:
+  - **★3**: +15 Starting Mana Points (instant early ultimate readiness).
+  - **★5**: +20% Ultimate Skill Damage amplification.
+  - **★7 (MAX)**: +10% Critical Hit Chance, +25% Critical Hit Damage, and an illustrious Golden Card Frame.
+- **Evolution Preservation**: Ascension tiers and perk bonuses persist across all evolutionary transformations.
+
+### 11. Unified 8-Column Mobile Navigation Dock
+- **Single-Line High-Density Dock**: `Hero`, `Madness`, `Trials`, `Forge`, `Realm`, `Summon`, `Vault`, and `Index` built specifically for mobile screens with zero horizontal overflow or wrapping.
 - **Manual Battle Engagement Controls**: Standby and Engaged combat states prevent screen-forcing or hijacking when viewing other menus.
 
-### 11. Integrated Audio Engine
+### 12. Integrated Audio Engine
 - **Background Music**: Dynamic looping atmospheric themes for Astral Sanctum, Madness Tower combat, Pantheon Trials, and The Divine Forge.
 - **Tactile Sound Effects**: Impact transients, critical blow booms, ultimate release bursts, level-up chimes, and victory fanfares.
 - **Autoplay & Unmute Compliance**: Reliable one-tap unmuting, AudioContext resumption, and synchronized audio controls across combat and top navigation bars.

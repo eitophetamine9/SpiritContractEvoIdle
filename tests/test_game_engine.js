@@ -354,14 +354,19 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Cleared "Olympian Nexus" [Tier 1]! Gained ${essenceDungeonResult.essencesAwarded} Essences of the Gods & ${essenceDungeonResult.soulEssenceAwarded} Soul Essence.`);
   if (essenceDungeonResult.essencesAwarded <= 0) throw new Error('Should award Essences of the Gods');
 
-  // Test EXP Potions
+  // Test EXP Potions (0 Shards, consumes 1 Astral Essence + 5 God Essences)
   const testSpirit = gameState.state.spirits[0];
   const preXp = testSpirit.xp;
   gameState.state.resources.spiritShards = 1000;
   gameState.state.resources.essencesOfTheGods = 50;
+  gameState.state.resources.soulEssence = 20;
+  const initialShards = gameState.state.resources.spiritShards;
+  const initialAstral = gameState.state.resources.soulEssence;
   gameState.buyExpPotion(testSpirit.id, 'lesser_elixir');
   console.log(`  Used Lesser Astral Elixir on ${testSpirit.customName}: XP ${preXp} -> ${testSpirit.xp} (+10,000 XP)`);
   if (testSpirit.xp < preXp + 10000 && testSpirit.level === 1) throw new Error('EXP potion failed to grant XP');
+  if (gameState.state.resources.spiritShards !== initialShards) throw new Error('EXP potion should NOT consume regular shards!');
+  if (gameState.state.resources.soulEssence !== initialAstral - 1) throw new Error('EXP potion should consume 1 Astral Essence!');
 
   // Test Combat Blessings
   gameState.applyTemporaryBlessing('blessing_ares');
@@ -461,6 +466,184 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     console.log(`  [PASS] Blocked floor skip to Floor 3 while Floor 2 is uncleared: "${err.message}"`);
   }
   if (!skipBlocked) throw new Error('Should block skipping Floor 2 to unlock Floor 3');
+
+  // Test 18: Spirit Ascension System (★1 to ★7) with Duplicates & Astral Essence
+  console.log('\n[TEST 18] Testing Spirit Ascension System (★1 to ★7):');
+  const baseCat = gameState.state.spirits.find(s => s.speciesId === 'cat_spirit');
+  if (!baseCat) throw new Error('Base cat spirit not found for ascension test');
+
+  // Create a duplicate cat spirit
+  const dupCatId = gameState.generateId();
+  const dupCat = {
+    id: dupCatId,
+    speciesId: 'cat_spirit',
+    customName: 'Duplicate Cat',
+    level: 1,
+    xp: 0,
+    tier: 1,
+    rarity: 'COMMON',
+    element: 'EARTH',
+    power: 10,
+    maxHp: 100,
+    currentHp: 100,
+    isFallen: false,
+    isEquipped: false,
+    favorite: false
+  };
+  gameState.state.spirits.push(dupCat);
+
+  // Check eligible duplicates
+  const eligibleDups = gameState.getEligibleAscensionDuplicates(baseCat.id);
+  console.log(`  Found ${eligibleDups.length} eligible duplicate(s) for ${baseCat.customName}`);
+  if (eligibleDups.length === 0) throw new Error('Should find at least 1 eligible duplicate');
+
+  // Verify failure when insufficient Astral Essence
+  gameState.state.resources.soulEssence = 0;
+  let essenceBlocked = false;
+  try {
+    gameState.ascendSpirit(baseCat.id, [dupCatId]);
+  } catch (err) {
+    essenceBlocked = true;
+    console.log(`  [PASS] Blocked ascension without Astral Essence: "${err.message}"`);
+  }
+  if (!essenceBlocked) throw new Error('Should block ascension when lacking Astral Essence');
+
+  // Now fund Astral Essence and perform Ascension ★1
+  gameState.state.resources.soulEssence = 10;
+  const preAscPower = baseCat.power;
+  const ascRes = gameState.ascendSpirit(baseCat.id, [dupCatId]);
+  console.log(`  Ascended ${baseCat.customName} to ★${ascRes.newTier}! Power: ${preAscPower} -> ${baseCat.power} (+${ascRes.bonusPercent}% stats)`);
+  if (baseCat.ascensionLevel !== 1) throw new Error('Ascension level should be 1');
+  if (baseCat.power <= preAscPower) throw new Error('Ascension should boost spirit power');
+  if (gameState.state.spirits.some(s => s.id === dupCatId)) throw new Error('Duplicate spirit should be consumed upon ascension');
+  if (gameState.state.resources.soulEssence !== 9) throw new Error('Should deduct 1 Astral Essence');
+
+  // 19. Test Celestial Constellations (Zodiac Tree)
+  console.log('\n[TEST 19] Testing Celestial Constellations (Zodiac Tree):');
+  gameState.state.resources.soulEssence = 20;
+  const initialPower = gameState.getTotalPartyPower();
+  const dracoUnlock = gameState.unlockConstellationStar('draco');
+  console.log(`  Unlocked Draco Node 1: ${dracoUnlock.star.name} (${dracoUnlock.star.desc})`);
+  if (gameState.state.constellations.draco !== 1) throw new Error('Draco should be level 1');
+  if (gameState.state.resources.soulEssence !== 18) throw new Error('Should deduct 2 Astral Essences');
+  
+  const bonuses = gameState.getConstellationBonuses();
+  console.log(`  Active Constellation Bonuses:`, bonuses);
+  if (bonuses.partyAtkPercent !== 4) throw new Error('Draco node 1 should give 4% party ATK');
+
+  const powerAfterDraco = gameState.getTotalPartyPower();
+  console.log(`  Party Power: ${initialPower} -> ${powerAfterDraco} (+4% ATK boost reflected)`);
+  if (powerAfterDraco <= initialPower) throw new Error('Party power should increase with constellation ATK bonus');
+
+  // Pegasus Node 1 & 2 for Max Energy boost
+  gameState.unlockConstellationStar('pegasus'); // Node 1 (cost 2)
+  const prevMaxEnergy = gameState.state.resources.maxEnergy;
+  gameState.unlockConstellationStar('pegasus'); // Node 2 (cost 3, +20 Max Energy)
+  console.log(`  Unlocked Pegasus Node 2 -> Max Energy: ${prevMaxEnergy} -> ${gameState.state.resources.maxEnergy} (+20 boost)`);
+  if (gameState.state.resources.maxEnergy !== prevMaxEnergy + 20) throw new Error('Pegasus node 2 should increase maxEnergy by 20');
+
+  // 20. Test Astral Transmutation & Astral Expeditions
+  console.log('\n[TEST 20] Testing Astral Transmutation & Astral Expeditions:');
+  // Fund resources for transmutation
+  gameState.state.resources.spiritShards = 5000;
+  gameState.state.resources.essencesOfTheGods = 50;
+  gameState.state.resources.soulEssence = 5;
+
+  const preTransmuteAstral = gameState.state.resources.soulEssence;
+  const transRes = gameState.transmuteShardsToAstralEssence();
+  console.log(`  Transmutation 1: Cost ${transRes.shardCost} Shards + ${transRes.godCost} Gods -> Gained +${transRes.astralGained} Astral Essence (Total: ${gameState.state.resources.soulEssence})`);
+  if (gameState.state.resources.soulEssence !== preTransmuteAstral + 1) throw new Error('Should gain 1 Astral Essence');
+  if (transRes.shardCost !== 1000) throw new Error('First transmutation should cost 1000 shards');
+  
+  // Anti-oversaturation test: second transmutation costs 1,250 shards
+  const transRes2 = gameState.transmuteShardsToAstralEssence();
+  console.log(`  Transmutation 2 (Anti-Oversaturation): Cost ${transRes2.shardCost} Shards (Scaled up by +250 today)`);
+  if (transRes2.shardCost !== 1250) throw new Error('Second transmutation should cost 1250 shards');
+
+  // Test Astral Expeditions
+  // Create 2 test non-party spirits for expedition
+  const expSp1 = { id: 'exp_spirit_1', speciesId: 'cat_spirit', level: 10, element: 'WATER', rarity: 'COMMON', isEquipped: false };
+  const expSp2 = { id: 'exp_spirit_2', speciesId: 'dog_spirit', level: 10, element: 'EARTH', rarity: 'COMMON', isEquipped: false };
+  gameState.state.spirits.push(expSp1, expSp2);
+
+  const eligibleExpSpirits = gameState.getEligibleExpeditionSpirits();
+  console.log(`  Eligible idle spirits for dispatch: ${eligibleExpSpirits.length}`);
+
+  // Test dispatching to Starlight Fissure (requires 1 spirit)
+  const dispatchRes = gameState.dispatchExpedition('starlight_fissure', ['exp_spirit_1']);
+  console.log(`  Dispatched expedition to Starlight Fissure: active = ${dispatchRes.expedition.active}`);
+  if (!gameState.state.expeditions.starlight_fissure?.active) throw new Error('Expedition should be active');
+
+  // Verify non-party spirit cannot be double-dispatched (nebula_abyss requires 2 spirits)
+  let doubleDispatchBlocked = false;
+  try {
+    gameState.dispatchExpedition('nebula_abyss', ['exp_spirit_1', 'exp_spirit_2']);
+  } catch (e) {
+    doubleDispatchBlocked = true;
+    console.log(`  [PASS] Blocked double dispatch: "${e.message}"`);
+  }
+  if (!doubleDispatchBlocked) throw new Error('Should block already-dispatched spirits');
+
+  // Fast-forward expedition time for claim
+  gameState.state.expeditions.starlight_fissure.startTime = Date.now() - (7200 * 1000 + 1000);
+  const claimRes = gameState.claimExpeditionRewards('starlight_fissure');
+  console.log(`  Claimed Starlight Fissure rewards: +${claimRes.astralGained} 🔮 Astral, +${claimRes.godsGained} 💠 Gods, +${claimRes.shardsGained} 💎 Shards (Element Match: ${claimRes.hasElementMatch})`);
+  if (gameState.state.expeditions.starlight_fissure !== null) throw new Error('Expedition fissure should be cleared after claim');
+
+  // 21. Test Bulk Dismantle for Artifacts (Relics) and Weapons
+  console.log('\n[TEST 21] Testing Bulk Dismantle for Artifacts (Relics) and Weapons:');
+  const dummyRelic3 = { uid: 'relic_bulk_3star', type: 'relic', stars: 3, level: 1, name: 'Bronze Helm' };
+  const dummyRelic4 = { uid: 'relic_bulk_4star', type: 'relic', stars: 4, level: 2, name: 'Silver Aegis' };
+  const dummyRelicEquipped = { uid: 'relic_bulk_eq', type: 'relic', stars: 3, level: 1, equippedToSpiritId: 'starter_spirit_1' };
+  const dummyRelicFav = { uid: 'relic_bulk_fav', type: 'relic', stars: 3, level: 1, favorite: true };
+
+  const dummyWeaponCommon = { uid: 'wep_bulk_com', type: 'weapon', rarity: 'COMMON', level: 1, name: 'Iron Sword' };
+  const dummyWeaponEquipped = { uid: 'wep_bulk_eq', type: 'weapon', rarity: 'COMMON', level: 1, equippedToSpiritId: 'starter_spirit_1' };
+  const dummyWeaponFav = { uid: 'wep_bulk_fav', type: 'weapon', rarity: 'COMMON', level: 1, favorite: true };
+
+  gameState.state.inventory.equipment.push(
+    dummyRelic3, dummyRelic4, dummyRelicEquipped, dummyRelicFav,
+    dummyWeaponCommon, dummyWeaponEquipped, dummyWeaponFav
+  );
+
+  const prevShards = gameState.state.resources.spiritShards;
+  const prevGodEssences = gameState.state.resources.essencesOfTheGods;
+
+  // Attempt to bulk dismantle all 7 items
+  const bulkRes = gameState.bulkDismantleEquipment([
+    'relic_bulk_3star', 'relic_bulk_4star', 'relic_bulk_eq', 'relic_bulk_fav',
+    'wep_bulk_com', 'wep_bulk_eq', 'wep_bulk_fav'
+  ]);
+
+  console.log(`  Bulk Dismantled: ${bulkRes.count} items, +${bulkRes.shardsGained} Shards, +${bulkRes.essencesGained} Gods Essences`);
+
+  // Only 3 items should have been dismantled (the non-equipped, non-favorited ones)
+  if (bulkRes.count !== 3) throw new Error(`Expected 3 items dismantled, got ${bulkRes.count}`);
+  
+  // Verify inventory removal and safety retention
+  const eqUids = gameState.state.inventory.equipment.map(e => e.uid);
+  if (eqUids.includes('relic_bulk_3star') || eqUids.includes('relic_bulk_4star') || eqUids.includes('wep_bulk_com')) {
+    throw new Error('Dismantled items were not removed from equipment inventory');
+  }
+  if (!eqUids.includes('relic_bulk_eq') || !eqUids.includes('relic_bulk_fav')) {
+    throw new Error('Equipped or favorited relics should NOT have been dismantled');
+  }
+  if (!eqUids.includes('wep_bulk_eq') || !eqUids.includes('wep_bulk_fav')) {
+    throw new Error('Equipped or favorited weapons should NOT have been dismantled');
+  }
+
+  // Verify resource gains
+  if (gameState.state.resources.spiritShards !== prevShards + bulkRes.shardsGained) {
+    throw new Error('Spirit shards were not accurately updated after bulk dismantle');
+  }
+  if (gameState.state.resources.essencesOfTheGods !== prevGodEssences + bulkRes.essencesGained) {
+    throw new Error('God essences were not accurately updated after bulk dismantle');
+  }
+
+  // Verify alias function gameState.bulkDismantle()
+  const aliasRes = gameState.bulkDismantle([]);
+  if (aliasRes.count !== 0) throw new Error('bulkDismantle alias failed');
+  console.log('  [PASS] Bulk dismantle equipment successfully validated!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

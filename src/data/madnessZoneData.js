@@ -31,10 +31,14 @@ export function getSwarmForStage(stage, subStage) {
     : Math.pow(1.28, 4) * Math.pow(1.18, stage - 5);
   const waveScale = 1 + (subStage - 1) * 0.18;
 
-  // Rebalanced total shard & essence rewards for the wave
+  // Rebalanced total shard & essence rewards for the wave (curbed late-stage inflation)
   const totalShardReward = isBossWave 
-    ? Math.round(18 + stage * 5)
-    : Math.max(2, Math.round(2 + (stage - 1) * 1.5 + subStage * 0.8));
+    ? (stage === 1 
+        ? 23 
+        : Math.round(23 + Math.min(stage - 1, 15) * 3 + Math.sqrt(Math.max(0, stage - 16)) * 6))
+    : (stage === 1
+        ? Math.max(2, Math.round(2 + subStage * 0.8))
+        : Math.max(2, Math.round(2 + Math.min(stage - 1, 15) * 1.0 + Math.sqrt(Math.max(0, stage - 16)) * 1.5 + subStage * 0.8)));
 
   const totalEssenceReward = isBossWave 
     ? Math.max(1, Math.floor(1 + (stage - 1) * 0.5)) 

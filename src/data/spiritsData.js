@@ -1101,24 +1101,40 @@ export function getXpRequiredForLevel(level) {
 }
 
 /**
- * Formula to calculate Spirit combat power
+ * Spirit Ascension Configuration (★1 through ★7)
+ * Consumes duplicate copies of the same spirit species + Astral Essences
  */
-export function calculateSpiritPower(species, level, rarityName) {
+export const ASCENSION_CONFIG = [
+  { tier: 1, duplicates: 1, astralCost: 1, bonusPercent: 12, perk: 'Astral Resonance (+12% all stats)' },
+  { tier: 2, duplicates: 1, astralCost: 1, bonusPercent: 24, perk: 'Cosmic Attunement (+24% all stats)' },
+  { tier: 3, duplicates: 2, astralCost: 2, bonusPercent: 36, perk: 'Cosmic Surge (+15 Starting MP, +36% all stats)' },
+  { tier: 4, duplicates: 2, astralCost: 3, bonusPercent: 48, perk: 'Celestial Fortitude (+48% all stats)' },
+  { tier: 5, duplicates: 3, astralCost: 4, bonusPercent: 60, perk: 'Astral Amp (+20% Ultimate DMG, +60% all stats)' },
+  { tier: 6, duplicates: 3, astralCost: 5, bonusPercent: 72, perk: 'Supernal Aura (+72% all stats)' },
+  { tier: 7, duplicates: 4, astralCost: 8, bonusPercent: 84, perk: 'Ascended Divinity (+84% stats, +10% Crit, +25% Crit DMG, Golden Frame)' }
+];
+
+/**
+ * Formula to calculate Spirit combat power (scales with level, rarity, and ascension)
+ */
+export function calculateSpiritPower(species, level, rarityName, ascensionLevel = 0) {
   const effectiveRarity = rarityName ? rarityName.toUpperCase() : (species.baseRarity || 'COMMON');
   const rarityObj = RARITIES[effectiveRarity] || RARITIES.COMMON;
   const lvlMult = 1 + (level - 1) * species.growthRate;
-  return Math.max(1, Math.round(species.basePower * lvlMult * rarityObj.multiplier));
+  const ascMult = 1 + (ascensionLevel || 0) * 0.12;
+  return Math.max(1, Math.round(species.basePower * lvlMult * rarityObj.multiplier * ascMult));
 }
 
 /**
  * Formula to calculate Spirit Maximum Health Points (HP)
  * Robust scaling to ensure survivability in two-way battles
  */
-export function calculateSpiritMaxHp(species, level, rarityName) {
+export function calculateSpiritMaxHp(species, level, rarityName, ascensionLevel = 0) {
   const effectiveRarity = rarityName ? rarityName.toUpperCase() : (species.baseRarity || 'COMMON');
   const rarityObj = RARITIES[effectiveRarity] || RARITIES.COMMON;
   const lvlMult = 1 + (level - 1) * 0.22;
-  return Math.max(80, Math.round(species.basePower * 12 * lvlMult * rarityObj.multiplier));
+  const ascMult = 1 + (ascensionLevel || 0) * 0.12;
+  return Math.max(80, Math.round(species.basePower * 12 * lvlMult * rarityObj.multiplier * ascMult));
 }
 
 /**

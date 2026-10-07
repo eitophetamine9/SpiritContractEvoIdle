@@ -1,5 +1,5 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from './pixelBox.js';
-import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel, ASCENSION_CONFIG } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
 import { GREEK_GOD_SETS, RELIC_SLOT_TYPES } from '../../data/equipmentData.js';
 
@@ -980,6 +980,15 @@ export function showSpiritModal(spirit, onUpdate) {
     const canEvolve = isCapped && species && species.evolutions && species.evolutions.length > 0;
     const refundShards = 40 * (currentSpirit.tier || 1) + Math.floor((currentSpirit.level || 1) * 3);
 
+    const currentAscLevel = currentSpirit.ascensionLevel || 0;
+    const eligibleDups = gameState.getEligibleAscensionDuplicates(currentSpirit.id);
+    const nextAscTier = currentAscLevel + 1;
+    const ascConfig = ASCENSION_CONFIG.find(c => c.tier === nextAscTier);
+    const userAstralEssence = gameState.state.resources.soulEssence || 0;
+    const canAscend = currentAscLevel < 7 && !!ascConfig && 
+      eligibleDups.length >= ascConfig.duplicates && 
+      userAstralEssence >= ascConfig.astralCost;
+
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
         <div class="modal-card modal-card-equipment" style="max-width: 440px;">
@@ -1017,6 +1026,9 @@ export function showSpiritModal(spirit, onUpdate) {
                 <div style="font-size: 12px; font-weight: 800; color: #2ed573; margin-top: 2px;">
                   ⚡ ${currentSpirit.power.toLocaleString()} Power
                 </div>
+                <div style="font-size: 11px; font-weight: 900; color: #ffd32a; margin-top: 3px;">
+                  ${'★'.repeat(currentAscLevel)}${'☆'.repeat(7 - currentAscLevel)} (★${currentAscLevel}/7)
+                </div>
               </div>
             </div>
 
@@ -1029,6 +1041,35 @@ export function showSpiritModal(spirit, onUpdate) {
               <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
                 <div style="width: ${xpPercent}%; height: 100%; background: linear-gradient(90deg, #70a1ff, #00d2ff); border-radius: 4px; transition: width 0.3s ease;"></div>
               </div>
+            </div>
+
+            <!-- Ascension (★1 to ★7) Section -->
+            <div style="margin-bottom: 14px; padding: 10px; background: rgba(147, 51, 234, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 12px; font-weight: 800; color: #e9d5ff; display: flex; align-items: center; gap: 4px;">
+                  <span>⭐</span> Spirit Ascension
+                </span>
+                <span style="font-size: 11px; font-weight: 900; color: #ffd32a;">
+                  ${currentAscLevel >= 7 ? '★7 (MAX)' : `★${currentAscLevel} ➔ ★${nextAscTier}`}
+                </span>
+              </div>
+
+              ${currentAscLevel >= 7 ? `
+                <div style="font-size: 11px; color: #d8b4fe; line-height: 1.4;">
+                  🏆 <strong>Ascended Divinity Active:</strong> +84% all stats, +10% Crit Rate, +25% Crit Damage!
+                </div>
+              ` : `
+                <div style="font-size: 10px; color: #cbd5e1; margin-bottom: 6px; line-height: 1.4;">
+                  Perk: <span style="color: #c084fc; font-weight: 700;">${ascConfig.perk}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                  <span>Duplicates: <strong style="color: ${eligibleDups.length >= ascConfig.duplicates ? '#4cd137' : '#ff7675'}; font-size: 11px;">${eligibleDups.length}/${ascConfig.duplicates} available</strong></span>
+                  <span>Astral: <strong style="color: ${userAstralEssence >= ascConfig.astralCost ? '#e056fd' : '#ff7675'}; font-size: 11px;">${userAstralEssence}/${ascConfig.astralCost} 🔮</strong></span>
+                </div>
+                <button id="btn-modal-ascend-spirit" style="width: 100%; min-height: 38px; background: ${canAscend ? 'linear-gradient(135deg, #a855f7, #6366f1)' : 'rgba(255,255,255,0.08)'}; color: ${canAscend ? '#fff' : '#64748b'}; font-weight: 800; font-size: 12px; border: 1px solid ${canAscend ? '#c084fc' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; cursor: ${canAscend ? 'pointer' : 'not-allowed'}; box-shadow: ${canAscend ? '0 0 12px rgba(168,85,247,0.4)' : 'none'};" ${canAscend ? '' : 'disabled'}>
+                  ${canAscend ? `⭐ Ascend to ★${nextAscTier} (+12% Stats)` : (eligibleDups.length < ascConfig.duplicates ? `Need ${ascConfig.duplicates - eligibleDups.length} more duplicate copy(ies)` : `Need ${ascConfig.astralCost} 🔮 Astral Essence`)}
+                </button>
+              `}
             </div>
 
             <!-- Rename Nickname Input -->
@@ -1091,6 +1132,21 @@ export function showSpiritModal(spirit, onUpdate) {
       if (input && input.value) {
         gameState.renameSpirit(currentSpirit.id, input.value);
         render();
+      }
+    });
+
+    // Ascend Spirit
+    modalRoot.querySelector('#btn-modal-ascend-spirit')?.addEventListener('click', () => {
+      if (!canAscend) return;
+      const dupIdsToSacrifice = eligibleDups.slice(0, ascConfig.duplicates).map(d => d.id);
+      if (confirm(`Sacrifice ${ascConfig.duplicates} duplicate copy(ies) of ${currentSpirit.customName} and ${ascConfig.astralCost} 🔮 Astral Essence to ascend to ★${nextAscTier}?`)) {
+        try {
+          const res = gameState.ascendSpirit(currentSpirit.id, dupIdsToSacrifice);
+          alert(`🎉 Ascension Complete!\n${res.spirit.customName} attained ★${res.newTier} Ascension!\nBonus: +${res.bonusPercent}% Stats (${res.perk})`);
+          render();
+        } catch (err) {
+          alert(err.message);
+        }
       }
     });
 
