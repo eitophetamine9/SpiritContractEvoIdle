@@ -170,11 +170,24 @@ class AudioManager {
     }
   }
 
+  play(sfxKey) {
+    return this.playSfx(sfxKey);
+  }
+
   playSfx(sfxKey) {
     if (this.isMuted || this.sfxVolume <= 0) return;
     this.init();
 
-    const src = this.sfxTracks[sfxKey] || this.sfxTracks.tap;
+    // Map common aliases
+    const aliasMap = {
+      evolution_confirm: 'evolution',
+      spirit_unlocked: 'reward',
+      level_up: 'levelup',
+      item_claim: 'reward',
+      click: 'tap'
+    };
+    const resolvedKey = aliasMap[sfxKey] || sfxKey;
+    const src = this.sfxTracks[resolvedKey] || this.sfxTracks.tap;
     try {
       const audio = new Audio(src);
       audio.volume = this.sfxVolume;

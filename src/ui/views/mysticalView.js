@@ -852,7 +852,7 @@ function bindConstellationEvents(container) {
       const cId = e.currentTarget.getAttribute('data-constellation-id');
       try {
         gameState.unlockConstellationStar(cId);
-        audioManager.play('evolution_confirm');
+        try { audioManager.playSfx('evolution'); } catch {}
         renderMysticalView(container);
       } catch (err) {
         alert(err.message);
@@ -865,7 +865,7 @@ function bindTransmutationEvents(container) {
   container.querySelector('#btn-transmute-shards')?.addEventListener('click', () => {
     try {
       gameState.transmuteShardsToAstralEssence();
-      audioManager.play('evolution_confirm');
+      try { audioManager.playSfx('evolution'); } catch {}
       renderMysticalView(container);
     } catch (err) {
       alert(err.message);
@@ -879,7 +879,7 @@ function bindExpeditionEvents(container) {
       const fId = e.currentTarget.getAttribute('data-fissure-id');
       try {
         const loot = gameState.claimExpeditionRewards(fId);
-        audioManager.play('level_up');
+        try { audioManager.playSfx('reward'); } catch {}
         alert(`🏆 Expedition Spoils Collected!\n+${loot.astralGained} 🔮 Astral Essences\n+${loot.godsGained} 💠 Essences of the Gods\n+${loot.shardsGained.toLocaleString()} 💎 Spirit Shards${loot.relicGained ? `\n🎁 BONUS RELIC: ${loot.relicGained.name} (${loot.relicGained.rarity})` : ''}${loot.hasElementMatch ? '\n✨ Elemental Synergy: +25% Bonus Applied!' : ''}`);
         renderMysticalView(container);
       } catch (err) {
@@ -911,7 +911,7 @@ function bindExpeditionEvents(container) {
       const chosenIds = sorted.slice(0, fissure.requiredSpirits).map(s => s.id);
       try {
         gameState.dispatchExpedition(fId, chosenIds);
-        audioManager.play('spirit_unlocked');
+        try { audioManager.playSfx('tap'); } catch {}
         renderMysticalView(container);
       } catch (err) {
         alert(err.message);
@@ -1025,7 +1025,7 @@ function openExpeditionSpiritPickerModal(fissureId, container) {
   confirmBtn?.addEventListener('click', () => {
     try {
       gameState.dispatchExpedition(fissure.id, Array.from(selectedIds));
-      audioManager.play('spirit_unlocked');
+      try { audioManager.playSfx('tap'); } catch {}
       closeModal();
       renderMysticalView(container);
     } catch (err) {
