@@ -87,6 +87,25 @@ $$\text{Power} = \lfloor \text{BasePower} \times (1 + (L - 1) \times \text{Growt
 | **Bear Spirit** | Rare | Lv. 20 | 90% HighLord Bear (Epic, 2.5x), 8% Bear of Dreams (Mythical, 3.8x), 2% Cosmic Bear Ursalite (Transcendent, 5.5x) |
 | **Wisp Spirit** | Epic | Lv. 25 | 100% High Elf (Mythical, 3.5x) |
 | **Fallen Warrior Spirit** | Legendary | Lv. 30 | 99% Sovereign Warrior (Mythical, 3.0x), 1% DreadLord Warrior (Transcendent, 6.0x) |
+| **Baphomet, Nether Voidbinder** | Epic | Lv. 40 | 100% Baphomet, Archdemon Overlord (Legendary, Cap: Lv. 60) |
+| **Astraea, Star-Forged Valkyrie** | Legendary | Lv. 50 | 100% Astraea, Celestial Queen (Mythical, Cap: Lv. 80) |
+| **Leviathan, Tidal Behemoth** | Legendary | Lv. 50 | 100% Leviathan, Primordial Ocean (Mythical, Cap: Lv. 80) |
+| **Solaris, Lion Sin of Pride** | Mythical | Lv. 60 | 100% Solaris, The One Ultimate (Transcendent, Cap: Lv. 100) |
+| **Gelda, Thousand Ashes Empress** | Mythical | Lv. 60 | 100% Gelda, Sanguine Sovereign (Transcendent, Cap: Lv. 100) |
+
+### 3.2 Complete Evolutionary Horizons & Bestiary Classifications (47 Species)
+
+All 47 collectible spirit species in the game catalog broken down across all seven rarity tiers:
+
+| Rarity Tier | Species Count | Complete Roster of Species |
+| :--- | :---: | :--- |
+| **COMMON** | 4 | Cat Spirit, Dog Spirit, Chicken Spirit, Caterpillar Spirit |
+| **UNCOMMON** | 10 | Bull Spirit, Lizard Spirit, Python Spirit, Furious Cat, Vitality Dog, Battle Chicken, Elegant Butterfly, Raging Bull, Multi-venom Lizard, HighLord Python |
+| **RARE** | 2 | Shark Spirit, Bear Spirit |
+| **EPIC** | 9 | Wisp Spirit, Elemental Cat, Guardian Dog, Elemental Bull, Komodo Dragon, Huge Albino Anaconda, Great White Shark, HighLord Bear, Baphomet (Nether Voidbinder) |
+| **LEGENDARY** | 6 | Fallen Warrior Spirit, Dino Genus Chicken, Mystical Butterfly, Astraea (Star-Forged Valkyrie), Leviathan (Tidal Behemoth), Baphomet (Archdemon Overlord) |
+| **MYTHICAL** | 11 | Minotaur, Drake, Wyrm, Megalodon, Bear of Dreams, High Elf, Sovereign Warrior, Solaris (Lion Sin of Pride), Gelda (Thousand Ashes Empress), Astraea (Celestial Queen), Leviathan (Primordial Ocean) |
+| **TRANSCENDENT** | 5 | Cosmic Oceanic Devourer, Cosmic Bear Ursalite, DreadLord Warrior, Solaris (The One Ultimate), Gelda (Sanguine Sovereign) |
 
 ---
 

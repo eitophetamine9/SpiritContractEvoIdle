@@ -41,7 +41,6 @@
 - **Audio Engine**: Web Audio API & HTML5 Audio (`audioManager.js`) delivering zero-latency procedural SFX triggers, multi-channel BGM crossfading, user-gesture autoplay compliance, and persisted volume preferences.
 - **Build & Development Tooling**: Vite with PWA plugin (`vite-plugin-pwa`) supporting offline caching, instant Hot Module Replacement (HMR), and lightweight tree-shaken bundles.
 - **Storage & Offline Engine**: Local persistence with auto-saving every 15s, import/export backup tooling, and offline progress simulation capped at 24 hours.
-- **Automated Testing Suite**: Native Node.js test suite with 17 automated tests validating combat loops, relic set math, gacha distribution curves, evolution horizons, and UI rendering integrity.
 
 ---
 
