@@ -232,5 +232,60 @@ if (mysticalContainer.innerHTML.includes('NaN')) {
 }
 console.log('[PASS] Astral Realm view renders all 7 navigation tabs cleanly.');
 
+// 11. Test Hero View Equipment Slot Upgrade Integration
+import { renderPartyView } from '../src/ui/views/partyView.js';
+import { showEquipmentSlotModal } from '../src/ui/components/modals.js';
+
+const partyContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+
+// Ensure a test relic is in inventory
+const testRelic = {
+  uid: 'test_relic_upgrade_hero',
+  type: 'relic',
+  slotTypeId: 'headgear',
+  setId: 'zeus',
+  stars: 3,
+  level: 1,
+  name: "Zeus's Crown",
+  mainStatName: 'ATK Power',
+  mainStatValue: 20
+};
+gameState.state.inventory.equipment.push(testRelic);
+
+renderPartyView(partyContainer);
+if (!partyContainer.innerHTML.includes('data-drawer-upgrade')) {
+  throw new Error('Hero drawer is missing data-drawer-upgrade buttons for relics!');
+}
+if (!partyContainer.innerHTML.includes('Tap any socket to upgrade artifacts')) {
+  throw new Error('Hero socket rack is missing upgrade artifacts guidance!');
+}
+
+// Equip to party spirit and test showEquipmentSlotModal
+const partySpirits = gameState.getPartySpirits();
+if (partySpirits.length > 0) {
+  const heroSpirit = partySpirits[0];
+  gameState.equipItem(heroSpirit.id, testRelic.uid);
+  
+  const modalRoot = {
+    innerHTML: '',
+    querySelector: () => ({ addEventListener: () => {} }),
+    querySelectorAll: () => []
+  };
+  global.document.getElementById = (id) => id === 'modal-root' ? modalRoot : null;
+  
+  showEquipmentSlotModal({ spiritId: heroSpirit.id, slotType: 'headgear' });
+  if (!modalRoot.innerHTML.includes('btn-modal-enhance')) {
+    throw new Error('showEquipmentSlotModal missing direct Enhance button for equipped artifact!');
+  }
+  if (!modalRoot.innerHTML.includes('btn-modal-inspect-item')) {
+    throw new Error('showEquipmentSlotModal missing Details button for equipped artifact!');
+  }
+}
+console.log('[PASS] Hero View & Slot Modal artifact upgrade integration validated.');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

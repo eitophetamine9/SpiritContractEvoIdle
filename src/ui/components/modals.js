@@ -517,6 +517,16 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
     });
 
     const isCurrentEquipped = !!currentItem;
+    const isRelic = currentItem && currentItem.type === 'relic';
+    const stars = isRelic ? (currentItem.stars || 3) : 3;
+    const starColors = { 3: '#b2bec3', 4: '#00cec9', 5: '#ffd32a', 6: '#ff4757' };
+    const starColor = starColors[stars] || '#ffd32a';
+    const nextLevel = isRelic ? ((currentItem.level || 0) + 1) : 0;
+    const shardCost = isRelic ? Math.round(50 * nextLevel * (stars * 0.4)) : 0;
+    const isMilestone = isRelic && (nextLevel % 3 === 0);
+    const essenceCost = isMilestone ? Math.round(stars * 2 + nextLevel * 0.5) : 0;
+    const canEnhance = isRelic && (currentItem.level || 0) < 15;
+    const canAscend = isRelic && stars === 5 && (currentItem.level || 0) >= 15;
 
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
@@ -540,11 +550,21 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
           <div class="equip-section-title">CURRENTLY EQUIPPED</div>
           ${isCurrentEquipped ? `
             <div class="equipped-item-card" style="border-color: ${currentItem.color || '#4cd137'};">
-              <div class="equip-card-left">
+              <div class="equip-card-left" style="width: 100%;">
                 <span class="equip-icon-large">${currentItem.icon}</span>
-                <div class="equip-card-info">
+                <div class="equip-card-info" style="flex: 1;">
                   <div class="equip-item-name" style="color: ${currentItem.color || '#fff'};">
-                    ${currentItem.name} <span class="equip-rarity-pill" style="border-color: ${currentItem.color || '#fff'}; color: ${currentItem.color || '#fff'};">${currentItem.rarity}</span>
+                    <span>${currentItem.name}</span>
+                    ${isRelic ? `
+                      <span style="font-size: 11px; font-weight: 900; color: ${starColor}; letter-spacing: 1px;">
+                        ${'★'.repeat(stars)}
+                      </span>
+                      <span style="font-size: 10px; font-weight: 800; color: #ffd32a; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,211,42,0.4);">
+                        +${currentItem.level || 0}/15
+                      </span>
+                    ` : `
+                      <span class="equip-rarity-pill" style="border-color: ${currentItem.color || '#fff'}; color: ${currentItem.color || '#fff'};">${currentItem.rarity}</span>
+                    `}
                   </div>
                   <div class="equip-item-stat">
                     ${currentItem.type === 'weapon' ? `⚡ +${currentItem.atkPower} ATK Power • +${currentItem.critRate}% Crit` : `⚡ +${currentItem.mainStatValue} ${currentItem.mainStatName}`}
@@ -554,11 +574,45 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                       ${GREEK_GOD_SETS[currentItem.setId].icon} ${GREEK_GOD_SETS[currentItem.setId].name} (2pc/4pc Set)
                     </div>
                   ` : ''}
+                  ${isRelic && currentItem.substats && currentItem.substats.length > 0 ? `
+                    <div class="equip-card-substats-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                      ${currentItem.substats.map(sub => `
+                        <span style="font-size: 9px; font-weight: 700; color: #a4b0be; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; padding: 1px 4px;">
+                          ${sub.name} <strong style="color: #2ed573;">+${sub.value}${sub.isPercent ? '%' : ''}</strong>
+                        </span>
+                      `).join('')}
+                    </div>
+                  ` : ''}
                 </div>
               </div>
-              <button class="btn-unequip-slot" id="btn-modal-unequip" data-slot="${slotType}">
-                Unequip
-              </button>
+
+              <!-- Action Controls Row for Equipped Item -->
+              <div class="equip-card-actions-row" style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 6px; flex-wrap: wrap; width: 100%;">
+                ${isRelic ? `
+                  ${canEnhance ? `
+                    <button class="btn-modal-enhance-slot" id="btn-modal-enhance" data-relic-uid="${currentItem.uid}">
+                      <span>⚡ Enhance (+${nextLevel})</span>
+                      <span class="enhance-cost-sub">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                    </button>
+                  ` : `
+                    <div class="badge-max-enhance">
+                      ✓ +15 MAX
+                    </div>
+                  `}
+                  ${canAscend ? `
+                    <button class="btn-modal-ascend-slot" id="btn-modal-ascend" data-relic-uid="${currentItem.uid}">
+                      <span>👑 Ascend to 6★</span>
+                      <span class="enhance-cost-sub">100 ✨ • 10 🔮</span>
+                    </button>
+                  ` : ''}
+                  <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-relic-uid="${currentItem.uid}" title="View Details, Lore & Reassign">
+                    🔍 Details
+                  </button>
+                ` : ''}
+                <button class="btn-unequip-slot" id="btn-modal-unequip" data-slot="${slotType}">
+                  Unequip
+                </button>
+              </div>
             </div>
           ` : `
             <div class="empty-slot-banner">
@@ -595,6 +649,7 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                         <div class="equip-card-info">
                           <div class="equip-item-name" style="color: ${item.color || '#fff'};">
                             ${item.name}
+                            ${item.type === 'relic' ? `<span style="font-size: 10px; font-weight: 800; color: #ffd32a;">+${item.level || 0}</span>` : ''}
                             <span class="equip-rarity-pill" style="border-color: ${item.color}; color: ${item.color}; font-size: 9px;">${item.rarity}</span>
                           </div>
                           <div class="equip-item-stat">
@@ -620,6 +675,11 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                           <button class="btn-action-equip" data-equip-uid="${item.uid}">
                             Equip
                           </button>
+                          ${item.type === 'relic' ? `
+                            <button class="btn-action-upgrade" data-inspect-uid="${item.uid}" title="Upgrade Artifact">
+                              ⚡
+                            </button>
+                          ` : ''}
                           ${!item.equippedToSpiritId ? `
                             <button class="btn-action-dismantle" data-dismantle-uid="${item.uid}" title="Dismantle for Spirit Shards">
                               ♻️
@@ -660,6 +720,55 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
       } catch (err) {
         alert(err.message);
       }
+    });
+
+    modalRoot.querySelector('#btn-modal-enhance')?.addEventListener('click', () => {
+      try {
+        const res = gameState.enhanceRelic(currentItem.uid);
+        audioManager.playSfx('levelup');
+        renderModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    modalRoot.querySelector('#btn-modal-ascend')?.addEventListener('click', () => {
+      try {
+        const res = gameState.ascendRelic(currentItem.uid);
+        audioManager.playSfx('evolution');
+        alert(`🌟 Ascended ${currentItem.name} to 6★! Unlocked 5th Substat slot!`);
+        renderModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    modalRoot.querySelector('#btn-modal-inspect-item')?.addEventListener('click', () => {
+      showItemInspectModal({
+        item: currentItem,
+        onUpdate: () => {
+          renderModal();
+          if (onUpdate) onUpdate();
+        }
+      });
+    });
+
+    modalRoot.querySelectorAll('[data-inspect-uid]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const uid = e.currentTarget.getAttribute('data-inspect-uid');
+        const itemToInspect = allEquipment.find(i => i.uid === uid);
+        if (itemToInspect) {
+          showItemInspectModal({
+            item: itemToInspect,
+            onUpdate: () => {
+              renderModal();
+              if (onUpdate) onUpdate();
+            }
+          });
+        }
+      });
     });
 
     modalRoot.querySelectorAll('[data-equip-uid]').forEach(btn => {

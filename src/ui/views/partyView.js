@@ -2,7 +2,7 @@ import { gameState } from '../../state/gameState.js';
 import { SPIRIT_SPECIES, getXpRequiredForLevel, getRarityInfo } from '../../data/spiritsData.js';
 import { RELIC_SLOT_TYPES, GREEK_GOD_SETS } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
-import { showEvolutionCeremonyModal, showEquipmentSlotModal } from '../components/modals.js';
+import { showEvolutionCeremonyModal, showEquipmentSlotModal, showItemInspectModal } from '../components/modals.js';
 import { audioManager } from '../../audio/audioManager.js';
 
 let activeViewMode = 'showcase'; // 'showcase' or 'roster'
@@ -244,7 +244,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
       <div class="pedestal-equipment-rack">
         <div class="equipment-section-header">
           <span class="equip-rack-title">⚔️ Divine Arsenal & 6 Relics</span>
-          <span class="equip-rack-sub">Tap socket to inspect or swap gear</span>
+          <span class="equip-rack-sub">Tap any socket to upgrade artifacts (+1 to +15) or swap gear</span>
         </div>
 
         <div class="equipment-sockets-row">
@@ -268,9 +268,16 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                       data-spirit-id="${spirit.id}"
                       data-slot="${slot.id}"
                       style="${relic ? `border-color: ${relic.color || 'var(--primary-color)'};` : ''}"
-                      title="${relic ? `${relic.name} (${relic.rarity})\n+${relic.mainStatValue} ${relic.mainStatName}\nSet: ${relic.setName}` : `Empty ${slot.name} (Tap to equip)`}">
+                      title="${relic ? `${relic.name} (+${relic.level || 0})\n+${relic.mainStatValue} ${relic.mainStatName}\nSet: ${relic.setName}\nTap to Upgrade or Swap` : `Empty ${slot.name} (Tap to equip)`}">
                 <span class="socket-icon">${relic ? relic.icon : slot.icon}</span>
-                <span class="socket-tag" style="${relic ? `color: ${relic.accentColor || relic.color};` : ''}">${relic ? relic.setId.slice(0, 3).toUpperCase() : slot.name.slice(0, 3).toUpperCase()}</span>
+                <span class="socket-tag" style="${relic ? `color: ${relic.accentColor || relic.color};` : ''}">
+                  ${relic ? `${relic.setId.slice(0, 3).toUpperCase()} +${relic.level || 0}` : slot.name.slice(0, 3).toUpperCase()}
+                </span>
+                ${relic ? `
+                  <span class="socket-level-pill ${relic.level >= 15 ? 'pill-max' : ''}">
+                    +${relic.level || 0}
+                  </span>
+                ` : ''}
               </button>
             `;
           }).join('')}
@@ -322,7 +329,9 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                     <div class="drawer-card-top">
                       <span class="drawer-item-icon">${item.icon}</span>
                       <div class="drawer-item-texts">
-                        <span class="drawer-item-name" style="color: ${item.color || '#fff'};">${item.name}</span>
+                        <span class="drawer-item-name" style="color: ${item.color || '#fff'};">
+                          ${item.name} ${item.type === 'relic' ? `<span style="font-size: 10px; font-weight: 800; color: #ffd32a;">+${item.level || 0}</span>` : ''}
+                        </span>
                         <span class="drawer-item-stat">
                           ${item.type === 'weapon' ? `+${item.atkPower} ATK` : `+${item.mainStatValue} ${item.mainStatName}`}
                         </span>
@@ -330,6 +339,11 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                     </div>
 
                     <div class="drawer-card-actions">
+                      ${item.type === 'relic' ? `
+                        <button class="btn-drawer-action upgrade-action" data-drawer-upgrade="${item.uid}" title="Upgrade this artifact (+${(item.level || 0) + 1})">
+                          ⚡ Upgrade
+                        </button>
+                      ` : ''}
                       ${isEquippedToCurrent ? `
                         <button class="btn-drawer-action unequip-action" data-drawer-unequip data-slot="${item.type === 'weapon' ? 'weapon' : item.slotTypeId}">
                           Unequip
@@ -432,7 +446,7 @@ function renderRosterModeHtml(partySpirits) {
             <div class="spirit-equipment-section">
               <div class="equipment-section-header">
                 <span class="equip-rack-title">⚔️ Divine Arsenal & 6 Relics</span>
-                <span class="equip-rack-sub">Tap socket to Equip/Unequip</span>
+                <span class="equip-rack-sub">Tap any socket to upgrade artifacts (+1 to +15) or swap gear</span>
               </div>
 
               <div class="equipment-sockets-row">
@@ -454,9 +468,16 @@ function renderRosterModeHtml(partySpirits) {
                             data-spirit-id="${spirit.id}"
                             data-slot="${slot.id}"
                             style="${relic ? `border-color: ${relic.color || 'var(--primary-color)'};` : ''}"
-                            title="${relic ? `${relic.name}\n+${relic.mainStatValue} ${relic.mainStatName}` : `Empty ${slot.name}`}">
+                            title="${relic ? `${relic.name} (+${relic.level || 0})\n+${relic.mainStatValue} ${relic.mainStatName}\nTap to Upgrade/Equip` : `Empty ${slot.name}`}">
                       <span class="socket-icon">${relic ? relic.icon : slot.icon}</span>
-                      <span class="socket-tag" style="${relic ? `color: ${relic.accentColor || relic.color};` : ''}">${relic ? relic.setId.slice(0, 3).toUpperCase() : slot.name.slice(0, 3).toUpperCase()}</span>
+                      <span class="socket-tag" style="${relic ? `color: ${relic.accentColor || relic.color};` : ''}">
+                        ${relic ? `${relic.setId.slice(0, 3).toUpperCase()} +${relic.level || 0}` : slot.name.slice(0, 3).toUpperCase()}
+                      </span>
+                      ${relic ? `
+                        <span class="socket-level-pill ${relic.level >= 15 ? 'pill-max' : ''}">
+                          +${relic.level || 0}
+                        </span>
+                      ` : ''}
                     </button>
                   `;
                 }).join('')}
@@ -576,6 +597,21 @@ function attachEventListeners(container) {
         } catch (err) {
           alert(err.message);
         }
+      }
+    });
+  });
+
+  // Rapid drawer upgrade
+  container.querySelectorAll('[data-drawer-upgrade]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const itemUid = e.currentTarget.getAttribute('data-drawer-upgrade');
+      const item = allEquipment.find(it => it.uid === itemUid);
+      if (item) {
+        showItemInspectModal({
+          item,
+          onUpdate: () => renderPartyView(container)
+        });
       }
     });
   });
