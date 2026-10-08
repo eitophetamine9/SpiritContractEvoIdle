@@ -645,6 +645,50 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (aliasRes.count !== 0) throw new Error('bulkDismantle alias failed');
   console.log('  [PASS] Bulk dismantle equipment successfully validated!');
 
+  // Test 22: Weapon Enhancement System & Scaling (+1 to +15)
+  console.log('\n[TEST 22] Testing Weapon Enhancement System & Stat Scaling (+1 to +15):');
+  const { createWeaponInstance } = await import('../src/data/equipmentData.js');
+  const testWpn = createWeaponInstance({ weaponTypeId: 'sword', rarity: 'RARE', level: 1 });
+  gameState.state.inventory.equipment.push(testWpn);
+  gameState.state.resources.spiritShards = 100000;
+  gameState.state.resources.essencesOfTheGods = 2000;
+
+  const initPower = testWpn.atkPower;
+  const initLevel = testWpn.level;
+  const enhance1 = gameState.enhanceWeapon(testWpn.uid);
+  console.log(`  Enhanced weapon to +${testWpn.level}: ATK ${initPower} -> ${testWpn.atkPower} (Cost: ${enhance1.shardCost} Shards)`);
+  if (testWpn.level !== 2) throw new Error(`Expected level 2, got ${testWpn.level}`);
+  if (testWpn.atkPower <= initPower) throw new Error('Weapon ATK power did not increase upon enhancement');
+
+  // Enhance up to max level +15
+  while (testWpn.level < 15) {
+    const nextLvl = testWpn.level + 1;
+    const res = gameState.enhanceWeapon(testWpn.uid);
+    if (nextLvl % 3 === 0 && res.essenceCost <= 0) {
+      throw new Error(`Milestone +${nextLvl} should require Essences of the Gods`);
+    }
+  }
+
+  console.log(`  Enhanced weapon to MAX level +${testWpn.level}: Final ATK Power: ${testWpn.atkPower}, Crit: ${testWpn.critRate}%, Ult Amp: ${testWpn.ultAmp}%`);
+  if (testWpn.level !== 15) throw new Error('Expected weapon level 15');
+
+  // Verify max level cap error
+  let blockedOverMax = false;
+  try {
+    gameState.enhanceWeapon(testWpn.uid);
+  } catch (err) {
+    blockedOverMax = true;
+    console.log(`  [PASS] Blocked enhancement beyond max: "${err.message}"`);
+  }
+  if (!blockedOverMax) throw new Error('Expected error when enhancing weapon past max level');
+
+  // Verify generic enhanceEquipment helper
+  const testWpn2 = createWeaponInstance({ weaponTypeId: 'bow', rarity: 'EPIC', level: 1 });
+  gameState.state.inventory.equipment.push(testWpn2);
+  const genRes = gameState.enhanceEquipment(testWpn2.uid);
+  if (testWpn2.level !== 2) throw new Error('enhanceEquipment failed for weapon');
+  console.log('  [PASS] Generic gameState.enhanceEquipment validated for weapons!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

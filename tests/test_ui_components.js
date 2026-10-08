@@ -284,8 +284,30 @@ if (partySpirits.length > 0) {
   if (!modalRoot.innerHTML.includes('btn-modal-inspect-item')) {
     throw new Error('showEquipmentSlotModal missing Details button for equipped artifact!');
   }
+
+  // Test weapon slot modal with direct enhance weapon button
+  const testWpnItem = {
+    uid: 'test_wpn_upgrade_hero',
+    type: 'weapon',
+    weaponTypeId: 'sword',
+    rarity: 'RARE',
+    level: 1,
+    name: 'Rare Spectral Blade',
+    atkPower: 40,
+    critRate: 8,
+    ultAmp: 12
+  };
+  gameState.state.inventory.equipment.push(testWpnItem);
+  gameState.equipItem(heroSpirit.id, testWpnItem.uid);
+  showEquipmentSlotModal({ spiritId: heroSpirit.id, slotType: 'weapon' });
+  if (!modalRoot.innerHTML.includes('btn-modal-enhance-weapon')) {
+    throw new Error('showEquipmentSlotModal missing direct Enhance button for equipped weapon!');
+  }
+  if (!modalRoot.innerHTML.includes('btn-modal-inspect-item')) {
+    throw new Error('showEquipmentSlotModal missing Details button for equipped weapon!');
+  }
 }
-console.log('[PASS] Hero View & Slot Modal artifact upgrade integration validated.');
+console.log('[PASS] Hero View & Slot Modal artifact and weapon upgrade integration validated.');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

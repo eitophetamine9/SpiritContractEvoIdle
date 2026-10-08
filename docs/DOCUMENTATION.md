@@ -246,6 +246,12 @@ The Divine Forge provides a standalone dungeon instance dedicated to forging spe
   - **Master Forge (Tier 3)**: Costs 15 Energy. Recommended Power: 2,800 PWR. Drops 2-3 targeted weapons.
   - **Celestial Forge (Tier 4)**: Costs 18 Energy. Recommended Power: 10,000 PWR. Drops 3 targeted weapons.
 - **Combat Arena**: Features 3 waves of combat (Forge Minions, Elite Automatons, and the Colossus Forge Master) before awarding weapon loot.
+- **Weapon Enhancement Engine (+1 to +15)**:
+  - Weapons can be upgraded from +1 up to +15 using Spirit Shards and Essences of the Gods.
+  - Upgrading directly from the **Hero socket modal**, **Hero equipment drawer**, or **Vault inspection modal**.
+  - Each level increases primary **ATK Power** scaled to weapon rarity multiplier.
+  - Every 3 milestone levels (+3, +6, +9, +12, +15), weapons gain +1% Critical Rate (up to 35%) and +2% Ultimate Amplification (up to 45%).
+  - At +15, weapons display the glowing `✓ +15 MAX` golden crest.
 
 ### 8.5 Relic Star Tiers (3★-6★), Substats & Ascension
 - **Star Ratings (3★ to 6★)**:

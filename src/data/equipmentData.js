@@ -504,3 +504,48 @@ export function createWeaponInstance({ weaponTypeId, rarity = 'COMMON', level = 
     equippedToSpiritId: null
   };
 }
+
+export const MAX_WEAPON_LEVEL = 15;
+
+/**
+ * Calculates the resource cost to enhance a weapon to the next level
+ */
+export function getWeaponEnhanceCost(weapon) {
+  const currentLevel = weapon.level || 1;
+  if (currentLevel >= MAX_WEAPON_LEVEL) return null;
+  const nextLevel = currentLevel + 1;
+  const rarityObj = EQUIPMENT_RARITIES[weapon.rarity] || EQUIPMENT_RARITIES.COMMON;
+  const mult = rarityObj.multiplier || 1.0;
+
+  const shardCost = Math.round(45 * nextLevel * (mult * 0.5));
+  const isMilestone = nextLevel % 3 === 0;
+  const essenceCost = isMilestone ? Math.round(nextLevel * 1.5 + mult) : 0;
+
+  return { nextLevel, shardCost, essenceCost, isMilestone };
+}
+
+/**
+ * Enhances a weapon by 1 level (up to MAX_WEAPON_LEVEL), scaling ATK Power and milestone secondary stats
+ */
+export function enhanceWeaponData(weapon) {
+  const currentLevel = weapon.level || 1;
+  if (currentLevel >= MAX_WEAPON_LEVEL) {
+    throw new Error(`Weapon is already at maximum enhancement level (+${MAX_WEAPON_LEVEL})!`);
+  }
+
+  weapon.level = currentLevel + 1;
+  const rarityObj = EQUIPMENT_RARITIES[weapon.rarity] || EQUIPMENT_RARITIES.COMMON;
+  const mult = rarityObj.multiplier || 1.0;
+
+  // Enhance primary ATK Power
+  const growth = Math.max(6, Math.round(25 * mult * 0.22));
+  weapon.atkPower = (weapon.atkPower || Math.round(25 * mult)) + growth;
+
+  // Milestone triggers at +3, +6, +9, +12, +15 for Crit Rate and Ult Amp
+  if (weapon.level % 3 === 0) {
+    weapon.critRate = Math.min(35, (weapon.critRate || Math.round(5 * mult)) + 1);
+    weapon.ultAmp = Math.min(45, (weapon.ultAmp || Math.round(8 * mult)) + 2);
+  }
+
+  return weapon;
+}

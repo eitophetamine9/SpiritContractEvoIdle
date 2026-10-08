@@ -254,9 +254,14 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                   data-spirit-id="${spirit.id}"
                   data-slot="weapon"
                   style="${weapon ? `border-color: ${weapon.color || '#f1c40f'};` : ''}"
-                  title="${weapon ? `${weapon.name} (${weapon.rarity})\n+${weapon.atkPower} ATK Power` : 'Weapon Socket (Tap to equip)'}">
+                  title="${weapon ? `${weapon.name} (+${weapon.level || 1}) (${weapon.rarity})\n+${weapon.atkPower} ATK Power\nTap to Upgrade or Swap` : 'Weapon Socket (Tap to equip)'}">
             <span class="socket-icon">${weapon ? weapon.icon : '⚔️'}</span>
-            <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? 'WPN' : '+WPN'}</span>
+            <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? `WPN +${weapon.level || 1}` : '+WPN'}</span>
+            ${weapon ? `
+              <span class="socket-level-pill ${weapon.level >= 15 ? 'pill-max' : ''}">
+                +${weapon.level || 1}
+              </span>
+            ` : ''}
           </button>
 
           <!-- 6 Relic Sockets -->
@@ -330,7 +335,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                       <span class="drawer-item-icon">${item.icon}</span>
                       <div class="drawer-item-texts">
                         <span class="drawer-item-name" style="color: ${item.color || '#fff'};">
-                          ${item.name} ${item.type === 'relic' ? `<span style="font-size: 10px; font-weight: 800; color: #ffd32a;">+${item.level || 0}</span>` : ''}
+                          ${item.name} <span style="font-size: 10px; font-weight: 800; color: #ffd32a;">+${item.level || (item.type === 'weapon' ? 1 : 0)}</span>
                         </span>
                         <span class="drawer-item-stat">
                           ${item.type === 'weapon' ? `+${item.atkPower} ATK` : `+${item.mainStatValue} ${item.mainStatName}`}
@@ -339,11 +344,9 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                     </div>
 
                     <div class="drawer-card-actions">
-                      ${item.type === 'relic' ? `
-                        <button class="btn-drawer-action upgrade-action" data-drawer-upgrade="${item.uid}" title="Upgrade this artifact (+${(item.level || 0) + 1})">
-                          ⚡ Upgrade
-                        </button>
-                      ` : ''}
+                      <button class="btn-drawer-action upgrade-action" data-drawer-upgrade="${item.uid}" title="Upgrade this ${item.type === 'weapon' ? 'weapon' : 'artifact'} (+${(item.level || (item.type === 'weapon' ? 1 : 0)) + 1})">
+                        ⚡ Upgrade
+                      </button>
                       ${isEquippedToCurrent ? `
                         <button class="btn-drawer-action unequip-action" data-drawer-unequip data-slot="${item.type === 'weapon' ? 'weapon' : item.slotTypeId}">
                           Unequip
@@ -455,9 +458,14 @@ function renderRosterModeHtml(partySpirits) {
                         data-spirit-id="${spirit.id}"
                         data-slot="weapon"
                         style="${weapon ? `border-color: ${weapon.color || '#f1c40f'};` : ''}"
-                        title="${weapon ? `${weapon.name} (${weapon.rarity})\n+${weapon.atkPower} ATK Power` : 'Weapon Socket'}">
+                        title="${weapon ? `${weapon.name} (+${weapon.level || 1}) (${weapon.rarity})\n+${weapon.atkPower} ATK Power\nTap to Upgrade or Swap` : 'Weapon Socket'}">
                   <span class="socket-icon">${weapon ? weapon.icon : '⚔️'}</span>
-                  <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? 'WPN' : '+WPN'}</span>
+                  <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? `WPN +${weapon.level || 1}` : '+WPN'}</span>
+                  ${weapon ? `
+                    <span class="socket-level-pill ${weapon.level >= 15 ? 'pill-max' : ''}">
+                      +${weapon.level || 1}
+                    </span>
+                  ` : ''}
                 </button>
 
                 ${RELIC_SLOT_TYPES.map(slot => {

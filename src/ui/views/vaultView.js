@@ -469,6 +469,7 @@ export function renderVaultView(container) {
                   </span>
 
                   <div class="flex items-center gap-1">
+                    <span class="px-1 py-0.2 rounded text-[8px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30">+${w.level || 1}</span>
                     ${isEquipped ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">✓ ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
                     <button class="btn-card-fav text-xs transition-transform active:scale-125" data-fav-weapon-uid="${w.uid}" title="Toggle Favorite">
                       ${w.favorite ? '<span class="text-amber-400 font-black">★</span>' : '<span class="text-slate-600">☆</span>'}

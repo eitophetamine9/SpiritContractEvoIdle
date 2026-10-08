@@ -20,9 +20,13 @@ import {
   WEAPON_TYPES, 
   RELIC_STAR_TIERS,
   RELIC_SUBSTAT_TYPES,
+  EQUIPMENT_RARITIES,
+  MAX_WEAPON_LEVEL,
   createRelicInstance, 
   createWeaponInstance,
   enhanceRelicData,
+  enhanceWeaponData,
+  getWeaponEnhanceCost,
   ascendRelicData,
   generateRelicSubstats,
   calculateRelicMainStat
@@ -2610,6 +2614,56 @@ class GameStateManager {
     this.emit('inventoryUpdated', this.state.inventory);
     this.emit('resourcesUpdated', this.state.resources);
     return { success: true, item, shardCost, essenceCost };
+  }
+
+  enhanceWeapon(itemUid) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Weapon not found in inventory');
+    if (item.type !== 'weapon') throw new Error('Item is not a Weapon');
+
+    const currentLevel = item.level || 1;
+    if (currentLevel >= MAX_WEAPON_LEVEL) {
+      throw new Error(`Weapon has reached maximum enhancement (+${MAX_WEAPON_LEVEL})!`);
+    }
+
+    const costInfo = getWeaponEnhanceCost(item);
+    if (!costInfo) {
+      throw new Error(`Weapon has reached maximum enhancement (+${MAX_WEAPON_LEVEL})!`);
+    }
+
+    const { nextLevel, shardCost, essenceCost } = costInfo;
+
+    if (this.state.resources.spiritShards < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost}, have ${this.state.resources.spiritShards}.`);
+    }
+    if (essenceCost > 0 && (this.state.resources.essencesOfTheGods || 0) < essenceCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${essenceCost}, have ${this.state.resources.essencesOfTheGods || 0}.`);
+    }
+
+    this.state.resources.spiritShards -= shardCost;
+    if (essenceCost > 0) {
+      this.state.resources.essencesOfTheGods -= essenceCost;
+    }
+
+    enhanceWeaponData(item);
+
+    this.save();
+    this.emit('equipmentUpdated', { item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+    return { success: true, item, shardCost, essenceCost, nextLevel };
+  }
+
+  enhanceEquipment(itemUid) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Equipment item not found in inventory');
+    if (item.type === 'weapon') {
+      return this.enhanceWeapon(itemUid);
+    } else {
+      return this.enhanceRelic(itemUid);
+    }
   }
 
   ascendRelic(itemUid) {

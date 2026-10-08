@@ -243,3 +243,38 @@ class AudioManager {
 }
 
 export const audioManager = new AudioManager();
+
+// Ensure global accessibility across all modules and inline handlers
+if (typeof globalThis !== 'undefined') {
+  globalThis.audioManager = audioManager;
+}
+if (typeof window !== 'undefined') {
+  window.audioManager = audioManager;
+}
+
+/**
+ * Global failsafe sound effect trigger.
+ * Will never throw or interrupt UI state updates if audio is unavailable.
+ */
+export function safePlaySfx(sfxKey) {
+  try {
+    if (typeof audioManager !== 'undefined' && audioManager?.playSfx) {
+      audioManager.playSfx(sfxKey);
+    }
+  } catch {
+    // Silently ignore audio playback errors
+  }
+}
+
+/**
+ * Global failsafe BGM trigger.
+ */
+export function safePlayBgm(trackKey) {
+  try {
+    if (typeof audioManager !== 'undefined' && audioManager?.playBgm) {
+      audioManager.playBgm(trackKey);
+    }
+  } catch {
+    // Silently ignore audio playback errors
+  }
+}

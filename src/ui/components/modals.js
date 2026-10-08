@@ -1,7 +1,8 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from './pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel, ASCENSION_CONFIG } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
-import { GREEK_GOD_SETS, RELIC_SLOT_TYPES } from '../../data/equipmentData.js';
+import { GREEK_GOD_SETS, RELIC_SLOT_TYPES, getWeaponEnhanceCost, MAX_WEAPON_LEVEL } from '../../data/equipmentData.js';
+import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
 
 export function showOfflineModal(report, onClaim) {
   const modalRoot = document.getElementById('modal-root');
@@ -518,15 +519,33 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
 
     const isCurrentEquipped = !!currentItem;
     const isRelic = currentItem && currentItem.type === 'relic';
+    const isWeapon = currentItem && currentItem.type === 'weapon';
     const stars = isRelic ? (currentItem.stars || 3) : 3;
     const starColors = { 3: '#b2bec3', 4: '#00cec9', 5: '#ffd32a', 6: '#ff4757' };
     const starColor = starColors[stars] || '#ffd32a';
-    const nextLevel = isRelic ? ((currentItem.level || 0) + 1) : 0;
-    const shardCost = isRelic ? Math.round(50 * nextLevel * (stars * 0.4)) : 0;
-    const isMilestone = isRelic && (nextLevel % 3 === 0);
-    const essenceCost = isMilestone ? Math.round(stars * 2 + nextLevel * 0.5) : 0;
-    const canEnhance = isRelic && (currentItem.level || 0) < 15;
-    const canAscend = isRelic && stars === 5 && (currentItem.level || 0) >= 15;
+
+    let nextLevel = 0;
+    let shardCost = 0;
+    let essenceCost = 0;
+    let canEnhance = false;
+    let canAscend = false;
+
+    if (isRelic) {
+      nextLevel = (currentItem.level || 0) + 1;
+      shardCost = Math.round(50 * nextLevel * (stars * 0.4));
+      const isMilestone = (nextLevel % 3 === 0);
+      essenceCost = isMilestone ? Math.round(stars * 2 + nextLevel * 0.5) : 0;
+      canEnhance = (currentItem.level || 0) < 15;
+      canAscend = stars === 5 && (currentItem.level || 0) >= 15;
+    } else if (isWeapon) {
+      nextLevel = (currentItem.level || 1) + 1;
+      const wCost = getWeaponEnhanceCost(currentItem);
+      if (wCost) {
+        shardCost = wCost.shardCost;
+        essenceCost = wCost.essenceCost;
+        canEnhance = true;
+      }
+    }
 
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
@@ -564,6 +583,9 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                       </span>
                     ` : `
                       <span class="equip-rarity-pill" style="border-color: ${currentItem.color || '#fff'}; color: ${currentItem.color || '#fff'};">${currentItem.rarity}</span>
+                      <span style="font-size: 10px; font-weight: 800; color: #ffd32a; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,211,42,0.4);">
+                        +${currentItem.level || 1}/15
+                      </span>
                     `}
                   </div>
                   <div class="equip-item-stat">
@@ -606,6 +628,20 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                     </button>
                   ` : ''}
                   <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-relic-uid="${currentItem.uid}" title="View Details, Lore & Reassign">
+                    🔍 Details
+                  </button>
+                ` : isWeapon ? `
+                  ${canEnhance ? `
+                    <button class="btn-modal-enhance-slot" id="btn-modal-enhance-weapon" data-weapon-uid="${currentItem.uid}">
+                      <span>⚡ Enhance (+${nextLevel})</span>
+                      <span class="enhance-cost-sub">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                    </button>
+                  ` : `
+                    <div class="badge-max-enhance">
+                      ✓ +15 MAX
+                    </div>
+                  `}
+                  <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-weapon-uid="${currentItem.uid}" title="View Details, Lore & Reassign">
                     🔍 Details
                   </button>
                 ` : ''}
@@ -725,7 +761,18 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
     modalRoot.querySelector('#btn-modal-enhance')?.addEventListener('click', () => {
       try {
         const res = gameState.enhanceRelic(currentItem.uid);
-        audioManager.playSfx('levelup');
+        try { safePlaySfx('levelup'); } catch {}
+        renderModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    modalRoot.querySelector('#btn-modal-enhance-weapon')?.addEventListener('click', () => {
+      try {
+        const res = gameState.enhanceWeapon(currentItem.uid);
+        try { safePlaySfx('levelup'); } catch {}
         renderModal();
         if (onUpdate) onUpdate();
       } catch (err) {
@@ -736,7 +783,7 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
     modalRoot.querySelector('#btn-modal-ascend')?.addEventListener('click', () => {
       try {
         const res = gameState.ascendRelic(currentItem.uid);
-        audioManager.playSfx('evolution');
+        try { safePlaySfx('evolution'); } catch {}
         alert(`🌟 Ascended ${currentItem.name} to 6★! Unlocked 5th Substat slot!`);
         renderModal();
         if (onUpdate) onUpdate();
@@ -827,6 +874,7 @@ export function showItemInspectModal({ item, onUpdate }) {
     const equippedSpirit = spirits.find(s => s.id === currentItem.equippedToSpiritId);
 
     const isRelic = currentItem.type === 'relic';
+    const isWeapon = currentItem.type === 'weapon';
     const stars = currentItem.stars || 3;
     const godSet = isRelic ? GREEK_GOD_SETS[currentItem.setId] : null;
 
@@ -836,18 +884,36 @@ export function showItemInspectModal({ item, onUpdate }) {
       5: '#ffd32a',
       6: '#ff4757'
     };
-    const starLabel = '★'.repeat(stars);
+    const starLabel = isRelic ? '★'.repeat(stars) : '';
     const starColor = starColors[stars] || '#ffd32a';
 
-    const nextLevel = (currentItem.level || 0) + 1;
-    const shardCost = Math.round(50 * nextLevel * (stars * 0.4));
-    const isMilestone = nextLevel % 3 === 0;
-    const essenceCost = isMilestone ? Math.round(stars * 2 + nextLevel * 0.5) : 0;
-    const canEnhance = isRelic && (currentItem.level || 0) < 15;
-    const canAscend = isRelic && stars === 5 && (currentItem.level || 0) >= 15;
+    let nextLevel = 0;
+    let shardCost = 0;
+    let essenceCost = 0;
+    let canEnhance = false;
+    let canAscend = false;
+
+    if (isRelic) {
+      nextLevel = (currentItem.level || 0) + 1;
+      shardCost = Math.round(50 * nextLevel * (stars * 0.4));
+      const isMilestone = nextLevel % 3 === 0;
+      essenceCost = isMilestone ? Math.round(stars * 2 + nextLevel * 0.5) : 0;
+      canEnhance = (currentItem.level || 0) < 15;
+      canAscend = stars === 5 && (currentItem.level || 0) >= 15;
+    } else if (isWeapon) {
+      nextLevel = (currentItem.level || 1) + 1;
+      const wCost = getWeaponEnhanceCost(currentItem);
+      if (wCost) {
+        shardCost = wCost.shardCost;
+        essenceCost = wCost.essenceCost;
+        canEnhance = true;
+      }
+    }
 
     const dismantleEssences = isRelic ? (stars === 3 ? 5 : stars === 4 ? 15 : stars === 5 ? 40 : 100) : 0;
-    const dismantleShards = Math.round(20 * (currentItem.level || 1) + stars * 10);
+    const dismantleShards = isRelic
+      ? Math.round(20 * (currentItem.level || 1) + stars * 10)
+      : Math.round(25 * (currentItem.level || 1) + 15);
 
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
@@ -860,12 +926,19 @@ export function showItemInspectModal({ item, onUpdate }) {
                   ${currentItem.name}
                 </h3>
                 <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                  <span style="font-size: 13px; font-weight: 900; color: ${starColor}; letter-spacing: 1px;">
-                    ${starLabel}
-                  </span>
-                  <span style="font-size: 11px; color: var(--text-muted);">
-                    • +${currentItem.level || 0}/15 ${isRelic ? `• ${currentItem.slotName || 'Relic'}` : '• Weapon'}
-                  </span>
+                  ${isRelic ? `
+                    <span style="font-size: 13px; font-weight: 900; color: ${starColor}; letter-spacing: 1px;">
+                      ${starLabel}
+                    </span>
+                    <span style="font-size: 11px; color: var(--text-muted);">
+                      • +${currentItem.level || 0}/15 • ${currentItem.slotName || 'Relic'}
+                    </span>
+                  ` : `
+                    <span class="equip-rarity-pill" style="border-color: ${currentItem.color || '#fff'}; color: ${currentItem.color || '#fff'};">${currentItem.rarity}</span>
+                    <span style="font-size: 11px; color: #ffd32a; font-weight: 800;">
+                      +${currentItem.level || 1}/15 Weapon
+                    </span>
+                  `}
                 </div>
               </div>
             </div>
@@ -925,12 +998,12 @@ export function showItemInspectModal({ item, onUpdate }) {
               </div>
             ` : ''}
 
-            <!-- Relic Enhancement & Ascension Buttons -->
+            <!-- Equipment Enhancement & Ascension Buttons -->
             ${isRelic ? `
               <div style="display: flex; gap: 6px; margin-bottom: 12px;">
                 ${canEnhance ? `
                   <button id="btn-enhance-relic" class="btn-drawer-action" style="flex: 1; background: linear-gradient(135deg, #f39c12, #d35400); color: #fff; font-weight: 800; min-height: 42px;">
-                    ⚡ Enhance (+${nextLevel})<br>
+                    ⚡ Enhance Relic (+${nextLevel})<br>
                     <span style="font-size: 10px; opacity: 0.9;">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
                   </button>
                 ` : `
@@ -945,6 +1018,19 @@ export function showItemInspectModal({ item, onUpdate }) {
                     <span style="font-size: 10px; opacity: 0.9;">100 ✨ • 10 🔮</span>
                   </button>
                 ` : ''}
+              </div>
+            ` : isWeapon ? `
+              <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+                ${canEnhance ? `
+                  <button id="btn-enhance-weapon" class="btn-drawer-action" style="flex: 1; background: linear-gradient(135deg, #f39c12, #d35400); color: #fff; font-weight: 800; min-height: 42px;">
+                    ⚡ Enhance Weapon (+${nextLevel})<br>
+                    <span style="font-size: 10px; opacity: 0.9;">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                  </button>
+                ` : `
+                  <div style="flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: #2ecc71; padding: 10px; background: rgba(46,204,113,0.1); border-radius: 6px;">
+                    ✓ Max Enhancement (+15)
+                  </div>
+                `}
               </div>
             ` : ''}
 
@@ -996,10 +1082,23 @@ export function showItemInspectModal({ item, onUpdate }) {
     modalRoot.querySelector('#btn-close-item-inspect')?.addEventListener('click', closeModal);
     modalRoot.querySelector('#btn-close-item-done')?.addEventListener('click', closeModal);
 
+    // Enhance Weapon
+    modalRoot.querySelector('#btn-enhance-weapon')?.addEventListener('click', () => {
+      try {
+        const res = gameState.enhanceWeapon(currentItem.uid);
+        try { safePlaySfx('levelup'); } catch {}
+        renderModal();
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
     // Enhance Relic
     modalRoot.querySelector('#btn-enhance-relic')?.addEventListener('click', () => {
       try {
         const res = gameState.enhanceRelic(currentItem.uid);
+        try { safePlaySfx('levelup'); } catch {}
         renderModal();
         if (onUpdate) onUpdate();
       } catch (err) {
@@ -1011,6 +1110,7 @@ export function showItemInspectModal({ item, onUpdate }) {
     modalRoot.querySelector('#btn-ascend-relic')?.addEventListener('click', () => {
       try {
         const res = gameState.ascendRelic(currentItem.uid);
+        try { safePlaySfx('evolution'); } catch {}
         alert(`🌟 Ascended ${currentItem.name} to 6★! Unlocked 5th Substat slot!`);
         renderModal();
         if (onUpdate) onUpdate();
