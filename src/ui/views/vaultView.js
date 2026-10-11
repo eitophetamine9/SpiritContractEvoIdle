@@ -11,7 +11,7 @@
 
 import { gameState } from '../../state/gameState.js';
 import { audioManager } from '../../audio/audioManager.js';
-import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getRarityInfo, getRoleInfo } from '../../data/spiritsData.js';
 import { EQUIPMENT_RARITIES, GREEK_GOD_SETS, RELIC_STAR_TIERS } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showSpiritModal, showItemInspectModal } from '../components/modals.js';
@@ -297,6 +297,8 @@ export function renderVaultView(container) {
             const rarity = getRarityInfo(s.rarity || 'COMMON');
             const species = SPIRIT_SPECIES[s.speciesId];
             const elem = (species?.element || 'EARTH').toUpperCase();
+            const roleKey = s.role || (species ? species.role : 'MAIN_DPS') || 'MAIN_DPS';
+            const roleInfo = getRoleInfo(roleKey);
 
             const ELEM_COLORS = {
               FIRE: '#ff4757', WATER: '#00d2d3', EARTH: '#2ed573',
@@ -323,6 +325,9 @@ export function renderVaultView(container) {
                   <div class="flex items-center gap-1">
                     <span class="px-1.5 py-0.2 rounded text-[8px] font-black uppercase" style="background: ${elemColor}22; color: ${elemColor}; border: 1px solid ${elemColor}66;">
                       ${elem}
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded text-[8px] font-black uppercase" style="background: ${roleInfo.bg}; color: ${roleInfo.color}; border: 1px solid ${roleInfo.border};" title="Role: ${roleInfo.name}">
+                      ${roleInfo.icon} ${roleInfo.name}
                     </span>
                     <span class="text-[9px] font-extrabold text-slate-400">Lv.${s.level}</span>
                     ${(s.ascensionLevel || 0) > 0 ? `

@@ -1,4 +1,5 @@
 import { RARITIES, getRarityInfo, SPIRIT_SPECIES, ELEMENTS } from '../../data/spiritsData.js';
+import { getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 
 /**
  * Creates a distinctly styled CSS placeholder box for a Spirit.
@@ -23,6 +24,7 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
   const elemKey = (spiritOrSpecies.element || species.element || 'EARTH').toUpperCase();
   const elemObj = ELEMENTS[elemKey] || ELEMENTS.EARTH;
   const glyph = species.avatarEmoji || '✨';
+  const sheetKey = getSheetKeyForSpecies(species.id);
 
   return `
     <div class="pixel-box rarity-${rarityLower} ${boxClass} ${isCapped ? 'capped-pulse' : ''}" 
@@ -41,9 +43,10 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
       </div>
 
       <div class="pixel-art-slot" data-art-target="spirit-${species.id}">
-        <!-- Manual Pixel Art / Sprite Image drop-in point -->
-        <div class="placeholder-creature-sprite">
-          <span class="core-glyph">${glyph}</span>
+        <!-- Animated Pixel Creature Sprite -->
+        <div class="animated-pixel-sprite sprite-${sheetKey}" style="--sprite-sheet: url('/assets/sprites/creatures/${sheetKey}.svg');">
+          <div class="sprite-frame-viewer"></div>
+          <span class="core-glyph-fallback" style="display: none;">${glyph}</span>
         </div>
       </div>
 

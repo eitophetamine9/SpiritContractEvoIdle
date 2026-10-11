@@ -1,0 +1,138 @@
+{
+  "version": "1.0.0",
+  "defaultFrameWidth": 48,
+  "defaultFrameHeight": 48,
+  "animationFps": {
+    "idle": 6,
+    "attack": 12,
+    "hurt": 8,
+    "cast": 8
+  },
+  "speciesMapping": {
+    "cat_spirit": "feline_shadow",
+    "furious_cat": "feline_shadow",
+    "elemental_cat": "feline_shadow",
+    "dog_spirit": "canine_guardian",
+    "vitality_dog": "canine_guardian",
+    "guardian_dog": "canine_guardian",
+    "chicken_spirit": "avian_blaze",
+    "blazing_rooster": "avian_blaze",
+    "phoenix_scion": "avian_blaze",
+    "bull_spirit": "bovine_earth",
+    "iron_bull": "bovine_earth",
+    "minotaur": "bovine_earth",
+    "caterpillar_spirit": "insect_chrysalis",
+    "chrysalis_spirit": "insect_chrysalis",
+    "mystical_butterfly": "insect_chrysalis",
+    "lizard_spirit": "feline_shadow",
+    "multi_venom_lizard": "feline_shadow",
+    "komodo_dragon": "bovine_earth",
+    "drake": "draconic_leviathan",
+    "python_spirit": "draconic_leviathan",
+    "highlord_python": "draconic_leviathan",
+    "albino_anaconda": "draconic_leviathan",
+    "wyrm": "draconic_leviathan",
+    "shark_spirit": "draconic_leviathan",
+    "great_white_shark": "draconic_leviathan",
+    "megalodon": "draconic_leviathan",
+    "cosmic_devourer": "draconic_leviathan",
+    "bear_spirit": "bovine_earth",
+    "highlord_bear": "bovine_earth",
+    "bear_of_dreams": "bovine_earth",
+    "ursalite": "bovine_earth",
+    "high_elf": "celestial_sun",
+    "fallen_warrior": "feline_shadow",
+    "sovereign_warrior": "bovine_earth",
+    "dreadlord_warrior": "bovine_earth",
+    "solaris_lion_of_pride": "celestial_sun",
+    "solaris_the_one": "celestial_sun",
+    "gelda_thousand_ashes": "feline_shadow",
+    "gelda_sanguine": "feline_shadow",
+    "astraea_valkyrie": "celestial_sun",
+    "astraea_celestial_queen": "celestial_sun",
+    "leviathan_behemoth": "draconic_leviathan",
+    "leviathan_primordial": "draconic_leviathan",
+    "baphomet_voidbinder": "draconic_leviathan",
+    "baphomet_archdemon": "draconic_leviathan",
+    "wisp_spirit": "celestial_sun"
+  },
+  "sheets": {
+    "feline_shadow": {
+      "path": "/assets/sprites/creatures/feline_shadow.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "canine_guardian": {
+      "path": "/assets/sprites/creatures/canine_guardian.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "avian_blaze": {
+      "path": "/assets/sprites/creatures/avian_blaze.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 6, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 12, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "bovine_earth": {
+      "path": "/assets/sprites/creatures/bovine_earth.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 4, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 8, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "insect_chrysalis": {
+      "path": "/assets/sprites/creatures/insect_chrysalis.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 6, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "draconic_leviathan": {
+      "path": "/assets/sprites/creatures/draconic_leviathan.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "celestial_sun": {
+      "path": "/assets/sprites/creatures/celestial_sun.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 6, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    }
+  }
+}
