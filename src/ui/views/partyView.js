@@ -1,13 +1,23 @@
 import { gameState } from '../../state/gameState.js';
-import { SPIRIT_SPECIES, getXpRequiredForLevel, getRarityInfo } from '../../data/spiritsData.js';
+import { 
+  SPIRIT_SPECIES, 
+  getXpRequiredForLevel, 
+  getRarityInfo,
+  getRoleInfo,
+  getSpiritRole,
+  calculateSpiritStats,
+  FORMATION_SLOTS,
+  FORMATION_COLUMNS
+} from '../../data/spiritsData.js';
 import { RELIC_SLOT_TYPES, GREEK_GOD_SETS } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showEvolutionCeremonyModal, showEquipmentSlotModal, showItemInspectModal } from '../components/modals.js';
 import { audioManager } from '../../audio/audioManager.js';
 
-let activeViewMode = 'showcase'; // 'showcase' or 'roster'
+let activeViewMode = 'showcase'; // 'showcase', 'formation', or 'roster'
 let selectedPartyIndex = 0;
 let equipmentDrawerFilter = 'all'; // 'all', 'weapon', 'relic'
+let selectedSlotForSwap = null;
 
 export function renderPartyView(container) {
   const partySpirits = gameState.getPartySpirits();
@@ -45,6 +55,9 @@ export function renderPartyView(container) {
       <!-- Mode Switcher & Party Summary Strip -->
       <div class="party-top-controls-bar">
         <div class="party-mode-pills">
+          <button id="btn-mode-formation" class="party-mode-pill ${activeViewMode === 'formation' ? 'active' : ''}">
+            ⚔️ 3×3 Formation
+          </button>
           <button id="btn-mode-showcase" class="party-mode-pill ${activeViewMode === 'showcase' ? 'active' : ''}">
             👑 Hero Pedestal
           </button>
@@ -61,12 +74,199 @@ export function renderPartyView(container) {
         </div>
       </div>
 
-      ${activeViewMode === 'showcase' ? renderShowcaseModeHtml(partySpirits, selectedSpirit, allEquipment) : renderRosterModeHtml(partySpirits)}
+      ${activeViewMode === 'formation' 
+        ? renderFormationModeHtml(partySpirits) 
+        : (activeViewMode === 'showcase' 
+            ? renderShowcaseModeHtml(partySpirits, selectedSpirit, allEquipment) 
+            : renderRosterModeHtml(partySpirits))}
 
     </div>
   `;
 
   attachEventListeners(container);
+}
+
+/**
+ * 3x3 Tactical Squad Formation Mode (Phase 2 & 5 Implementation)
+ */
+function renderFormationModeHtml(partySpirits) {
+  const formationData = gameState.getPartyFormation();
+  const { slots, counts, isValid, validationError } = formationData;
+
+  return `
+    <div class="formation-view-container">
+      
+      <!-- Formation Status & Header -->
+      <div class="formation-header-card">
+        <div class="formation-title-group">
+          <div class="formation-main-title">
+            <span class="text-glow">⚔️ 3×3 Tactical Squad Formation</span>
+            <span class="formation-validity-badge ${isValid ? 'valid' : 'invalid'}">
+              ${isValid ? '✅ Valid Formation' : `⚠️ ${validationError}`}
+            </span>
+          </div>
+          <div class="formation-subtitle">
+            Position spirits on the 3×3 tactical battlefield: <strong>1 Backline</strong> (Sanctuary Anchor), <strong>2–3 Midline</strong> (Flank Cadence), and <strong>1–2 Frontline</strong> (Vanguard Tanks).
+          </div>
+        </div>
+
+        <div class="formation-actions-row">
+          <div class="formation-quota-chips">
+            <span class="quota-chip ${counts.back === 1 ? 'met' : ''}" title="Backline: Exactly 1 spirit">
+              🎯 Back: ${counts.back}/1
+            </span>
+            <span class="quota-chip ${counts.mid >= 2 && counts.mid <= 3 ? 'met' : ''}" title="Midline: 2 or 3 spirits">
+              ⚡ Mid: ${counts.mid}/3
+            </span>
+            <span class="quota-chip ${counts.front >= 1 && counts.front <= 2 ? 'met' : ''}" title="Frontline: 1 or 2 spirits">
+              🛡️ Front: ${counts.front}/2
+            </span>
+            <span class="quota-chip ${counts.total === 5 ? 'met' : ''}" title="Total active squad size">
+              ⛩️ Squad: ${counts.total}/5
+            </span>
+          </div>
+
+          <button id="btn-auto-align-formation" class="btn-auto-align" title="Automatically arrange squad into optimal role positions">
+            ⚡ Auto-Align Formation
+          </button>
+        </div>
+      </div>
+
+      <!-- 3x3 Tactical Battle Grid: 3 Columns -->
+      <div class="tactical-battle-grid">
+        
+        <!-- Column 0: Backline -->
+        <div class="grid-column backline-column">
+          <div class="column-header">
+            <div class="column-title">
+              <span>🎯 BACKLINE</span>
+              <span class="col-count-pill">${counts.back}/1</span>
+            </div>
+            <div class="column-perk-tag" title="Perk: +15% ATK & Heal potency, -50% threat footprint">
+              ✨ Sanctuary (+15% ATK/Heal, -50% Aggro)
+            </div>
+          </div>
+
+          <div class="column-tiles-stack">
+            ${['b1', 'b2', 'b3'].map(slotId => renderTileSlotHtml(slots[slotId], slotId)).join('')}
+          </div>
+        </div>
+
+        <!-- Column 1: Midline -->
+        <div class="grid-column midline-column">
+          <div class="column-header">
+            <div class="column-title">
+              <span>⚡ MIDLINE</span>
+              <span class="col-count-pill">${counts.mid}/3</span>
+            </div>
+            <div class="column-perk-tag" title="Perk: Balanced attack cadence & flexible synergy">
+              ⚔️ Flank Cadence (1.0x Threat)
+            </div>
+          </div>
+
+          <div class="column-tiles-stack">
+            ${['m1', 'm2', 'm3'].map(slotId => renderTileSlotHtml(slots[slotId], slotId)).join('')}
+          </div>
+        </div>
+
+        <!-- Column 2: Frontline -->
+        <div class="grid-column frontline-column">
+          <div class="column-header">
+            <div class="column-title">
+              <span>🛡️ FRONTLINE</span>
+              <span class="col-count-pill">${counts.front}/2</span>
+            </div>
+            <div class="column-perk-tag" title="Perk: +15% Armor/DEF, 2.0x innate threat aggro draw">
+              🛡️ Vanguard (+15% DEF, 2.0x Taunt/Aggro)
+            </div>
+          </div>
+
+          <div class="column-tiles-stack">
+            ${['f1', 'f2', 'f3'].map(slotId => renderTileSlotHtml(slots[slotId], slotId)).join('')}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tactical Interaction Hint -->
+      <div class="formation-instruction-bar">
+        <span>💡 ${selectedSlotForSwap ? `Selected [${selectedSlotForSwap.toUpperCase()}]. Tap another tile to swap positions, or tap again to cancel.` : 'Tap any hero or tile to select and swap positions. Tanks naturally draw enemy focus to shield back/midline allies!'}</span>
+      </div>
+
+    </div>
+  `;
+}
+
+function compactNumber(num) {
+  if (typeof num !== 'number') return num;
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 10000) return (num / 1000).toFixed(0) + 'k';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+  return num;
+}
+
+function renderTileSlotHtml(slotData, slotId) {
+  const spirit = slotData?.spirit;
+  const isSelected = selectedSlotForSwap === slotId;
+
+  if (!spirit) {
+    return `
+      <div class="grid-tile-card tile-empty ${isSelected ? 'tile-selected' : ''}" 
+           data-formation-slot="${slotId}" 
+           title="Empty Slot ${slotId.toUpperCase()} (${slotData.label})">
+        <div class="tile-empty-header">
+          <span class="tile-code">[${slotId.toUpperCase()}]</span>
+          <span class="tile-rec-role">Pref: ${slotData.defaultRole}</span>
+        </div>
+        <div class="tile-empty-body">
+          <span class="tile-plus-icon">+</span>
+          <span class="tile-empty-label">${isSelected ? 'Tap to Move' : 'Empty Tile'}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const species = SPIRIT_SPECIES[spirit.speciesId];
+  const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
+  const roleKey = spirit.role || (species ? species.role : 'MAIN_DPS') || 'MAIN_DPS';
+  const roleInfo = getRoleInfo(roleKey);
+  const stats = calculateSpiritStats(spirit, spirit.level, spirit.rarity, spirit.ascensionLevel) || {};
+  const totalPower = gameState.getSpiritTotalPower(spirit);
+
+  return `
+    <div class="grid-tile-card tile-occupied ${isSelected ? 'tile-selected' : ''}" 
+         data-formation-slot="${slotId}" 
+         style="border-color: ${isSelected ? '#ffd32a' : rarity.color}66;">
+      
+      <!-- Tile Header -->
+      <div class="tile-card-header">
+        <span class="tile-code">[${slotId.toUpperCase()}]</span>
+        <span class="tile-role-badge" style="background: ${roleInfo.bg}; color: ${roleInfo.color}; border: 1px solid ${roleInfo.border};">
+          ${roleInfo.icon} ${roleInfo.name}
+        </span>
+      </div>
+
+      <!-- Tile Avatar & Identity -->
+      <div class="tile-spirit-row">
+        <div class="tile-avatar-box">
+          ${createSpiritPlaceholderBox(spirit, { width: '36px', height: '36px' })}
+        </div>
+        <div class="tile-spirit-info">
+          <div class="tile-spirit-name" title="${spirit.customName}">${spirit.customName}</div>
+          <div class="tile-level-tag">Lv.${spirit.level} • <span style="color: ${rarity.color}; font-weight: 700;">${rarity.name}</span></div>
+          <div class="tile-pwr-tag">⚡ ${compactNumber(totalPower)} PWR</div>
+        </div>
+      </div>
+
+      <!-- Tactical Combat Attributes Matrix -->
+      <div class="tile-stat-strip">
+        <span title="Hit Points (Max HP): ${(stats.maxHp || spirit.maxHp).toLocaleString()}">❤️ ${compactNumber(stats.maxHp || spirit.maxHp)}</span>
+        <span title="Armor / DEF: ${(stats.def || 10).toLocaleString()}">🛡️ ${compactNumber(stats.def || 10)}</span>
+        <span title="Attack Power: ${(stats.atk || spirit.power).toLocaleString()}">⚔️ ${compactNumber(stats.atk || spirit.power)}</span>
+        <span title="Threat / Aggro Score: ${stats.threat || roleInfo.baseThreat}">🧲 ${stats.threat || roleInfo.baseThreat}</span>
+      </div>
+    </div>
+  `;
 }
 
 /**
@@ -86,6 +286,13 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
 
   const species = SPIRIT_SPECIES[spirit.speciesId];
   const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
+  const roleKey = spirit.role || (species ? species.role : 'MAIN_DPS') || 'MAIN_DPS';
+  const roleInfo = getRoleInfo(roleKey);
+  const detailedStats = calculateSpiritStats(spirit, spirit.level, spirit.rarity, spirit.ascensionLevel) || {};
+  const currentSlotId = gameState.getSpiritFormationSlot(spirit.id);
+  const slotDef = currentSlotId ? FORMATION_SLOTS[currentSlotId] : null;
+  const colDef = slotDef ? FORMATION_COLUMNS[slotDef.col] : null;
+
   const reqXp = getXpRequiredForLevel(spirit.level);
   const isCapped = spirit.level >= (species ? species.levelCap : 99);
   const xpPercent = isCapped ? 100 : Math.min(100, Math.floor((spirit.xp / reqXp) * 100));
@@ -94,7 +301,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
   const activeSets = gameState.getSpiritActiveSetBonuses(spirit);
   const totalSpiritPower = gameState.getSpiritTotalPower(spirit);
   const bonusPower = totalSpiritPower - spirit.power;
-  const spiritHp = spirit.maxHp || 100;
+  const spiritHp = detailedStats.maxHp || spirit.maxHp || 100;
   const spiritMp = spirit.currentMp || 0;
 
   // Filter bag equipment
@@ -165,12 +372,18 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
           <div class="hero-title-header">
             <div class="hero-name-row">
               <span class="hero-custom-name">${spirit.customName}</span>
+              <span class="hero-role-badge" style="background: ${roleInfo.bg}; color: ${roleInfo.color}; border: 1px solid ${roleInfo.border};">
+                ${roleInfo.icon} ${roleInfo.name.toUpperCase()}
+              </span>
               <span class="hero-rarity-badge" style="border-color: ${rarity.color}; color: ${rarity.color}; background: rgba(0,0,0,0.5);">
                 ${rarity.name.toUpperCase()}
               </span>
             </div>
             <div class="hero-species-sub">
               ${species ? species.name : 'Unknown Species'} • Lv. ${spirit.level}/${species ? species.levelCap : '??'} ${isCapped ? '[CAP]' : ''}
+            </div>
+            <div class="hero-formation-pos-banner">
+              📍 <strong>${slotDef ? slotDef.label : 'Midline Center (M2)'}</strong> • <span style="color: #00d2d3;">${colDef ? colDef.perkName : 'Flank Perk'}</span> (${colDef ? colDef.perkDesc : 'Balanced cadence'})
             </div>
           </div>
 
@@ -187,16 +400,27 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
             ` : ''}
           </div>
 
-          <!-- Segmented Attribute Gauges -->
+          <!-- Tactical Attributes Grid -->
           <div class="hero-attributes-stack">
             <!-- ATK Power -->
             <div class="attribute-row">
               <div class="attr-label-row">
                 <span>⚔️ ATK Power</span>
-                <span class="attr-val">${spirit.power + (weapon ? weapon.atkPower : 0)}</span>
+                <span class="attr-val">${detailedStats.atk || (spirit.power + (weapon ? weapon.atkPower : 0))}</span>
               </div>
               <div class="segmented-gauge">
                 ${renderSegmentedGauge(Math.min(10, Math.ceil(totalSpiritPower / 100)))}
+              </div>
+            </div>
+
+            <!-- Armor / DEF -->
+            <div class="attribute-row">
+              <div class="attr-label-row">
+                <span>🛡️ Armor (DEF)</span>
+                <span class="attr-val">${detailedStats.def || 10}</span>
+              </div>
+              <div class="segmented-gauge def-gauge">
+                ${renderSegmentedGauge(Math.min(10, Math.ceil((detailedStats.def || 10) / 15)))}
               </div>
             </div>
 
@@ -209,6 +433,13 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
               <div class="segmented-gauge hp-gauge">
                 ${renderSegmentedGauge(8)}
               </div>
+            </div>
+
+            <!-- Speed & Crit & Threat Row -->
+            <div class="hero-tactical-stats-strip">
+              <div class="sub-stat-pill" title="Action Cadence">⚡ SPD: ${detailedStats.spd || 1.0}s</div>
+              <div class="sub-stat-pill" title="Critical Chance">🎯 Crit: ${detailedStats.critRate || 5}% (${detailedStats.critDmg || 150}%)</div>
+              <div class="sub-stat-pill" title="Innate Aggro / Threat Weight">🧲 Threat: ${detailedStats.threat || roleInfo.baseThreat}</div>
             </div>
 
             <!-- Mana / Ult Readiness -->
@@ -522,6 +753,11 @@ function renderSegmentedGauge(activeSegments = 5, totalSegments = 10) {
 
 function attachEventListeners(container) {
   // Mode switcher
+  document.getElementById('btn-mode-formation')?.addEventListener('click', () => {
+    activeViewMode = 'formation';
+    renderPartyView(container);
+  });
+
   document.getElementById('btn-mode-showcase')?.addEventListener('click', () => {
     activeViewMode = 'showcase';
     renderPartyView(container);
@@ -530,6 +766,45 @@ function attachEventListeners(container) {
   document.getElementById('btn-mode-roster')?.addEventListener('click', () => {
     activeViewMode = 'roster';
     renderPartyView(container);
+  });
+
+  // Auto-align formation action
+  document.getElementById('btn-auto-align-formation')?.addEventListener('click', () => {
+    try {
+      gameState.autoFormatParty();
+      audioManager.playSfx('success');
+      renderPartyView(container);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // Tap-to-move/swap 3x3 formation grid tiles
+  container.querySelectorAll('[data-formation-slot]').forEach(tile => {
+    tile.addEventListener('click', (e) => {
+      const slotId = e.currentTarget.getAttribute('data-formation-slot');
+      if (!selectedSlotForSwap) {
+        // Select this slot as source
+        selectedSlotForSwap = slotId;
+        audioManager.playSfx('tap');
+        renderPartyView(container);
+      } else if (selectedSlotForSwap === slotId) {
+        // Deselect on tap again
+        selectedSlotForSwap = null;
+        renderPartyView(container);
+      } else {
+        // Attempt swap/move
+        const sourceSlot = selectedSlotForSwap;
+        selectedSlotForSwap = null;
+        try {
+          gameState.swapFormationSlots(sourceSlot, slotId);
+          audioManager.playSfx('equip');
+        } catch (err) {
+          alert(err.message);
+        }
+        renderPartyView(container);
+      }
+    });
   });
 
   // Switch selected team member

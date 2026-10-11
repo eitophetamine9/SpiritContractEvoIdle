@@ -1,13 +1,16 @@
 import { gameState, ENERGY_ENTRY_COST } from '../../state/gameState.js';
 import { getBiomeForStage } from '../../data/biomesData.js';
-import { getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
+import { getRarityInfo, SPIRIT_SPECIES, getRoleInfo, FORMATION_SLOTS, FORMATION_COLUMNS } from '../../data/spiritsData.js';
 import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../components/pixelBox.js';
-import { audioManager } from '../../audio/audioManager.js';
+import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
+import { showSpiritModal } from '../components/modals.js';
+import { getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
 let isEventsBound = false;
+let selectedMadnessSlot = null;
 
 export function renderMadnessView(container) {
   const state = gameState.state;
@@ -44,6 +47,7 @@ export function renderMadnessView(container) {
   const isAtFrontierStage = mz.stage === mz.highestStageUnlocked;
   const showUnlockBanner = isAtFrontierStage && hasClearedHighestUnlocked;
   const livingEnemiesCount = swarm.filter(e => !e.isDefeated && e.hp > 0).length;
+  const formationData = gameState.getPartyFormation();
 
   container.innerHTML = `
     <div class="madness-container ${biome.themeClass}">
@@ -125,65 +129,34 @@ export function renderMadnessView(container) {
         <!-- Floating Bouncing Damage Overlay Layer -->
         <div id="damage-popup-layer" class="damage-popup-layer"></div>
 
-        <!-- Left Side: Staggered Allied Spirit Formation with HP/MP Bars -->
-        <div class="allied-formation-column">
-          <div class="formation-header-label">ALLIED SPIRIT LINEUP</div>
+        <!-- Left Side: Seamless 3x3 Allied Spirit Formation (No Boxes, No Empty Slots) -->
+        <div class="allied-formation-column seamless-allied-column">
           
-          <div class="staggered-party-formation">
-            ${Array.from({ length: 5 }).map((_, idx) => {
-              const spirit = partySpirits[idx];
-              if (!spirit) {
-                return `
-                  <div class="spirit-formation-slot empty-slot" style="--stagger-offset: ${idx * 6}px;">
-                    <div class="empty-slot-marker">+</div>
-                  </div>
-                `;
-              }
-
-              const species = SPIRIT_SPECIES[spirit.speciesId];
-              const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
-              const maxHp = spirit.maxHp || 100;
-              const curHp = typeof spirit.currentHp === 'number' ? spirit.currentHp : maxHp;
-              const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
-              const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
-              const isUltReady = mpPct >= 100;
-              const isFallen = spirit.isFallen || curHp <= 0;
-              const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
-
-              return `
-                <div class="spirit-formation-slot slot-active ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="allied-slot-${idx}" style="--stagger-offset: ${(idx % 2) * 12}px;">
-                  
-                  <!-- Overhead Rarity & Level Floating Badge -->
-                  <div class="overhead-status-bar">
-                    <span class="overhead-rarity" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
-                      ${rarity.name.toUpperCase()}
-                    </span>
-                    <span class="overhead-level">Lv.${spirit.level}</span>
-                  </div>
-
-                  <!-- Spirit Sprite Box with Ground Shadow -->
-                  <div class="spirit-sprite-container">
-                    ${createSpiritPlaceholderBox(spirit, { boxClass: 'formation-spirit-box' })}
-                    ${isUltReady ? '<div class="ult-ready-tag" id="ult-ready-tag-' + idx + '">✨ ULT READY</div>' : ''}
-                    ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
-                    <div class="combat-ground-shadow"></div>
-                  </div>
-
-                  <!-- Dual HP / MP Bars -->
-                  <div class="spirit-hud-bars">
-                    <div class="hud-bar-hp" title="${curHp}/${maxHp} HP ${spirit.shieldHp > 0 ? `(+${spirit.shieldHp} Shield)` : ''}">
-                      <div class="hud-hp-fill" id="spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
-                      ${shieldPct > 0 ? `<div class="hud-shield-fill" id="spirit-shield-fill-${idx}" style="width: ${shieldPct}%;"></div>` : ''}
-                    </div>
-                    <div class="hud-bar-mp" title="${mpPct}/100 MP">
-                      <div class="hud-mp-fill" id="spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
-                    </div>
-                  </div>
-
-                </div>
-              `;
-            }).join('')}
+          <div class="formation-header-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span>ALLIED SQUAD</span>
+            <button id="btn-madness-auto-align" class="btn-madness-quick-action" title="Auto-align squad into optimal role positions">⚡ Auto-Align</button>
           </div>
+
+          <!-- Seamless 3x3 Battlefield Grid: Characters directly in environment -->
+          <div class="madness-tactical-grid madness-seamless-grid">
+            
+            <!-- Column 1: Backline -->
+            <div class="madness-grid-col col-back seamless-grid-col">
+              ${['b1', 'b2', 'b3'].map(slotId => renderSeamlessMadnessSpirit(slotId, formationData.slots[slotId], partySpirits)).filter(Boolean).join('')}
+            </div>
+
+            <!-- Column 2: Midline -->
+            <div class="madness-grid-col col-mid seamless-grid-col">
+              ${['m1', 'm2', 'm3'].map(slotId => renderSeamlessMadnessSpirit(slotId, formationData.slots[slotId], partySpirits)).filter(Boolean).join('')}
+            </div>
+
+            <!-- Column 3: Frontline -->
+            <div class="madness-grid-col col-front seamless-grid-col">
+              ${['f1', 'f2', 'f3'].map(slotId => renderSeamlessMadnessSpirit(slotId, formationData.slots[slotId], partySpirits)).filter(Boolean).join('')}
+            </div>
+
+          </div>
+
         </div>
 
         <!-- Center Combat Clash Point (Animations / Particles) -->
@@ -399,6 +372,62 @@ export function renderMadnessView(container) {
     });
   }
 
+  // Formation Auto-Align button
+  const btnAutoAlign = container.querySelector('#btn-madness-auto-align');
+  if (btnAutoAlign) {
+    btnAutoAlign.addEventListener('click', (e) => {
+      e.stopPropagation();
+      gameState.autoFormatParty();
+      selectedMadnessSlot = null;
+      safePlaySfx('upgrade');
+      showCombatBanner(container, '⚡ Squad auto-aligned to optimal formation!', 'victory');
+      renderMadnessView(container);
+    });
+  }
+
+  // Interactive 3x3 Tile Tap-to-Swap
+  container.querySelectorAll('[data-formation-slot]').forEach(tile => {
+    tile.addEventListener('click', (e) => {
+      if (e.target.closest('.overhead-inspect-btn')) return;
+
+      const slotId = tile.getAttribute('data-formation-slot');
+      if (!slotId) return;
+
+      if (!selectedMadnessSlot) {
+        selectedMadnessSlot = slotId;
+        safePlaySfx('click');
+        renderMadnessView(container);
+      } else if (selectedMadnessSlot === slotId) {
+        selectedMadnessSlot = null;
+        safePlaySfx('click');
+        renderMadnessView(container);
+      } else {
+        try {
+          gameState.swapFormationSlots(selectedMadnessSlot, slotId);
+          selectedMadnessSlot = null;
+          safePlaySfx('click');
+          renderMadnessView(container);
+        } catch (err) {
+          showCombatBanner(container, `⚠️ ${err.message}`, 'wipe');
+          selectedMadnessSlot = null;
+          renderMadnessView(container);
+        }
+      }
+    });
+  });
+
+  // Spirit Quick Inspect Modal
+  container.querySelectorAll('.overhead-inspect-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const spiritId = btn.getAttribute('data-inspect-spirit');
+      const spirit = gameState.state.spirits.find(s => s.id === spiritId);
+      if (spirit) {
+        showSpiritModal(spirit, () => renderMadnessView(container));
+      }
+    });
+  });
+
   // Hook global combat listeners once with strict container guard
   if (!isEventsBound) {
     isEventsBound = true;
@@ -411,17 +440,32 @@ export function renderMadnessView(container) {
       if (!hasMadnessContainer) return;
 
       if (eventType === 'ultimateCast') {
-        showCombatBanner(currentContainer, `✨ ${payload.spirit.customName} casts ${payload.ult.name}!`, 'ult');
+        const role = payload.spirit?.role;
+        const bannerType = role === 'TANK' ? 'wipe' : 'ult';
+        const roleIcon = role === 'TANK' ? '🛡️' : (role === 'HEALER' ? '💚' : '✨');
+        showCombatBanner(currentContainer, `${roleIcon} ${payload.spirit.customName} casts ${payload.ult.name}!`, bannerType);
         arenaRenderer.triggerUltimatePulse('#ffd700');
         if (payload.totalDamageDealt > 0) {
-          spawnCombatNumber(currentContainer, `${payload.totalDamageDealt} ULT!`, 'ult');
+          const critText = payload.isCrit ? 'CRIT ' : '';
+          spawnCombatNumber(currentContainer, `${critText}${payload.totalDamageDealt} ULT!`, 'ult');
           arenaRenderer.spawnDamagePopup(null, null, payload.totalDamageDealt, true);
         }
         if (payload.totalHealingDone > 0) {
           spawnCombatNumber(currentContainer, `+${payload.totalHealingDone} HP`, 'heal');
         }
+        if (payload.tauntActivated) {
+          spawnCombatNumber(currentContainer, `TAUNT LOCK (6s)!`, 'heal');
+        }
       } else if (eventType === 'enemyCounterAttack') {
-        spawnCombatNumber(currentContainer, `-${payload.damage}`, 'enemy-hit');
+        if (payload.isTauntedTarget) {
+          spawnCombatNumber(currentContainer, `TAUNTED! -${payload.damage}`, 'enemy-hit');
+        } else if (payload.defMitigated > 0) {
+          spawnCombatNumber(currentContainer, `-${payload.damage} (DEF -${payload.defMitigated})`, 'enemy-hit');
+        } else {
+          spawnCombatNumber(currentContainer, `-${payload.damage}`, 'enemy-hit');
+        }
+      } else if (eventType === 'spiritEvaded') {
+        spawnCombatNumber(currentContainer, `DODGE!`, 'heal');
       } else if (eventType === 'partyWiped') {
         showCombatBanner(currentContainer, '💀 PARTY WIPED! Regrouping at Wave 1 with 100% HP restored...', 'wipe');
         setTimeout(() => {
@@ -522,6 +566,28 @@ export function updateMadnessCombatTick(container) {
       } else {
         slot.classList.remove('spirit-fallen');
       }
+
+      // 3. Dynamic Taunt Status Tracking
+      const isTaunting = (spirit.tauntTimer || 0) > 0;
+      if (isTaunting) {
+        slot.classList.add('taunt-active');
+        let tauntTag = slot.querySelector('.taunt-active-tag');
+        if (!tauntTag) {
+          const spriteContainer = slot.querySelector('.spirit-sprite-container');
+          if (spriteContainer) {
+            tauntTag = document.createElement('div');
+            tauntTag.className = 'taunt-active-tag';
+            tauntTag.textContent = '🛡️ TAUNT';
+            spriteContainer.prepend(tauntTag);
+          }
+        }
+      } else {
+        slot.classList.remove('taunt-active');
+        const tauntTag = slot.querySelector('.taunt-active-tag');
+        if (tauntTag && tauntTag.parentNode) {
+          tauntTag.parentNode.removeChild(tauntTag);
+        }
+      }
     }
   });
 
@@ -543,4 +609,67 @@ export function updateMadnessCombatTick(container) {
       }
     }
   });
+}
+
+/**
+ * Renders an individual seamless spirit on the Madness battlefield.
+ * Only the animated asset, name, and level are shown. No card boxes, no borders, no empty slots.
+ */
+function renderSeamlessMadnessSpirit(slotId, slotData, partySpirits) {
+  const spirit = slotData?.spirit;
+  if (!spirit) return ''; // Empty slots are omitted completely!
+
+  const idx = partySpirits.findIndex(s => s && s.id === spirit.id);
+  const species = SPIRIT_SPECIES[spirit.speciesId];
+  const maxHp = spirit.maxHp || 100;
+  const curHp = typeof spirit.currentHp === 'number' ? spirit.currentHp : maxHp;
+  const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+  const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
+  const isUltReady = mpPct >= 100;
+  const isFallen = spirit.isFallen || curHp <= 0;
+  const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
+  const isTaunting = (spirit.tauntTimer || 0) > 0;
+  const sheetKey = getSheetKeyForSpecies(species ? species.id : null);
+  const glyph = species ? (species.avatarEmoji || '✨') : '✨';
+  const isSelected = selectedMadnessSlot === slotId;
+
+  return `
+    <div class="spirit-formation-slot seamless-battle-spirit ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''} ${isTaunting ? 'taunt-active' : ''} ${isSelected ? 'seamless-slot-selected' : ''}" 
+         id="allied-slot-${idx >= 0 ? idx : slotId}" 
+         data-formation-slot="${slotId}" 
+         data-spirit-id="${spirit.id}" 
+         style="grid-row: ${slotId[1] || '1'};"
+         title="${spirit.customName} [${slotId.toUpperCase()}] • Lv.${spirit.level}">
+
+      <!-- Name & Level Only (Seamless Overhead) -->
+      <div class="seamless-overhead-tag">
+        <span class="seamless-spirit-name" title="${spirit.customName}">${spirit.customName}</span>
+        <span class="seamless-spirit-level">Lv.${spirit.level}</span>
+      </div>
+
+      <!-- Animated Creature Asset Only (No Card Box, No Border) -->
+      <div class="spirit-sprite-container seamless-sprite-container">
+        ${isTaunting ? '<div class="taunt-active-tag">🛡️ TAUNT</div>' : ''}
+        <div class="animated-pixel-sprite sprite-${sheetKey}" style="--sprite-sheet: url('/assets/sprites/creatures/${sheetKey}.svg');">
+          <div class="sprite-frame-viewer"></div>
+          <span class="core-glyph-fallback" style="display: none;">${glyph}</span>
+        </div>
+        ${isUltReady ? `<div class="ult-ready-tag" id="ult-ready-tag-${idx}">✨ ULT</div>` : ''}
+        ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
+        <div class="combat-ground-shadow"></div>
+      </div>
+
+      <!-- Slim Floating HP & MP Bars -->
+      <div class="spirit-hud-bars seamless-hud-bars">
+        <div class="hud-bar-hp" title="${curHp}/${maxHp} HP ${spirit.shieldHp > 0 ? `(+${spirit.shieldHp} Shield)` : ''}">
+          <div class="hud-hp-fill" id="spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
+          ${shieldPct > 0 ? `<div class="hud-shield-fill" id="spirit-shield-fill-${idx}" style="width: ${shieldPct}%;"></div>` : ''}
+        </div>
+        <div class="hud-bar-mp" title="${mpPct}/100 MP">
+          <div class="hud-mp-fill" id="spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
+        </div>
+      </div>
+
+    </div>
+  `;
 }

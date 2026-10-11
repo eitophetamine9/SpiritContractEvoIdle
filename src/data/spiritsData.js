@@ -28,6 +28,229 @@ export function getRarityInfo(rarity) {
 }
 
 /**
+ * 5 Tactical Spirit Roles & Targeting Profiles
+ */
+export const ROLES = {
+  MAIN_DPS: {
+    id: 'MAIN_DPS',
+    name: 'Main DPS',
+    title: 'Executioner & Frontline Cleaver',
+    icon: '⚔️',
+    color: '#ff4757',
+    bg: 'rgba(255, 71, 87, 0.15)',
+    border: '#ff4757',
+    optimalColumn: 'back_or_mid',
+    optimalColumnLabel: 'Backline / Midline',
+    baseThreat: 50,
+    desc: 'High ATK, Crit Rate & execution burst. Deals devastating boss and single-target damage.'
+  },
+  SUB_DPS: {
+    id: 'SUB_DPS',
+    name: 'Sub-DPS',
+    title: 'Elemental Flanker & Cleaver',
+    icon: '🗡️',
+    color: '#ffa502',
+    bg: 'rgba(255, 165, 2, 0.15)',
+    border: '#ffa502',
+    optimalColumn: 'mid',
+    optimalColumnLabel: 'Midline',
+    baseThreat: 85,
+    desc: 'High Attack Cadence, multi-target cleaves, poison/DoT, and armor shred.'
+  },
+  TANK: {
+    id: 'TANK',
+    name: 'Tank (Guardian)',
+    title: 'Vanguard Bulwark & Protector',
+    icon: '🛡️',
+    color: '#1e90ff',
+    bg: 'rgba(30, 144, 255, 0.15)',
+    border: '#1e90ff',
+    optimalColumn: 'front',
+    optimalColumnLabel: 'Frontline',
+    baseThreat: 220,
+    desc: 'Massive HP, high Armor, and innate Taunt. Intercepts incoming blows to protect the squad.'
+  },
+  SUPPORT: {
+    id: 'SUPPORT',
+    name: 'Support',
+    title: 'Tactical Buffer & Energy Battery',
+    icon: '🪄',
+    color: '#9b59b6',
+    bg: 'rgba(155, 89, 182, 0.15)',
+    border: '#9b59b6',
+    optimalColumn: 'mid_or_back',
+    optimalColumnLabel: 'Midline / Backline',
+    baseThreat: 60,
+    desc: 'Accelerates party Mana replenishment, amplifies damage, and bestows squad shields.'
+  },
+  HEALER: {
+    id: 'HEALER',
+    name: 'Healer',
+    title: 'Restorer of Vitality & Life Bloom',
+    icon: '💚',
+    color: '#2ed573',
+    bg: 'rgba(46, 213, 115, 0.15)',
+    border: '#2ed573',
+    optimalColumn: 'back',
+    optimalColumnLabel: 'Backline',
+    baseThreat: 35,
+    desc: 'Sustained party regeneration, emergency burst heals, revives, and protective barriers.'
+  }
+};
+
+/**
+ * Normalized stat weighting multipliers per role
+ */
+export const ROLE_STAT_WEIGHTS = {
+  MAIN_DPS: { atkMult: 1.35, defMult: 0.75, hpMult: 0.85, spdBase: 1.05, critRate: 14, critDmg: 165, threat: 50 },
+  SUB_DPS:  { atkMult: 1.15, defMult: 0.85, hpMult: 0.95, spdBase: 1.25, critRate: 10, critDmg: 150, threat: 85 },
+  TANK:     { atkMult: 0.65, defMult: 1.60, hpMult: 1.55, spdBase: 0.85, critRate: 5,  critDmg: 130, threat: 220 },
+  SUPPORT:  { atkMult: 0.85, defMult: 1.00, hpMult: 1.05, spdBase: 1.15, critRate: 6,  critDmg: 140, threat: 60 },
+  HEALER:   { atkMult: 0.75, defMult: 1.10, hpMult: 1.15, spdBase: 1.00, critRate: 5,  critDmg: 140, threat: 35 }
+};
+
+export function getRoleInfo(roleKey) {
+  const key = (roleKey || 'MAIN_DPS').toUpperCase();
+  return ROLES[key] || ROLES.MAIN_DPS;
+}
+
+export function getSpiritRole(speciesOrId) {
+  if (!speciesOrId) return 'MAIN_DPS';
+  if (typeof speciesOrId === 'string') {
+    const sp = SPIRIT_SPECIES[speciesOrId];
+    return sp ? (sp.role || 'MAIN_DPS') : 'MAIN_DPS';
+  }
+  return speciesOrId.role || (SPIRIT_SPECIES[speciesOrId.speciesId]?.role || 'MAIN_DPS');
+}
+
+/**
+ * 3x3 Tactical Formation Grid Specifications
+ * Layout: 3 Columns x 3 Rows
+ * - Backline (Column 0): Max 1 spirit (Furthest back - Sniper / Main DPS / Healer Anchor)
+ * - Midline (Column 1): 2 to 3 spirits (Middle flex - Sub-DPS, Supports)
+ * - Frontline (Column 2): 1 to 2 spirits (Front vanguard - Tanks, Bruisers)
+ */
+export const FORMATION_SLOTS = {
+  b1: { id: 'b1', col: 'back', row: 0, label: 'Backline Top', defaultRole: 'HEALER' },
+  b2: { id: 'b2', col: 'back', row: 1, label: 'Backline Center', defaultRole: 'MAIN_DPS' },
+  b3: { id: 'b3', col: 'back', row: 2, label: 'Backline Bottom', defaultRole: 'HEALER' },
+
+  m1: { id: 'm1', col: 'mid', row: 0, label: 'Midline Top', defaultRole: 'SUB_DPS' },
+  m2: { id: 'm2', col: 'mid', row: 1, label: 'Midline Center', defaultRole: 'SUPPORT' },
+  m3: { id: 'm3', col: 'mid', row: 2, label: 'Midline Bottom', defaultRole: 'SUB_DPS' },
+
+  f1: { id: 'f1', col: 'front', row: 0, label: 'Frontline Top', defaultRole: 'TANK' },
+  f2: { id: 'f2', col: 'front', row: 1, label: 'Frontline Center', defaultRole: 'TANK' },
+  f3: { id: 'f3', col: 'front', row: 2, label: 'Frontline Bottom', defaultRole: 'TANK' }
+};
+
+export const FORMATION_COLUMNS = {
+  back: {
+    id: 'back',
+    name: 'Backline',
+    icon: '🎯',
+    slots: ['b1', 'b2', 'b3'],
+    minUnits: 0,
+    maxUnits: 1,
+    threatMultiplier: 0.5,
+    perkName: 'Sanctuary Perk',
+    perkDesc: '+15% ATK & Healing Potency, -50% threat footprint',
+    atkBonusPercent: 15,
+    healBonusPercent: 15,
+    defBonusPercent: 0
+  },
+  mid: {
+    id: 'mid',
+    name: 'Midline',
+    icon: '⚡',
+    slots: ['m1', 'm2', 'm3'],
+    minUnits: 0,
+    maxUnits: 3,
+    threatMultiplier: 1.0,
+    perkName: 'Flank Perk',
+    perkDesc: 'Balanced cadence & flexible synergy',
+    atkBonusPercent: 0,
+    healBonusPercent: 0,
+    defBonusPercent: 0
+  },
+  front: {
+    id: 'front',
+    name: 'Frontline',
+    icon: '🛡️',
+    slots: ['f1', 'f2', 'f3'],
+    minUnits: 0,
+    maxUnits: 2,
+    threatMultiplier: 2.0,
+    perkName: 'Vanguard Perk',
+    perkDesc: '+15% Armor/DEF, 2.0x threat aggro draw',
+    atkBonusPercent: 0,
+    healBonusPercent: 0,
+    defBonusPercent: 15
+  }
+};
+
+/**
+ * Validates a formation slot mapping object { b1: id, b2: null, ... }
+ */
+export function validateFormationGrid(formation) {
+  if (!formation || typeof formation !== 'object') {
+    return { valid: false, error: 'Invalid formation object' };
+  }
+
+  let backCount = 0;
+  let midCount = 0;
+  let frontCount = 0;
+  let totalCount = 0;
+  const seenSpirits = new Set();
+
+  for (const [slotId, spiritId] of Object.entries(formation)) {
+    if (!spiritId) continue;
+    if (seenSpirits.has(spiritId)) {
+      return { valid: false, error: `Duplicate spirit ${spiritId} positioned in multiple slots` };
+    }
+    seenSpirits.add(spiritId);
+    totalCount++;
+
+    const slotDef = FORMATION_SLOTS[slotId];
+    if (!slotDef) {
+      return { valid: false, error: `Unknown formation slot "${slotId}"` };
+    }
+
+    if (slotDef.col === 'back') backCount++;
+    else if (slotDef.col === 'mid') midCount++;
+    else if (slotDef.col === 'front') frontCount++;
+  }
+
+  if (backCount > 1) {
+    return { valid: false, error: `Backline can only hold at most 1 spirit (currently ${backCount})` };
+  }
+  if (frontCount > 2) {
+    return { valid: false, error: `Frontline can only hold at most 2 spirits (currently ${frontCount})` };
+  }
+  if (midCount > 3) {
+    return { valid: false, error: `Midline can only hold at most 3 spirits (currently ${midCount})` };
+  }
+
+  // Full squad check (when party has 5 members)
+  if (totalCount === 5) {
+    if (backCount !== 1) {
+      return { valid: false, error: 'Full 5-member party requires exactly 1 spirit in the Backline' };
+    }
+    if (midCount < 2 || midCount > 3) {
+      return { valid: false, error: `Full 5-member party requires 2 or 3 in Midline (currently ${midCount})` };
+    }
+    if (frontCount < 1 || frontCount > 2) {
+      return { valid: false, error: `Full 5-member party requires 1 or 2 in Frontline (currently ${frontCount})` };
+    }
+  }
+
+  return {
+    valid: true,
+    counts: { back: backCount, mid: midCount, front: frontCount, total: totalCount }
+  };
+}
+
+/**
  * Elemental Affinity Matrix:
  * Fire beats Earth, Earth beats Wind, Wind beats Water, Water beats Fire.
  * Light and Void (Dark) have mutual celestial opposition (+30%).
@@ -127,6 +350,7 @@ export const SPIRIT_SPECIES = {
     name: 'Cat Spirit',
     baseRarity: 'COMMON',
     element: 'WIND',
+    role: 'SUB_DPS',
     tier: 1,
     levelCap: 10,
     basePower: 12,
@@ -144,6 +368,7 @@ export const SPIRIT_SPECIES = {
     name: 'Dog Spirit',
     baseRarity: 'COMMON',
     element: 'EARTH',
+    role: 'TANK',
     tier: 1,
     levelCap: 10,
     basePower: 13,
@@ -161,6 +386,7 @@ export const SPIRIT_SPECIES = {
     name: 'Chicken Spirit',
     baseRarity: 'COMMON',
     element: 'FIRE',
+    role: 'MAIN_DPS',
     tier: 1,
     levelCap: 10,
     basePower: 11,
@@ -178,6 +404,7 @@ export const SPIRIT_SPECIES = {
     name: 'Caterpillar Spirit',
     baseRarity: 'COMMON',
     element: 'EARTH',
+    role: 'HEALER',
     tier: 1,
     levelCap: 10,
     basePower: 10,
@@ -199,6 +426,7 @@ export const SPIRIT_SPECIES = {
     name: 'Bull Spirit',
     baseRarity: 'UNCOMMON',
     element: 'EARTH',
+    role: 'TANK',
     tier: 1,
     levelCap: 15,
     basePower: 20,
@@ -217,6 +445,7 @@ export const SPIRIT_SPECIES = {
     name: 'Lizard Spirit',
     baseRarity: 'UNCOMMON',
     element: 'WATER',
+    role: 'SUB_DPS',
     tier: 1,
     levelCap: 15,
     basePower: 19,
@@ -235,6 +464,7 @@ export const SPIRIT_SPECIES = {
     name: 'Python Spirit',
     baseRarity: 'UNCOMMON',
     element: 'DARK',
+    role: 'SUB_DPS',
     tier: 1,
     levelCap: 15,
     basePower: 21,
@@ -257,6 +487,7 @@ export const SPIRIT_SPECIES = {
     name: 'Shark Spirit',
     baseRarity: 'RARE',
     element: 'WATER',
+    role: 'MAIN_DPS',
     tier: 1,
     levelCap: 20,
     basePower: 32,
@@ -275,6 +506,7 @@ export const SPIRIT_SPECIES = {
     name: 'Bear Spirit',
     baseRarity: 'RARE',
     element: 'EARTH',
+    role: 'TANK',
     tier: 1,
     levelCap: 20,
     basePower: 34,
@@ -297,6 +529,7 @@ export const SPIRIT_SPECIES = {
     name: 'Wisp Spirit',
     baseRarity: 'EPIC',
     element: 'LIGHT',
+    role: 'SUPPORT',
     tier: 1,
     levelCap: 25,
     basePower: 50,
@@ -317,6 +550,7 @@ export const SPIRIT_SPECIES = {
     name: 'Fallen Warrior Spirit',
     baseRarity: 'LEGENDARY',
     element: 'DARK',
+    role: 'MAIN_DPS',
     tier: 1,
     levelCap: 30,
     basePower: 95,
@@ -340,6 +574,7 @@ export const SPIRIT_SPECIES = {
     name: 'Furious Cat',
     baseRarity: 'UNCOMMON',
     element: 'WIND',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 35,
     basePower: 32,
@@ -354,6 +589,7 @@ export const SPIRIT_SPECIES = {
     name: 'Elemental Cat',
     baseRarity: 'EPIC',
     element: 'LIGHT',
+    role: 'SUPPORT',
     tier: 2,
     levelCap: 40,
     basePower: 58,
@@ -370,6 +606,7 @@ export const SPIRIT_SPECIES = {
     name: 'Vitality Dog',
     baseRarity: 'UNCOMMON',
     element: 'EARTH',
+    role: 'HEALER',
     tier: 2,
     levelCap: 35,
     basePower: 33,
@@ -384,6 +621,7 @@ export const SPIRIT_SPECIES = {
     name: 'Guardian Dog',
     baseRarity: 'EPIC',
     element: 'LIGHT',
+    role: 'TANK',
     tier: 2,
     levelCap: 40,
     basePower: 60,
@@ -400,6 +638,7 @@ export const SPIRIT_SPECIES = {
     name: 'Battle Chicken',
     baseRarity: 'UNCOMMON',
     element: 'FIRE',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 35,
     basePower: 34,
@@ -414,6 +653,7 @@ export const SPIRIT_SPECIES = {
     name: 'Dino Genus Chicken',
     baseRarity: 'LEGENDARY',
     element: 'FIRE',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 45,
     basePower: 115,
@@ -430,6 +670,7 @@ export const SPIRIT_SPECIES = {
     name: 'Elegant Butterfly',
     baseRarity: 'UNCOMMON',
     element: 'WIND',
+    role: 'HEALER',
     tier: 2,
     levelCap: 35,
     basePower: 33,
@@ -444,6 +685,7 @@ export const SPIRIT_SPECIES = {
     name: 'Mystical Butterfly',
     baseRarity: 'LEGENDARY',
     element: 'LIGHT',
+    role: 'HEALER',
     tier: 2,
     levelCap: 45,
     basePower: 118,
@@ -460,6 +702,7 @@ export const SPIRIT_SPECIES = {
     name: 'Raging Bull',
     baseRarity: 'UNCOMMON',
     element: 'FIRE',
+    role: 'TANK',
     tier: 2,
     levelCap: 35,
     basePower: 45,
@@ -474,6 +717,7 @@ export const SPIRIT_SPECIES = {
     name: 'Elemental Bull',
     baseRarity: 'EPIC',
     element: 'EARTH',
+    role: 'TANK',
     tier: 2,
     levelCap: 40,
     basePower: 70,
@@ -488,6 +732,7 @@ export const SPIRIT_SPECIES = {
     name: 'Minotaur',
     baseRarity: 'MYTHICAL',
     element: 'FIRE',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 50,
     basePower: 145,
@@ -504,6 +749,7 @@ export const SPIRIT_SPECIES = {
     name: 'Multi-venom Lizard',
     baseRarity: 'UNCOMMON',
     element: 'EARTH',
+    role: 'SUB_DPS',
     tier: 2,
     levelCap: 35,
     basePower: 44,
@@ -518,6 +764,7 @@ export const SPIRIT_SPECIES = {
     name: 'Komodo Dragon',
     baseRarity: 'EPIC',
     element: 'WATER',
+    role: 'TANK',
     tier: 2,
     levelCap: 40,
     basePower: 68,
@@ -532,6 +779,7 @@ export const SPIRIT_SPECIES = {
     name: 'Drake',
     baseRarity: 'MYTHICAL',
     element: 'FIRE',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 50,
     basePower: 148,
@@ -548,6 +796,7 @@ export const SPIRIT_SPECIES = {
     name: 'HighLord Python',
     baseRarity: 'UNCOMMON',
     element: 'DARK',
+    role: 'SUB_DPS',
     tier: 2,
     levelCap: 35,
     basePower: 45,
@@ -562,6 +811,7 @@ export const SPIRIT_SPECIES = {
     name: 'Huge Albino Anaconda',
     baseRarity: 'EPIC',
     element: 'LIGHT',
+    role: 'TANK',
     tier: 2,
     levelCap: 40,
     basePower: 70,
@@ -576,6 +826,7 @@ export const SPIRIT_SPECIES = {
     name: 'Wyrm',
     baseRarity: 'MYTHICAL',
     element: 'DARK',
+    role: 'SUB_DPS',
     tier: 2,
     levelCap: 50,
     basePower: 150,
@@ -592,6 +843,7 @@ export const SPIRIT_SPECIES = {
     name: 'Great White Shark',
     baseRarity: 'EPIC',
     element: 'WATER',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 40,
     basePower: 82,
@@ -606,6 +858,7 @@ export const SPIRIT_SPECIES = {
     name: 'Megalodon',
     baseRarity: 'MYTHICAL',
     element: 'WATER',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 50,
     basePower: 165,
@@ -620,6 +873,7 @@ export const SPIRIT_SPECIES = {
     name: 'Cosmic Oceanic Devourer',
     baseRarity: 'TRANSCENDENT',
     element: 'WATER',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 60,
     basePower: 295,
@@ -636,6 +890,7 @@ export const SPIRIT_SPECIES = {
     name: 'HighLord Bear',
     baseRarity: 'EPIC',
     element: 'EARTH',
+    role: 'TANK',
     tier: 2,
     levelCap: 40,
     basePower: 84,
@@ -650,6 +905,7 @@ export const SPIRIT_SPECIES = {
     name: 'Bear of Dreams',
     baseRarity: 'MYTHICAL',
     element: 'LIGHT',
+    role: 'HEALER',
     tier: 2,
     levelCap: 50,
     basePower: 168,
@@ -664,6 +920,7 @@ export const SPIRIT_SPECIES = {
     name: 'Cosmic Bear Ursalite',
     baseRarity: 'TRANSCENDENT',
     element: 'EARTH',
+    role: 'TANK',
     tier: 2,
     levelCap: 60,
     basePower: 300,
@@ -680,6 +937,7 @@ export const SPIRIT_SPECIES = {
     name: 'High Elf',
     baseRarity: 'MYTHICAL',
     element: 'LIGHT',
+    role: 'HEALER',
     tier: 2,
     levelCap: 50,
     basePower: 185,
@@ -696,6 +954,7 @@ export const SPIRIT_SPECIES = {
     name: 'Sovereign Warrior',
     baseRarity: 'MYTHICAL',
     element: 'DARK',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 50,
     basePower: 210,
@@ -710,6 +969,7 @@ export const SPIRIT_SPECIES = {
     name: 'DreadLord Warrior',
     baseRarity: 'TRANSCENDENT',
     element: 'DARK',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 60,
     basePower: 360,
@@ -728,6 +988,7 @@ export const SPIRIT_SPECIES = {
     name: 'Solaris, Lion Sin of Pride',
     baseRarity: 'MYTHICAL',
     element: 'LIGHT',
+    role: 'MAIN_DPS',
     tier: 1,
     levelCap: 60,
     basePower: 260,
@@ -744,6 +1005,7 @@ export const SPIRIT_SPECIES = {
     name: 'Solaris, The One Ultimate',
     baseRarity: 'TRANSCENDENT',
     element: 'LIGHT',
+    role: 'MAIN_DPS',
     tier: 2,
     levelCap: 100,
     basePower: 450,
@@ -758,6 +1020,7 @@ export const SPIRIT_SPECIES = {
     name: 'Gelda, Thousand Ashes Empress',
     baseRarity: 'MYTHICAL',
     element: 'DARK',
+    role: 'SUB_DPS',
     tier: 1,
     levelCap: 60,
     basePower: 250,
@@ -774,6 +1037,7 @@ export const SPIRIT_SPECIES = {
     name: 'Gelda, Sanguine Sovereign',
     baseRarity: 'TRANSCENDENT',
     element: 'DARK',
+    role: 'SUB_DPS',
     tier: 2,
     levelCap: 100,
     basePower: 440,
@@ -788,6 +1052,7 @@ export const SPIRIT_SPECIES = {
     name: 'Astraea, Star-Forged Valkyrie',
     baseRarity: 'LEGENDARY',
     element: 'WIND',
+    role: 'SUPPORT',
     tier: 1,
     levelCap: 50,
     basePower: 160,
@@ -804,6 +1069,7 @@ export const SPIRIT_SPECIES = {
     name: 'Astraea, Celestial Queen',
     baseRarity: 'MYTHICAL',
     element: 'WIND',
+    role: 'SUPPORT',
     tier: 2,
     levelCap: 80,
     basePower: 280,
@@ -818,6 +1084,7 @@ export const SPIRIT_SPECIES = {
     name: 'Leviathan, Tidal Behemoth',
     baseRarity: 'LEGENDARY',
     element: 'WATER',
+    role: 'TANK',
     tier: 1,
     levelCap: 50,
     basePower: 155,
@@ -834,6 +1101,7 @@ export const SPIRIT_SPECIES = {
     name: 'Leviathan, Primordial Ocean',
     baseRarity: 'MYTHICAL',
     element: 'WATER',
+    role: 'TANK',
     tier: 2,
     levelCap: 80,
     basePower: 275,
@@ -848,6 +1116,7 @@ export const SPIRIT_SPECIES = {
     name: 'Baphomet, Nether Voidbinder',
     baseRarity: 'EPIC',
     element: 'DARK',
+    role: 'SUB_DPS',
     tier: 1,
     levelCap: 40,
     basePower: 110,
@@ -864,6 +1133,7 @@ export const SPIRIT_SPECIES = {
     name: 'Baphomet, Archdemon Overlord',
     baseRarity: 'LEGENDARY',
     element: 'DARK',
+    role: 'SUB_DPS',
     tier: 2,
     levelCap: 60,
     basePower: 175,
@@ -1135,6 +1405,55 @@ export function calculateSpiritMaxHp(species, level, rarityName, ascensionLevel 
   const lvlMult = 1 + (level - 1) * 0.22;
   const ascMult = 1 + (ascensionLevel || 0) * 0.12;
   return Math.max(80, Math.round(species.basePower * 12 * lvlMult * rarityObj.multiplier * ascMult));
+}
+
+/**
+ * Calculates in-depth combat attributes (ATK, DEF, HP, SPD, CRIT%, Threat) based on role and progression
+ */
+export function calculateSpiritStats(speciesOrSpirit, level = 1, rarityName = null, ascensionLevel = 0) {
+  if (!speciesOrSpirit) return null;
+  const species = typeof speciesOrSpirit === 'string'
+    ? SPIRIT_SPECIES[speciesOrSpirit]
+    : (speciesOrSpirit.speciesId ? SPIRIT_SPECIES[speciesOrSpirit.speciesId] : speciesOrSpirit);
+  if (!species) return null;
+
+  const actualLevel = typeof speciesOrSpirit === 'object' && speciesOrSpirit.level ? speciesOrSpirit.level : level;
+  const actualAscension = typeof speciesOrSpirit === 'object' && speciesOrSpirit.ascensionLevel !== undefined
+    ? speciesOrSpirit.ascensionLevel
+    : ascensionLevel;
+  const rawRarity = (typeof speciesOrSpirit === 'object' && speciesOrSpirit.rarity)
+    ? speciesOrSpirit.rarity
+    : (rarityName || species.baseRarity || 'COMMON');
+
+  const rarityObj = RARITIES[rawRarity.toUpperCase()] || RARITIES.COMMON;
+  const roleKey = species.role || 'MAIN_DPS';
+  const roleInfo = ROLES[roleKey] || ROLES.MAIN_DPS;
+  const weights = ROLE_STAT_WEIGHTS[roleKey] || ROLE_STAT_WEIGHTS.MAIN_DPS;
+
+  const lvlMult = 1 + (actualLevel - 1) * (species.growthRate || 0.18);
+  const ascMult = 1 + (actualAscension || 0) * 0.12;
+
+  const atk = Math.max(5, Math.round(species.basePower * weights.atkMult * lvlMult * rarityObj.multiplier * ascMult));
+  const def = Math.max(3, Math.round((species.basePower * 0.75) * weights.defMult * (1 + (actualLevel - 1) * 0.16) * rarityObj.multiplier * ascMult));
+  const maxHp = Math.max(80, Math.round(species.basePower * 12 * weights.hpMult * (1 + (actualLevel - 1) * 0.22) * rarityObj.multiplier * ascMult));
+  const spd = parseFloat((weights.spdBase * (1 + (actualLevel - 1) * 0.005)).toFixed(2));
+  const critRate = Math.min(60, weights.critRate + Math.floor(actualLevel / 10));
+  const critDmg = weights.critDmg + Math.floor(actualLevel / 5);
+  const threat = Math.round(weights.threat * (1 + (actualLevel - 1) * 0.02));
+  const power = Math.max(1, Math.round(species.basePower * lvlMult * rarityObj.multiplier * ascMult));
+
+  return {
+    role: roleKey,
+    roleInfo,
+    atk,
+    def,
+    maxHp,
+    spd,
+    critRate,
+    critDmg,
+    threat,
+    power
+  };
 }
 
 /**

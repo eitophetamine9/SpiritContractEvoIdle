@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .c-armor { fill: #10b981; }
+      .c-plate { fill: #059669; }
+      .c-gold  { fill: #f59e0b; }
+      .c-dark  { fill: #064e3b; }
+      .c-eye   { fill: #34d399; }
+      .c-white { fill: #ffffff; }
+      .c-hurt  { fill: #ef4444; }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 (Vanguard Stance) -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="42" rx="15" ry="4" fill="rgba(0,0,0,0.3)"/>
+    <rect x="14" y="20" width="20" height="16" rx="3" class="c-armor"/>
+    <rect x="16" y="22" width="16" height="12" class="c-plate"/>
+    <rect x="22" y="10" width="16" height="14" rx="2" class="c-armor"/>
+    <rect x="30" y="15" width="8" height="7" class="c-dark"/>
+    <!-- Floppy Ears -->
+    <polygon points="22,10 18,18 24,14" class="c-dark"/>
+    <!-- Golden Crest -->
+    <polygon points="28,8 30,3 32,8" class="c-gold"/>
+    <rect x="27" y="13" width="3" height="3" class="c-eye"/>
+    <!-- Front Iron Shield Plate -->
+    <rect x="32" y="24" width="6" height="12" rx="1" class="c-gold"/>
+    <rect x="16" y="36" width="5" height="4" class="c-dark"/>
+    <rect x="27" y="36" width="5" height="4" class="c-dark"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Breathe Down) -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="42" rx="16" ry="4" fill="rgba(0,0,0,0.35)"/>
+    <rect x="13" y="21" width="22" height="15" rx="3" class="c-armor"/>
+    <rect x="15" y="23" width="18" height="11" class="c-plate"/>
+    <rect x="22" y="12" width="16" height="13" rx="2" class="c-armor"/>
+    <rect x="30" y="17" width="8" height="6" class="c-dark"/>
+    <polygon points="22,12 18,20 24,16" class="c-dark"/>
+    <polygon points="28,10 30,5 32,10" class="c-gold"/>
+    <rect x="27" y="15" width="3" height="2" class="c-eye"/>
+    <rect x="32" y="25" width="6" height="11" rx="1" class="c-gold"/>
+    <rect x="15" y="36" width="6" height="4" class="c-dark"/>
+    <rect x="27" y="36" width="6" height="4" class="c-dark"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Chest Out / Bulwark) -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="42" rx="14" ry="3.5" fill="rgba(0,0,0,0.25)"/>
+    <rect x="14" y="19" width="20" height="17" rx="3" class="c-armor"/>
+    <rect x="16" y="21" width="16" height="13" class="c-plate"/>
+    <rect x="22" y="9" width="16" height="14" rx="2" class="c-armor"/>
+    <polygon points="28,7 30,2 32,7" class="c-gold"/>
+    <rect x="27" y="12" width="3" height="3" class="c-eye"/>
+    <circle cx="28" cy="13" r="1" class="c-white"/>
+    <rect x="33" y="23" width="6" height="13" rx="1" class="c-gold"/>
+    <rect x="16" y="35" width="5" height="4" class="c-dark"/>
+    <rect x="27" y="35" width="5" height="4" class="c-dark"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Tail Wag) -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="42" rx="15" ry="4" fill="rgba(0,0,0,0.3)"/>
+    <rect x="14" y="20" width="20" height="16" rx="3" class="c-armor"/>
+    <rect x="22" y="10" width="16" height="14" rx="2" class="c-armor"/>
+    <rect x="27" y="13" width="3" height="3" class="c-eye"/>
+    <path d="M14 26 C8 22, 9 14, 15 10" stroke="#10b981" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <polygon points="28,8 30,3 32,8" class="c-gold"/>
+    <rect x="32" y="24" width="6" height="12" rx="1" class="c-gold"/>
+    <rect x="16" y="36" width="5" height="4" class="c-dark"/>
+    <rect x="27" y="36" width="5" height="4" class="c-dark"/>
+  </g>
+
+  <!-- Frame 4: Attack Windup (Shield Brace) -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="22" cy="42" rx="16" ry="4" fill="rgba(0,0,0,0.3)"/>
+    <rect x="16" y="20" width="20" height="16" rx="3" class="c-plate"/>
+    <rect x="20" y="12" width="15" height="13" rx="2" class="c-dark"/>
+    <rect x="26" y="20" width="10" height="16" rx="2" class="c-gold"/>
+    <polygon points="31,23 35,28 31,33" fill="#ffffff"/>
+  </g>
+
+  <!-- Frame 5: Attack Strike (Shield Slam) -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="30" cy="42" rx="18" ry="4" fill="rgba(0,0,0,0.3)"/>
+    <rect x="18" y="19" width="22" height="16" rx="3" class="c-armor"/>
+    <rect x="28" y="11" width="15" height="13" rx="2" class="c-armor"/>
+    <rect x="34" y="18" width="10" height="18" rx="2" class="c-gold"/>
+    <!-- Shockwave Ring -->
+    <ellipse cx="44" cy="28" rx="4" ry="12" fill="none" stroke="#34d399" stroke-width="3"/>
+  </g>
+
+  <!-- Frame 6: Attack Impact (Taunt Roar) -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="28" cy="42" rx="16" ry="4" fill="rgba(0,0,0,0.3)"/>
+    <rect x="16" y="18" width="22" height="16" rx="3" class="c-armor"/>
+    <rect x="25" y="9" width="16" height="14" rx="2" class="c-armor"/>
+    <polygon points="37,13 46,9 43,18" fill="#f59e0b"/>
+    <rect x="33" y="19" width="10" height="17" rx="2" class="c-gold"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Recoil -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="18" cy="42" rx="14" ry="3" fill="rgba(0,0,0,0.2)"/>
+    <rect x="10" y="20" width="20" height="16" rx="3" class="c-hurt"/>
+    <rect x="16" y="11" width="16" height="13" rx="2" class="c-hurt"/>
+    <line x1="20" y1="14" x2="24" y2="18" stroke="#ffffff" stroke-width="2"/>
+    <line x1="24" y1="14" x2="20" y2="18" stroke="#ffffff" stroke-width="2"/>
+  </g>
+</svg>

@@ -1,5 +1,5 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from './pixelBox.js';
-import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel, ASCENSION_CONFIG } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel, ASCENSION_CONFIG, getRoleInfo } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
 import { GREEK_GOD_SETS, RELIC_SLOT_TYPES, getWeaponEnhanceCost, MAX_WEAPON_LEVEL } from '../../data/equipmentData.js';
 import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
@@ -402,6 +402,7 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
     `;
   } else {
     const evolutions = species.evolutions || [];
+    const roleInfo = getRoleInfo(species.role || 'MAIN_DPS');
 
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
@@ -421,9 +422,14 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
               </div>
               
               <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
-                <span class="rarity-pill ${species.baseRarity.toLowerCase()}" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
-                  ${rarity.name.toUpperCase()}
-                </span>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <span class="rarity-pill ${species.baseRarity.toLowerCase()}" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
+                    ${rarity.name.toUpperCase()}
+                  </span>
+                  <span style="font-size: 10px; font-weight: 800; color: ${roleInfo.color}; background: ${roleInfo.bg}; border: 1px solid ${roleInfo.border}; padding: 1px 6px; border-radius: 4px;" title="${roleInfo.name}: ${roleInfo.desc}">
+                    ${roleInfo.icon} ${roleInfo.name}
+                  </span>
+                </div>
                 <div style="display: flex; gap: 8px; font-size: 11px; color: var(--text-moon); font-weight: 700; margin-top: 2px;">
                   <span>Tier ${species.tier || 1}</span>
                   <span>Max Lv: ${species.levelCap}</span>
@@ -1188,6 +1194,10 @@ export function showSpiritModal(spirit, onUpdate) {
     const xpPercent = isCapped ? 100 : Math.min(100, Math.floor((currentSpirit.xp / reqXp) * 100));
     const canEvolve = isCapped && species && species.evolutions && species.evolutions.length > 0;
     const refundShards = 40 * (currentSpirit.tier || 1) + Math.floor((currentSpirit.level || 1) * 3);
+    const roleKey = currentSpirit.role || (species ? species.role : 'MAIN_DPS') || 'MAIN_DPS';
+    const roleInfo = getRoleInfo(roleKey);
+    const combatStats = gameState.getSpiritCombatStats(currentSpirit);
+    const slotId = gameState.getSpiritFormationSlot(currentSpirit.id);
 
     const currentAscLevel = currentSpirit.ascensionLevel || 0;
     const eligibleDups = gameState.getEligibleAscensionDuplicates(currentSpirit.id);
@@ -1227,6 +1237,9 @@ export function showSpiritModal(spirit, onUpdate) {
                   <span class="rarity-pill ${rarity.name.toLowerCase()}" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
                     ${rarity.name.toUpperCase()}
                   </span>
+                  <span style="font-size: 10px; font-weight: 800; color: ${roleInfo.color}; background: ${roleInfo.bg}; border: 1px solid ${roleInfo.border}; padding: 1px 6px; border-radius: 4px;" title="${roleInfo.name}: ${roleInfo.desc}">
+                    ${roleInfo.icon} ${roleInfo.name}
+                  </span>
                   ${isInParty ? '<span style="font-size: 10px; font-weight: 800; background: #27ae60; color: #fff; padding: 2px 6px; border-radius: 4px;">IN PARTY</span>' : '<span style="font-size: 10px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">VAULT RESERVES</span>'}
                 </div>
                 <div style="font-size: 13px; font-weight: 800; color: #fff;">
@@ -1249,6 +1262,55 @@ export function showSpiritModal(spirit, onUpdate) {
               </div>
               <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;">
                 <div style="width: ${xpPercent}%; height: 100%; background: linear-gradient(90deg, #70a1ff, #00d2ff); border-radius: 4px; transition: width 0.3s ease;"></div>
+              </div>
+            </div>
+
+            <!-- Tactical Role & Combat Attributes Card (Phase 5) -->
+            <div style="margin-bottom: 14px; padding: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 11px; font-weight: 800; color: ${roleInfo.color};">
+                    ${roleInfo.icon} ${roleInfo.name}
+                  </span>
+                  <span style="font-size: 10px; color: var(--text-muted);">
+                    ${slotId ? `Grid [${slotId.toUpperCase()}] • ${combatStats ? combatStats.columnPerk || 'Neutral' : ''}` : 'No Formation Slot'}
+                  </span>
+                </div>
+                <span style="font-size: 10px; color: var(--text-moon); font-weight: 700;">
+                  Aggro: ${combatStats ? combatStats.effectiveThreat : 50} (${combatStats ? combatStats.threatMultiplier : 1.0}x)
+                </span>
+              </div>
+
+              <div style="font-size: 10px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.3;">
+                ${roleInfo.desc}
+              </div>
+
+              <!-- Stat Strip Grid -->
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 11px; font-weight: 800;">
+                <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="font-size: 9px; color: var(--text-muted);">HIT POINTS</div>
+                  <div style="color: #ff6b81;">❤️ ${combatStats ? combatStats.maxHp.toLocaleString() : currentSpirit.maxHp}</div>
+                </div>
+                <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="font-size: 9px; color: var(--text-muted);">ARMOR / DEF</div>
+                  <div style="color: #70a1ff;">🛡️ ${combatStats ? combatStats.def : 20}</div>
+                </div>
+                <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="font-size: 9px; color: var(--text-muted);">ATK POWER</div>
+                  <div style="color: #ffd32a;">⚔️ ${combatStats ? combatStats.atk : currentSpirit.power}</div>
+                </div>
+                <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="font-size: 9px; color: var(--text-muted);">CRITICAL RATE</div>
+                  <div style="color: #ff9ff3;">🎯 ${combatStats ? combatStats.critRate : 5}%</div>
+                </div>
+                <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="font-size: 9px; color: var(--text-muted);">CRIT DAMAGE</div>
+                  <div style="color: #feca57;">💥 ${combatStats ? combatStats.critDmg : 150}%</div>
+                </div>
+                <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                  <div style="font-size: 9px; color: var(--text-muted);">HEAL AMPLIFY</div>
+                  <div style="color: #2ed573;">💚 ${combatStats ? Math.round(combatStats.healAmp * 100) : 100}%</div>
+                </div>
               </div>
             </div>
 

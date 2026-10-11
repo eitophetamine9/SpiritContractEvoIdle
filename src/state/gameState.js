@@ -9,9 +9,15 @@ import {
   getXpRequiredForLevel, 
   calculateSpiritPower,
   calculateSpiritMaxHp,
+  calculateSpiritStats,
   getSpiritUltimate,
   getElementalMultiplier,
-  calculatePartyResonance
+  calculatePartyResonance,
+  FORMATION_SLOTS,
+  FORMATION_COLUMNS,
+  validateFormationGrid,
+  getSpiritRole,
+  getRoleInfo
 } from '../data/spiritsData.js';
 import { getEnemyForStage, getSwarmForStage } from '../data/madnessZoneData.js';
 import { 
@@ -235,6 +241,11 @@ class GameStateManager {
       lastTransmutationDate: new Date().toDateString(),
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
+      partyFormation: {
+        b1: null, b2: null, b3: null,
+        m1: null, m2: starterId, m3: null,
+        f1: null, f2: null, f3: null
+      },
       hallOfFame: [starterId], // Max 5 showcase spirits
       discoveredSpeciesIds: [starterSpecies.id], // Spirit Compendium
       madnessZone: {
@@ -449,7 +460,178 @@ class GameStateManager {
       state.party = state.party.slice(0, 5);
     }
 
+    // Ensure partyFormation exists, is sanitized, and matches state.party
+    state.partyFormation = this.sanitizePartyFormation(state.partyFormation, state.party, state.spirits);
+
     return state;
+  }
+
+  /**
+   * Sanitizes and validates the 3x3 tactical grid formation
+   */
+  sanitizePartyFormation(loadedFormation, party = [], spirits = []) {
+    const defaultFormation = {
+      b1: null, b2: null, b3: null,
+      m1: null, m2: null, m3: null,
+      f1: null, f2: null, f3: null
+    };
+
+    if (!Array.isArray(party) || party.length === 0) {
+      return defaultFormation;
+    }
+
+    const clean = { ...defaultFormation };
+    const partySet = new Set(party);
+    const assignedSpirits = new Set();
+
+    if (loadedFormation && typeof loadedFormation === 'object') {
+      for (const [slotId, spiritId] of Object.entries(loadedFormation)) {
+        if (!FORMATION_SLOTS[slotId] || !spiritId) continue;
+        if (partySet.has(spiritId) && !assignedSpirits.has(spiritId)) {
+          clean[slotId] = spiritId;
+          assignedSpirits.add(spiritId);
+        }
+      }
+    }
+
+    // Check if valid and all party members are assigned
+    const validation = validateFormationGrid(clean);
+    const allAssigned = party.every(id => assignedSpirits.has(id));
+
+    if (validation.valid && allAssigned && assignedSpirits.size === party.length) {
+      return clean;
+    }
+
+    // Otherwise, auto-format party into optimal 3x3 grid
+    return this.autoFormatPartyArray(party, spirits);
+  }
+
+  /**
+   * Generates a 100% valid 3x3 tactical formation for a given list of spirit IDs
+   * Adheres to constraints:
+   * - 1 in the furthest back (Backline)
+   * - 2 or 3 in the middle (Midline)
+   * - 1 or 2 in the front (Frontline)
+   */
+  autoFormatPartyArray(party = [], spirits = []) {
+    const formation = {
+      b1: null, b2: null, b3: null,
+      m1: null, m2: null, m3: null,
+      f1: null, f2: null, f3: null
+    };
+
+    if (!Array.isArray(party) || party.length === 0) {
+      return formation;
+    }
+
+    const spiritsCatalog = spirits.length > 0 ? spirits : (this.state?.spirits || []);
+    const partySpirits = party
+      .map(id => spiritsCatalog.find(s => s.id === id))
+      .filter(Boolean);
+
+    if (partySpirits.length === 0) {
+      return formation;
+    }
+
+    // Role categorization
+    const tanks = [];
+    const healers = [];
+    const mainDps = [];
+    const subDps = [];
+    const supports = [];
+
+    for (const spirit of partySpirits) {
+      const role = getSpiritRole(spirit);
+      if (role === 'TANK') tanks.push(spirit);
+      else if (role === 'HEALER') healers.push(spirit);
+      else if (role === 'MAIN_DPS') mainDps.push(spirit);
+      else if (role === 'SUPPORT') supports.push(spirit);
+      else subDps.push(spirit);
+    }
+
+    // 1. Backline (furthest back - max 1 unit):
+    // Prioritize Healer -> Main DPS -> Support -> Sub-DPS -> Tank
+    let backSpirit = healers.shift() || mainDps.shift() || supports.shift() || subDps.shift() || tanks.shift();
+    if (backSpirit) {
+      formation.b2 = backSpirit.id; // Center back anchor
+    }
+
+    // 2. Frontline (front - max 2 units, min 1 unit when full squad):
+    // Prioritize Tanks -> Sub-DPS -> remaining
+    const frontSpirits = [];
+    while (frontSpirits.length < 2 && tanks.length > 0) {
+      frontSpirits.push(tanks.shift());
+    }
+    if (partySpirits.length >= 3 && frontSpirits.length === 0) {
+      const frontCandidate = subDps.shift() || mainDps.shift() || supports.shift() || healers.shift();
+      if (frontCandidate) frontSpirits.push(frontCandidate);
+    }
+
+    if (frontSpirits[0]) formation.f2 = frontSpirits[0].id; // Center front
+    if (frontSpirits[1]) formation.f1 = frontSpirits[1].id; // Top front
+
+    // 3. Midline (middle - 2 to 3 units):
+    // All remaining spirits
+    const remaining = [...tanks, ...healers, ...mainDps, ...supports, ...subDps];
+    const midSlots = ['m2', 'm1', 'm3'];
+    let midIdx = 0;
+    while (remaining.length > 0 && midIdx < midSlots.length) {
+      const s = remaining.shift();
+      formation[midSlots[midIdx]] = s.id;
+      midIdx++;
+    }
+
+    // If any spirit still remains and front has capacity
+    if (remaining.length > 0 && !formation.f1) {
+      formation.f1 = remaining.shift().id;
+    }
+    if (remaining.length > 0 && !formation.f3) {
+      formation.f3 = remaining.shift().id;
+    }
+
+    return formation;
+  }
+
+  /**
+   * Intelligently assigns an individual spirit into the best open formation slot
+   */
+  seatSpiritIntoFormation(spiritId) {
+    if (!spiritId) return;
+    if (!this.state.partyFormation) {
+      this.state.partyFormation = this.sanitizePartyFormation(null, this.state.party, this.state.spirits);
+    }
+
+    // If already seated, do nothing
+    if (Object.values(this.state.partyFormation).includes(spiritId)) return;
+
+    const spirit = this.state.spirits.find(s => s.id === spiritId);
+    const role = spirit ? getSpiritRole(spirit) : 'MAIN_DPS';
+    const form = this.state.partyFormation;
+
+    let targetSlot = null;
+    const currentCounts = {
+      back: ['b1', 'b2', 'b3'].filter(k => !!form[k]).length,
+      mid: ['m1', 'm2', 'm3'].filter(k => !!form[k]).length,
+      front: ['f1', 'f2', 'f3'].filter(k => !!form[k]).length
+    };
+
+    if (role === 'TANK' && currentCounts.front < 2) {
+      targetSlot = !form.f2 ? 'f2' : (!form.f1 ? 'f1' : (!form.f3 ? 'f3' : null));
+    } else if ((role === 'HEALER' || role === 'MAIN_DPS') && currentCounts.back < 1) {
+      targetSlot = !form.b2 ? 'b2' : (!form.b1 ? 'b1' : (!form.b3 ? 'b3' : null));
+    } else if (currentCounts.mid < 3) {
+      targetSlot = !form.m2 ? 'm2' : (!form.m1 ? 'm1' : (!form.m3 ? 'm3' : null));
+    } else if (currentCounts.front < 2) {
+      targetSlot = !form.f2 ? 'f2' : (!form.f1 ? 'f1' : (!form.f3 ? 'f3' : null));
+    } else if (currentCounts.back < 1) {
+      targetSlot = !form.b2 ? 'b2' : (!form.b1 ? 'b1' : (!form.b3 ? 'b3' : null));
+    }
+
+    if (targetSlot) {
+      form[targetSlot] = spiritId;
+    } else {
+      this.autoFormatParty();
+    }
   }
 
   /**
@@ -726,10 +908,177 @@ class GameStateManager {
   }
 
   /**
+   * =========================================================================
+   * SPIRIT COMBAT STATS, THREAT AGGRO & DEFENSE MITIGATION (Phase 3)
+   * =========================================================================
+   */
+
+  /**
+   * Returns comprehensive combat stats for a spirit including formation column perks,
+   * equipment/relic substats, critical ratings, and effective threat weight.
+   */
+  getSpiritCombatStats(spiritOrId) {
+    if (!spiritOrId) return null;
+    const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
+    if (!spirit) return null;
+
+    const baseStats = calculateSpiritStats(spirit) || {
+      role: 'MAIN_DPS',
+      atk: spirit.power || 20,
+      def: 20,
+      maxHp: spirit.maxHp || 100,
+      spd: 1.0,
+      critRate: 5,
+      critDmg: 150,
+      threat: 50,
+      power: spirit.power || 20
+    };
+
+    // Formation slot & column perks
+    const slotId = this.getSpiritFormationSlot(spirit.id);
+    const slotDef = slotId ? FORMATION_SLOTS[slotId] : null;
+    const colDef = slotDef ? FORMATION_COLUMNS[slotDef.col] : FORMATION_COLUMNS.mid;
+    const colKey = slotDef ? slotDef.col : 'mid';
+
+    // Equipment & substats
+    let bonusAtk = 0;
+    let bonusDef = 0;
+    let bonusHp = 0;
+    let bonusCritRate = 0;
+    let bonusCritDmg = 0;
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+
+    if (spirit.weapon) {
+      const wpn = equipmentList.find(e => e.uid === spirit.weapon);
+      if (wpn) {
+        if (wpn.atkPower) bonusAtk += wpn.atkPower;
+        if (wpn.critRate) bonusCritRate += wpn.critRate;
+      }
+    }
+
+    if (spirit.relics) {
+      for (const relicUid of Object.values(spirit.relics)) {
+        if (!relicUid) continue;
+        const relic = equipmentList.find(e => e.uid === relicUid);
+        if (relic) {
+          if (relic.mainStatName === 'Bonus ATK Power') bonusAtk += (relic.mainStatValue || 0);
+          if (Array.isArray(relic.substats)) {
+            for (const sub of relic.substats) {
+              if (sub.typeId === 'flat_atk') bonusAtk += (sub.value || 0);
+              else if (sub.typeId === 'crit_rate') bonusCritRate += (sub.value || 0);
+              else if (sub.typeId === 'crit_dmg') bonusCritDmg += (sub.value || 0);
+              else if (sub.typeId === 'flat_hp') bonusHp += (sub.value || 0);
+              else if (sub.typeId === 'flat_shield') bonusDef += Math.round((sub.value || 0) * 0.25);
+            }
+          }
+        }
+      }
+    }
+
+    // Column Perks:
+    // Frontline Vanguard Perk: +15% DEF / Armor
+    // Backline Sanctuary Perk: +15% ATK / Healing Potency
+    const defColumnMult = (colKey === 'front') ? 1.15 : 1.0;
+    const atkColumnMult = (colKey === 'back') ? 1.15 : 1.0;
+    const healAmpMult = (colKey === 'back') ? 1.15 : 1.0;
+
+    // Effective Threat: Base Threat * Column Multiplier
+    const threatMult = colDef ? colDef.threatMultiplier : 1.0;
+    const effectiveThreat = Math.max(1, Math.round(baseStats.threat * threatMult));
+
+    const finalAtk = Math.max(1, Math.round((baseStats.atk + bonusAtk) * atkColumnMult));
+    const finalDef = Math.max(1, Math.round((baseStats.def + bonusDef) * defColumnMult));
+    const finalCritRate = Math.min(75, baseStats.critRate + bonusCritRate);
+    const finalCritDmg = baseStats.critDmg + bonusCritDmg;
+
+    return {
+      role: baseStats.role,
+      roleInfo: baseStats.roleInfo,
+      atk: finalAtk,
+      def: finalDef,
+      maxHp: baseStats.maxHp + bonusHp,
+      spd: baseStats.spd,
+      critRate: finalCritRate,
+      critDmg: finalCritDmg,
+      healAmp: healAmpMult,
+      baseThreat: baseStats.threat,
+      threatMultiplier: threatMult,
+      effectiveThreat,
+      formationSlot: slotId,
+      formationColumn: colKey,
+      columnPerk: colDef ? colDef.perkName : 'Flank Perk',
+      tauntTimer: spirit.tauntTimer || 0,
+      isTaunting: (spirit.tauntTimer || 0) > 0
+    };
+  }
+
+  /**
+   * Selects an enemy attack target from living party spirits:
+   * 1. 100% priority to any spirit under active [TAUNT LOCK] (Tank aggro).
+   * 2. Otherwise selects via weighted random according to Effective Threat score.
+   */
+  selectCombatTarget(livingSpirits) {
+    if (!Array.isArray(livingSpirits) || livingSpirits.length === 0) return null;
+    if (livingSpirits.length === 1) return livingSpirits[0];
+
+    // 1. Check for Active Taunt Lock
+    const tauntingSpirits = livingSpirits.filter(s => (s.tauntTimer || 0) > 0);
+    if (tauntingSpirits.length > 0) {
+      if (tauntingSpirits.length === 1) return tauntingSpirits[0];
+      return tauntingSpirits[Math.floor(Math.random() * tauntingSpirits.length)];
+    }
+
+    // 2. Weighted Random by Effective Threat
+    const weights = livingSpirits.map(spirit => {
+      const stats = this.getSpiritCombatStats(spirit);
+      return Math.max(1, stats ? stats.effectiveThreat : 50);
+    });
+
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    let rand = Math.random() * totalWeight;
+
+    for (let i = 0; i < livingSpirits.length; i++) {
+      if (rand < weights[i]) {
+        return livingSpirits[i];
+      }
+      rand -= weights[i];
+    }
+
+    return livingSpirits[0];
+  }
+
+  /**
+   * Calculates DEF damage reduction: DamageTaken = RawDamage * (350 / (350 + DEF))
+   */
+  calculateDamageMitigation(rawDamage, def) {
+    const safeDef = Math.max(0, def || 0);
+    const mitigationMultiplier = 350 / (350 + safeDef);
+    const mitigatedDamage = Math.max(1, Math.round(rawDamage * mitigationMultiplier));
+    const defMitigated = Math.max(0, rawDamage - mitigatedDamage);
+    return {
+      mitigatedDamage,
+      defMitigated,
+      mitigationMultiplier
+    };
+  }
+
+  /**
+   * Activates Taunt Lock on a spirit
+   */
+  setSpiritTauntLock(spiritId, durationSec = 6.0) {
+    const spirit = this.state.spirits.find(s => s.id === spiritId);
+    if (!spirit) return false;
+    spirit.tauntTimer = durationSec;
+    this.emit('tauntLockActivated', { spirit, duration: durationSec });
+    return true;
+  }
+
+  /**
    * Madness Zone Two-Way Combat Loop
    * Living spirits attack living swarm enemies & accumulate Mana
    * At 100 MP, spirits unleash Ultimates (AoE, Heals, Shields, Executes)
-   * Enemies fight back on cooldowns, damaging spirits
+   * Enemies fight back on cooldowns, targeting based on Threat and Taunt
+   * DEF reduces incoming enemy damage according to 350 / (350 + DEF)
    * Revives whole party on Floor Boss Victory; Resets to Wave 1 on Party Wipeout
    */
   tickMadnessCombat(deltaSec) {
@@ -755,6 +1104,7 @@ class GameStateManager {
         s.currentMp = (s.ascensionLevel >= 3) ? 15 : 0;
         s.shieldHp = Math.round(s.maxHp * initShieldPct);
         s.isFallen = false;
+        s.tauntTimer = 0;
       });
       this.spawnMadnessEnemy();
       this.emit('partyWiped', {
@@ -776,10 +1126,20 @@ class GameStateManager {
 
     // 3. Spirits Attack, Mana Accumulation & 4-pc Set Bonus Procs
     for (const spirit of livingSpirits) {
+      // Tick taunt decay
+      if (spirit.tauntTimer > 0) {
+        spirit.tauntTimer = Math.max(0, spirit.tauntTimer - deltaSec);
+      }
+
       // Effective power including weapons, relics, substats, and 2-pc set bonuses
       const effectivePower = this.getSpiritTotalPower(spirit);
       const elemMult = getElementalMultiplier(spirit.element, leadEnemy.element || 'EARTH');
-      const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * elemMult));
+
+      // Backline Sanctuary Perk: +15% ATK
+      const stats = this.getSpiritCombatStats(spirit);
+      const posAtkMult = (stats && stats.formationColumn === 'back') ? 1.15 : 1.0;
+
+      const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * elemMult * posAtkMult));
       const damageThisTick = baseDps * deltaSec;
       leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
 
@@ -822,7 +1182,7 @@ class GameStateManager {
     // Keep currentEnemy in sync with lead living enemy
     madnessZone.currentEnemy = livingEnemies.find(e => !e.isDefeated && e.hp > 0) || null;
 
-    // 4. Enemies Fight Back (Counter-attacks on cooldown timers with Evasion check)
+    // 4. Enemies Fight Back (Counter-attacks on cooldown timers with Evasion check & Threat Targeting)
     for (const enemy of livingEnemies) {
       if (enemy.hp <= 0 || enemy.isDefeated) continue;
 
@@ -830,8 +1190,8 @@ class GameStateManager {
       if (enemy.attackTimer <= 0) {
         enemy.attackTimer = enemy.attackCooldown || 2.4;
 
-        // Counter-attack the lead living spirit
-        const targetSpirit = livingSpirits[0];
+        // Select target spirit using Threat Aggro & Taunt Lock algorithm
+        const targetSpirit = this.selectCombatTarget(livingSpirits);
         if (targetSpirit) {
           // Check Evasion (Hermes 2pc +15% evasion, Feather relic)
           const targetBonuses = this.getSpiritActiveSetBonuses(targetSpirit);
@@ -845,23 +1205,29 @@ class GameStateManager {
           }
 
           const enemyElemMult = getElementalMultiplier(enemy.element || 'EARTH', targetSpirit.element || 'EARTH');
-          let enemyDamage = Math.max(1, Math.round(enemy.power * enemyElemMult * (0.8 + Math.random() * 0.35)));
+          let rawEnemyDamage = Math.max(1, Math.round(enemy.power * enemyElemMult * (0.8 + Math.random() * 0.35)));
 
           // Constellation damage mitigation (Phoenix: Eternal Avatar)
           const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
           if (constBonuses.damageMitigationPercent) {
-            enemyDamage = Math.max(1, Math.round(enemyDamage * (1 - constBonuses.damageMitigationPercent / 100)));
+            rawEnemyDamage = Math.max(1, Math.round(rawEnemyDamage * (1 - constBonuses.damageMitigationPercent / 100)));
           }
 
+          // Apply DEF Mitigation Formula (350 / (350 + DEF))
+          const targetStats = this.getSpiritCombatStats(targetSpirit);
+          const { mitigatedDamage, defMitigated } = this.calculateDamageMitigation(rawEnemyDamage, targetStats ? targetStats.def : 20);
+          let finalDamage = mitigatedDamage;
+
           // Absorb damage with shield first
+          let shieldAbsorbed = 0;
           if (targetSpirit.shieldHp > 0) {
-            const absorb = Math.min(targetSpirit.shieldHp, enemyDamage);
-            targetSpirit.shieldHp -= absorb;
-            enemyDamage -= absorb;
+            shieldAbsorbed = Math.min(targetSpirit.shieldHp, finalDamage);
+            targetSpirit.shieldHp -= shieldAbsorbed;
+            finalDamage -= shieldAbsorbed;
           }
 
           // Apply remaining damage to HP
-          targetSpirit.currentHp = Math.max(0, targetSpirit.currentHp - enemyDamage);
+          targetSpirit.currentHp = Math.max(0, targetSpirit.currentHp - finalDamage);
           if (targetSpirit.currentHp <= 0) {
             targetSpirit.isFallen = true;
             targetSpirit.currentHp = 0;
@@ -871,7 +1237,11 @@ class GameStateManager {
           this.emit('enemyCounterAttack', {
             enemy,
             targetSpirit,
-            damage: enemyDamage
+            damage: finalDamage,
+            rawDamage: rawEnemyDamage,
+            defMitigated,
+            shieldAbsorbed,
+            isTauntedTarget: (targetSpirit.tauntTimer || 0) > 0
           });
         }
       }
@@ -879,7 +1249,10 @@ class GameStateManager {
   }
 
   /**
-   * Spirit Ultimate Execution
+   * Spirit Ultimate Execution with Role-Specific Enhancements
+   * - Tanks: Apply party-wide shields and activate 6s Taunt Lock
+   * - Main DPS: Factor in Critical Strike (Crit Rate & Crit DMG)
+   * - Healers: Factor in Heal Amplification (Backline Sanctuary +15%)
    */
   procSpiritUltimate(spirit) {
     const ult = getSpiritUltimate(spirit.speciesId);
@@ -889,11 +1262,39 @@ class GameStateManager {
     const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
     const fallenSpirits = party.filter(s => s.isFallen || s.currentHp <= 0);
 
+    const spiritStats = this.getSpiritCombatStats(spirit);
+    const role = spiritStats ? spiritStats.role : getSpiritRole(spirit.speciesId);
+
+    // TANK SPECIAL: Activate 6-second Taunt Lock and grant party shield
+    if (role === 'TANK') {
+      spirit.tauntTimer = 6.0;
+      const tankDef = spiritStats ? spiritStats.def : 40;
+      const tankShieldAmount = Math.max(40, Math.round(tankDef * 2.5));
+      for (const ally of livingSpirits) {
+        ally.shieldHp = (ally.shieldHp || 0) + tankShieldAmount;
+      }
+      this.emit('tauntLockActivated', { spirit, duration: 6.0, shieldAmount: tankShieldAmount });
+    }
+
+    // CRITICAL STRIKE CHECK (for DPS roles)
+    let isCrit = false;
+    let critMult = 1.0;
+    if (role === 'MAIN_DPS' || role === 'SUB_DPS') {
+      const critRoll = Math.random() * 100;
+      if (spiritStats && critRoll < spiritStats.critRate) {
+        isCrit = true;
+        critMult = spiritStats.critDmg / 100;
+      }
+    }
+
+    // HEAL AMPLIFICATION (for Healer roles, e.g. Backline Sanctuary Perk)
+    const healAmp = (spiritStats && spiritStats.healAmp) ? spiritStats.healAmp : 1.0;
+
     let totalDamageDealt = 0;
     let totalHealingDone = 0;
     const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
     const ultAmpMult = 1 + ((constBonuses.ultAmp || 0) / 100);
-    const ascUltMult = ((spirit.ascensionLevel >= 5) ? 1.20 : 1.0) * ultAmpMult;
+    const ascUltMult = ((spirit.ascensionLevel >= 5) ? 1.20 : 1.0) * ultAmpMult * critMult;
 
     switch (ult.type) {
       case 'AOE_DAMAGE': {
@@ -933,7 +1334,7 @@ class GameStateManager {
         break;
       }
       case 'HEAL': {
-        const healRatio = (ult.healPercent || 30) / 100;
+        const healRatio = ((ult.healPercent || 30) / 100) * healAmp;
         // Revive 1 fallen ally with healRatio HP if someone is fallen
         if (fallenSpirits.length > 0) {
           const allyToRevive = fallenSpirits[0];
@@ -949,7 +1350,7 @@ class GameStateManager {
         break;
       }
       case 'SUPPORT': {
-        const healRatio = (ult.healPercent || 20) / 100;
+        const healRatio = ((ult.healPercent || 20) / 100) * healAmp;
         const shieldRatio = (ult.shieldPercent || 20) / 100;
         if (fallenSpirits.length > 0) {
           const allyToRevive = fallenSpirits[0];
@@ -966,7 +1367,7 @@ class GameStateManager {
         break;
       }
       case 'AOE_DAMAGE_AND_HEAL': {
-        const damagePerEnemy = Math.max(1, Math.round(spirit.power * (ult.multiplier || 3.0)));
+        const damagePerEnemy = Math.max(1, Math.round(spirit.power * (ult.multiplier || 3.0) * critMult));
         for (const enemy of livingEnemies) {
           enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
           totalDamageDealt += damagePerEnemy;
@@ -974,7 +1375,7 @@ class GameStateManager {
             this.onIndividualEnemyKilled(enemy);
           }
         }
-        const healRatio = (ult.healPercent || 25) / 100;
+        const healRatio = ((ult.healPercent || 25) / 100) * healAmp;
         if (fallenSpirits.length > 0) {
           const allyToRevive = fallenSpirits[0];
           allyToRevive.isFallen = false;
@@ -994,7 +1395,9 @@ class GameStateManager {
       spirit,
       ult,
       totalDamageDealt,
-      totalHealingDone
+      totalHealingDone,
+      isCrit,
+      role
     });
   }
 
@@ -1016,11 +1419,25 @@ class GameStateManager {
 
     const enemy = livingEnemies[0];
     const partyPower = this.getTotalPartyPower();
-    const damage = Math.max(1, Math.round(partyPower * 0.45));
+
+    // Check if Main DPS in party triggers a Critical Click
+    const party = this.getPartySpirits();
+    const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
+    let isCrit = false;
+    let critMult = 1.0;
+    const dpsSpirit = livingSpirits.find(s => getSpiritRole(s) === 'MAIN_DPS');
+    if (dpsSpirit) {
+      const dpsStats = this.getSpiritCombatStats(dpsSpirit);
+      if (dpsStats && Math.random() * 100 < dpsStats.critRate) {
+        isCrit = true;
+        critMult = dpsStats.critDmg / 100;
+      }
+    }
+
+    const damage = Math.max(1, Math.round(partyPower * 0.45 * critMult));
     enemy.hp = Math.max(0, enemy.hp - damage);
 
     // Active tapping charges +10 MP on all living party spirits!
-    const party = this.getPartySpirits();
     party.forEach(s => {
       if (!s.isFallen) {
         s.currentMp = Math.min(s.maxMp || 100, (s.currentMp || 0) + 10);
@@ -1041,10 +1458,11 @@ class GameStateManager {
       damage,
       enemyHp: enemy.hp,
       enemyMaxHp: enemy.maxHp,
-      killed
+      killed,
+      isCrit
     });
 
-    return { damage, killed, remainingHp: enemy.hp };
+    return { damage, killed, remainingHp: enemy.hp, isCrit };
   }
 
   spawnMadnessEnemy() {
@@ -1374,6 +1792,7 @@ class GameStateManager {
       if (this.state.party.length < 5) {
         spirit.isEquipped = true;
         this.state.party.push(spirit.id);
+        this.seatSpiritIntoFormation(spirit.id);
       }
 
       this.state.spirits.unshift(spirit);
@@ -1480,8 +1899,10 @@ class GameStateManager {
 
     spirit.isEquipped = true;
     this.state.party.push(spiritId);
+    this.seatSpiritIntoFormation(spiritId);
     this.save();
     this.emit('partyUpdated', this.getPartySpirits());
+    this.emit('partyFormationUpdated', this.getPartyFormation());
     return true;
   }
 
@@ -1497,8 +1918,18 @@ class GameStateManager {
     const spirit = this.state.spirits.find(s => s.id === spiritId);
     if (spirit) spirit.isEquipped = false;
 
+    // Clear from formation
+    if (this.state.partyFormation) {
+      for (const [slotId, sId] of Object.entries(this.state.partyFormation)) {
+        if (sId === spiritId) {
+          this.state.partyFormation[slotId] = null;
+        }
+      }
+    }
+
     this.save();
     this.emit('partyUpdated', this.getPartySpirits());
+    this.emit('partyFormationUpdated', this.getPartyFormation());
     return true;
   }
 
@@ -1508,11 +1939,179 @@ class GameStateManager {
       .filter(Boolean);
   }
 
+  /**
+   * Returns active party spirits annotated with their 3x3 tactical formation slot and column
+   */
+  getPartySpiritsByFormation() {
+    const form = this.state.partyFormation || {};
+    const spirits = this.getPartySpirits();
+
+    return spirits.map(spirit => {
+      let slotId = null;
+      for (const [sId, occupiedId] of Object.entries(form)) {
+        if (occupiedId === spirit.id) {
+          slotId = sId;
+          break;
+        }
+      }
+
+      const slotDef = slotId ? FORMATION_SLOTS[slotId] : null;
+      const colDef = slotDef ? FORMATION_COLUMNS[slotDef.col] : null;
+
+      return {
+        ...spirit,
+        formationSlot: slotId,
+        formationColumn: slotDef ? slotDef.col : 'mid',
+        formationSlotLabel: slotDef ? slotDef.label : 'Midline',
+        columnPerk: colDef ? colDef.perkName : 'Flank Perk',
+        threatMultiplier: colDef ? colDef.threatMultiplier : 1.0
+      };
+    });
+  }
+
   getTotalPartyPower() {
     const party = this.getPartySpirits();
     const basePower = party.reduce((sum, s) => sum + s.power, 0);
     const resonanceBonus = 1 + (this.state.resources.resonanceTier || 0) * 0.05;
     return Math.round(basePower * resonanceBonus);
+  }
+
+  // =========================================================================
+  // 3X3 TACTICAL GRID FORMATION API
+  // =========================================================================
+
+  /**
+   * Returns complete status and slot metadata for the 3x3 tactical grid
+   */
+  getPartyFormation() {
+    if (!this.state.partyFormation) {
+      this.state.partyFormation = this.sanitizePartyFormation(null, this.state.party, this.state.spirits);
+    }
+
+    const form = this.state.partyFormation;
+    const slots = {};
+    for (const [slotId, def] of Object.entries(FORMATION_SLOTS)) {
+      const spiritId = form[slotId] || null;
+      const spirit = spiritId ? (this.state.spirits.find(s => s.id === spiritId) || null) : null;
+      slots[slotId] = {
+        ...def,
+        spiritId,
+        spirit
+      };
+    }
+
+    const validation = validateFormationGrid(form);
+    return {
+      slots,
+      raw: { ...form },
+      counts: validation.counts || { back: 0, mid: 0, front: 0, total: 0 },
+      isValid: validation.valid,
+      validationError: validation.error || null,
+      columns: FORMATION_COLUMNS
+    };
+  }
+
+  /**
+   * Returns current slot ID ('b1'..'f3') of a given spirit ID
+   */
+  getSpiritFormationSlot(spiritId) {
+    if (!spiritId || !this.state.partyFormation) return null;
+    for (const [slotId, sId] of Object.entries(this.state.partyFormation)) {
+      if (sId === spiritId) return slotId;
+    }
+    return null;
+  }
+
+  /**
+   * Positions a spirit into targetSlotId, automatically swapping if occupied
+   * and enforcing column constraints (1 Back, 2-3 Mid, 1-2 Front)
+   */
+  setSpiritPosition(spiritId, targetSlotId) {
+    const spirit = this.state.spirits.find(s => s.id === spiritId);
+    if (!spirit) throw new Error('Spirit not found in collection!');
+    if (!FORMATION_SLOTS[targetSlotId]) throw new Error(`Invalid formation slot "${targetSlotId}"!`);
+
+    // Ensure partyFormation exists
+    if (!this.state.partyFormation) {
+      this.state.partyFormation = this.sanitizePartyFormation(null, this.state.party, this.state.spirits);
+    }
+
+    // Auto-equip if not currently in party
+    if (!this.state.party.includes(spiritId)) {
+      if (this.state.party.length >= 5) {
+        throw new Error('Party is full (5/5). Unequip a spirit first or swap positions with an active member.');
+      }
+      this.state.party.push(spiritId);
+      spirit.isEquipped = true;
+    }
+
+    const form = { ...this.state.partyFormation };
+    const currentSlot = this.getSpiritFormationSlot(spiritId);
+    const occupantId = form[targetSlotId];
+
+    if (occupantId && occupantId !== spiritId) {
+      if (currentSlot) {
+        // Swap positions between the two equipped spirits
+        form[currentSlot] = occupantId;
+        form[targetSlotId] = spiritId;
+      } else {
+        throw new Error(`Slot "${targetSlotId}" is already occupied. Choose an empty tile or swap with an equipped unit.`);
+      }
+    } else {
+      if (currentSlot) form[currentSlot] = null;
+      form[targetSlotId] = spiritId;
+    }
+
+    const validation = validateFormationGrid(form);
+    if (!validation.valid) {
+      throw new Error(`Cannot place spirit in ${targetSlotId}: ${validation.error}`);
+    }
+
+    this.state.partyFormation = form;
+    this.save();
+    this.emit('partyFormationUpdated', this.getPartyFormation());
+    this.emit('partyUpdated', this.getPartySpirits());
+    return { success: true, targetSlotId, previousSlotId: currentSlot };
+  }
+
+  /**
+   * Swaps contents between two grid slots
+   */
+  swapFormationSlots(slotA, slotB) {
+    if (!FORMATION_SLOTS[slotA] || !FORMATION_SLOTS[slotB]) {
+      throw new Error(`Invalid formation slot specified (${slotA}, ${slotB})`);
+    }
+
+    if (!this.state.partyFormation) {
+      this.state.partyFormation = this.sanitizePartyFormation(null, this.state.party, this.state.spirits);
+    }
+
+    const form = { ...this.state.partyFormation };
+    const temp = form[slotA];
+    form[slotA] = form[slotB];
+    form[slotB] = temp;
+
+    const validation = validateFormationGrid(form);
+    if (!validation.valid) {
+      throw new Error(`Cannot swap ${slotA} and ${slotB}: ${validation.error}`);
+    }
+
+    this.state.partyFormation = form;
+    this.save();
+    this.emit('partyFormationUpdated', this.getPartyFormation());
+    this.emit('partyUpdated', this.getPartySpirits());
+    return { success: true, slotA, slotB };
+  }
+
+  /**
+   * Automatically organizes active party spirits into the optimal 3x3 tactical grid
+   */
+  autoFormatParty() {
+    this.state.partyFormation = this.autoFormatPartyArray(this.state.party, this.state.spirits);
+    this.save();
+    this.emit('partyFormationUpdated', this.getPartyFormation());
+    this.emit('partyUpdated', this.getPartySpirits());
+    return this.getPartyFormation();
   }
 
   // =========================================================================
@@ -1559,6 +2158,7 @@ class GameStateManager {
     if (this.state.party.length < 5) {
       spirit.isEquipped = true;
       this.state.party.push(spirit.id);
+      this.seatSpiritIntoFormation(spirit.id);
     }
 
     this.state.spirits.unshift(spirit);
@@ -2980,6 +3580,7 @@ class GameStateManager {
         battle.currentWave += 1;
         livingSpirits.forEach(s => {
           s.currentHp = Math.min(s.maxHp, s.currentHp + Math.round(s.maxHp * 0.25));
+          s.tauntTimer = 0;
         });
         battle.currentSwarm = this.generateDungeonWave(battle.dungeonType, battle.chamberId, battle.tier, battle.currentWave);
         this.emit('dungeonBattleUpdated', battle);
@@ -2995,8 +3596,17 @@ class GameStateManager {
 
     // Spirits attack & accumulate MP
     for (const spirit of livingSpirits) {
+      // Tick taunt decay
+      if (spirit.tauntTimer > 0) {
+        spirit.tauntTimer = Math.max(0, spirit.tauntTimer - deltaSec);
+      }
+
       const effectivePower = this.getSpiritTotalPower(spirit);
-      const baseDps = Math.max(1, Math.round(effectivePower * 0.45));
+      // Backline Sanctuary Perk: +15% ATK
+      const stats = this.getSpiritCombatStats(spirit);
+      const posAtkMult = (stats && stats.formationColumn === 'back') ? 1.15 : 1.0;
+
+      const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * posAtkMult));
       const damageThisTick = baseDps * deltaSec;
       leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
 
@@ -3020,28 +3630,44 @@ class GameStateManager {
       leadEnemy.hp = 0;
     }
 
-    // Enemies attack living spirits
+    // Enemies attack living spirits (Targeting based on Threat aggro & DEF mitigation)
     for (const enemy of livingEnemies) {
       if (enemy.isDefeated || enemy.hp <= 0) continue;
       enemy.currentCooldown = (enemy.currentCooldown || 0) - deltaSec;
       if (enemy.currentCooldown <= 0) {
         enemy.currentCooldown = enemy.attackCooldown || 2.0;
 
-        const targetSpirit = livingSpirits[Math.floor(Math.random() * livingSpirits.length)];
+        const targetSpirit = this.selectCombatTarget(livingSpirits);
         if (targetSpirit) {
-          let enemyDamage = Math.max(1, Math.round(enemy.power * (0.8 + Math.random() * 0.4)));
+          let rawEnemyDamage = Math.max(1, Math.round(enemy.power * (0.8 + Math.random() * 0.4)));
 
+          // Apply DEF Mitigation Formula (350 / (350 + DEF))
+          const targetStats = this.getSpiritCombatStats(targetSpirit);
+          const { mitigatedDamage, defMitigated } = this.calculateDamageMitigation(rawEnemyDamage, targetStats ? targetStats.def : 20);
+          let finalEnemyDamage = mitigatedDamage;
+
+          let shieldAbsorbed = 0;
           if (targetSpirit.shieldHp > 0) {
-            const absorbed = Math.min(targetSpirit.shieldHp, enemyDamage);
-            targetSpirit.shieldHp -= absorbed;
-            enemyDamage -= absorbed;
+            shieldAbsorbed = Math.min(targetSpirit.shieldHp, finalEnemyDamage);
+            targetSpirit.shieldHp -= shieldAbsorbed;
+            finalEnemyDamage -= shieldAbsorbed;
           }
 
-          targetSpirit.currentHp = Math.max(0, targetSpirit.currentHp - enemyDamage);
+          targetSpirit.currentHp = Math.max(0, targetSpirit.currentHp - finalEnemyDamage);
           if (targetSpirit.currentHp <= 0) {
             targetSpirit.isFallen = true;
             targetSpirit.currentHp = 0;
           }
+
+          this.emit('dungeonEnemyCounterAttack', {
+            enemy,
+            targetSpirit,
+            damage: finalEnemyDamage,
+            rawDamage: rawEnemyDamage,
+            defMitigated,
+            shieldAbsorbed,
+            isTauntedTarget: (targetSpirit.tauntTimer || 0) > 0
+          });
         }
       }
     }
@@ -3055,12 +3681,40 @@ class GameStateManager {
     const party = this.getPartySpirits();
     const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
 
+    const spiritStats = this.getSpiritCombatStats(spirit);
+    const role = spiritStats ? spiritStats.role : getSpiritRole(spirit.speciesId);
+
+    // TANK SPECIAL: Activate 6-second Taunt Lock and grant party shield
+    if (role === 'TANK') {
+      spirit.tauntTimer = 6.0;
+      const tankDef = spiritStats ? spiritStats.def : 40;
+      const tankShieldAmount = Math.max(40, Math.round(tankDef * 2.5));
+      for (const ally of livingSpirits) {
+        ally.shieldHp = (ally.shieldHp || 0) + tankShieldAmount;
+      }
+      this.emit('tauntLockActivated', { spirit, duration: 6.0, shieldAmount: tankShieldAmount });
+    }
+
+    // CRITICAL STRIKE CHECK (for DPS roles)
+    let isCrit = false;
+    let critMult = 1.0;
+    if (role === 'MAIN_DPS' || role === 'SUB_DPS') {
+      const critRoll = Math.random() * 100;
+      if (spiritStats && critRoll < spiritStats.critRate) {
+        isCrit = true;
+        critMult = spiritStats.critDmg / 100;
+      }
+    }
+
+    // HEAL AMPLIFICATION (for Healer roles, e.g. Backline Sanctuary Perk)
+    const healAmp = (spiritStats && spiritStats.healAmp) ? spiritStats.healAmp : 1.0;
+
     let totalDamageDealt = 0;
     let totalHealingDone = 0;
 
     switch (ult.type) {
       case 'AOE_DAMAGE': {
-        const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier));
+        const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier * critMult));
         for (const enemy of livingEnemies) {
           enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
           totalDamageDealt += damagePerEnemy;
@@ -3074,7 +3728,7 @@ class GameStateManager {
       case 'SINGLE_TARGET_BURST': {
         const primaryTarget = livingEnemies[0];
         if (primaryTarget) {
-          const burstDamage = Math.max(1, Math.round(spirit.power * ult.multiplier));
+          const burstDamage = Math.max(1, Math.round(spirit.power * ult.multiplier * critMult));
           primaryTarget.hp = Math.max(0, primaryTarget.hp - burstDamage);
           totalDamageDealt += burstDamage;
           if (primaryTarget.hp <= 0) {
@@ -3085,7 +3739,7 @@ class GameStateManager {
         break;
       }
       case 'TEAM_HEAL': {
-        const healPerSpirit = Math.max(1, Math.round(spirit.power * ult.multiplier));
+        const healPerSpirit = Math.max(1, Math.round(spirit.power * ult.multiplier * healAmp));
         for (const ally of livingSpirits) {
           const actualHeal = Math.min(ally.maxHp - ally.currentHp, healPerSpirit);
           ally.currentHp += actualHeal;
@@ -3104,7 +3758,7 @@ class GameStateManager {
         const lowestHpEnemy = [...livingEnemies].sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
         if (lowestHpEnemy) {
           const isExecuteThreshold = (lowestHpEnemy.hp / lowestHpEnemy.maxHp) <= ult.threshold;
-          const mult = isExecuteThreshold ? ult.multiplier * 2 : ult.multiplier;
+          const mult = (isExecuteThreshold ? ult.multiplier * 2 : ult.multiplier) * critMult;
           const execDamage = Math.max(1, Math.round(spirit.power * mult));
           lowestHpEnemy.hp = Math.max(0, lowestHpEnemy.hp - execDamage);
           totalDamageDealt += execDamage;
@@ -3121,7 +3775,9 @@ class GameStateManager {
       spirit,
       ult,
       totalDamageDealt,
-      totalHealingDone
+      totalHealingDone,
+      isCrit,
+      role
     });
   }
 
@@ -3136,8 +3792,20 @@ class GameStateManager {
     const party = this.getPartySpirits();
     const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
 
+    // Check if Main DPS in party triggers a Critical Click
+    let isCrit = false;
+    let critMult = 1.0;
+    const dpsSpirit = livingSpirits.find(s => getSpiritRole(s) === 'MAIN_DPS');
+    if (dpsSpirit) {
+      const dpsStats = this.getSpiritCombatStats(dpsSpirit);
+      if (dpsStats && Math.random() * 100 < dpsStats.critRate) {
+        isCrit = true;
+        critMult = dpsStats.critDmg / 100;
+      }
+    }
+
     const totalPartyPower = livingSpirits.reduce((sum, s) => sum + this.getSpiritTotalPower(s), 0);
-    const tapDamage = Math.max(1, Math.round(totalPartyPower * (0.35 + Math.random() * 0.2)));
+    const tapDamage = Math.max(1, Math.round(totalPartyPower * (0.35 + Math.random() * 0.2) * critMult));
 
     leadEnemy.hp = Math.max(0, leadEnemy.hp - tapDamage);
     if (leadEnemy.hp <= 0) {

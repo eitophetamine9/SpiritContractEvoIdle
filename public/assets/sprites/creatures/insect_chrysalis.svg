@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .h-body  { fill: #10b981; }
+      .h-lite  { fill: #6ee7b7; }
+      .h-wing  { fill: #a7f3d0; opacity: 0.85; }
+      .h-spk   { fill: #fef08a; }
+      .h-dark  { fill: #047857; }
+      .h-eye   { fill: #064e3b; }
+      .h-hurt  { fill: #ef4444; }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 (Fairy Hover Down) -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="42" rx="10" ry="3" fill="rgba(0,0,0,0.2)"/>
+    <!-- Translucent Wings Down -->
+    <ellipse cx="14" cy="18" rx="8" ry="12" class="h-wing"/>
+    <ellipse cx="34" cy="18" rx="8" ry="12" class="h-wing"/>
+    <!-- Caterpillar / Chrysalis Segments -->
+    <rect x="20" y="24" width="8" height="8" rx="3" class="h-body"/>
+    <rect x="19" y="18" width="10" height="8" rx="3" class="h-body"/>
+    <rect x="18" y="12" width="12" height="9" rx="3" class="h-lite"/>
+    <!-- Antennae -->
+    <path d="M20 12 Q16 6 14 8" stroke="#047857" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M28 12 Q32 6 34 8" stroke="#047857" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="21" cy="15" r="1.5" class="h-eye"/>
+    <circle cx="27" cy="15" r="1.5" class="h-eye"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Wings Mid) -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="42" rx="9" ry="2.5" fill="rgba(0,0,0,0.18)"/>
+    <ellipse cx="12" cy="14" rx="9" ry="10" class="h-wing"/>
+    <ellipse cx="36" cy="14" rx="9" ry="10" class="h-wing"/>
+    <rect x="20" y="22" width="8" height="8" rx="3" class="h-body"/>
+    <rect x="19" y="16" width="10" height="8" rx="3" class="h-body"/>
+    <rect x="18" y="10" width="12" height="9" rx="3" class="h-lite"/>
+    <path d="M20 10 Q16 4 14 6" stroke="#047857" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M28 10 Q32 4 34 6" stroke="#047857" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="21" cy="13" r="1.5" class="h-eye"/>
+    <circle cx="27" cy="13" r="1.5" class="h-eye"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Wings High) -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="42" rx="8" ry="2" fill="rgba(0,0,0,0.15)"/>
+    <ellipse cx="15" cy="10" rx="7" ry="13" class="h-wing"/>
+    <ellipse cx="33" cy="10" rx="7" ry="13" class="h-wing"/>
+    <rect x="20" y="21" width="8" height="8" rx="3" class="h-body"/>
+    <rect x="19" y="15" width="10" height="8" rx="3" class="h-body"/>
+    <rect x="18" y="9" width="12" height="9" rx="3" class="h-lite"/>
+    <circle cx="21" cy="12" r="1.5" class="h-eye"/>
+    <circle cx="27" cy="12" r="1.5" class="h-eye"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Heal Spores Glow) -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="42" rx="10" ry="3" fill="rgba(0,0,0,0.2)"/>
+    <ellipse cx="13" cy="16" rx="8" ry="11" class="h-wing"/>
+    <ellipse cx="35" cy="16" rx="8" ry="11" class="h-wing"/>
+    <rect x="20" y="23" width="8" height="8" rx="3" class="h-body"/>
+    <rect x="19" y="17" width="10" height="8" rx="3" class="h-body"/>
+    <rect x="18" y="11" width="12" height="9" rx="3" class="h-lite"/>
+    <circle cx="21" cy="14" r="1.5" class="h-eye"/>
+    <circle cx="27" cy="14" r="1.5" class="h-eye"/>
+    <!-- Golden Spores -->
+    <circle cx="10" cy="22" r="1.5" class="h-spk"/>
+    <circle cx="38" cy="20" r="1.5" class="h-spk"/>
+    <circle cx="24" cy="34" r="1.5" class="h-spk"/>
+  </g>
+
+  <!-- Frame 4: Attack Windup (Life Pollen Gather) -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="42" rx="10" ry="3" fill="rgba(0,0,0,0.2)"/>
+    <ellipse cx="14" cy="14" rx="8" ry="12" class="h-wing"/>
+    <ellipse cx="34" cy="14" rx="8" ry="12" class="h-wing"/>
+    <rect x="18" y="13" width="12" height="9" rx="3" class="h-lite"/>
+    <circle cx="24" cy="24" r="6" fill="#6ee7b7" opacity="0.6"/>
+  </g>
+
+  <!-- Frame 5: Attack Strike (Verdant Pulse Cast) -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="24" cy="42" rx="12" ry="3" fill="rgba(0,0,0,0.2)"/>
+    <rect x="18" y="11" width="12" height="9" rx="3" class="h-lite"/>
+    <!-- Bloom Flower Wave -->
+    <circle cx="36" cy="18" r="8" fill="#10b981" opacity="0.4"/>
+    <circle cx="36" cy="18" r="5" fill="#fef08a"/>
+    <polygon points="36,8 38,14 36,12" fill="#6ee7b7"/>
+  </g>
+
+  <!-- Frame 6: Attack Impact (Sanctuary Bloom) -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="42" rx="11" ry="3" fill="rgba(0,0,0,0.2)"/>
+    <rect x="18" y="12" width="12" height="9" rx="3" class="h-lite"/>
+    <circle cx="38" cy="18" r="7" fill="#6ee7b7" opacity="0.8"/>
+    <circle cx="38" cy="18" r="4" fill="#ffffff"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Recoil -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="20" cy="42" rx="8" ry="2" fill="rgba(0,0,0,0.15)"/>
+    <rect x="16" y="13" width="12" height="9" rx="3" class="h-hurt"/>
+    <rect x="18" y="21" width="8" height="8" rx="3" class="h-hurt"/>
+    <line x1="18" y1="15" x2="22" y2="19" stroke="#ffffff" stroke-width="2"/>
+    <line x1="22" y1="15" x2="18" y2="19" stroke="#ffffff" stroke-width="2"/>
+  </g>
+</svg>

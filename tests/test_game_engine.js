@@ -4,9 +4,16 @@ import {
   rollContractSpirit,
   rollAstralContractSpirit,
   getXpRequiredForLevel, 
-  calculateSpiritPower 
+  calculateSpiritPower,
+  ROLES,
+  calculateSpiritStats,
+  getRoleInfo,
+  getSpiritRole
 } from '../src/data/index.js';
 import { getEnemyForStage } from '../src/data/index.js';
+import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies } from '../src/render/spriteAnimator.js';
+import fs from 'fs';
+import path from 'path';
 
 console.log('--- RUNNING SPIRIT CONTRACT EVO ENGINE & BALANCE TESTS ---');
 
@@ -688,6 +695,332 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   const genRes = gameState.enhanceEquipment(testWpn2.uid);
   if (testWpn2.level !== 2) throw new Error('enhanceEquipment failed for weapon');
   console.log('  [PASS] Generic gameState.enhanceEquipment validated for weapons!');
+
+  // Test 23: Spirit Combat Roles, Stats Scaling & Threat System (Phase 1)
+  console.log('\n[TEST 23] Testing Spirit Combat Roles, Detailed Stats Scaling & Threat System (Phase 1):');
+  const validRoleIds = Object.keys(ROLES);
+  const speciesList = Object.values(SPIRIT_SPECIES);
+  console.log(`  Total spirit species count: ${speciesList.length} (Expected 47)`);
+  if (speciesList.length < 47) throw new Error(`Expected at least 47 species, found ${speciesList.length}`);
+
+  const roleCounts = { MAIN_DPS: 0, SUB_DPS: 0, TANK: 0, SUPPORT: 0, HEALER: 0 };
+  for (const sp of speciesList) {
+    if (!sp.role) throw new Error(`Species "${sp.id}" is missing a combat role!`);
+    if (!validRoleIds.includes(sp.role)) throw new Error(`Species "${sp.id}" has invalid role "${sp.role}"!`);
+    roleCounts[sp.role]++;
+  }
+
+  console.log('  Role distribution across catalog:');
+  for (const [rKey, count] of Object.entries(roleCounts)) {
+    const roleInfo = getRoleInfo(rKey);
+    console.log(`    ${roleInfo.icon} ${roleInfo.name}: ${count} spirits (Base Threat: ${roleInfo.baseThreat}, Favored Line: ${roleInfo.optimalColumnLabel})`);
+  }
+
+  // Verify getSpiritRole helper
+  if (getSpiritRole('bull_spirit') !== 'TANK') throw new Error('Expected bull_spirit to have TANK role');
+  if (getSpiritRole('solaris_lion_pride') !== 'MAIN_DPS') throw new Error('Expected solaris_lion_pride to have MAIN_DPS role');
+  if (getSpiritRole({ speciesId: 'bear_of_dreams' }) !== 'HEALER') throw new Error('Expected bear_of_dreams to have HEALER role');
+
+  // Verify calculateSpiritStats for Tank vs DPS vs Healer
+  const tankStats = calculateSpiritStats('bull_spirit', 1, 'RARE');
+  const dpsStats = calculateSpiritStats('shark_spirit', 1, 'RARE');
+  const healerStats = calculateSpiritStats('wisp_spirit', 1, 'RARE');
+
+  console.log(`  Tank (bull_spirit RARE Lv1): HP=${tankStats.maxHp}, DEF=${tankStats.def}, ATK=${tankStats.atk}, Threat=${tankStats.threat}`);
+  console.log(`  DPS (shark_spirit RARE Lv1): HP=${dpsStats.maxHp}, DEF=${dpsStats.def}, ATK=${dpsStats.atk}, Threat=${dpsStats.threat}`);
+  console.log(`  Healer (wisp_spirit RARE Lv1): HP=${healerStats.maxHp}, DEF=${healerStats.def}, ATK=${healerStats.atk}, Threat=${healerStats.threat}`);
+
+  if (tankStats.threat <= dpsStats.threat) throw new Error('Tank should have higher innate threat than DPS');
+  if (tankStats.maxHp <= dpsStats.maxHp) throw new Error('Tank should have higher HP than DPS');
+  if (dpsStats.atk <= tankStats.atk) throw new Error('DPS should have higher ATK than Tank');
+  if (healerStats.threat > 60) throw new Error('Healer should maintain minimal threat footprint');
+
+  // Verify backward compatibility
+  const catStats = calculateSpiritStats('cat_spirit', 1, 'COMMON');
+  const expectedCatPower = calculateSpiritPower(SPIRIT_SPECIES.cat_spirit, 1, 'COMMON');
+  if (catStats.power !== expectedCatPower) throw new Error(`Power mismatch: got ${catStats.power}, expected ${expectedCatPower}`);
+  if (catStats.maxHp < 80) throw new Error(`Cat Spirit HP should be >= 80, got ${catStats.maxHp}`);
+
+  console.log('  [PASS] Phase 1 spirit combat roles, stats formulas, and threat baselines fully validated!');
+
+  // Test 24: 3x3 Tactical Grid Formation State, Auto-Format & Constraints (Phase 2)
+  console.log('\n[TEST 24] Testing 3x3 Tactical Grid Formation State & Constraints (Phase 2):');
+  
+  // 1. Initial starter formation check
+  const initForm = gameState.getPartyFormation();
+  console.log('  Initial Formation Slots count:', Object.keys(initForm.slots).length, '(Expected 9)');
+  if (Object.keys(initForm.slots).length !== 9) throw new Error('Formation grid must have exactly 9 slots (3x3)');
+  if (!initForm.isValid) throw new Error(`Initial formation should be valid: ${initForm.validationError}`);
+  console.log(`  Initial squad counts: Back=${initForm.counts.back}, Mid=${initForm.counts.mid}, Front=${initForm.counts.front}, Total=${initForm.counts.total}`);
+
+  // 2. Setup full 5-spirit party (1 Tank, 1 Healer, 2 DPS, 1 Support)
+  // Ensure distinct role composition: Cat (Sub-DPS), Bull (Tank), Caterpillar (Healer), Shark (Main DPS), Astraea (Support)
+  let starterUnit = gameState.state.spirits.find(s => s.speciesId === 'cat_spirit');
+  if (!starterUnit) {
+    starterUnit = {
+      id: 'starter_cat_unit',
+      speciesId: 'cat_spirit',
+      customName: 'Nimble Cat Spirit',
+      level: 1, xp: 0, tier: 1, rarity: 'COMMON', element: 'WIND',
+      power: 50, maxHp: 300, currentHp: 300, maxMp: 100, currentMp: 0, shieldHp: 0,
+      isFallen: false, isEquipped: false
+    };
+    gameState.state.spirits.push(starterUnit);
+  }
+  const testTank = {
+    id: 'test_tank_unit',
+    speciesId: 'bull_spirit',
+    customName: 'Iron Vanguard Bull',
+    level: 1, xp: 0, tier: 1, rarity: 'EPIC', element: 'EARTH',
+    power: 100, maxHp: 1000, currentHp: 1000, maxMp: 100, currentMp: 0, shieldHp: 0,
+    isFallen: false, isEquipped: false
+  };
+  const testHealer = {
+    id: 'test_healer_unit',
+    speciesId: 'caterpillar_spirit',
+    customName: 'Lepidopteran Vitality Healer',
+    level: 1, xp: 0, tier: 1, rarity: 'EPIC', element: 'EARTH',
+    power: 80, maxHp: 600, currentHp: 600, maxMp: 100, currentMp: 0, shieldHp: 0,
+    isFallen: false, isEquipped: false
+  };
+  const testMainDps = {
+    id: 'test_main_dps_unit',
+    speciesId: 'shark_spirit',
+    customName: 'Abyssal Apex Shark',
+    level: 1, xp: 0, tier: 1, rarity: 'EPIC', element: 'WATER',
+    power: 150, maxHp: 700, currentHp: 700, maxMp: 100, currentMp: 0, shieldHp: 0,
+    isFallen: false, isEquipped: false
+  };
+  const testSupport = {
+    id: 'test_support_unit',
+    speciesId: 'astraea_valkyrie',
+    customName: 'Star Valkyrie Astraea',
+    level: 1, xp: 0, tier: 1, rarity: 'EPIC', element: 'WIND',
+    power: 90, maxHp: 650, currentHp: 650, maxMp: 100, currentMp: 0, shieldHp: 0,
+    isFallen: false, isEquipped: false
+  };
+
+  gameState.state.spirits.push(testTank, testHealer, testMainDps, testSupport);
+  gameState.state.party = [starterUnit.id, testTank.id, testHealer.id, testMainDps.id, testSupport.id];
+  starterUnit.isEquipped = true;
+  testTank.isEquipped = true;
+  testHealer.isEquipped = true;
+  testMainDps.isEquipped = true;
+  testSupport.isEquipped = true;
+
+  // 3. Test autoFormatParty
+  const autoForm = gameState.autoFormatParty();
+  console.log(`  Auto-formatted 5-member party: Back=${autoForm.counts.back}, Mid=${autoForm.counts.mid}, Front=${autoForm.counts.front}`);
+  if (!autoForm.isValid) throw new Error(`Auto-formatted party should be valid: ${autoForm.validationError}`);
+  if (autoForm.counts.back !== 1) throw new Error(`Full party requires exactly 1 in Backline, got ${autoForm.counts.back}`);
+  if (autoForm.counts.mid < 2 || autoForm.counts.mid > 3) throw new Error(`Full party requires 2 or 3 in Midline, got ${autoForm.counts.mid}`);
+  if (autoForm.counts.front < 1 || autoForm.counts.front > 2) throw new Error(`Full party requires 1 or 2 in Frontline, got ${autoForm.counts.front}`);
+
+  // Tank should be in Frontline (f1, f2, or f3)
+  const tankSlot = gameState.getSpiritFormationSlot(testTank.id);
+  console.log(`  Tank positioned at: ${tankSlot} (Role: TANK, Column: ${initForm.slots[tankSlot]?.col})`);
+  if (!['f1', 'f2', 'f3'].includes(tankSlot)) throw new Error(`Expected Tank to be seated in Frontline, got ${tankSlot}`);
+
+  // Healer should be in Backline (b1, b2, or b3)
+  const healerSlot = gameState.getSpiritFormationSlot(testHealer.id);
+  console.log(`  Healer positioned at: ${healerSlot} (Role: HEALER, Column: ${initForm.slots[healerSlot]?.col})`);
+  if (!['b1', 'b2', 'b3'].includes(healerSlot)) throw new Error(`Expected Healer to be seated in Backline, got ${healerSlot}`);
+
+  // 4. Test constraint enforcement: Moving a 2nd unit to Backline MUST fail
+  let blockedBacklineOverflow = false;
+  try {
+    // Attempt to move Tank into Backline top (b1) when Healer is in Backline (b2)
+    gameState.setSpiritPosition(testTank.id, 'b1');
+  } catch (err) {
+    blockedBacklineOverflow = true;
+    console.log(`  [PASS] Blocked Backline overflow (>1 unit): "${err.message}"`);
+  }
+  if (!blockedBacklineOverflow) throw new Error('Should reject placing more than 1 spirit into Backline');
+
+  // 5. Test legal move: Move tank within Frontline
+  const oldFrontSlot = gameState.getSpiritFormationSlot(testTank.id);
+  const targetFrontSlot = oldFrontSlot === 'f2' ? 'f1' : 'f2';
+  gameState.setSpiritPosition(testTank.id, targetFrontSlot);
+  if (gameState.getSpiritFormationSlot(testTank.id) !== targetFrontSlot) {
+    throw new Error('Failed to move Tank to open frontline slot');
+  }
+  console.log(`  [PASS] Legal repositioning to ${targetFrontSlot} succeeded!`);
+
+  // 6. Test swapFormationSlots
+  gameState.swapFormationSlots(targetFrontSlot, oldFrontSlot);
+  if (gameState.getSpiritFormationSlot(testTank.id) !== oldFrontSlot) {
+    throw new Error('swapFormationSlots failed to return unit to original slot');
+  }
+  console.log(`  [PASS] Slot swap between ${targetFrontSlot} and ${oldFrontSlot} validated!`);
+
+  // 7. Verify getPartySpiritsByFormation returns enriched metadata
+  const formationParty = gameState.getPartySpiritsByFormation();
+  console.log('  Annotated party spirits:');
+  for (const s of formationParty) {
+    console.log(`    ${s.customName}: Slot=${s.formationSlot} (${s.formationColumn.toUpperCase()}) | ThreatMult=${s.threatMultiplier}x | Perk="${s.columnPerk}"`);
+    if (!s.formationSlot) throw new Error(`Missing formationSlot for spirit ${s.customName}`);
+    if (!['back', 'mid', 'front'].includes(s.formationColumn)) throw new Error(`Invalid formationColumn for spirit ${s.customName}`);
+  }
+
+  console.log('  [PASS] Phase 2 3x3 tactical grid formation state, auto-layout and constraints fully validated!');
+
+  // =========================================================================
+  // [TEST 25] Testing Aggro, Threat Targeting, Tank Taunt Lock & DEF Mitigation (Phase 3)
+  // =========================================================================
+  console.log('\n[TEST 25] Testing Aggro, Threat Targeting, Tank Taunt Lock & DEF Mitigation (Phase 3):');
+
+  // 1. Verify getSpiritCombatStats calculates perks and effective threat
+  const phase3TankStats = gameState.getSpiritCombatStats(testTank);
+  const phase3HealerStats = gameState.getSpiritCombatStats(testHealer);
+  const phase3DpsStats = gameState.getSpiritCombatStats(testMainDps);
+
+  console.log(`  Frontline Tank: Role=${phase3TankStats.role}, DEF=${phase3TankStats.def} (Vanguard Perk +15%), Threat=${phase3TankStats.effectiveThreat} (Base: ${phase3TankStats.baseThreat} * 2.0x)`);
+  console.log(`  Backline Healer: Role=${phase3HealerStats.role}, HealAmp=${phase3HealerStats.healAmp} (Sanctuary Perk +15%), Threat=${phase3HealerStats.effectiveThreat} (Base: ${phase3HealerStats.baseThreat} * 0.5x)`);
+  console.log(`  Midline DPS: Role=${phase3DpsStats.role}, ATK=${phase3DpsStats.atk}, Threat=${phase3DpsStats.effectiveThreat} (Base: ${phase3DpsStats.baseThreat} * 1.0x)`);
+
+  if (phase3TankStats.threatMultiplier !== 2.0) throw new Error(`Frontline tank should have 2.0x threat multiplier, got ${phase3TankStats.threatMultiplier}`);
+  if (phase3HealerStats.threatMultiplier !== 0.5) throw new Error(`Backline healer should have 0.5x threat multiplier, got ${phase3HealerStats.threatMultiplier}`);
+  if (phase3HealerStats.healAmp !== 1.15) throw new Error(`Backline healer should receive 1.15x healAmp, got ${phase3HealerStats.healAmp}`);
+
+  // 2. Test DEF Damage Mitigation Formula: DamageTaken = RawDamage * (350 / (350 + DEF))
+  const zeroDefMit = gameState.calculateDamageMitigation(100, 0);
+  const def350Mit = gameState.calculateDamageMitigation(100, 350);
+  const def700Mit = gameState.calculateDamageMitigation(100, 700);
+
+  console.log(`  DEF Mitigation (Raw 100): DEF 0 -> ${zeroDefMit.mitigatedDamage} dmg | DEF 350 -> ${def350Mit.mitigatedDamage} dmg (-50%) | DEF 700 -> ${def700Mit.mitigatedDamage} dmg (-67%)`);
+  if (zeroDefMit.mitigatedDamage !== 100) throw new Error(`0 DEF should take 100 dmg, got ${zeroDefMit.mitigatedDamage}`);
+  if (def350Mit.mitigatedDamage !== 50) throw new Error(`350 DEF should take 50 dmg, got ${def350Mit.mitigatedDamage}`);
+  if (def700Mit.mitigatedDamage !== 33) throw new Error(`700 DEF should take 33 dmg, got ${def700Mit.mitigatedDamage}`);
+
+  // 3. Test Threat-Weighted Targeting Distribution
+  const livingParty = gameState.getPartySpirits().filter(s => !s.isFallen);
+  const targetCounts = {};
+  livingParty.forEach(s => targetCounts[s.id] = 0);
+
+  const SIMULATION_ROUNDS = 1000;
+  for (let i = 0; i < SIMULATION_ROUNDS; i++) {
+    const picked = gameState.selectCombatTarget(livingParty);
+    targetCounts[picked.id] = (targetCounts[picked.id] || 0) + 1;
+  }
+
+  const tankHits = targetCounts[testTank.id] || 0;
+  const healerHits = targetCounts[testHealer.id] || 0;
+  console.log(`  Targeting Simulation (1000 strikes): Frontline Tank: ${tankHits} hits (${(tankHits/10).toFixed(1)}%) vs Backline Healer: ${healerHits} hits (${(healerHits/10).toFixed(1)}%)`);
+
+  if (tankHits <= healerHits) {
+    throw new Error(`Frontline Tank (${tankHits}) should receive significantly more attacks than Backline Healer (${healerHits})`);
+  }
+  if (tankHits < 350) {
+    throw new Error(`Frontline Tank should draw at least 35% of attacks in 5-man party, got ${tankHits}`);
+  }
+
+  // 4. Test Tank Taunt Lock (100% targeting draw)
+  gameState.setSpiritTauntLock(testTank.id, 6.0);
+  if (!testTank.tauntTimer || testTank.tauntTimer <= 0) throw new Error('setSpiritTauntLock should set tauntTimer');
+
+  let tauntLockHits = 0;
+  for (let i = 0; i < 100; i++) {
+    const picked = gameState.selectCombatTarget(livingParty);
+    if (picked.id === testTank.id) tauntLockHits++;
+  }
+  console.log(`  Taunt Lock Active: Frontline Tank intercepted ${tauntLockHits}/100 attacks (100% expected)`);
+  if (tauntLockHits !== 100) throw new Error(`Active Taunt Lock MUST intercept 100% of attacks, got ${tauntLockHits}/100`);
+
+  // 5. Test Tank Ultimate execution applying shields and Taunt Lock
+  testTank.currentHp = testTank.maxHp;
+  testTank.shieldHp = 0;
+  testTank.tauntTimer = 0;
+  gameState.procSpiritUltimate(testTank);
+
+  if (testTank.tauntTimer <= 0) throw new Error('Tank ultimate MUST activate Taunt Lock');
+  const livingAlliesWithShield = livingParty.filter(s => s.shieldHp > 0);
+  console.log(`  Tank Ultimate: Activated ${testTank.tauntTimer}s Taunt Lock & shielded ${livingAlliesWithShield.length}/${livingParty.length} allies`);
+  if (livingAlliesWithShield.length !== livingParty.length) throw new Error('Tank ultimate should grant shield to all living party members');
+
+  // Clear taunt timer for cleanup
+  testTank.tauntTimer = 0;
+
+  console.log('  [PASS] Phase 3 Threat targeting, Tank Taunt Lock, DEF mitigation, and role ultimates fully validated!');
+
+  // =========================================================================
+  // [TEST 26] Testing Sprite Animation Pipeline, Manifest & Controller (Phase 4)
+  // =========================================================================
+  console.log('\n[TEST 26] Testing Sprite Animation Pipeline, Manifest & Controller (Phase 4):');
+
+  // 1. Verify Manifest Configurations and Species Mappings
+  const mappedCount = Object.keys(SPRITE_MANIFEST.speciesMapping).length;
+  console.log(`  Species mapped to spritesheets: ${mappedCount} (Expected >= 40)`);
+  if (mappedCount < 40) throw new Error(`Expected at least 40 species mapped, got ${mappedCount}`);
+
+  const sampleSpecies = [
+    { id: 'cat_spirit', expected: 'feline_shadow' },
+    { id: 'bull_spirit', expected: 'bovine_earth' },
+    { id: 'chicken_spirit', expected: 'avian_blaze' },
+    { id: 'caterpillar_spirit', expected: 'insect_chrysalis' },
+    { id: 'shark_spirit', expected: 'draconic_leviathan' },
+    { id: 'solaris_the_one', expected: 'celestial_sun' },
+    { id: 'dog_spirit', expected: 'canine_guardian' }
+  ];
+
+  for (const s of sampleSpecies) {
+    const sheetKey = getSheetKeyForSpecies(s.id);
+    if (sheetKey !== s.expected) {
+      throw new Error(`Species "${s.id}" mapped to "${sheetKey}", expected "${s.expected}"`);
+    }
+    console.log(`  Mapped: ${s.id} ➔ ${sheetKey} (48x48)`);
+  }
+
+  // 2. Verify Physical Existence of All SVG Spritesheets
+  const requiredSheets = Object.keys(SPRITE_MANIFEST.sheets);
+  console.log(`  Total creature spritesheets defined: ${requiredSheets.length} (Expected 7)`);
+  if (requiredSheets.length !== 7) throw new Error(`Expected 7 sheets, got ${requiredSheets.length}`);
+
+  for (const sheetKey of requiredSheets) {
+    const sheetDef = SPRITE_MANIFEST.sheets[sheetKey];
+    const fullPath = path.resolve(process.cwd(), 'public', sheetDef.path.replace(/^\//, ''));
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Spritesheet file missing on disk: ${fullPath}`);
+    }
+    const content = fs.readFileSync(fullPath, 'utf8');
+    if (!content.includes('<svg') || !content.includes('viewBox="0 0 384 48"')) {
+      throw new Error(`Invalid SVG spritesheet format in ${sheetDef.path}`);
+    }
+  }
+  console.log('  [PASS] All 7 SVG spritesheet asset files verified on disk!');
+
+  // 3. Test SpriteAnimator Controller State Machine
+  const animator = new SpriteAnimator('feline_shadow');
+  if (animator.currentAnim !== 'idle') throw new Error(`Initial anim should be idle, got ${animator.currentAnim}`);
+  if (animator.getCurrentFrame() !== 0) throw new Error(`Initial frame should be 0, got ${animator.getCurrentFrame()}`);
+
+  // Test frame stepping
+  animator.update(0.25); // 0.25s at 5 fps = step forward ~1 frame
+  const currentFrame = animator.getCurrentFrame();
+  console.log(`  SpriteAnimator frame stepped: 0 ➔ ${currentFrame} (Idle loop active)`);
+  if (currentFrame === 0) throw new Error('Frame should advance with delta time');
+
+  // Test attack trigger and auto-return to idle
+  let attackCompleted = false;
+  animator.triggerAttack(() => {
+    attackCompleted = true;
+  });
+  if (animator.currentAnim !== 'attack') throw new Error(`Expected attack anim, got ${animator.currentAnim}`);
+
+  // Step through attack frames
+  animator.update(0.5); // Fast forward attack
+  if (!attackCompleted || animator.currentAnim !== 'idle') {
+    throw new Error('Attack animation should complete and return to idle state');
+  }
+  console.log('  [PASS] Attack animation executed and smoothly transitioned back to idle loop!');
+
+  // Test hurt trigger
+  animator.triggerHurt();
+  if (animator.currentAnim !== 'hurt') throw new Error(`Expected hurt anim, got ${animator.currentAnim}`);
+  animator.update(0.5); // Complete hurt
+  if (animator.currentAnim !== 'idle') throw new Error('Hurt animation should complete back to idle');
+  console.log('  [PASS] Hurt animation executed and returned to idle!');
+
+  console.log('  [PASS] Phase 4 Free Animated Sprites Pipeline & Animation Controller fully validated!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

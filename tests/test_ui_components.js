@@ -143,7 +143,26 @@ if (!madnessContainer.innerHTML.includes('btn-fight-enemy') || !madnessContainer
 if (!madnessContainer.innerHTML.includes('btn-prev-stage') || !madnessContainer.innerHTML.includes('btn-combat-sound')) {
   throw new Error('Floor navigation or audio toggle missing from Madness View!');
 }
-console.log('[PASS] Madness Zone View renders allies, enemies, controls, and audio toggle cleanly.');
+if (!madnessContainer.innerHTML.includes('madness-tactical-grid') || 
+    !madnessContainer.innerHTML.includes('madness-seamless-grid') || 
+    !madnessContainer.innerHTML.includes('col-back') || 
+    !madnessContainer.innerHTML.includes('col-mid') || 
+    !madnessContainer.innerHTML.includes('col-front')) {
+  throw new Error('3x3 Tactical Grid (Back, Mid, Front columns) or seamless grid class missing from Madness View!');
+}
+if (madnessContainer.innerHTML.includes('empty-grid-tile') || madnessContainer.innerHTML.includes('empty-tile-coord')) {
+  throw new Error('Empty slot boxes must NOT be rendered on the Madness screen!');
+}
+if (!madnessContainer.innerHTML.includes('seamless-battle-spirit') ||
+    !madnessContainer.innerHTML.includes('seamless-overhead-tag') ||
+    !madnessContainer.innerHTML.includes('seamless-spirit-name') ||
+    !madnessContainer.innerHTML.includes('seamless-spirit-level')) {
+  throw new Error('Seamless spirits with overhead name and level missing from Madness View!');
+}
+if (!madnessContainer.innerHTML.includes('btn-madness-auto-align') || !madnessContainer.innerHTML.includes('data-formation-slot')) {
+  throw new Error('Auto-align button or tactical formation slots missing from Madness View!');
+}
+console.log('[PASS] Madness Zone View renders 3x3 tactical grid formation, seamless spirits (no empty slot boxes), and auto-align cleanly.');
 
 // 7. Test setStage method on gameState
 const currentStage = gameState.state.madnessZone.stage;
@@ -309,5 +328,19 @@ if (partySpirits.length > 0) {
 }
 console.log('[PASS] Hero View & Slot Modal artifact and weapon upgrade integration validated.');
 
+// 12. Test Hero View 3x3 Tactical Squad Formation Mode
+const heroFormationContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderPartyView(heroFormationContainer);
+// Simulate clicking 3x3 Formation button
+if (!heroFormationContainer.innerHTML.includes('tactical-battle-grid') && !heroFormationContainer.innerHTML.includes('btn-mode-formation')) {
+  throw new Error('Hero View missing 3x3 Formation mode switch pill');
+}
+console.log('[PASS] Hero View 3x3 Formation mode controls validated.');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
+
