@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .sd-blade { fill: #2d3436; }
+      .sd-edge { fill: #a29bfe; }
+      .sd-poison { fill: #00b894; }
+      .sd-hilt { fill: #636e72; }
+      .sd-smoke { fill: rgba(162, 155, 254, 0.4); }
+      .sd-shadow { fill: rgba(0, 0, 0, 0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="8" ry="2.6" class="sd-shadow"/>
+    <!-- Left Dagger -->
+    <g transform="translate(-5, 0) rotate(-15 20 28)">
+      <polygon points="20,10 23,24 20,27 17,24" class="sd-blade"/>
+      <polygon points="20,10 21.5,24 20,27" class="sd-edge"/>
+      <rect x="15" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="18.5" y="30" width="3" height="6" class="sd-blade"/>
+      <circle cx="20" cy="37" r="1.5" class="sd-poison"/>
+    </g>
+    <!-- Right Dagger -->
+    <g transform="translate(5, 0) rotate(15 28 28)">
+      <polygon points="28,10 31,24 28,27 25,24" class="sd-blade"/>
+      <polygon points="28,10 29.5,24 28,27" class="sd-edge"/>
+      <rect x="23" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="26.5" y="30" width="3" height="6" class="sd-blade"/>
+      <circle cx="28" cy="37" r="1.5" class="sd-poison"/>
+    </g>
+    <!-- Shadow mist wisp -->
+    <circle cx="24" cy="18" r="2.5" class="sd-smoke"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 [48..96] - floating subtle twist -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="7" ry="2.2" class="sd-shadow"/>
+    <g transform="translate(-5, -2) rotate(-18 20 28)">
+      <polygon points="20,10 23,24 20,27 17,24" class="sd-blade"/>
+      <polygon points="20,10 21.5,24 20,27" class="sd-edge"/>
+      <rect x="15" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="18.5" y="30" width="3" height="6" class="sd-blade"/>
+    </g>
+    <g transform="translate(5, -2) rotate(18 28 28)">
+      <polygon points="28,10 31,24 28,27 25,24" class="sd-blade"/>
+      <polygon points="28,10 29.5,24 28,27" class="sd-edge"/>
+      <rect x="23" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="26.5" y="30" width="3" height="6" class="sd-blade"/>
+    </g>
+    <circle cx="20" cy="12" r="2" class="sd-smoke"/>
+    <circle cx="28" cy="16" r="2" class="sd-smoke"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="6.5" ry="2" class="sd-shadow"/>
+    <g transform="translate(-5, -3) rotate(-15 20 28)">
+      <polygon points="20,10 23,24 20,27 17,24" class="sd-blade"/>
+      <polygon points="20,10 21.5,24 20,27" class="sd-edge"/>
+      <rect x="15" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="18.5" y="30" width="3" height="6" class="sd-blade"/>
+    </g>
+    <g transform="translate(5, -3) rotate(15 28 28)">
+      <polygon points="28,10 31,24 28,27 25,24" class="sd-blade"/>
+      <polygon points="28,10 29.5,24 28,27" class="sd-edge"/>
+      <rect x="23" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="26.5" y="30" width="3" height="6" class="sd-blade"/>
+    </g>
+    <circle cx="24" cy="10" r="3" class="sd-smoke"/>
+    <circle cx="24" cy="22" r="1.5" class="sd-poison"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43.5" rx="7.5" ry="2.4" class="sd-shadow"/>
+    <g transform="translate(-5, -1) rotate(-15 20 28)">
+      <polygon points="20,10 23,24 20,27 17,24" class="sd-blade"/>
+      <rect x="15" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="18.5" y="30" width="3" height="6" class="sd-blade"/>
+    </g>
+    <g transform="translate(5, -1) rotate(15 28 28)">
+      <polygon points="28,10 31,24 28,27 25,24" class="sd-blade"/>
+      <rect x="23" y="27" width="10" height="3" rx="1" class="sd-hilt"/>
+      <rect x="26.5" y="30" width="3" height="6" class="sd-blade"/>
+    </g>
+  </g>
+
+  <!-- Frame 4: Attack 1 [192..240] - Cross Stance -->
+  <g transform="translate(192, 0)">
+    <g transform="rotate(45 24 24)">
+      <polygon points="24,6 27,24 24,28 21,24" class="sd-blade"/>
+      <rect x="18" y="28" width="12" height="3" rx="1" class="sd-hilt"/>
+    </g>
+    <g transform="rotate(-45 24 24)">
+      <polygon points="24,6 27,24 24,28 21,24" class="sd-blade"/>
+      <rect x="18" y="28" width="12" height="3" rx="1" class="sd-hilt"/>
+    </g>
+    <circle cx="24" cy="24" r="3" fill="#00b894"/>
+  </g>
+
+  <!-- Frame 5: Attack 2 [240..288] - X-Slash Cross Cut -->
+  <g transform="translate(240, 0)">
+    <line x1="8" y1="8" x2="40" y2="40" stroke="#a29bfe" stroke-width="2.5"/>
+    <line x1="8" y1="40" x2="40" y2="8" stroke="#00b894" stroke-width="2.5"/>
+    <circle cx="24" cy="24" r="5" fill="#ffffff"/>
+  </g>
+
+  <!-- Frame 6: Attack 3 [288..336] - Poison Mist Cloud -->
+  <g transform="translate(288, 0)">
+    <circle cx="20" cy="20" r="8" fill="rgba(0, 184, 148, 0.4)"/>
+    <circle cx="30" cy="24" r="6" fill="rgba(162, 155, 254, 0.4)"/>
+    <circle cx="26" cy="16" r="3" fill="#00b894"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Flash [336..384] -->
+  <g transform="translate(336, 0)">
+    <g transform="translate(-5, 0) rotate(-15 20 28)">
+      <polygon points="20,10 23,24 20,27 17,24" fill="#ffffff"/>
+      <rect x="15" y="27" width="10" height="3" rx="1" fill="#dfe6e9"/>
+    </g>
+    <g transform="translate(5, 0) rotate(15 28 28)">
+      <polygon points="28,10 31,24 28,27 25,24" fill="#ffffff"/>
+      <rect x="23" y="27" width="10" height="3" rx="1" fill="#dfe6e9"/>
+    </g>
+  </g>
+</svg>

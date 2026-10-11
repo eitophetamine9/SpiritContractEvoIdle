@@ -6092,6 +6092,76 @@ button:disabled {
   background-size: 576px 72px;
 }
 
+.animated-weapon-sprite {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 4px 10px rgba(230, 126, 34, 0.5));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.animated-weapon-sprite:hover {
+  transform: translateY(-3px) scale(1.1);
+  filter: drop-shadow(0 6px 16px rgba(230, 126, 34, 0.8));
+}
+
+.animated-weapon-sprite .sprite-frame-viewer {
+  width: 48px;
+  height: 48px;
+  background-image: var(--sprite-sheet);
+  background-size: 384px 48px;
+  background-position: 0px 0px;
+  background-repeat: no-repeat;
+  animation: spriteIdleCycle 0.9s steps(4) infinite;
+  image-rendering: pixelated;
+}
+
+/* Equipment Socket Scaled Sprites (Pedestal & Roster slots) */
+.socket-animated-sprite {
+  width: 32px !important;
+  height: 32px !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) !important;
+  pointer-events: none;
+}
+
+.socket-animated-sprite .sprite-frame-viewer {
+  width: 32px !important;
+  height: 32px !important;
+  background-size: 256px 32px !important;
+}
+
+/* Modal Inspect Large Scaled Sprites */
+.inspect-animated-sprite {
+  width: 72px !important;
+  height: 72px !important;
+  filter: drop-shadow(0 6px 20px rgba(241, 196, 15, 0.7)) !important;
+}
+
+.inspect-animated-sprite .sprite-frame-viewer {
+  width: 72px !important;
+  height: 72px !important;
+  background-size: 576px 72px !important;
+}
+
+/* Vault Card Artwork Sprites */
+.vault-card-sprite {
+  width: 56px !important;
+  height: 56px !important;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7)) !important;
+}
+
+.vault-card-sprite .sprite-frame-viewer {
+  width: 56px !important;
+  height: 56px !important;
+  background-size: 448px 56px !important;
+}
+
 /* Mirrored sprite for combat facing */
 .flipped-sprite {
   transform: scaleX(-1);

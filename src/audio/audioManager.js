@@ -7,8 +7,9 @@ class AudioManager {
   constructor() {
     this.audioContext = null;
     this.isMuted = false;
-    this.bgmVolume = 0.45;
-    this.sfxVolume = 0.70;
+    this.bgmVolume = 0.35;
+    this.sfxVolume = 0.35;
+    this.lastUltSfxTime = 0;
     this.currentBgmTrack = null;
     this.bgmAudioElement = null;
     this.audioInitialized = false;
@@ -19,8 +20,8 @@ class AudioManager {
       if (saved) {
         const parsed = JSON.parse(saved);
         this.isMuted = !!parsed.isMuted;
-        this.bgmVolume = typeof parsed.bgmVolume === 'number' ? parsed.bgmVolume : 0.45;
-        this.sfxVolume = typeof parsed.sfxVolume === 'number' ? parsed.sfxVolume : 0.70;
+        this.bgmVolume = typeof parsed.bgmVolume === 'number' ? Math.min(parsed.bgmVolume, 0.40) : 0.35;
+        this.sfxVolume = typeof parsed.sfxVolume === 'number' ? (parsed.sfxVolume > 0.6 ? 0.35 : parsed.sfxVolume) : 0.35;
       }
     } catch {
       // Fallback to defaults
@@ -187,10 +188,24 @@ class AudioManager {
       click: 'tap'
     };
     const resolvedKey = aliasMap[sfxKey] || sfxKey;
+
+    // Anti-spam throttling for ultimate SFX (minimum 1.4s interval)
+    if (resolvedKey === 'ult') {
+      const now = Date.now();
+      if (now - this.lastUltSfxTime < 1400) {
+        return; // Suppress overlapping ultimate sounds
+      }
+      this.lastUltSfxTime = now;
+    }
+
     const src = this.sfxTracks[resolvedKey] || this.sfxTracks.tap;
     try {
       const audio = new Audio(src);
-      audio.volume = this.sfxVolume;
+      // Attenuate ultimate sound specifically so it never overwhelms or distorts
+      const volumeLevel = resolvedKey === 'ult' 
+        ? Math.max(0, Math.min(1, this.sfxVolume * 0.55)) 
+        : this.sfxVolume;
+      audio.volume = volumeLevel;
       audio.play().catch(() => {});
     } catch {
       // ignore audio play errors in background

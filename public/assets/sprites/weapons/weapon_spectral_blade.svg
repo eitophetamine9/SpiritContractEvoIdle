@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .sb-edge { fill: #00cec9; }
+      .sb-blade { fill: #81ecec; }
+      .sb-core { fill: #ffffff; }
+      .sb-guard { fill: #6c5ce7; }
+      .sb-hilt { fill: #2d3436; }
+      .sb-glow { fill: rgba(0, 206, 201, 0.4); }
+      .sb-shadow { fill: rgba(0, 0, 0, 0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="10" ry="3" class="sb-shadow"/>
+    <!-- Blade Aura -->
+    <path d="M21 8 Q24 2 27 8 L27 26 L21 26 Z" class="sb-glow"/>
+    <!-- Blade Outer -->
+    <polygon points="24,6 27,24 24,28 21,24" class="sb-blade"/>
+    <!-- Blade Core Rune -->
+    <polygon points="24,8 25.5,23 24,26 22.5,23" class="sb-core"/>
+    <!-- Guard -->
+    <rect x="16" y="27" width="16" height="4" rx="1.5" class="sb-guard"/>
+    <circle cx="24" cy="29" r="1.5" class="sb-edge"/>
+    <!-- Grip & Pommel -->
+    <rect x="22" y="31" width="4" height="7" rx="1" class="sb-hilt"/>
+    <circle cx="24" cy="39" r="2.5" class="sb-guard"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 [48..96] - slight bob up & pulse -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="8" ry="2.5" class="sb-shadow"/>
+    <path d="M20 6 Q24 0 28 6 L28 25 L20 25 Z" class="sb-glow"/>
+    <polygon points="24,4 27,22 24,26 21,22" class="sb-blade"/>
+    <polygon points="24,6 25.5,21 24,24 22.5,21" class="sb-core"/>
+    <rect x="16" y="25" width="16" height="4" rx="1.5" class="sb-guard"/>
+    <circle cx="24" cy="27" r="1.5" class="sb-edge"/>
+    <rect x="22" y="29" width="4" height="7" rx="1" class="sb-hilt"/>
+    <circle cx="24" cy="37" r="2.5" class="sb-guard"/>
+    <circle cx="28" cy="14" r="1.5" class="sb-blade"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 [96..144] - highest float -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="7" ry="2.2" class="sb-shadow"/>
+    <path d="M20 5 Q24 -1 28 5 L28 24 L20 24 Z" class="sb-glow"/>
+    <polygon points="24,3 27,21 24,25 21,21" class="sb-blade"/>
+    <polygon points="24,5 25.5,20 24,23 22.5,20" class="sb-core"/>
+    <rect x="16" y="24" width="16" height="4" rx="1.5" class="sb-guard"/>
+    <circle cx="24" cy="26" r="1.5" class="sb-edge"/>
+    <rect x="22" y="28" width="4" height="7" rx="1" class="sb-hilt"/>
+    <circle cx="24" cy="36" r="2.5" class="sb-guard"/>
+    <circle cx="20" cy="12" r="1.5" class="sb-core"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 [144..192] - descending -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43.5" rx="9" ry="2.8" class="sb-shadow"/>
+    <path d="M21 7 Q24 1 27 7 L27 25.5 L21 25.5 Z" class="sb-glow"/>
+    <polygon points="24,5 27,23 24,27 21,23" class="sb-blade"/>
+    <polygon points="24,7 25.5,22 24,25 22.5,22" class="sb-core"/>
+    <rect x="16" y="26" width="16" height="4" rx="1.5" class="sb-guard"/>
+    <circle cx="24" cy="28" r="1.5" class="sb-edge"/>
+    <rect x="22" y="30" width="4" height="7" rx="1" class="sb-hilt"/>
+    <circle cx="24" cy="38" r="2.5" class="sb-guard"/>
+  </g>
+
+  <!-- Frame 4: Attack 1 [192..240] - tilt back -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="43" rx="10" ry="3" class="sb-shadow"/>
+    <g transform="rotate(-25 24 35)">
+      <polygon points="24,4 27,22 24,26 21,22" class="sb-blade"/>
+      <polygon points="24,6 25.5,21 24,24 22.5,21" class="sb-core"/>
+      <rect x="16" y="25" width="16" height="4" rx="1.5" class="sb-guard"/>
+      <rect x="22" y="29" width="4" height="7" rx="1" class="sb-hilt"/>
+      <circle cx="24" cy="37" r="2.5" class="sb-guard"/>
+    </g>
+  </g>
+
+  <!-- Frame 5: Attack 2 [240..288] - full forward slash -->
+  <g transform="translate(240, 0)">
+    <!-- Slash Arc Trail -->
+    <path d="M8 8 Q28 14 38 32 Q24 22 10 16 Z" fill="rgba(0, 206, 201, 0.7)"/>
+    <path d="M12 10 Q28 16 35 30" stroke="#fff" stroke-width="2" fill="none"/>
+    <g transform="rotate(45 24 30)">
+      <polygon points="24,4 27,22 24,26 21,22" class="sb-blade"/>
+      <rect x="16" y="25" width="16" height="4" rx="1.5" class="sb-guard"/>
+      <rect x="22" y="29" width="4" height="7" rx="1" class="sb-hilt"/>
+    </g>
+  </g>
+
+  <!-- Frame 6: Attack 3 [288..336] - slash follow-through -->
+  <g transform="translate(288, 0)">
+    <path d="M16 16 Q36 24 42 38" stroke="rgba(129, 236, 236, 0.6)" stroke-width="3" fill="none"/>
+    <circle cx="40" cy="36" r="3" class="sb-core"/>
+    <g transform="rotate(30 24 33)">
+      <polygon points="24,5 27,23 24,27 21,23" class="sb-blade"/>
+      <rect x="16" y="26" width="16" height="4" rx="1.5" class="sb-guard"/>
+      <rect x="22" y="30" width="4" height="7" rx="1" class="sb-hilt"/>
+    </g>
+  </g>
+
+  <!-- Frame 7: Hurt / Flash [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="10" ry="3" class="sb-shadow"/>
+    <polygon points="24,6 27,24 24,28 21,24" fill="#ffffff"/>
+    <rect x="16" y="27" width="16" height="4" rx="1.5" fill="#a29bfe"/>
+    <rect x="22" y="31" width="4" height="7" rx="1" class="sb-hilt"/>
+    <!-- Flare particles -->
+    <circle cx="16" cy="14" r="2" fill="#00cec9"/>
+    <circle cx="32" cy="18" r="2" fill="#81ecec"/>
+    <circle cx="24" cy="6" r="2.5" fill="#ffffff"/>
+  </g>
+</svg>

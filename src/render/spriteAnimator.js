@@ -199,6 +199,72 @@ export const SPRITE_MANIFEST = {
         attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
         hurt: { frames: [7], fps: 6, loop: false }
       }
+    },
+    weapon_spectral_blade: {
+      path: '/assets/sprites/weapons/weapon_spectral_blade.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_celestial_bow: {
+      path: '/assets/sprites/weapons/weapon_celestial_bow.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_astral_staff: {
+      path: '/assets/sprites/weapons/weapon_astral_staff.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_primordial_claws: {
+      path: '/assets/sprites/weapons/weapon_primordial_claws.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_shadow_dagger: {
+      path: '/assets/sprites/weapons/weapon_shadow_dagger.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_titan_mallet: {
+      path: '/assets/sprites/weapons/weapon_titan_mallet.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
     }
   }
 };
@@ -295,6 +361,31 @@ export function createAnimatedEnemyHtml(enemy, { extraClasses = '' } = {}) {
   `;
 }
 
+export function getSheetKeyForWeapon(weaponOrType) {
+  if (!weaponOrType) return 'weapon_spectral_blade';
+  const typeStr = typeof weaponOrType === 'object' 
+    ? (weaponOrType.weaponType || weaponOrType.archetype || weaponOrType.subType || weaponOrType.id || weaponOrType.name || '')
+    : weaponOrType;
+  const str = String(typeStr).toLowerCase();
+
+  if (str.includes('bow') || str.includes('arrow') || str.includes('archer')) {
+    return 'weapon_celestial_bow';
+  }
+  if (str.includes('staff') || str.includes('scepter') || str.includes('wand') || str.includes('rod')) {
+    return 'weapon_astral_staff';
+  }
+  if (str.includes('claw') || str.includes('fist') || str.includes('gauntlet')) {
+    return 'weapon_primordial_claws';
+  }
+  if (str.includes('dagger') || str.includes('assassin') || str.includes('knife')) {
+    return 'weapon_shadow_dagger';
+  }
+  if (str.includes('hammer') || str.includes('mallet') || str.includes('mace') || str.includes('titan')) {
+    return 'weapon_titan_mallet';
+  }
+  return 'weapon_spectral_blade';
+}
+
 /**
  * Generates HTML string for an animated relic piece
  */
@@ -303,6 +394,19 @@ export function createAnimatedRelicHtml(relicOrSetId, slotType = 'headgear', { e
   const path = SPRITE_MANIFEST.sheets[sheetKey]?.path || `/assets/sprites/relics/${sheetKey}.svg`;
   return `
     <div class="animated-relic-sprite sprite-${sheetKey} ${extraClasses}" style="--sprite-sheet: url('${path}');">
+      <div class="sprite-frame-viewer"></div>
+    </div>
+  `;
+}
+
+/**
+ * Generates HTML string for an animated weapon piece
+ */
+export function createAnimatedWeaponHtml(weaponOrType, { extraClasses = '' } = {}) {
+  const sheetKey = getSheetKeyForWeapon(weaponOrType);
+  const path = SPRITE_MANIFEST.sheets[sheetKey]?.path || `/assets/sprites/weapons/${sheetKey}.svg`;
+  return `
+    <div class="animated-weapon-sprite sprite-${sheetKey} ${extraClasses}" style="--sprite-sheet: url('${path}');">
       <div class="sprite-frame-viewer"></div>
     </div>
   `;

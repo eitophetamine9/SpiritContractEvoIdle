@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .tm-head { fill: #2d3436; }
+      .tm-gold { fill: #e67e22; }
+      .tm-shaft { fill: #d35400; }
+      .tm-magma { fill: #e74c3c; }
+      .tm-core { fill: #f39c12; }
+      .tm-shadow { fill: rgba(0, 0, 0, 0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="10" ry="3.2" class="tm-shadow"/>
+    <!-- Shaft -->
+    <rect x="22.5" y="16" width="3" height="26" rx="1" class="tm-shaft"/>
+    <circle cx="24" cy="42" r="2.5" class="tm-gold"/>
+    <!-- Heavy War Hammer Head -->
+    <rect x="13" y="10" width="22" height="13" rx="2" class="tm-head"/>
+    <rect x="11" y="9" width="4" height="15" rx="1" class="tm-gold"/>
+    <rect x="33" y="9" width="4" height="15" rx="1" class="tm-gold"/>
+    <!-- Molten Core Inlay -->
+    <circle cx="24" cy="16.5" r="3.5" class="tm-magma"/>
+    <circle cx="24" cy="16.5" r="1.8" class="tm-core"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 [48..96] - breathing float & magma glow -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="8.5" ry="2.7" class="tm-shadow"/>
+    <rect x="22.5" y="14" width="3" height="26" rx="1" class="tm-shaft"/>
+    <circle cx="24" cy="40" r="2.5" class="tm-gold"/>
+    <rect x="13" y="8" width="22" height="13" rx="2" class="tm-head"/>
+    <rect x="11" y="7" width="4" height="15" rx="1" class="tm-gold"/>
+    <rect x="33" y="7" width="4" height="15" rx="1" class="tm-gold"/>
+    <circle cx="24" cy="14.5" r="4" class="tm-magma"/>
+    <circle cx="24" cy="14.5" r="2" class="tm-core"/>
+    <!-- Spark particle -->
+    <circle cx="37" cy="6" r="1.5" class="tm-core"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="7.5" ry="2.4" class="tm-shadow"/>
+    <rect x="22.5" y="13" width="3" height="26" rx="1" class="tm-shaft"/>
+    <circle cx="24" cy="39" r="2.5" class="tm-gold"/>
+    <rect x="13" y="7" width="22" height="13" rx="2" class="tm-head"/>
+    <rect x="11" y="6" width="4" height="15" rx="1" class="tm-gold"/>
+    <rect x="33" y="6" width="4" height="15" rx="1" class="tm-gold"/>
+    <circle cx="24" cy="13.5" r="4.5" class="tm-magma"/>
+    <circle cx="24" cy="13.5" r="2.5" class="tm-core"/>
+    <circle cx="11" cy="5" r="1.5" class="tm-core"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43.5" rx="9" ry="2.9" class="tm-shadow"/>
+    <rect x="22.5" y="15" width="3" height="26" rx="1" class="tm-shaft"/>
+    <circle cx="24" cy="41" r="2.5" class="tm-gold"/>
+    <rect x="13" y="9" width="22" height="13" rx="2" class="tm-head"/>
+    <rect x="11" y="8" width="4" height="15" rx="1" class="tm-gold"/>
+    <rect x="33" y="8" width="4" height="15" rx="1" class="tm-gold"/>
+    <circle cx="24" cy="15.5" r="3.5" class="tm-magma"/>
+  </g>
+
+  <!-- Frame 4: Attack 1 [192..240] - Overhead Windup -->
+  <g transform="translate(192, 0)">
+    <g transform="rotate(-40 24 35)">
+      <rect x="22.5" y="12" width="3" height="26" rx="1" class="tm-shaft"/>
+      <rect x="13" y="6" width="22" height="13" rx="2" class="tm-head"/>
+      <rect x="11" y="5" width="4" height="15" rx="1" class="tm-gold"/>
+      <rect x="33" y="5" width="4" height="15" rx="1" class="tm-gold"/>
+    </g>
+  </g>
+
+  <!-- Frame 5: Attack 2 [240..288] - Earth-Shattering Slam -->
+  <g transform="translate(240, 0)">
+    <rect x="22.5" y="22" width="3" height="22" rx="1" class="tm-shaft"/>
+    <rect x="13" y="18" width="22" height="13" rx="2" class="tm-head"/>
+    <rect x="11" y="17" width="4" height="15" rx="1" class="tm-gold"/>
+    <rect x="33" y="17" width="4" height="15" rx="1" class="tm-gold"/>
+    <!-- Shockwave ground cracks -->
+    <path d="M4 42 L14 36 L24 43 L34 35 L44 42" stroke="#e74c3c" stroke-width="2" fill="none"/>
+    <circle cx="24" cy="38" r="7" fill="rgba(243, 156, 18, 0.7)"/>
+  </g>
+
+  <!-- Frame 6: Attack 3 [288..336] - Shockwave Embers -->
+  <g transform="translate(288, 0)">
+    <rect x="22.5" y="17" width="3" height="25" rx="1" class="tm-shaft"/>
+    <rect x="13" y="11" width="22" height="13" rx="2" class="tm-head"/>
+    <circle cx="8" cy="32" r="2" class="tm-core"/>
+    <circle cx="40" cy="30" r="2" class="tm-core"/>
+    <circle cx="24" cy="24" r="2.5" class="tm-magma"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Flash [336..384] -->
+  <g transform="translate(336, 0)">
+    <rect x="22.5" y="16" width="3" height="26" rx="1" fill="#ffffff"/>
+    <rect x="13" y="10" width="22" height="13" rx="2" fill="#ffffff"/>
+    <circle cx="24" cy="16.5" r="6" fill="#f39c12"/>
+  </g>
+</svg>

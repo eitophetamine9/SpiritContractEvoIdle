@@ -13,6 +13,7 @@ import { RELIC_SLOT_TYPES, GREEK_GOD_SETS } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showEvolutionCeremonyModal, showEquipmentSlotModal, showItemInspectModal } from '../components/modals.js';
 import { audioManager } from '../../audio/audioManager.js';
+import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 
 let activeViewMode = 'showcase'; // 'showcase', 'formation', or 'roster'
 let selectedPartyIndex = 0;
@@ -486,7 +487,9 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                   data-slot="weapon"
                   style="${weapon ? `border-color: ${weapon.color || '#f1c40f'};` : ''}"
                   title="${weapon ? `${weapon.name} (+${weapon.level || 1}) (${weapon.rarity})\n+${weapon.atkPower} ATK Power\nTap to Upgrade or Swap` : 'Weapon Socket (Tap to equip)'}">
-            <span class="socket-icon">${weapon ? weapon.icon : '⚔️'}</span>
+            ${weapon 
+              ? createAnimatedWeaponHtml(weapon, { extraClasses: 'socket-animated-sprite' }) 
+              : '<span class="socket-icon">⚔️</span>'}
             <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? `WPN +${weapon.level || 1}` : '+WPN'}</span>
             ${weapon ? `
               <span class="socket-level-pill ${weapon.level >= 15 ? 'pill-max' : ''}">
@@ -505,7 +508,9 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                       data-slot="${slot.id}"
                       style="${relic ? `border-color: ${relic.color || 'var(--primary-color)'};` : ''}"
                       title="${relic ? `${relic.name} (+${relic.level || 0})\n+${relic.mainStatValue} ${relic.mainStatName}\nSet: ${relic.setName}\nTap to Upgrade or Swap` : `Empty ${slot.name} (Tap to equip)`}">
-                <span class="socket-icon">${relic ? relic.icon : slot.icon}</span>
+                ${relic 
+                  ? createAnimatedRelicHtml(relic, slot.id, { extraClasses: 'socket-animated-sprite' }) 
+                  : `<span class="socket-icon">${slot.icon}</span>`}
                 <span class="socket-tag" style="${relic ? `color: ${relic.accentColor || relic.color};` : ''}">
                   ${relic ? `${relic.setId.slice(0, 3).toUpperCase()} +${relic.level || 0}` : slot.name.slice(0, 3).toUpperCase()}
                 </span>
@@ -563,7 +568,12 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                 return `
                   <div class="drawer-item-card ${isEquippedToCurrent ? 'card-current-equipped' : ''}" style="border-color: ${item.color || 'var(--border-color)'};">
                     <div class="drawer-card-top">
-                      <span class="drawer-item-icon">${item.icon}</span>
+                      <div class="drawer-item-icon-wrap" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        ${item.type === 'weapon'
+                          ? createAnimatedWeaponHtml(item, { extraClasses: 'socket-animated-sprite' })
+                          : createAnimatedRelicHtml(item, item.slotTypeId, { extraClasses: 'socket-animated-sprite' })
+                        }
+                      </div>
                       <div class="drawer-item-texts">
                         <span class="drawer-item-name" style="color: ${item.color || '#fff'};">
                           ${item.name} <span style="font-size: 10px; font-weight: 800; color: #ffd32a;">+${item.level || (item.type === 'weapon' ? 1 : 0)}</span>
@@ -690,7 +700,9 @@ function renderRosterModeHtml(partySpirits) {
                         data-slot="weapon"
                         style="${weapon ? `border-color: ${weapon.color || '#f1c40f'};` : ''}"
                         title="${weapon ? `${weapon.name} (+${weapon.level || 1}) (${weapon.rarity})\n+${weapon.atkPower} ATK Power\nTap to Upgrade or Swap` : 'Weapon Socket'}">
-                  <span class="socket-icon">${weapon ? weapon.icon : '⚔️'}</span>
+                  ${weapon 
+                    ? createAnimatedWeaponHtml(weapon, { extraClasses: 'socket-animated-sprite' }) 
+                    : '<span class="socket-icon">⚔️</span>'}
                   <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? `WPN +${weapon.level || 1}` : '+WPN'}</span>
                   ${weapon ? `
                     <span class="socket-level-pill ${weapon.level >= 15 ? 'pill-max' : ''}">
@@ -708,7 +720,9 @@ function renderRosterModeHtml(partySpirits) {
                             data-slot="${slot.id}"
                             style="${relic ? `border-color: ${relic.color || 'var(--primary-color)'};` : ''}"
                             title="${relic ? `${relic.name} (+${relic.level || 0})\n+${relic.mainStatValue} ${relic.mainStatName}\nTap to Upgrade/Equip` : `Empty ${slot.name}`}">
-                      <span class="socket-icon">${relic ? relic.icon : slot.icon}</span>
+                      ${relic 
+                        ? createAnimatedRelicHtml(relic, slot.id, { extraClasses: 'socket-animated-sprite' }) 
+                        : `<span class="socket-icon">${slot.icon}</span>`}
                       <span class="socket-tag" style="${relic ? `color: ${relic.accentColor || relic.color};` : ''}">
                         ${relic ? `${relic.setId.slice(0, 3).toUpperCase()} +${relic.level || 0}` : slot.name.slice(0, 3).toUpperCase()}
                       </span>
@@ -920,10 +934,10 @@ function attachEventListeners(container) {
   container.querySelectorAll('[data-drawer-dismantle]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const itemUid = e.currentTarget.getAttribute('data-drawer-dismantle');
-      if (confirm('Dismantle this equipment item for Spirit Shards?')) {
+      if (confirm('Dismantle this equipment item for Spirit Shards and Essences of the Gods?')) {
         try {
           const res = gameState.dismantleEquipment(itemUid);
-          alert(`Dismantled equipment! Gained +${res.shardsGained} Spirit Shards.`);
+          alert(`Dismantled equipment! Gained +${res.shardsGained} Spirit Shards${res.essencesGained > 0 ? ` and +${res.essencesGained} Essences of the Gods` : ''}.`);
           renderPartyView(container);
         } catch (err) {
           alert(err.message);

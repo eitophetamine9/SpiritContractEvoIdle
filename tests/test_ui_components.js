@@ -362,6 +362,62 @@ if (!contractContainer.innerHTML.includes('banner-showcase-pedestal') ||
 }
 console.log('[PASS] Summon Banner Overhaul with animated hero and divine relic piece validated.');
 
+// 14. Test Animated Relics & Weapons in Vault and Character Equipment
+import { renderVaultView } from '../src/ui/views/vaultView.js';
+gameState.state.inventory = gameState.state.inventory || {};
+gameState.state.inventory.equipment = [
+  {
+    uid: 'vault_test_relic_1',
+    type: 'relic',
+    stars: 4,
+    level: 3,
+    setId: 'zeus',
+    slotTypeId: 'headgear',
+    name: 'Thunder Crown',
+    mainStatValue: 50,
+    mainStatName: 'Max HP'
+  },
+  {
+    uid: 'vault_test_weapon_1',
+    type: 'weapon',
+    level: 5,
+    rarity: 'RARE',
+    weaponType: 'sword',
+    name: 'Spectral Warblade',
+    atkPower: 45,
+    critRate: 8
+  }
+];
+
+const vaultTestContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderVaultView(vaultTestContainer);
+if (!vaultTestContainer.innerHTML.includes('vault-cat-btn')) {
+  throw new Error('Vault View failed to render category buttons');
+}
+
+// Equip weapon and relic to starter spirit and test Party View
+const starterSp = gameState.state.spirits[0];
+gameState.state.inventory.equipment[0].equippedToSpiritId = starterSp.id;
+gameState.state.inventory.equipment[1].equippedToSpiritId = starterSp.id;
+starterSp.relics = { headgear: gameState.state.inventory.equipment[0] };
+starterSp.weapon = gameState.state.inventory.equipment[1];
+
+const partyEquipContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderPartyView(partyEquipContainer);
+if (!partyEquipContainer.innerHTML.includes('animated-weapon-sprite') ||
+    !partyEquipContainer.innerHTML.includes('animated-relic-sprite')) {
+  throw new Error('Party View character equipment missing animated weapon or relic sprites!');
+}
+console.log('[PASS] Animated Relics & Weapons in Vault and Character Equipment validated.');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 
