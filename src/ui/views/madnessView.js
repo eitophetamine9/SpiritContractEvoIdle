@@ -5,7 +5,7 @@ import { createEnemyPlaceholderBox, createSpiritPlaceholderBox } from '../compon
 import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { showSpiritModal } from '../components/modals.js';
-import { getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
+import { getSheetKeyForSpecies, createAnimatedEnemyHtml, getSheetKeyForEnemy } from '../../render/spriteAnimator.js';
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
@@ -164,41 +164,36 @@ export function renderMadnessView(container) {
           <div class="clash-sparks-icon">⚔️</div>
         </div>
 
-        <!-- Right Side: Corrupted Swarm Formation -->
-        <div class="enemy-formation-column">
+        <!-- Right Side: Corrupted Swarm Formation (Seamless, No Borders, Animated Sprites) -->
+        <div class="enemy-formation-column seamless-enemy-column">
           <div class="formation-header-label" style="color: #ff6b81;">
             ${swarm.some(e => e.isBoss) ? '⚠️ OVERLORD SWARM' : `CORRUPTED SWARM (${livingEnemiesCount}/${swarm.length})`}
           </div>
 
-          <div class="enemy-swarm-wrapper" id="enemy-swarm-wrapper">
+          <div class="enemy-swarm-wrapper" id="enemy-swarm-wrapper" style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
             ${swarm.map((em, sIdx) => {
               const isDead = em.isDefeated || em.hp <= 0;
               const emHpPct = Math.max(0, Math.min(100, Math.round((em.hp / em.maxHp) * 100)));
               return `
-                <div class="enemy-swarm-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="enemy-slot-${sIdx}" style="--swarm-stagger: ${(sIdx % 2) * 8}px;">
+                <div class="seamless-enemy-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="enemy-slot-${sIdx}" style="--swarm-stagger: ${(sIdx % 2) * 8}px;">
                   
-                  <!-- Enemy Details & Health Bar -->
-                  <div class="enemy-overhead-card">
-                    <div class="enemy-name-row">
-                      <span class="enemy-name-label">${em.name}</span>
-                      ${em.isBoss ? '<span class="boss-crown-badge">👑 BOSS</span>' : ''}
+                  <!-- Enemy Details & Floating Health Bar (Overhead, Borderless) -->
+                  <div class="seamless-enemy-overhead">
+                    <div class="seamless-enemy-name">
+                      ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
+                      <span>${em.name}</span>
                     </div>
-                    <div class="enemy-pwr-label">⚡ ${em.power.toLocaleString()} PWR</div>
+                    <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
 
-                    <div class="enemy-hp-track">
-                      <div id="enemy-hp-fill-${sIdx}" class="enemy-hp-fill" style="width: ${emHpPct}%;"></div>
-                      <div id="enemy-hp-text-${sIdx}" class="enemy-hp-text">
-                        ${Math.ceil(em.hp).toLocaleString()} / ${em.maxHp.toLocaleString()} HP
-                      </div>
+                    <div class="seamless-enemy-hp-track">
+                      <div id="enemy-hp-fill-${sIdx}" class="seamless-enemy-hp-fill" style="width: ${emHpPct}%;"></div>
                     </div>
                   </div>
 
-                  <!-- Enemy Sprite Frame with Ground Shadow -->
-                  <div class="enemy-sprite-container">
-                    <div class="enemy-placeholder-frame">
-                      ${createEnemyPlaceholderBox(em)}
-                    </div>
-                    <div class="combat-ground-shadow enemy-shadow"></div>
+                  <!-- Animated Enemy Sprite with Ground Shadow (No Box, No Border) -->
+                  <div class="enemy-sprite-container seamless-sprite-container">
+                    ${createAnimatedEnemyHtml(em, { extraClasses: 'flipped-sprite' })}
+                    <div class="combat-ground-shadow ${em.isBoss ? 'enemy-shadow' : ''}"></div>
                   </div>
 
                 </div>

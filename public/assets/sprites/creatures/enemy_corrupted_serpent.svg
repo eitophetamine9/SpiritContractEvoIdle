@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .s-dark  { fill: #0b132b; }
+      .s-body  { fill: #1c2541; }
+      .s-mid   { fill: #3a506b; }
+      .s-scale { fill: #5bc0be; }
+      .s-eye   { fill: #ff0055; }
+      .s-fang  { fill: #ffffff; }
+      .s-plasma{ fill: #9b59b6; }
+      .s-shadow{ fill: rgba(0,0,0,0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="14" ry="4" class="s-shadow"/>
+    <!-- Coils -->
+    <path d="M12 36 Q18 42 24 38 Q30 34 36 38" stroke="#1c2541" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M14 36 Q20 40 25 38" stroke="#5bc0be" stroke-width="2" fill="none"/>
+    <!-- Body S-curve -->
+    <path d="M22 36 Q16 28 22 20 Q26 14 26 10" stroke="#1c2541" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M22 36 Q16 28 22 20 Q26 14 26 10" stroke="#3a506b" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <!-- Head -->
+    <polygon points="26,7 34,11 28,17 22,14" class="s-dark"/>
+    <rect x="25" y="10" width="3" height="3" class="s-eye"/>
+    <!-- Fangs -->
+    <polygon points="31,14 32,17 30,15" class="s-fang"/>
+    <!-- Frill -->
+    <polygon points="20,11 15,8 19,14" class="s-plasma"/>
+    <polygon points="21,17 16,16 20,21" class="s-plasma"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Sinuous coil) [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="43" rx="15" ry="4.2" class="s-shadow"/>
+    <path d="M11 37 Q18 43 24 39 Q30 35 37 39" stroke="#1c2541" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M23 37 Q18 29 23 21 Q27 15 26 11" stroke="#1c2541" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M23 37 Q18 29 23 21 Q27 15 26 11" stroke="#3a506b" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <polygon points="26,8 34,12 28,18 22,15" class="s-dark"/>
+    <rect x="25" y="11" width="3" height="3" class="s-eye"/>
+    <polygon points="31,15 32,18 30,16" class="s-fang"/>
+    <polygon points="20,12 14,9 19,15" class="s-plasma"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Strike Pose Height) [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="43" rx="13" ry="3.8" class="s-shadow"/>
+    <path d="M13 36 Q19 41 24 37 Q29 33 35 37" stroke="#1c2541" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M21 35 Q15 27 21 19 Q25 13 25 8" stroke="#1c2541" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M21 35 Q15 27 21 19 Q25 13 25 8" stroke="#3a506b" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <polygon points="25,5 34,9 28,16 21,12" class="s-dark"/>
+    <rect x="25" y="8" width="3.5" height="3" class="s-eye"/>
+    <polygon points="31,12 33,16 30,13" class="s-fang"/>
+    <polygon points="19,9 13,6 18,13" class="s-plasma"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Descent) [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="14" ry="4" class="s-shadow"/>
+    <path d="M12 36 Q18 42 24 38 Q30 34 36 38" stroke="#1c2541" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M22 36 Q16 28 22 20 Q26 14 26 10" stroke="#1c2541" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M22 36 Q16 28 22 20 Q26 14 26 10" stroke="#3a506b" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <polygon points="26,7 34,11 28,17 22,14" class="s-dark"/>
+    <rect x="25" y="10" width="3" height="3" class="s-eye"/>
+  </g>
+
+  <!-- Frame 4: Attack 1 [192..240] -->
+  <g transform="translate(192, 0)">
+    <path d="M14 36 Q10 26 18 18 Q26 16 28 12" stroke="#1c2541" stroke-width="7" fill="none"/>
+    <polygon points="28,9 37,13 31,19 24,16" class="s-dark"/>
+    <rect x="27" y="12" width="3" height="3" class="s-eye"/>
+  </g>
+
+  <!-- Frame 5: Attack 2 (Lunge Bite) [240..288] -->
+  <g transform="translate(240, 0)">
+    <circle cx="34" cy="18" r="14" fill="rgba(91,192,190,0.3)"/>
+    <path d="M10 38 Q18 32 30 20" stroke="#1c2541" stroke-width="7" fill="none"/>
+    <polygon points="30,12 44,18 36,26 26,20" class="s-dark"/>
+    <polygon points="40,20 44,24 38,22" class="s-fang"/>
+    <polygon points="36,14 40,18 34,16" class="s-fang"/>
+  </g>
+
+  <!-- Frame 6: Attack 3 [288..336] -->
+  <g transform="translate(288, 0)">
+    <path d="M12 37 Q18 32 26 22" stroke="#1c2541" stroke-width="6" fill="none"/>
+    <polygon points="26,14 36,18 30,24 22,19" class="s-dark"/>
+  </g>
+
+  <!-- Frame 7: Hurt [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="14" ry="4" class="s-shadow"/>
+    <path d="M12 38 Q20 36 28 38" stroke="#3a506b" stroke-width="6" fill="none"/>
+    <polygon points="22,16 30,20 24,26 18,22" class="s-dark"/>
+    <rect x="21" y="19" width="3" height="3" fill="#ffffff"/>
+  </g>
+</svg>

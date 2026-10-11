@@ -972,8 +972,8 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
 
   // 2. Verify Physical Existence of All SVG Spritesheets
   const requiredSheets = Object.keys(SPRITE_MANIFEST.sheets);
-  console.log(`  Total creature spritesheets defined: ${requiredSheets.length} (Expected 7)`);
-  if (requiredSheets.length !== 7) throw new Error(`Expected 7 sheets, got ${requiredSheets.length}`);
+  console.log(`  Total creature & relic spritesheets defined: ${requiredSheets.length} (Expected >= 7)`);
+  if (requiredSheets.length < 7) throw new Error(`Expected at least 7 sheets, got ${requiredSheets.length}`);
 
   for (const sheetKey of requiredSheets) {
     const sheetDef = SPRITE_MANIFEST.sheets[sheetKey];
@@ -986,7 +986,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
       throw new Error(`Invalid SVG spritesheet format in ${sheetDef.path}`);
     }
   }
-  console.log('  [PASS] All 7 SVG spritesheet asset files verified on disk!');
+  console.log(`  [PASS] All ${requiredSheets.length} SVG spritesheet asset files verified on disk!`);
 
   // 3. Test SpriteAnimator Controller State Machine
   const animator = new SpriteAnimator('feline_shadow');

@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .t-sea   { fill: #00d2d3; }
+      .t-foam  { fill: #e0fbfb; }
+      .t-deep  { fill: #0984e3; }
+      .t-gold  { fill: #f1c40f; }
+      .t-bubble{ fill: #ffffff; }
+      .t-shadow{ fill: rgba(0,0,0,0.3); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Float 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="11" ry="3.5" class="t-shadow"/>
+    <!-- Shaft -->
+    <rect x="23" y="16" width="3" height="24" class="t-gold"/>
+    <circle cx="24.5" cy="40" r="2" class="t-sea"/>
+    <!-- Trident Head -->
+    <path d="M16 8 L18 18 L24 20 L30 18 L32 8" stroke="#00d2d3" stroke-width="2.5" fill="none"/>
+    <polygon points="24,6 26,16 23,16" class="t-foam"/>
+    <polygon points="16,7 18,13 15,13" class="t-foam"/>
+    <polygon points="32,7 34,13 31,13" class="t-foam"/>
+    <!-- Central Core Gem -->
+    <circle cx="24.5" cy="20" r="2.5" class="t-deep"/>
+    <!-- Aqua Orb Bubble -->
+    <circle cx="20" cy="12" r="1.5" class="t-bubble"/>
+  </g>
+
+  <!-- Frame 1: Float 2 [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="9" ry="3" class="t-shadow"/>
+    <rect x="23" y="14" width="3" height="24" class="t-gold"/>
+    <circle cx="24.5" cy="38" r="2" class="t-sea"/>
+    <path d="M16 6 L18 16 L24 18 L30 16 L32 6" stroke="#00d2d3" stroke-width="2.5" fill="none"/>
+    <polygon points="24,4 26,14 23,14" class="t-foam"/>
+    <polygon points="16,5 18,11 15,11" class="t-foam"/>
+    <polygon points="32,5 34,11 31,11" class="t-foam"/>
+    <circle cx="24.5" cy="18" r="3" class="t-deep"/>
+    <circle cx="28" cy="10" r="1.5" class="t-bubble"/>
+    <circle cx="17" cy="15" r="1" class="t-bubble"/>
+  </g>
+
+  <!-- Frame 2: Float 3 [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="8.5" ry="2.8" class="t-shadow"/>
+    <rect x="23" y="13" width="3" height="24" class="t-gold"/>
+    <circle cx="24.5" cy="37" r="2" class="t-sea"/>
+    <path d="M16 5 L18 15 L24 17 L30 15 L32 5" stroke="#00d2d3" stroke-width="2.5" fill="none"/>
+    <polygon points="24,3 26,13 23,13" class="t-foam"/>
+    <polygon points="16,4 18,10 15,10" class="t-foam"/>
+    <polygon points="32,4 34,10 31,10" class="t-foam"/>
+    <circle cx="24.5" cy="17" r="3.5" class="t-deep"/>
+    <circle cx="21" cy="8" r="2" class="t-bubble"/>
+  </g>
+
+  <!-- Frame 3: Float 4 [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="10" ry="3.2" class="t-shadow"/>
+    <rect x="23" y="15" width="3" height="24" class="t-gold"/>
+    <circle cx="24.5" cy="39" r="2" class="t-sea"/>
+    <path d="M16 7 L18 17 L24 19 L30 17 L32 7" stroke="#00d2d3" stroke-width="2.5" fill="none"/>
+    <polygon points="24,5 26,15 23,15" class="t-foam"/>
+    <polygon points="16,6 18,12 15,12" class="t-foam"/>
+    <polygon points="32,6 34,12 31,12" class="t-foam"/>
+    <circle cx="24.5" cy="19" r="2.5" class="t-deep"/>
+    <circle cx="27" cy="13" r="1.5" class="t-bubble"/>
+  </g>
+
+  <!-- Frame 4: Burst 1 [192..240] -->
+  <g transform="translate(192, 0)">
+    <circle cx="24" cy="20" r="17" fill="rgba(0,210,211,0.2)"/>
+    <rect x="23" y="15" width="3" height="24" class="t-gold"/>
+    <path d="M16 7 L18 17 L24 19 L30 17 L32 7" stroke="#00d2d3" stroke-width="2.5" fill="none"/>
+  </g>
+
+  <!-- Frame 5: Burst 2 [240..288] -->
+  <g transform="translate(240, 0)">
+    <circle cx="24" cy="20" r="22" fill="rgba(9,132,227,0.3)"/>
+    <rect x="23" y="13" width="3" height="24" class="t-foam"/>
+    <path d="M16 5 L18 15 L24 17 L30 15 L32 5" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+  </g>
+
+  <!-- Frame 6: Burst 3 [288..336] -->
+  <g transform="translate(288, 0)">
+    <circle cx="24" cy="20" r="16" fill="rgba(0,210,211,0.2)"/>
+    <rect x="23" y="15" width="3" height="24" class="t-gold"/>
+    <path d="M16 7 L18 17 L24 19 L30 17 L32 7" stroke="#00d2d3" stroke-width="2.5" fill="none"/>
+  </g>
+
+  <!-- Frame 7: Burst 4 [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="11" ry="3.5" class="t-shadow"/>
+    <rect x="23" y="16" width="3" height="24" class="t-gold"/>
+    <path d="M16 8 L18 18 L24 20 L30 18 L32 8" stroke="#00d2d3" stroke-width="2.5" fill="none"/>
+  </g>
+</svg>

@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .b-steel { fill: #ecf0f1; }
+      .b-edge  { fill: #ffffff; }
+      .b-hilt  { fill: #c0392b; }
+      .b-gold  { fill: #f39c12; }
+      .b-fire  { fill: #e74c3c; }
+      .b-fire2 { fill: #ff7675; }
+      .b-shadow{ fill: rgba(0,0,0,0.3); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="12" ry="3.5" class="b-shadow"/>
+    <!-- Blade angled -->
+    <polygon points="24,6 27,24 24,28 21,24" class="b-steel"/>
+    <polygon points="24,6 25,24 24,28" class="b-edge"/>
+    <!-- Crossguard -->
+    <rect x="16" y="28" width="16" height="4" rx="1" class="b-gold"/>
+    <!-- Grip & Pommel -->
+    <rect x="22" y="32" width="4" height="7" class="b-hilt"/>
+    <circle cx="24" cy="40" r="2.5" class="b-gold"/>
+    <!-- Flame Wisps -->
+    <path d="M26 12 Q29 8 26 5 Q24 9 25 14" fill="#e74c3c"/>
+    <circle cx="27" cy="18" r="1.5" class="b-fire2"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="10" ry="3" class="b-shadow"/>
+    <polygon points="24,4 27,22 24,26 21,22" class="b-steel"/>
+    <polygon points="24,4 25,22 24,26" class="b-edge"/>
+    <rect x="16" y="26" width="16" height="4" rx="1" class="b-gold"/>
+    <rect x="22" y="30" width="4" height="7" class="b-hilt"/>
+    <circle cx="24" cy="38" r="2.5" class="b-gold"/>
+    <path d="M26 10 Q31 6 27 3 Q24 7 25 12" fill="#e74c3c"/>
+    <circle cx="21" cy="14" r="1.5" class="b-fire2"/>
+    <circle cx="28" cy="16" r="2" class="b-gold"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="9" ry="2.8" class="b-shadow"/>
+    <polygon points="24,3 27,21 24,25 21,21" class="b-steel"/>
+    <polygon points="24,3 25,21 24,25" class="b-edge"/>
+    <rect x="16" y="25" width="16" height="4" rx="1" class="b-gold"/>
+    <rect x="22" y="29" width="4" height="7" class="b-hilt"/>
+    <circle cx="24" cy="37" r="2.5" class="b-gold"/>
+    <path d="M22 9 Q17 5 21 2 Q24 6 23 11" fill="#e74c3c"/>
+    <circle cx="26" cy="12" r="2" class="b-fire2"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="11" ry="3.2" class="b-shadow"/>
+    <polygon points="24,5 27,23 24,27 21,23" class="b-steel"/>
+    <polygon points="24,5 25,23 24,27" class="b-edge"/>
+    <rect x="16" y="27" width="16" height="4" rx="1" class="b-gold"/>
+    <rect x="22" y="31" width="4" height="7" class="b-hilt"/>
+    <circle cx="24" cy="39" r="2.5" class="b-gold"/>
+    <path d="M26 11 Q29 7 26 4 Q24 8 25 13" fill="#e74c3c"/>
+    <circle cx="22" cy="16" r="1.5" class="b-gold"/>
+  </g>
+
+  <!-- Frame 4: Burst 1 [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="43" rx="12" ry="3.5" class="b-shadow"/>
+    <circle cx="24" cy="22" r="18" fill="rgba(231,76,60,0.2)"/>
+    <polygon points="24,5 27,23 24,27 21,23" class="b-steel"/>
+    <rect x="16" y="27" width="16" height="4" class="b-gold"/>
+    <rect x="22" y="31" width="4" height="7" class="b-hilt"/>
+  </g>
+
+  <!-- Frame 5: Burst 2 [240..288] -->
+  <g transform="translate(240, 0)">
+    <circle cx="24" cy="22" r="22" fill="rgba(243,156,18,0.3)"/>
+    <polygon points="24,3 28,21 24,25 20,21" class="b-edge"/>
+    <rect x="15" y="25" width="18" height="5" class="b-gold"/>
+    <rect x="22" y="30" width="4" height="7" class="b-hilt"/>
+  </g>
+
+  <!-- Frame 6: Burst 3 [288..336] -->
+  <g transform="translate(288, 0)">
+    <circle cx="24" cy="22" r="16" fill="rgba(231,76,60,0.2)"/>
+    <polygon points="24,5 27,23 24,27 21,23" class="b-steel"/>
+    <rect x="16" y="27" width="16" height="4" class="b-gold"/>
+    <rect x="22" y="31" width="4" height="7" class="b-hilt"/>
+  </g>
+
+  <!-- Frame 7: Burst 4 [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="12" ry="3.5" class="b-shadow"/>
+    <polygon points="24,6 27,24 24,28 21,24" class="b-steel"/>
+    <rect x="16" y="28" width="16" height="4" class="b-gold"/>
+    <rect x="22" y="32" width="4" height="7" class="b-hilt"/>
+    <circle cx="24" cy="40" r="2.5" class="b-gold"/>
+  </g>
+</svg>

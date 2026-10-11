@@ -1,6 +1,7 @@
 import { gameState } from '../../state/gameState.js';
 import { BANNER_CONFIGS, RARITIES, getRarityInfo } from '../../data/spiritsData.js';
 import { showSummonRevealModal } from '../components/modals.js';
+import { createAnimatedSpriteHtml, createAnimatedRelicHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 
 let activeBannerIndex = 0;
 let skipAnimation = false;
@@ -17,6 +18,15 @@ export function renderContractView(container, onNavigateToIndex) {
 
   const activeBanner = BANNER_CONFIGS[activeBannerIndex] || BANNER_CONFIGS[0];
   const summonProgressPct = Math.min(100, Math.round((summonXp / reqSummonXp) * 100));
+  const featuredSpeciesId = activeBanner.featuredSpeciesId || 'solaris_lion_pride';
+  const heroSheetKey = getSheetKeyForSpecies(featuredSpeciesId);
+  const featuredRelic = activeBanner.featuredRelic || {
+    id: 'relic_crown_zeus',
+    name: 'Crown of Celestial Splendor',
+    slot: 'headgear',
+    god: 'Zeus Divine Set',
+    color: '#f1c40f'
+  };
 
   const MILESTONES = [
     { count: 20, reward: '500 Shards & 20 Gods' },
@@ -164,19 +174,19 @@ export function renderContractView(container, onNavigateToIndex) {
           box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         ">►</button>
 
-        <!-- Featured Character Showcase Graphic -->
+        <!-- Featured Character & Relic Showcase Graphic (Overhauled with Animated Assets) -->
         <div style="
-          min-height: 200px;
+          min-height: 230px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           text-align: center;
-          padding: 8px 30px;
+          padding: 12px 24px;
           background: ${activeBanner.bgGradient};
           border-radius: 14px;
           border: 2px solid ${activeBanner.accentColor};
-          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+          box-shadow: 0 6px 24px rgba(0,0,0,0.45);
           position: relative;
         ">
           <!-- Element & Banner Tag -->
@@ -184,7 +194,7 @@ export function renderContractView(container, onNavigateToIndex) {
             position: absolute;
             top: 8px;
             left: 10px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             color: #ffd700;
             padding: 3px 8px;
             border-radius: 6px;
@@ -194,6 +204,7 @@ export function renderContractView(container, onNavigateToIndex) {
             display: flex;
             align-items: center;
             gap: 4px;
+            backdrop-filter: blur(6px);
           ">
             <span>${activeBanner.icon}</span>
             <span>${activeBanner.shortName}</span>
@@ -203,40 +214,76 @@ export function renderContractView(container, onNavigateToIndex) {
             position: absolute;
             top: 8px;
             right: 10px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             color: #ff7675;
             padding: 3px 8px;
             border-radius: 6px;
             font-size: 10px;
             font-weight: 800;
             border: 1px solid rgba(255,118,117,0.4);
+            backdrop-filter: blur(6px);
           ">
             ⏳ ${activeBanner.timerText}
           </div>
 
-          <!-- Featured Spirit Giant Avatar & Aura -->
-          <div style="
-            margin-top: 18px;
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: radial-gradient(circle, ${activeBanner.accentColor} 0%, rgba(0,0,0,0.6) 80%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            box-shadow: 0 0 25px ${activeBanner.accentColor}, inset 0 0 15px rgba(255,255,255,0.4);
-            border: 3px solid #fff;
-          ">
-            ${activeBanner.icon}
+          <!-- Central Dual Showcase Pedestal: Animated Hero + Animated Relic Artifact -->
+          <div class="banner-showcase-pedestal">
+            <!-- Animated Hero Sprite inside Altar Aura -->
+            <div class="banner-hero-avatar-wrap">
+              <div style="
+                width: 84px;
+                height: 84px;
+                border-radius: 50%;
+                background: radial-gradient(circle, ${activeBanner.accentColor}33 0%, rgba(0,0,0,0.85) 75%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 25px ${activeBanner.accentColor}88, inset 0 0 15px rgba(255,255,255,0.2);
+                border: 2.5px solid ${activeBanner.accentColor};
+              ">
+                ${createAnimatedSpriteHtml(heroSheetKey, { glyph: activeBanner.icon })}
+              </div>
+              <div class="combat-ground-shadow" style="width: 54px; margin-top: -6px;"></div>
+            </div>
+
+            <!-- Animated Divine Relic Artifact -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div style="
+                width: 68px;
+                height: 68px;
+                border-radius: 12px;
+                background: radial-gradient(circle, ${featuredRelic.color}25 0%, rgba(10,15,25,0.9) 80%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 20px ${featuredRelic.color}66, inset 0 0 10px rgba(255,255,255,0.15);
+                border: 2px solid ${featuredRelic.color};
+              ">
+                ${createAnimatedRelicHtml(featuredRelic.id, featuredRelic.slot)}
+              </div>
+              <div class="combat-ground-shadow" style="width: 44px; margin-top: -4px;"></div>
+            </div>
+          </div>
+
+          <!-- Featured Divine Relic Showcase Strip -->
+          <div class="banner-relic-feature-pill" style="border-color: ${featuredRelic.color}88;">
+            <span style="font-size: 14px;">⚡</span>
+            <div style="text-align: left;">
+              <div style="font-size: 10px; font-weight: 900; color: #ffffff; letter-spacing: 0.3px;">
+                ${featuredRelic.name}
+              </div>
+              <div style="font-size: 8.5px; font-weight: 700; color: ${featuredRelic.color};">
+                ${featuredRelic.god} • Rate-Up Bonus
+              </div>
+            </div>
           </div>
 
           <div style="margin-top: 8px;">
             <div style="
-              font-size: 19px; 
+              font-size: 18px; 
               font-weight: 900; 
               color: #ffffff; 
-              text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 12px ${activeBanner.accentColor};
+              text-shadow: 0 2px 8px rgba(0,0,0,0.95), 0 0 14px ${activeBanner.accentColor};
               letter-spacing: 0.5px;
             ">
               ${activeBanner.characterName}
@@ -248,12 +295,12 @@ export function renderContractView(container, onNavigateToIndex) {
 
           <!-- Subtitle Ribbon -->
           <div style="
-            margin-top: 8px;
+            margin-top: 6px;
             background: rgba(0,0,0,0.65);
             color: #ffebc8;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 700;
-            padding: 4px 12px;
+            padding: 3px 12px;
             border-radius: 999px;
             border: 1px solid rgba(255,235,200,0.3);
           ">

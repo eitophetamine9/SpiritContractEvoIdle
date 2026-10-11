@@ -131,8 +131,11 @@ renderMadnessView(madnessContainer);
 if (!madnessContainer.innerHTML.includes('isometric-battlefield')) {
   throw new Error('Isometric battlefield missing from Madness View');
 }
-if (!madnessContainer.innerHTML.includes('enemy-swarm-wrapper') || !madnessContainer.innerHTML.includes('enemy-placeholder-frame')) {
+if (!madnessContainer.innerHTML.includes('enemy-swarm-wrapper') || !madnessContainer.innerHTML.includes('seamless-enemy-slot')) {
   throw new Error('Enemies are missing from the Madness battlefield!');
+}
+if (madnessContainer.innerHTML.includes('enemy-placeholder-frame')) {
+  throw new Error('Enemy placeholder frames must NOT be present in seamless Madness View!');
 }
 if (madnessContainer.innerHTML.includes('diamond-hub-wrapper')) {
   throw new Error('Obsolete diamond hub is still present in Madness View!');
@@ -199,8 +202,11 @@ if (trialContainer.innerHTML.includes('undefined Relics') || trialContainer.inne
 if (!trialContainer.innerHTML.includes('pantheon-battlefield') || !trialContainer.innerHTML.includes('btn-trial-strike')) {
   throw new Error('Trial battlefield arena failed to render correctly');
 }
+if (!trialContainer.innerHTML.includes('seamless-trial-column') || !trialContainer.innerHTML.includes('seamless-trial-slot')) {
+  throw new Error('Trial battlefield arena must follow Tower of Madness seamless layout!');
+}
 gameState.exitDungeonBattle();
-console.log('[PASS] Pantheon Trials arena renders cleanly with no NaN or undefined values.');
+console.log('[PASS] Pantheon Trials arena renders cleanly with seamless animated spirits and no boxes or borders.');
 
 // Start a Forge Trial
 gameState.startDungeonTrial('forge', 'bladesmith_sanctum', 1);
@@ -341,6 +347,22 @@ if (!heroFormationContainer.innerHTML.includes('tactical-battle-grid') && !heroF
 }
 console.log('[PASS] Hero View 3x3 Formation mode controls validated.');
 
+// 13. Test Summon Banner Overhaul with Animated Hero & Divine Relic Pieces
+import { renderContractView } from '../src/ui/views/contractView.js';
+const contractContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderContractView(contractContainer, () => {});
+if (!contractContainer.innerHTML.includes('banner-showcase-pedestal') ||
+    !contractContainer.innerHTML.includes('banner-relic-feature-pill') ||
+    !contractContainer.innerHTML.includes('animated-relic-sprite')) {
+  throw new Error('Banner Overhaul missing dual animated hero and relic showcase!');
+}
+console.log('[PASS] Summon Banner Overhaul with animated hero and divine relic piece validated.');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
+
 
