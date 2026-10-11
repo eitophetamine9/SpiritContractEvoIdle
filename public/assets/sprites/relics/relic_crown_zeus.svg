@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .r-gold { fill: #f1c40f; }
+      .r-gold-lite { fill: #f9e79f; }
+      .r-gold-dark { fill: #b7950b; }
+      .r-gem { fill: #e74c3c; }
+      .r-spark { fill: #ffffff; }
+      .r-volt { fill: #00d2d3; }
+      .r-shadow { fill: rgba(0,0,0,0.3); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Float 1 (Base Crown Stance) [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="42" rx="12" ry="3.5" class="r-shadow"/>
+    <!-- Crown Base -->
+    <path d="M12 28 L36 28 L34 34 L14 34 Z" class="r-gold-dark"/>
+    <path d="M13 27 L35 27 L33 33 L15 33 Z" class="r-gold"/>
+    <!-- Crown Spikes -->
+    <polygon points="13,27 15,16 19,26" class="r-gold"/>
+    <polygon points="19,26 24,12 29,26" class="r-gold-lite"/>
+    <polygon points="29,26 33,16 35,27" class="r-gold"/>
+    <!-- Gems -->
+    <circle cx="24" cy="20" r="3" class="r-gem"/>
+    <circle cx="24" cy="30" r="2" class="r-volt"/>
+    <circle cx="18" cy="30" r="1.5" class="r-gem"/>
+    <circle cx="30" cy="30" r="1.5" class="r-gem"/>
+    <!-- Spark -->
+    <circle cx="24" cy="11" r="1.5" class="r-spark"/>
+  </g>
+
+  <!-- Frame 1: Float 2 (Ascending + Shimmer) [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="43" rx="10" ry="3" class="r-shadow"/>
+    <!-- Crown Base slightly higher -->
+    <path d="M12 26 L36 26 L34 32 L14 32 Z" class="r-gold-dark"/>
+    <path d="M13 25 L35 25 L33 31 L15 31 Z" class="r-gold"/>
+    <!-- Crown Spikes -->
+    <polygon points="13,25 15,14 19,24" class="r-gold"/>
+    <polygon points="19,24 24,10 29,24" class="r-gold-lite"/>
+    <polygon points="29,24 33,14 35,25" class="r-gold"/>
+    <!-- Gems with lightning sparks -->
+    <circle cx="24" cy="18" r="3.5" class="r-gem"/>
+    <circle cx="24" cy="28" r="2" class="r-volt"/>
+    <circle cx="18" cy="28" r="1.5" class="r-gem"/>
+    <circle cx="30" cy="28" r="1.5" class="r-gem"/>
+    <circle cx="24" cy="9" r="2" class="r-spark"/>
+    <circle cx="15" cy="13" r="1.5" class="r-volt"/>
+  </g>
+
+  <!-- Frame 2: Float 3 (Peak Float + Pulse) [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="9" ry="2.8" class="r-shadow"/>
+    <path d="M12 25 L36 25 L34 31 L14 31 Z" class="r-gold-dark"/>
+    <path d="M13 24 L35 24 L33 30 L15 30 Z" class="r-gold"/>
+    <polygon points="13,24 15,13 19,23" class="r-gold"/>
+    <polygon points="19,23 24,9 29,23" class="r-gold-lite"/>
+    <polygon points="29,23 33,13 35,25" class="r-gold"/>
+    <circle cx="24" cy="17" r="3" class="r-gem"/>
+    <circle cx="24" cy="27" r="2" class="r-volt"/>
+    <circle cx="18" cy="27" r="1.5" class="r-gem"/>
+    <circle cx="30" cy="27" r="1.5" class="r-gem"/>
+    <circle cx="24" cy="8" r="2.5" class="r-spark"/>
+    <circle cx="33" cy="12" r="1.5" class="r-volt"/>
+  </g>
+
+  <!-- Frame 3: Float 4 (Descending Glow) [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="11" ry="3.2" class="r-shadow"/>
+    <path d="M12 27 L36 27 L34 33 L14 33 Z" class="r-gold-dark"/>
+    <path d="M13 26 L35 26 L33 32 L15 32 Z" class="r-gold"/>
+    <polygon points="13,26 15,15 19,25" class="r-gold"/>
+    <polygon points="19,25 24,11 29,25" class="r-gold-lite"/>
+    <polygon points="29,25 33,15 35,26" class="r-gold"/>
+    <circle cx="24" cy="19" r="3" class="r-gem"/>
+    <circle cx="24" cy="29" r="2" class="r-volt"/>
+    <circle cx="18" cy="29" r="1.5" class="r-gem"/>
+    <circle cx="30" cy="29" r="1.5" class="r-gem"/>
+    <circle cx="24" cy="10" r="1.5" class="r-spark"/>
+  </g>
+
+  <!-- Frame 4: Special Burst 1 (Charge) [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="42" rx="13" ry="3.8" class="r-shadow"/>
+    <circle cx="24" cy="22" r="16" fill="rgba(241,196,15,0.2)"/>
+    <path d="M12 26 L36 26 L34 32 L14 32 Z" class="r-gold"/>
+    <polygon points="19,24 24,10 29,24" class="r-gold-lite"/>
+    <circle cx="24" cy="18" r="4" class="r-volt"/>
+  </g>
+
+  <!-- Frame 5: Special Burst 2 (Flash) [240..288] -->
+  <g transform="translate(240, 0)">
+    <circle cx="24" cy="22" r="20" fill="rgba(0,210,211,0.25)"/>
+    <path d="M12 25 L36 25 L34 31 L14 31 Z" class="r-spark"/>
+    <polygon points="19,23 24,8 29,23" class="r-spark"/>
+    <circle cx="24" cy="17" r="5" class="r-spark"/>
+  </g>
+
+  <!-- Frame 6: Special Burst 3 (Dispersal) [288..336] -->
+  <g transform="translate(288, 0)">
+    <circle cx="24" cy="22" r="15" fill="rgba(241,196,15,0.2)"/>
+    <path d="M12 27 L36 27 L34 33 L14 33 Z" class="r-gold"/>
+    <polygon points="19,25 24,11 29,25" class="r-gold-lite"/>
+    <circle cx="24" cy="19" r="3.5" class="r-gem"/>
+  </g>
+
+  <!-- Frame 7: Special Burst 4 (Recoil Settling) [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="42" rx="12" ry="3.5" class="r-shadow"/>
+    <path d="M12 28 L36 28 L34 34 L14 34 Z" class="r-gold-dark"/>
+    <path d="M13 27 L35 27 L33 33 L15 33 Z" class="r-gold"/>
+    <polygon points="19,26 24,12 29,26" class="r-gold-lite"/>
+    <circle cx="24" cy="20" r="3" class="r-gem"/>
+  </g>
+</svg>

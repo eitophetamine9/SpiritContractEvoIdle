@@ -16,6 +16,7 @@ import { EQUIPMENT_RARITIES, GREEK_GOD_SETS, RELIC_STAR_TIERS } from '../../data
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showSpiritModal, showItemInspectModal } from '../components/modals.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
+import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 
 let activeCategory = 'spirits'; // 'spirits' | 'relics' | 'weapons'
 let activeRarityFilter = 'ALL';
@@ -139,9 +140,9 @@ export function renderVaultView(container) {
       const r = relics.find(it => it.uid === idOrUid);
       if (r) {
         const stars = r.stars || 3;
-        const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
-        bulkShardsRefund += Math.round(tier.dismantleShards * (1 + (r.level - 1) * 0.15));
-        bulkEssencesRefund += tier.dismantleEssences + Math.floor((r.level - 1) * 1.5);
+        const rLvl = Math.max(1, r.level || 1);
+        bulkShardsRefund += Math.round(tier.dismantleShards * (1 + (rLvl - 1) * 0.15));
+        bulkEssencesRefund += Math.max(tier.dismantleEssences, tier.dismantleEssences + Math.max(0, rLvl - 1) * 2);
       }
     } else if (activeCategory === 'weapons') {
       const w = weapons.find(it => it.uid === idOrUid);
@@ -419,8 +420,8 @@ export function renderVaultView(container) {
 
                 <!-- Card Artwork Frame -->
                 <div class="relative w-full aspect-square max-h-24 rounded-xl flex items-center justify-center overflow-hidden mb-2" style="background: radial-gradient(circle, ${r.color || '#9b59b6'}25 0%, rgba(10,15,25,0.8) 75%); border: 1px solid ${starColor}33;">
-                  <span class="text-3xl filter drop-shadow">${r.icon}</span>
-                  <span class="absolute bottom-1 right-1.5 text-[8px] font-black uppercase px-1 rounded" style="color: ${rarObj.color}; background: rgba(0,0,0,0.6);">
+                  ${createAnimatedRelicHtml(r, r.slotTypeId, { extraClasses: 'vault-card-sprite' })}
+                  <span class="absolute bottom-1 right-1.5 text-[8px] font-black uppercase px-1 rounded z-10" style="color: ${rarObj.color}; background: rgba(0,0,0,0.6);">
                     ${r.slotName || 'Relic'}
                   </span>
                 </div>
@@ -484,8 +485,8 @@ export function renderVaultView(container) {
 
                 <!-- Card Artwork Frame -->
                 <div class="relative w-full aspect-square max-h-24 rounded-xl flex items-center justify-center overflow-hidden mb-2" style="background: radial-gradient(circle, rgba(230, 126, 34, 0.25) 0%, rgba(10,15,25,0.8) 75%); border: 1px solid ${rarObj.color}33;">
-                  <span class="text-3xl filter drop-shadow">${w.icon}</span>
-                  <span class="absolute bottom-1 right-1.5 text-[8px] font-black uppercase px-1 rounded" style="color: ${rarObj.color}; background: rgba(0,0,0,0.6);">
+                  ${createAnimatedWeaponHtml(w, { extraClasses: 'vault-card-sprite' })}
+                  <span class="absolute bottom-1 right-1.5 text-[8px] font-black uppercase px-1 rounded z-10" style="color: ${rarObj.color}; background: rgba(0,0,0,0.6);">
                     ${w.archetype || 'Weapon'}
                   </span>
                 </div>

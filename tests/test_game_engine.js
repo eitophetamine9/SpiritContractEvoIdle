@@ -11,7 +11,8 @@ import {
   getSpiritRole
 } from '../src/data/index.js';
 import { getEnemyForStage } from '../src/data/index.js';
-import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies } from '../src/render/spriteAnimator.js';
+import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon } from '../src/render/spriteAnimator.js';
+import { audioManager } from '../src/audio/audioManager.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -972,8 +973,8 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
 
   // 2. Verify Physical Existence of All SVG Spritesheets
   const requiredSheets = Object.keys(SPRITE_MANIFEST.sheets);
-  console.log(`  Total creature spritesheets defined: ${requiredSheets.length} (Expected 7)`);
-  if (requiredSheets.length !== 7) throw new Error(`Expected 7 sheets, got ${requiredSheets.length}`);
+  console.log(`  Total creature & relic spritesheets defined: ${requiredSheets.length} (Expected >= 7)`);
+  if (requiredSheets.length < 7) throw new Error(`Expected at least 7 sheets, got ${requiredSheets.length}`);
 
   for (const sheetKey of requiredSheets) {
     const sheetDef = SPRITE_MANIFEST.sheets[sheetKey];
@@ -986,7 +987,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
       throw new Error(`Invalid SVG spritesheet format in ${sheetDef.path}`);
     }
   }
-  console.log('  [PASS] All 7 SVG spritesheet asset files verified on disk!');
+  console.log(`  [PASS] All ${requiredSheets.length} SVG spritesheet asset files verified on disk!`);
 
   // 3. Test SpriteAnimator Controller State Machine
   const animator = new SpriteAnimator('feline_shadow');
@@ -1021,6 +1022,49 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log('  [PASS] Hurt animation executed and returned to idle!');
 
   console.log('  [PASS] Phase 4 Free Animated Sprites Pipeline & Animation Controller fully validated!');
+
+  // 27. Test Animated Equipment Assets, Relic Essence Dismantle & Audio Throttling
+  console.log('\n[TEST 27] Testing Animated Equipment Assets, Relic Essence Dismantle & Audio Throttling:');
+  const weaponHtml = createAnimatedWeaponHtml({ weaponType: 'bow' });
+  if (!weaponHtml.includes('animated-weapon-sprite') || !weaponHtml.includes('weapon_celestial_bow')) {
+    throw new Error('Weapon animated HTML generation failed for bow');
+  }
+  const relicHtml = createAnimatedRelicHtml({ setId: 'zeus' }, 'headgear');
+  if (!relicHtml.includes('animated-relic-sprite') || !relicHtml.includes('relic_crown_zeus')) {
+    throw new Error('Relic animated HTML generation failed for zeus crown');
+  }
+  console.log('  [PASS] createAnimatedWeaponHtml and createAnimatedRelicHtml verified!');
+
+  // Test relic dismantle awards Essences of the Gods
+  const initialEssences = gameState.state.resources.essencesOfTheGods || 0;
+  const testRelic = {
+    uid: 'test_relic_essence_uid_999',
+    type: 'relic',
+    stars: 3,
+    level: 1,
+    setId: 'zeus',
+    slotTypeId: 'headgear',
+    name: 'Test Zeus Crown'
+  };
+  gameState.state.inventory.equipment.push(testRelic);
+  const dismantleRes = gameState.dismantleEquipment('test_relic_essence_uid_999');
+  if (dismantleRes.essencesGained < 5) {
+    throw new Error(`Expected at least 5 essences on 3-star relic dismantle, got ${dismantleRes.essencesGained}`);
+  }
+  if ((gameState.state.resources.essencesOfTheGods || 0) < initialEssences + 5) {
+    throw new Error('GameState resources did not reflect gained essences of the gods');
+  }
+  console.log(`  [PASS] Single relic dismantle granted +${dismantleRes.essencesGained} Essences of the Gods!`);
+
+  // Test Audio Manager Ultimate SFX throttle
+  const initialUltTime = Date.now();
+  audioManager.lastUltSfxTime = initialUltTime;
+  audioManager.playSfx('ult');
+  // Since within 1400ms, lastUltSfxTime must remain unchanged
+  if (audioManager.lastUltSfxTime !== initialUltTime) {
+    throw new Error('Ultimate SFX was not throttled within cooldown window');
+  }
+  console.log('  [PASS] Audio Manager ultimate SFX throttling validated!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

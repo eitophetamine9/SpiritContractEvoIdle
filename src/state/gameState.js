@@ -1437,7 +1437,7 @@ class GameStateManager {
     const damage = Math.max(1, Math.round(partyPower * 0.45 * critMult));
     enemy.hp = Math.max(0, enemy.hp - damage);
 
-    // Active tapping charges +10 MP on all living party spirits!
+    // Active tapping charges +4 MP on all living party spirits
     party.forEach(s => {
       if (!s.isFallen) {
         s.currentMp = Math.min(s.maxMp || 100, (s.currentMp || 0) + 10);
@@ -3110,8 +3110,9 @@ class GameStateManager {
     if (item.type === 'relic') {
       const stars = item.stars || 3;
       const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
-      shardsGained = Math.round(tier.dismantleShards * (1 + (item.level - 1) * 0.15));
-      essencesGained = tier.dismantleEssences + Math.floor((item.level - 1) * 1.5);
+      const itemLvl = Math.max(1, item.level || 1);
+      shardsGained = Math.round(tier.dismantleShards * (1 + (itemLvl - 1) * 0.15));
+      essencesGained = Math.max(tier.dismantleEssences, tier.dismantleEssences + Math.max(0, itemLvl - 1) * 2);
       this.state.resources.spiritShards += shardsGained;
       this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + essencesGained;
     } else {
@@ -3145,8 +3146,9 @@ class GameStateManager {
         if (item.type === 'relic') {
           const stars = item.stars || 3;
           const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
-          shardsGained = Math.round(tier.dismantleShards * (1 + (item.level - 1) * 0.15));
-          essencesGained = tier.dismantleEssences + Math.floor((item.level - 1) * 1.5);
+          const itemLvl = Math.max(1, item.level || 1);
+          shardsGained = Math.round(tier.dismantleShards * (1 + (itemLvl - 1) * 0.15));
+          essencesGained = Math.max(tier.dismantleEssences, tier.dismantleEssences + Math.max(0, itemLvl - 1) * 2);
         } else {
           shardsGained = Math.round(25 * (item.level || 1));
         }

@@ -1223,6 +1223,13 @@ export const BANNER_CONFIGS = [
     characterName: 'Solaris, Lion Sin of Pride',
     characterTitle: 'Sun Deity of Unyielding Splendor',
     featuredSpeciesId: 'solaris_lion_pride',
+    featuredRelic: {
+      id: 'relic_crown_zeus',
+      name: 'Crown of Celestial Splendor',
+      slot: 'headgear',
+      god: 'Zeus Divine Set',
+      color: '#f1c40f'
+    },
     element: 'LIGHT',
     icon: '🦁',
     bannerTheme: 'solar',
@@ -1250,6 +1257,13 @@ export const BANNER_CONFIGS = [
     characterName: 'Gelda, Thousand Ashes Empress',
     characterTitle: 'Empress of Blood & Cinder',
     featuredSpeciesId: 'gelda_ashes_empress',
+    featuredRelic: {
+      id: 'relic_blade_ares',
+      name: 'Sanguine Cinder Warblade',
+      slot: 'weapon',
+      god: 'Ares War Set',
+      color: '#e74c3c'
+    },
     element: 'DARK',
     icon: '👑',
     bannerTheme: 'void',
@@ -1277,6 +1291,13 @@ export const BANNER_CONFIGS = [
     characterName: 'Astraea & Leviathan',
     characterTitle: 'Guardians of Heaven & Deepsea',
     featuredSpeciesId: 'astraea_valkyrie',
+    featuredRelic: {
+      id: 'relic_trident_poseidon',
+      name: 'Abyssal Trident of the Deep',
+      slot: 'necklace',
+      god: 'Poseidon Ocean Set',
+      color: '#00d2d3'
+    },
     element: 'WIND',
     icon: '🪽',
     bannerTheme: 'astral',
@@ -1304,6 +1325,13 @@ export const BANNER_CONFIGS = [
     characterName: 'Wandering Astral Spirits',
     characterTitle: 'Permanent Pantheon Pool',
     featuredSpeciesId: 'fallen_warrior_spirit',
+    featuredRelic: {
+      id: 'relic_orb_arcane',
+      name: 'Orb of Eternal Constellations',
+      slot: 'orb',
+      god: 'Apollo Solar Set',
+      color: '#ffd152'
+    },
     element: 'LIGHT',
     icon: '⚔️',
     bannerTheme: 'standard',

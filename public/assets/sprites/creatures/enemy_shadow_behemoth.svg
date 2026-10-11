@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .e-void   { fill: #0d0c1d; }
+      .e-body   { fill: #2c1b4d; }
+      .e-armor  { fill: #472d7b; }
+      .e-spike  { fill: #6a0572; }
+      .e-glow   { fill: #ff0055; }
+      .e-eye    { fill: #ff3366; }
+      .e-horn   { fill: #ab2567; }
+      .e-shadow { fill: rgba(0,0,0,0.4); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="15" ry="4" class="e-shadow"/>
+    <!-- Horns -->
+    <polygon points="17,14 11,4 19,10" class="e-horn"/>
+    <polygon points="31,14 37,4 29,10" class="e-horn"/>
+    <!-- Body -->
+    <rect x="15" y="20" width="18" height="17" rx="3" class="e-body"/>
+    <rect x="17" y="22" width="14" height="13" class="e-armor"/>
+    <!-- Core Glow -->
+    <circle cx="24" cy="28" r="3.5" class="e-glow"/>
+    <!-- Head -->
+    <rect x="16" y="11" width="16" height="13" rx="2" class="e-void"/>
+    <!-- Eyes -->
+    <rect x="18" y="15" width="4" height="3" class="e-eye"/>
+    <rect x="26" y="15" width="4" height="3" class="e-eye"/>
+    <!-- Shoulders Spikes -->
+    <polygon points="13,22 9,17 15,20" class="e-spike"/>
+    <polygon points="35,22 39,17 33,20" class="e-spike"/>
+    <!-- Claws/Feet -->
+    <rect x="16" y="37" width="5" height="5" rx="1" class="e-void"/>
+    <rect x="27" y="37" width="5" height="5" rx="1" class="e-void"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Breathe Down) [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="43" rx="16" ry="4.2" class="e-shadow"/>
+    <polygon points="17,16 11,6 19,12" class="e-horn"/>
+    <polygon points="31,16 37,6 29,12" class="e-horn"/>
+    <rect x="14" y="21" width="20" height="16" rx="3" class="e-body"/>
+    <rect x="16" y="23" width="16" height="12" class="e-armor"/>
+    <circle cx="24" cy="29" r="4" class="e-glow"/>
+    <rect x="16" y="13" width="16" height="12" rx="2" class="e-void"/>
+    <rect x="18" y="17" width="4" height="2.5" class="e-eye"/>
+    <rect x="26" y="17" width="4" height="2.5" class="e-eye"/>
+    <polygon points="12,23 8,18 14,21" class="e-spike"/>
+    <polygon points="36,23 40,18 34,21" class="e-spike"/>
+    <rect x="15" y="37" width="6" height="5" rx="1" class="e-void"/>
+    <rect x="27" y="37" width="6" height="5" rx="1" class="e-void"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Rise / Flare) [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="43" rx="14" ry="3.8" class="e-shadow"/>
+    <polygon points="17,12 11,2 19,8" class="e-horn"/>
+    <polygon points="31,12 37,2 29,8" class="e-horn"/>
+    <rect x="15" y="19" width="18" height="18" rx="3" class="e-body"/>
+    <rect x="17" y="21" width="14" height="14" class="e-armor"/>
+    <circle cx="24" cy="27" r="4.5" class="e-glow"/>
+    <rect x="16" y="10" width="16" height="13" rx="2" class="e-void"/>
+    <rect x="18" y="14" width="4" height="3" class="e-eye"/>
+    <rect x="26" y="14" width="4" height="3" class="e-eye"/>
+    <polygon points="13,21 9,16 15,19" class="e-spike"/>
+    <polygon points="35,21 39,16 33,19" class="e-spike"/>
+    <rect x="16" y="37" width="5" height="5" rx="1" class="e-void"/>
+    <rect x="27" y="37" width="5" height="5" rx="1" class="e-void"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Settle) [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="15" ry="4" class="e-shadow"/>
+    <polygon points="17,13 11,3 19,9" class="e-horn"/>
+    <polygon points="31,13 37,3 29,9" class="e-horn"/>
+    <rect x="15" y="20" width="18" height="17" rx="3" class="e-body"/>
+    <rect x="17" y="22" width="14" height="13" class="e-armor"/>
+    <circle cx="24" cy="28" r="3.5" class="e-glow"/>
+    <rect x="16" y="11" width="16" height="13" rx="2" class="e-void"/>
+    <rect x="18" y="15" width="4" height="3" class="e-eye"/>
+    <rect x="26" y="15" width="4" height="3" class="e-eye"/>
+    <polygon points="13,22 9,17 15,20" class="e-spike"/>
+    <polygon points="35,22 39,17 33,20" class="e-spike"/>
+    <rect x="16" y="37" width="5" height="5" rx="1" class="e-void"/>
+    <rect x="27" y="37" width="5" height="5" rx="1" class="e-void"/>
+  </g>
+
+  <!-- Frame 4: Attack 1 (Windup) [192..240] -->
+  <g transform="translate(192, 0)">
+    <rect x="13" y="18" width="20" height="18" rx="3" class="e-body"/>
+    <circle cx="23" cy="26" r="5" class="e-glow"/>
+    <rect x="14" y="9" width="16" height="13" class="e-void"/>
+    <rect x="16" y="13" width="4" height="3" class="e-eye"/>
+    <rect x="24" y="13" width="4" height="3" class="e-eye"/>
+  </g>
+
+  <!-- Frame 5: Attack 2 (Slash Strike) [240..288] -->
+  <g transform="translate(240, 0)">
+    <circle cx="24" cy="24" r="18" fill="rgba(255,0,85,0.25)"/>
+    <path d="M6 14 Q24 38 42 22" stroke="#ff0055" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <rect x="16" y="19" width="18" height="17" class="e-body"/>
+    <rect x="18" y="12" width="14" height="12" class="e-void"/>
+  </g>
+
+  <!-- Frame 6: Attack 3 (Follow Through) [288..336] -->
+  <g transform="translate(288, 0)">
+    <path d="M10 20 Q24 34 38 28" stroke="#ff3366" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <rect x="15" y="20" width="18" height="17" class="e-body"/>
+  </g>
+
+  <!-- Frame 7: Hurt / React [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="13" ry="3.5" class="e-shadow"/>
+    <rect x="17" y="21" width="16" height="16" class="e-spike"/>
+    <circle cx="25" cy="28" r="3" fill="#ffffff"/>
+    <rect x="18" y="12" width="14" height="12" class="e-void"/>
+    <polygon points="18,16 22,20 22,16 18,20" stroke="#ff3366" stroke-width="1.5"/>
+    <polygon points="26,16 30,20 30,16 26,20" stroke="#ff3366" stroke-width="1.5"/>
+  </g>
+</svg>

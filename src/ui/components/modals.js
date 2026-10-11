@@ -3,6 +3,7 @@ import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel, ASCENSION_CONFIG,
 import { gameState } from '../../state/gameState.js';
 import { GREEK_GOD_SETS, RELIC_SLOT_TYPES, getWeaponEnhanceCost, MAX_WEAPON_LEVEL } from '../../data/equipmentData.js';
 import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
+import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 
 export function showOfflineModal(report, onClaim) {
   const modalRoot = document.getElementById('modal-root');
@@ -576,7 +577,11 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
           ${isCurrentEquipped ? `
             <div class="equipped-item-card" style="border-color: ${currentItem.color || '#4cd137'};">
               <div class="equip-card-left" style="width: 100%;">
-                <span class="equip-icon-large">${currentItem.icon}</span>
+                <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  ${isRelic 
+                    ? createAnimatedRelicHtml(currentItem, currentItem.slotTypeId, { extraClasses: 'socket-animated-sprite' }) 
+                    : createAnimatedWeaponHtml(currentItem, { extraClasses: 'socket-animated-sprite' })}
+                </div>
                 <div class="equip-card-info" style="flex: 1;">
                   <div class="equip-item-name" style="color: ${currentItem.color || '#fff'};">
                     <span>${currentItem.name}</span>
@@ -687,7 +692,12 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                   return `
                     <div class="inventory-equip-card ${isEquippedToThis ? 'item-active' : ''}" style="border-color: ${item.color || 'var(--border-color)'};">
                       <div class="equip-card-left">
-                        <span class="equip-icon-box">${item.icon}</span>
+                        <div class="equip-icon-box" style="display: flex; align-items: center; justify-content: center;">
+                          ${item.type === 'weapon'
+                            ? createAnimatedWeaponHtml(item, { extraClasses: 'socket-animated-sprite' })
+                            : createAnimatedRelicHtml(item, item.slotTypeId, { extraClasses: 'socket-animated-sprite' })
+                          }
+                        </div>
                         <div class="equip-card-info">
                           <div class="equip-item-name" style="color: ${item.color || '#fff'};">
                             ${item.name}
@@ -840,10 +850,10 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
     modalRoot.querySelectorAll('[data-dismantle-uid]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const uid = e.currentTarget.getAttribute('data-dismantle-uid');
-        if (confirm('Dismantle this equipment item for Spirit Shards?')) {
+        if (confirm('Dismantle this equipment item for Spirit Shards and Essences of the Gods?')) {
           try {
             const res = gameState.dismantleEquipment(uid);
-            alert(`Dismantled equipment! Gained +${res.shardsGained} Spirit Shards.`);
+            alert(`Dismantled equipment! Gained +${res.shardsGained} Spirit Shards${res.essencesGained > 0 ? ` and +${res.essencesGained} Essences of the Gods` : ''}.`);
             renderModal();
             if (onUpdate) onUpdate();
           } catch (err) {
@@ -926,7 +936,12 @@ export function showItemInspectModal({ item, onUpdate }) {
         <div class="modal-card modal-card-equipment" style="max-width: 450px;">
           <div class="modal-header">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 26px;">${currentItem.icon}</span>
+              <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                ${isRelic
+                  ? createAnimatedRelicHtml(currentItem, currentItem.slotTypeId, { extraClasses: 'socket-animated-sprite' })
+                  : createAnimatedWeaponHtml(currentItem, { extraClasses: 'socket-animated-sprite' })
+                }
+              </div>
               <div>
                 <h3 class="modal-title" style="margin: 0; font-size: 16px; color: ${currentItem.color || '#ffd32a'};">
                   ${currentItem.name}
@@ -1157,7 +1172,7 @@ export function showItemInspectModal({ item, onUpdate }) {
       if (confirm(`Dismantle ${currentItem.name}?\nYou will gain +${dismantleShards} Spirit Shards${dismantleEssences > 0 ? ` and +${dismantleEssences} Essences of the Gods` : ''}.`)) {
         try {
           const res = gameState.dismantleEquipment(currentItem.uid);
-          alert(`Dismantled ${currentItem.name}!\nGained +${res.shardsGained} Shards${res.essencesOfTheGodsGained ? ` and +${res.essencesOfTheGodsGained} Essences of the Gods` : ''}.`);
+          alert(`Dismantled ${currentItem.name}!\nGained +${res.shardsGained} Shards${res.essencesGained ? ` and +${res.essencesGained} Essences of the Gods` : ''}.`);
           closeModal();
           if (onUpdate) onUpdate();
         } catch (err) {

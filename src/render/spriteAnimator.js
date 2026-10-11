@@ -133,6 +133,138 @@ export const SPRITE_MANIFEST = {
         attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
         hurt: { frames: [7], fps: 6, loop: false }
       }
+    },
+    enemy_shadow_behemoth: {
+      path: '/assets/sprites/creatures/enemy_shadow_behemoth.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    enemy_corrupted_serpent: {
+      path: '/assets/sprites/creatures/enemy_corrupted_serpent.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_crown_zeus: {
+      path: '/assets/sprites/relics/relic_crown_zeus.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 4, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 8, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_blade_ares: {
+      path: '/assets/sprites/relics/relic_blade_ares.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_trident_poseidon: {
+      path: '/assets/sprites/relics/relic_trident_poseidon.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_orb_arcane: {
+      path: '/assets/sprites/relics/relic_orb_arcane.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_spectral_blade: {
+      path: '/assets/sprites/weapons/weapon_spectral_blade.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_celestial_bow: {
+      path: '/assets/sprites/weapons/weapon_celestial_bow.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_astral_staff: {
+      path: '/assets/sprites/weapons/weapon_astral_staff.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_primordial_claws: {
+      path: '/assets/sprites/weapons/weapon_primordial_claws.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_shadow_dagger: {
+      path: '/assets/sprites/weapons/weapon_shadow_dagger.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    weapon_titan_mallet: {
+      path: '/assets/sprites/weapons/weapon_titan_mallet.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
     }
   }
 };
@@ -156,6 +288,128 @@ export function preloadSpriteSheet(sheetKey) {
 export function getSheetKeyForSpecies(speciesId) {
   if (!speciesId) return 'feline_shadow';
   return SPRITE_MANIFEST.speciesMapping[speciesId] || 'feline_shadow';
+}
+
+export function getSheetKeyForEnemy(enemy) {
+  if (!enemy) return 'enemy_shadow_behemoth';
+  const name = (enemy.name || '').toLowerCase();
+  const id = (enemy.id || enemy.speciesId || '').toLowerCase();
+  
+  if (enemy.isBoss || name.includes('overlord') || name.includes('behemoth') || name.includes('titan') || name.includes('avatar') || name.includes('hades')) {
+    return 'enemy_shadow_behemoth';
+  }
+  if (name.includes('serpent') || name.includes('wyrm') || name.includes('snake') || name.includes('hydra') || name.includes('abyss') || name.includes('leviathan')) {
+    return 'enemy_corrupted_serpent';
+  }
+  if (name.includes('blaze') || name.includes('fire') || name.includes('phoenix') || name.includes('avian')) {
+    return 'avian_blaze';
+  }
+  if (name.includes('bull') || name.includes('minotaur') || name.includes('golem') || name.includes('earth')) {
+    return 'bovine_earth';
+  }
+  if (name.includes('hound') || name.includes('wolf') || name.includes('cerberus')) {
+    return 'canine_guardian';
+  }
+  // Default alternating based on name length
+  return (name.length % 2 === 0) ? 'enemy_shadow_behemoth' : 'enemy_corrupted_serpent';
+}
+
+export function getSheetKeyForRelic(relicOrSetId, slotType) {
+  const godId = typeof relicOrSetId === 'object' ? (relicOrSetId?.setId || relicOrSetId?.godId) : relicOrSetId;
+  const slot = typeof relicOrSetId === 'object' ? (relicOrSetId?.slotTypeId || relicOrSetId?.type) : slotType;
+
+  if (godId === 'zeus' || slot === 'headgear' || slot === 'crown') {
+    return 'relic_crown_zeus';
+  }
+  if (godId === 'ares' || slot === 'weapon' || slot === 'sword') {
+    return 'relic_blade_ares';
+  }
+  if (godId === 'poseidon' || slot === 'necklace' || slot === 'trident') {
+    return 'relic_trident_poseidon';
+  }
+  if (godId === 'apollo' || godId === 'hermes' || godId === 'athena' || slot === 'orb' || slot === 'charm' || slot === 'totem' || slot === 'ring') {
+    return 'relic_orb_arcane';
+  }
+  return 'relic_crown_zeus';
+}
+
+/**
+ * Generates HTML string for an animated creature/hero sprite
+ */
+export function createAnimatedSpriteHtml(sheetKey, { isFlipped = false, extraClasses = '', glyph = '✨' } = {}) {
+  const path = SPRITE_MANIFEST.sheets[sheetKey]?.path || `/assets/sprites/creatures/${sheetKey}.svg`;
+  return `
+    <div class="animated-pixel-sprite sprite-${sheetKey} ${isFlipped ? 'flipped-sprite' : ''} ${extraClasses}" style="--sprite-sheet: url('${path}');">
+      <div class="sprite-frame-viewer"></div>
+      <span class="core-glyph-fallback" style="display: none;">${glyph}</span>
+    </div>
+  `;
+}
+
+/**
+ * Generates HTML string for an animated enemy sprite with optional boss styling
+ */
+export function createAnimatedEnemyHtml(enemy, { extraClasses = '' } = {}) {
+  const sheetKey = getSheetKeyForEnemy(enemy);
+  const path = SPRITE_MANIFEST.sheets[sheetKey]?.path || `/assets/sprites/creatures/${sheetKey}.svg`;
+  const isBoss = enemy?.isBoss || false;
+  return `
+    <div class="animated-pixel-sprite sprite-enemy sprite-${sheetKey} ${isBoss ? 'boss-animated-sprite' : ''} ${extraClasses}" style="--sprite-sheet: url('${path}');">
+      <div class="sprite-frame-viewer"></div>
+      <span class="core-glyph-fallback" style="display: none;">👾</span>
+    </div>
+  `;
+}
+
+export function getSheetKeyForWeapon(weaponOrType) {
+  if (!weaponOrType) return 'weapon_spectral_blade';
+  const typeStr = typeof weaponOrType === 'object' 
+    ? (weaponOrType.weaponType || weaponOrType.archetype || weaponOrType.subType || weaponOrType.id || weaponOrType.name || '')
+    : weaponOrType;
+  const str = String(typeStr).toLowerCase();
+
+  if (str.includes('bow') || str.includes('arrow') || str.includes('archer')) {
+    return 'weapon_celestial_bow';
+  }
+  if (str.includes('staff') || str.includes('scepter') || str.includes('wand') || str.includes('rod')) {
+    return 'weapon_astral_staff';
+  }
+  if (str.includes('claw') || str.includes('fist') || str.includes('gauntlet')) {
+    return 'weapon_primordial_claws';
+  }
+  if (str.includes('dagger') || str.includes('assassin') || str.includes('knife')) {
+    return 'weapon_shadow_dagger';
+  }
+  if (str.includes('hammer') || str.includes('mallet') || str.includes('mace') || str.includes('titan')) {
+    return 'weapon_titan_mallet';
+  }
+  return 'weapon_spectral_blade';
+}
+
+/**
+ * Generates HTML string for an animated relic piece
+ */
+export function createAnimatedRelicHtml(relicOrSetId, slotType = 'headgear', { extraClasses = '' } = {}) {
+  const sheetKey = getSheetKeyForRelic(relicOrSetId, slotType);
+  const path = SPRITE_MANIFEST.sheets[sheetKey]?.path || `/assets/sprites/relics/${sheetKey}.svg`;
+  return `
+    <div class="animated-relic-sprite sprite-${sheetKey} ${extraClasses}" style="--sprite-sheet: url('${path}');">
+      <div class="sprite-frame-viewer"></div>
+    </div>
+  `;
+}
+
+/**
+ * Generates HTML string for an animated weapon piece
+ */
+export function createAnimatedWeaponHtml(weaponOrType, { extraClasses = '' } = {}) {
+  const sheetKey = getSheetKeyForWeapon(weaponOrType);
+  const path = SPRITE_MANIFEST.sheets[sheetKey]?.path || `/assets/sprites/weapons/${sheetKey}.svg`;
+  return `
+    <div class="animated-weapon-sprite sprite-${sheetKey} ${extraClasses}" style="--sprite-sheet: url('${path}');">
+      <div class="sprite-frame-viewer"></div>
+    </div>
+  `;
 }
 
 /**

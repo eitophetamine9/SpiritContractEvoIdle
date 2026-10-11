@@ -125,18 +125,21 @@ npm run test:prob
 - **Omnipresent Navigation**: Dedicated tab on the 8-column bottom dock, top header, and vault view.
 
 ### 6. Relic System (3★-6★), Substats & Ascension
-- **Seven Equipment Sockets**: 1 Weapon and 6 Relics (Headgear, Totem, Ring, Necklace, Orb, Charm).
+- **Seven Equipment Sockets**: 1 Weapon and 6 Relics (Headgear, Totem, Ring, Necklace, Orb, Charm) with live animated sprites in Showcase pedestals, roster sockets, and the Rapid Equipment Drawer.
 - **Relic Star Tiers**: 3★ through 6★ star ratings rolling 1 to 4 randomized substats (Crit Chance, Crit Damage, ATK%, HP%, Speed, Flat Stats).
 - **Enhancement & Ascension**: Upgrade relics up to +15 and ascend maxed 5★ relics into glowing 6★ relics using Essences of the Gods.
 - **Eight Olympian God Sets**: Complete 2-piece and 4-piece set bonuses for Hades, Zeus, Poseidon, Hermes, Ares, Apollo, Athena, and Artemis.
+- **Essence-Yielding Dismantling**: Single and bulk relic dismantling reliably awards **Essence of the Gods** (scaling by star tier and level) alongside Spirit Shards.
 
 ### 7. The Pantheon Trials (Artifact Dungeon)
+- **Seamless Arena Layout**: Borderless combat arena following the Tower of Madness aesthetic with animated hero and enemy sprites.
 - **8 Deity Chambers**: Dedicated Olympian chambers across 4 difficulty tiers featuring 3-wave encounters (Sentinels, Guardians, and Olympian God Avatar Bosses).
 - **Loot Yields**: Targeted god relics, spirit shards, and god essences.
 
 ### 8. The Divine Forge (Weapon Dungeon)
 - **Six Weapon Chambers**: Dedicated forge instances for Blades, Bows, Staves, Claws, Daggers, and Mallets.
 - **Four Difficulty Tiers**: Apprentice, Artisan, Master, and Celestial forges with 3-wave battles dropping specialized weapons.
+- **Animated Weapon Sprites**: All 6 weapon archetypes feature dedicated animated SVG pixel spritesheets across cards, sockets, and inspect modals.
 
 ### 9. The Sanctuary of the Gods & Astral Realm Expansion
 - **Primary Astral Currencies**: The Astral Realm runs entirely on **🔮 Astral Essences** and **💠 Essences of the Gods**—zero regular shards required for Sanctum upgrades, energy expansion, or elixirs.
@@ -160,10 +163,16 @@ npm run test:prob
 - **Single-Line High-Density Dock**: `Hero`, `Madness`, `Trials`, `Forge`, `Realm`, `Summon`, `Vault`, and `Index` built specifically for mobile screens with zero horizontal overflow or wrapping.
 - **Manual Battle Engagement Controls**: Standby and Engaged combat states prevent screen-forcing or hijacking when viewing other menus.
 
-### 12. Integrated Audio Engine
+### 12. Integrated Audio Engine & Dynamic Mixing
 - **Background Music**: Dynamic looping atmospheric themes for Astral Sanctum, Madness Tower combat, Pantheon Trials, and The Divine Forge.
-- **Tactile Sound Effects**: Impact transients, critical blow booms, ultimate release bursts, level-up chimes, and victory fanfares.
+- **Tactile Sound Effects**: Impact transients, critical blow booms, level-up chimes, and victory fanfares.
+- **Ultimate SFX Anti-Spam & Volume Balancing**: Master default SFX volume tuned to a comfortable `0.35`, dedicated ultimate sound attenuation (`0.55x`), and a 1.4-second debounce cooldown preventing overlapping audio walls.
 - **Autoplay & Unmute Compliance**: Reliable one-tap unmuting, AudioContext resumption, and synchronized audio controls across combat and top navigation bars.
+
+### 13. Animated Pixel Sprite & 3x3 Tactical Grid Pipeline
+- **19 Animated SVG Spritesheets**: 7 creature hero families, 2 seamless shadow behemoth & corrupted serpent enemies, 4 divine Greek God relics, and 6 forged weapon archetypes.
+- **3x3 Tactical Formation Grid**: 9-slot positioning (Frontline, Midline, Backline) with role threat modifiers, aggro targeting, frontline Tank taunt locks, and defense mitigation.
+- **Seamless Madness & Trials Arenas**: Borderless animated heroes and enemies rendering cleanly within dark fantasy battlefields.
 
 ---
 
@@ -172,9 +181,8 @@ npm run test:prob
 The following features and enhancements are planned for upcoming releases:
 
 - **Guild Raids & World Bosses**: Cooperative community milestones facing off against colossal primordial beasts.
-- **Custom Pixel Art Asset Packs**: Upgrading CSS placeholder frames to full animated pixel sprites for all 37 spirit species and enemies.
+- **Expanded Bestiary Animations**: Additional unique animation variations for high-tier evolutionary evolutions.
 - **Cloud Account Synchronization**: Optional cloud save synchronization across multiple mobile and desktop devices.
-
 
 ---
 

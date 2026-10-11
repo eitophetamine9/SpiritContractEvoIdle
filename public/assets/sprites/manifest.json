@@ -133,6 +133,82 @@
         "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
         "hurt": { "frames": [7], "fps": 6, "loop": false }
       }
+    },
+    "enemy_shadow_behemoth": {
+      "path": "/assets/sprites/creatures/enemy_shadow_behemoth.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "enemy_corrupted_serpent": {
+      "path": "/assets/sprites/creatures/enemy_corrupted_serpent.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    }
+  },
+  "relicSheets": {
+    "relic_crown_zeus": {
+      "path": "/assets/sprites/relics/relic_crown_zeus.svg",
+      "name": "Zeus Divine Crown",
+      "godId": "zeus"
+    },
+    "relic_blade_ares": {
+      "path": "/assets/sprites/relics/relic_blade_ares.svg",
+      "name": "Ares Consecrated Warblade",
+      "godId": "ares"
+    },
+    "relic_trident_poseidon": {
+      "path": "/assets/sprites/relics/relic_trident_poseidon.svg",
+      "name": "Poseidon Abyssal Trident",
+      "godId": "poseidon"
+    },
+    "relic_orb_arcane": {
+      "path": "/assets/sprites/relics/relic_orb_arcane.svg",
+      "name": "Celestial Arcane Orb",
+      "godId": "apollo"
+    }
+  },
+  "weaponSheets": {
+    "weapon_spectral_blade": {
+      "path": "/assets/sprites/weapons/weapon_spectral_blade.svg",
+      "name": "Spectral Blade",
+      "type": "sword"
+    },
+    "weapon_celestial_bow": {
+      "path": "/assets/sprites/weapons/weapon_celestial_bow.svg",
+      "name": "Celestial Bow",
+      "type": "bow"
+    },
+    "weapon_astral_staff": {
+      "path": "/assets/sprites/weapons/weapon_astral_staff.svg",
+      "name": "Astral Scepter",
+      "type": "staff"
+    },
+    "weapon_primordial_claws": {
+      "path": "/assets/sprites/weapons/weapon_primordial_claws.svg",
+      "name": "Primordial Claws",
+      "type": "claw"
+    },
+    "weapon_shadow_dagger": {
+      "path": "/assets/sprites/weapons/weapon_shadow_dagger.svg",
+      "name": "Shadow Dagger",
+      "type": "dagger"
+    },
+    "weapon_titan_mallet": {
+      "path": "/assets/sprites/weapons/weapon_titan_mallet.svg",
+      "name": "Titan Mallet",
+      "type": "hammer"
     }
   }
 }

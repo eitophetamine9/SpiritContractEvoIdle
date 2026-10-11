@@ -458,6 +458,50 @@ The Divine Vault provides streamlined bulk operations across all three collectib
   - **Favorite Locking**: Any item with `favorite: true` is permanently protected from bulk actions; toggling a favorite immediately purges the item from the selection set.
 - **Dynamic Yield Preview**: Displays real-time estimated returns (💎 Spirit Shards and 💠 Essences of the Gods) prior to confirming the transaction.
 
+---
+
+## 16. Relic & Weapon Dismantle Economy
+
+### 16.1 Essence of the Gods Yield Formulas
+Dismantling artifacts (relics) rewards both Spirit Shards and Essences of the Gods based on Star Tier ($S$) and Enhancement Level ($L$):
+
+$$\text{Shards Gained} = \lfloor \text{TierBaseShards} \times (1 + (\max(1, L) - 1) \times 0.15) \rfloor$$
+$$\text{Essences of the Gods Gained} = \max(\text{TierBaseEssences}, \text{TierBaseEssences} + \max(0, L - 1) \times 2)$$
+
+| Star Tier | Tier Label | Base Dismantle Shards | Base Dismantle Essences (Lv. 1) | Max Level ($L$) |
+| :---: | :---: | :---: | :---: | :---: |
+| 3★ | Adept | 50 💎 | 5 💠 | 9 |
+| 4★ | Master | 150 💎 | 15 💠 | 12 |
+| 5★ | Ascended | 350 💎 | 30 💠 | 15 |
+| 6★ | Divine | 800 💎 | 60 💠 | 15 |
+
+- **Guaranteed Base Yield**: An un-enhanced (Lv. 1) relic is guaranteed to return 100% of its star tier's base essences (e.g., minimum 5 💠 for 3★, 15 💠 for 4★).
+- **Weapons Dismantle**: Yields $25 \times \max(1, L)$ Spirit Shards upon deconstruction.
+
+---
+
+## 17. 2D Animated Pixel Sprite Engine & Audio Architecture
+
+### 17.1 Sprite Animation Controller (`SpriteAnimator`)
+The game implements a lightweight, framework-agnostic sprite animator leveraging CSS background-step animations and modular SVG spritesheets:
+- **Frame Specifications**: 384x48px sheets with eight 48x48px frames (4 Idle, 3 Attack, 1 Hurt/Flash).
+- **Sheet Roster (19 Sheets Total)**:
+  - **Hero Creatures (7 Sheets)**: `feline_shadow`, `canine_guardian`, `avian_blaze`, `bovine_earth`, `insect_chrysalis`, `draconic_leviathan`, `celestial_sun`.
+  - **Enemies (2 Sheets)**: `enemy_shadow_behemoth`, `enemy_corrupted_serpent`.
+  - **Relics (4 Sheets)**: `relic_crown_zeus`, `relic_blade_ares`, `relic_trident_poseidon`, `relic_orb_arcane`.
+  - **Weapons (6 Sheets)**: `weapon_spectral_blade`, `weapon_celestial_bow`, `weapon_astral_staff`, `weapon_primordial_claws`, `weapon_shadow_dagger`, `weapon_titan_mallet`.
+- **Display Scaling Tokens**:
+  - `.socket-animated-sprite`: Scaled to 32x32px for hero pedestal and roster slots.
+  - `.vault-card-sprite`: Scaled to 56x56px for collection cards.
+  - `.inspect-animated-sprite`: Scaled to 72x72px for modal inspection pedestals.
+
+### 17.2 Audio Engine & Anti-Spam Throttling
+- **Master Level Calibration**: Default SFX and BGM volumes calibrated to `0.35` for balanced acoustics.
+- **Ultimate SFX Throttling**:
+  - Global 1,400ms debounce window on `playSfx('ult')` prevents audio cacophony during concurrent multi-hero ultimate bursts.
+  - Dedicated gain attenuation ($0.55 \times \text{sfxVolume}$) prevents waveform clipping.
+- **Combat Pacing**: Base automatic mana regeneration paced to $20 \text{ MP/s}$, and active tapping charges $+10 \text{ MP}$ per click.
+
 
 
 
