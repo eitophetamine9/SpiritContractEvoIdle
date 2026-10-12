@@ -180,6 +180,14 @@ export class ArenaRenderer25D {
   }
 
   loop = () => {
+    if (!this.canvas || !this.canvas.isConnected) {
+      this.destroy();
+      return;
+    }
+    if (typeof document !== 'undefined' && document.hidden) {
+      this.animId = requestAnimationFrame(this.loop);
+      return;
+    }
     this.time += 0.03;
     this.render();
     this.animId = requestAnimationFrame(this.loop);

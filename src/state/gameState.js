@@ -71,6 +71,45 @@ class GameStateManager {
     this.rafId = null;
     this.lastTickTime = performance.now();
     this.setBonusCooldowns = {};
+    this.isDirty = false;
+    this._equipmentMap = null;
+    this._equipmentMapDirty = true;
+    this._combatStatsCache = new Map();
+    this._spiritPowerCache = new Map();
+    this._setBonusesCache = new Map();
+    this._partyPowerCache = null;
+  }
+
+  getEquipmentMap() {
+    if (!this._equipmentMap || this._equipmentMapDirty) {
+      this._equipmentMap = new Map();
+      const list = (this.state && this.state.inventory && this.state.inventory.equipment) || [];
+      for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (item && item.uid) this._equipmentMap.set(item.uid, item);
+      }
+      this._equipmentMapDirty = false;
+    }
+    return this._equipmentMap;
+  }
+
+  getEquipmentItemByUid(uid) {
+    if (!uid) return null;
+    const map = this.getEquipmentMap();
+    let item = map.get(uid);
+    if (!item && this.state && this.state.inventory && Array.isArray(this.state.inventory.equipment)) {
+      item = this.state.inventory.equipment.find(e => e && e.uid === uid) || null;
+      if (item) map.set(uid, item);
+    }
+    return item || null;
+  }
+
+  invalidateCaches() {
+    this._equipmentMapDirty = true;
+    if (this._combatStatsCache) this._combatStatsCache.clear();
+    if (this._spiritPowerCache) this._spiritPowerCache.clear();
+    if (this._setBonusesCache) this._setBonusesCache.clear();
+    this._partyPowerCache = null;
   }
 
   /**
@@ -127,6 +166,7 @@ class GameStateManager {
     } else {
       this.state = this.sanitizeLoadedState(loaded);
     }
+    this.invalidateCaches();
 
     // Process Offline Progression based on last_saved
     const now = Date.now();
@@ -635,23 +675,31 @@ class GameStateManager {
   }
 
   /**
-   * LocalStorage saving
+   * LocalStorage saving (supports dirty checking to avoid redundant JSON serialization)
    */
-  save() {
+  save(force = false) {
     if (!this.state) return;
+    if (!force && this.isDirty === false) return;
     this.state.last_saved = Date.now();
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(this.state));
+      this.isDirty = false;
       this.emit('saved', { timestamp: this.state.last_saved });
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
     }
   }
 
+  markDirty() {
+    this.isDirty = true;
+  }
+
   startAutoSaver() {
     if (this.saveTimer) clearInterval(this.saveTimer);
     this.saveTimer = setInterval(() => {
-      this.save();
+      if (this.isDirty) {
+        this.save(true);
+      }
     }, AUTO_SAVE_INTERVAL_MS);
   }
 
@@ -922,6 +970,13 @@ class GameStateManager {
     const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
     if (!spirit) return null;
 
+    if (this._combatStatsCache && this._combatStatsCache.has(spirit.id)) {
+      const cached = this._combatStatsCache.get(spirit.id);
+      cached.tauntTimer = spirit.tauntTimer || 0;
+      cached.isTaunting = cached.tauntTimer > 0;
+      return cached;
+    }
+
     const baseStats = calculateSpiritStats(spirit) || {
       role: 'MAIN_DPS',
       atk: spirit.power || 20,
@@ -940,16 +995,15 @@ class GameStateManager {
     const colDef = slotDef ? FORMATION_COLUMNS[slotDef.col] : FORMATION_COLUMNS.mid;
     const colKey = slotDef ? slotDef.col : 'mid';
 
-    // Equipment & substats
+    // Equipment & substats (O(1) lookups)
     let bonusAtk = 0;
     let bonusDef = 0;
     let bonusHp = 0;
     let bonusCritRate = 0;
     let bonusCritDmg = 0;
-    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
 
     if (spirit.weapon) {
-      const wpn = equipmentList.find(e => e.uid === spirit.weapon);
+      const wpn = this.getEquipmentItemByUid(spirit.weapon);
       if (wpn) {
         if (wpn.atkPower) bonusAtk += wpn.atkPower;
         if (wpn.critRate) bonusCritRate += wpn.critRate;
@@ -959,7 +1013,7 @@ class GameStateManager {
     if (spirit.relics) {
       for (const relicUid of Object.values(spirit.relics)) {
         if (!relicUid) continue;
-        const relic = equipmentList.find(e => e.uid === relicUid);
+        const relic = this.getEquipmentItemByUid(relicUid);
         if (relic) {
           if (relic.mainStatName === 'Bonus ATK Power') bonusAtk += (relic.mainStatValue || 0);
           if (Array.isArray(relic.substats)) {
@@ -991,7 +1045,7 @@ class GameStateManager {
     const finalCritRate = Math.min(75, baseStats.critRate + bonusCritRate);
     const finalCritDmg = baseStats.critDmg + bonusCritDmg;
 
-    return {
+    const statsResult = {
       role: baseStats.role,
       roleInfo: baseStats.roleInfo,
       atk: finalAtk,
@@ -1010,6 +1064,10 @@ class GameStateManager {
       tauntTimer: spirit.tauntTimer || 0,
       isTaunting: (spirit.tauntTimer || 0) > 0
     };
+
+    if (!this._combatStatsCache) this._combatStatsCache = new Map();
+    this._combatStatsCache.set(spirit.id, statsResult);
+    return statsResult;
   }
 
   /**
@@ -1714,6 +1772,7 @@ class GameStateManager {
 
     this.state.stats.totalEvolutions += 1;
     this.markSpeciesDiscovered(nextSpecies.id);
+    this.invalidateCaches();
     this.save();
 
     const result = {
@@ -1900,6 +1959,7 @@ class GameStateManager {
     spirit.isEquipped = true;
     this.state.party.push(spiritId);
     this.seatSpiritIntoFormation(spiritId);
+    this.invalidateCaches();
     this.save();
     this.emit('partyUpdated', this.getPartySpirits());
     this.emit('partyFormationUpdated', this.getPartyFormation());
@@ -1927,6 +1987,7 @@ class GameStateManager {
       }
     }
 
+    this.invalidateCaches();
     this.save();
     this.emit('partyUpdated', this.getPartySpirits());
     this.emit('partyFormationUpdated', this.getPartyFormation());
@@ -2097,6 +2158,7 @@ class GameStateManager {
     }
 
     this.state.partyFormation = form;
+    this.invalidateCaches();
     this.save();
     this.emit('partyFormationUpdated', this.getPartyFormation());
     this.emit('partyUpdated', this.getPartySpirits());
@@ -2108,6 +2170,7 @@ class GameStateManager {
    */
   autoFormatParty() {
     this.state.partyFormation = this.autoFormatPartyArray(this.state.party, this.state.spirits);
+    this.invalidateCaches();
     this.save();
     this.emit('partyFormationUpdated', this.getPartyFormation());
     this.emit('partyUpdated', this.getPartySpirits());
@@ -2379,6 +2442,7 @@ class GameStateManager {
     }
 
     this.state.stats.totalAscensions = (this.state.stats.totalAscensions || 0) + 1;
+    this.invalidateCaches();
     this.save();
 
     this.emit('spiritAscended', { spirit: target, newTier: nextTier, config });
@@ -2457,6 +2521,7 @@ class GameStateManager {
       res.maxEnergy = (res.maxEnergy || 100) + star.bonus.maxEnergyBonus;
       res.energy = Math.min(res.maxEnergy, res.energy + star.bonus.maxEnergyBonus);
     }
+    this.invalidateCaches();
     this.save();
 
     this.emit('constellationUpdated', { constellationId, newLevel: nextNode, star });
@@ -2807,12 +2872,11 @@ class GameStateManager {
     if (!spiritOrId) return { weapon: null, relics: {} };
     const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
     if (!spirit) return { weapon: null, relics: {} };
-    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
-    const weapon = spirit.weapon ? equipmentList.find(e => e.uid === spirit.weapon) || null : null;
+    const weapon = spirit.weapon ? this.getEquipmentItemByUid(spirit.weapon) : null;
     const relics = {};
     if (spirit.relics) {
       for (const [slot, uid] of Object.entries(spirit.relics)) {
-        relics[slot] = uid ? equipmentList.find(e => e.uid === uid) || null : null;
+        relics[slot] = uid ? this.getEquipmentItemByUid(uid) : null;
       }
     }
     return { weapon, relics };
@@ -2822,12 +2886,15 @@ class GameStateManager {
     if (!spiritOrId) return [];
     const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
     if (!spirit || !spirit.relics) return [];
-    const countBySet = {};
-    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
 
+    if (this._setBonusesCache && this._setBonusesCache.has(spirit.id)) {
+      return this._setBonusesCache.get(spirit.id);
+    }
+
+    const countBySet = {};
     for (const relicUid of Object.values(spirit.relics)) {
       if (!relicUid) continue;
-      const relic = equipmentList.find(e => e.uid === relicUid);
+      const relic = this.getEquipmentItemByUid(relicUid);
       if (relic && relic.setId) {
         countBySet[relic.setId] = (countBySet[relic.setId] || 0) + 1;
       }
@@ -2864,6 +2931,9 @@ class GameStateManager {
         });
       }
     }
+
+    if (!this._setBonusesCache) this._setBonusesCache = new Map();
+    this._setBonusesCache.set(spirit.id, activeBonuses);
     return activeBonuses;
   }
 
@@ -2871,23 +2941,27 @@ class GameStateManager {
     if (!spiritOrId) return 0;
     const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
     if (!spirit) return 0;
-    let power = spirit.power || 0;
-    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
 
-    // Weapon bonus
+    if (this._spiritPowerCache && this._spiritPowerCache.has(spirit.id)) {
+      return this._spiritPowerCache.get(spirit.id);
+    }
+
+    let power = spirit.power || 0;
+
+    // Weapon bonus (O(1) lookup)
     if (spirit.weapon) {
-      const wpn = equipmentList.find(e => e.uid === spirit.weapon);
+      const wpn = this.getEquipmentItemByUid(spirit.weapon);
       if (wpn && wpn.atkPower) {
         power += wpn.atkPower;
       }
     }
 
-    // Relic bonuses & Substats
+    // Relic bonuses & Substats (O(1) lookups)
     let percentAtkBonus = 0;
     if (spirit.relics) {
       for (const relicUid of Object.values(spirit.relics)) {
         if (!relicUid) continue;
-        const relic = equipmentList.find(e => e.uid === relicUid);
+        const relic = this.getEquipmentItemByUid(relicUid);
         if (relic) {
           if (relic.mainStatName === 'Bonus ATK Power') {
             power += (relic.mainStatValue || 0);
@@ -2921,7 +2995,10 @@ class GameStateManager {
       damageMultiplier += (constBonuses.partyAtkPercent / 100);
     }
 
-    return Math.round(power * damageMultiplier);
+    const calculatedPower = Math.round(power * damageMultiplier);
+    if (!this._spiritPowerCache) this._spiritPowerCache = new Map();
+    this._spiritPowerCache.set(spirit.id, calculatedPower);
+    return calculatedPower;
   }
 
   getPartyElementalResonances() {
@@ -2929,12 +3006,16 @@ class GameStateManager {
   }
 
   getTotalPartyPower() {
+    if (this._partyPowerCache !== null && this._partyPowerCache !== undefined) {
+      return this._partyPowerCache;
+    }
     const party = this.getPartySpirits();
     const basePower = party.reduce((sum, s) => sum + this.getSpiritTotalPower(s), 0);
     const resonanceBonus = 1 + (this.state.resources.resonanceTier || 0) * 0.05;
     const elemResonance = this.getPartyElementalResonances();
     const elemAtkBonus = 1 + (elemResonance.atkPercent || 0) + (elemResonance.allStatsPercent || 0);
-    return Math.round(basePower * resonanceBonus * elemAtkBonus);
+    this._partyPowerCache = Math.round(basePower * resonanceBonus * elemAtkBonus);
+    return this._partyPowerCache;
   }
 
   proc4PieceSetBonus(spirit, setBonusObj) {
@@ -3061,6 +3142,7 @@ class GameStateManager {
       item.equippedToSpiritId = spirit.id;
     }
 
+    this.invalidateCaches();
     this.save();
     this.emit('equipmentUpdated', { spirit, item });
     this.emit('inventoryUpdated', this.state.inventory);
@@ -3074,18 +3156,19 @@ class GameStateManager {
 
     if (slotType === 'weapon') {
       if (spirit.weapon) {
-        const wpn = equipmentList.find(e => e.uid === spirit.weapon);
+        const wpn = this.getEquipmentItemByUid(spirit.weapon);
         if (wpn) wpn.equippedToSpiritId = null;
         spirit.weapon = null;
       }
     } else {
       if (spirit.relics && spirit.relics[slotType]) {
-        const relic = equipmentList.find(e => e.uid === spirit.relics[slotType]);
+        const relic = this.getEquipmentItemByUid(spirit.relics[slotType]);
         if (relic) relic.equippedToSpiritId = null;
         spirit.relics[slotType] = null;
       }
     }
 
+    this.invalidateCaches();
     this.save();
     this.emit('equipmentUpdated', { spirit, slotType });
     this.emit('inventoryUpdated', this.state.inventory);
@@ -3121,6 +3204,7 @@ class GameStateManager {
       this.state.resources.spiritShards += shardsGained;
     }
 
+    this.invalidateCaches();
     this.save();
     this.emit('equipmentDismantled', { item, shardsGained, essencesGained });
     this.emit('inventoryUpdated', this.state.inventory);
@@ -3164,6 +3248,7 @@ class GameStateManager {
     this.state.resources.spiritShards += totalShardsGained;
     this.state.resources.essencesOfTheGods = (this.state.resources.essencesOfTheGods || 0) + totalEssencesGained;
 
+    this.invalidateCaches();
     this.save();
     this.emit('equipmentBulkDismantled', { count, shardsGained: totalShardsGained, essencesGained: totalEssencesGained });
     this.emit('inventoryUpdated', this.state.inventory);
@@ -3182,7 +3267,7 @@ class GameStateManager {
 
   enhanceRelic(itemUid) {
     if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
-    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    const item = this.getEquipmentItemByUid(itemUid);
     if (!item) throw new Error('Relic not found in inventory');
     if (item.type !== 'relic') throw new Error('Item is not a Relic');
 
@@ -3211,6 +3296,7 @@ class GameStateManager {
 
     enhanceRelicData(item);
 
+    this.invalidateCaches();
     this.save();
     this.emit('equipmentUpdated', { item });
     this.emit('inventoryUpdated', this.state.inventory);
@@ -3220,7 +3306,7 @@ class GameStateManager {
 
   enhanceWeapon(itemUid) {
     if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
-    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    const item = this.getEquipmentItemByUid(itemUid);
     if (!item) throw new Error('Weapon not found in inventory');
     if (item.type !== 'weapon') throw new Error('Item is not a Weapon');
 
@@ -3250,6 +3336,7 @@ class GameStateManager {
 
     enhanceWeaponData(item);
 
+    this.invalidateCaches();
     this.save();
     this.emit('equipmentUpdated', { item });
     this.emit('inventoryUpdated', this.state.inventory);
@@ -3259,7 +3346,7 @@ class GameStateManager {
 
   enhanceEquipment(itemUid) {
     if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
-    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    const item = this.getEquipmentItemByUid(itemUid);
     if (!item) throw new Error('Equipment item not found in inventory');
     if (item.type === 'weapon') {
       return this.enhanceWeapon(itemUid);
@@ -3270,7 +3357,7 @@ class GameStateManager {
 
   ascendRelic(itemUid) {
     if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
-    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    const item = this.getEquipmentItemByUid(itemUid);
     if (!item) throw new Error('Relic not found in inventory');
     if (item.type !== 'relic') throw new Error('Item is not a Relic');
     if (item.stars !== 5) throw new Error('Only 5★ Relics can be ascended to 6★!');
@@ -3291,6 +3378,7 @@ class GameStateManager {
 
     ascendRelicData(item);
 
+    this.invalidateCaches();
     this.save();
     this.emit('equipmentUpdated', { item });
     this.emit('inventoryUpdated', this.state.inventory);
@@ -3337,7 +3425,7 @@ class GameStateManager {
     if (spirit.relics) {
       for (const relicUid of Object.values(spirit.relics)) {
         if (!relicUid) continue;
-        const relic = equipmentList.find(e => e.uid === relicUid);
+        const relic = this.getEquipmentItemByUid(relicUid);
         if (relic) {
           if (relic.mainStatName === 'Bonus Max HP') {
             baseHp += (relic.mainStatValue || 0);

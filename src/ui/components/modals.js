@@ -5,6 +5,24 @@ import { GREEK_GOD_SETS, RELIC_SLOT_TYPES, getWeaponEnhanceCost, MAX_WEAPON_LEVE
 import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
 import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 
+export function closeActiveModal() {
+  const modalRoot = document.getElementById('modal-root');
+  if (modalRoot) {
+    modalRoot.innerHTML = '';
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modalRoot = document.getElementById('modal-root');
+      if (modalRoot && modalRoot.firstElementChild) {
+        closeActiveModal();
+      }
+    }
+  });
+}
+
 export function showOfflineModal(report, onClaim) {
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot) return;

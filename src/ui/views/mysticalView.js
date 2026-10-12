@@ -51,10 +51,10 @@ function renderMysticalSanctumScreen(container) {
   const partySpirits = gameState.getPartySpirits();
 
   container.innerHTML = `
-    <div class="mystical-realm-container flex flex-col gap-3 p-2 text-white">
+    <div class="mystical-realm-container">
       
       <!-- Top Realm Hero Banner: Clean Proportional Typography -->
-      <div class="mystical-hero-banner relative overflow-hidden rounded-xl bg-gradient-to-b from-cyan-950/60 via-slate-900/90 to-slate-950 border border-cyan-500/30 p-3 shadow-lg backdrop-blur-md">
+      <div class="mystical-hero-banner">
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between gap-2">
             <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
@@ -63,15 +63,15 @@ function renderMysticalSanctumScreen(container) {
 
             <!-- Currency Badges -->
             <div class="flex items-center gap-1.5 flex-wrap">
-              <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 border border-cyan-500/30 text-[11px]" title="Essences of the Gods">
+              <div class="mystical-stat-chip" title="Essences of the Gods">
                 <span class="text-cyan-400 font-bold">💠 Gods:</span>
                 <strong class="text-cyan-200 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
               </div>
-              <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 border border-purple-500/30 text-[11px]" title="Astral Essence">
+              <div class="mystical-stat-chip" title="Astral Essence">
                 <span class="text-purple-400 font-bold">🔮 Astral:</span>
                 <strong class="text-purple-200 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
               </div>
-              <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 border border-amber-500/30 text-[11px]" title="Energy Capacity">
+              <div class="mystical-stat-chip" title="Energy Capacity">
                 <span class="text-amber-400 font-bold">⚡</span>
                 <strong class="text-amber-300 font-black">${res.energy}/${currentMaxEnergy}</strong>
               </div>
@@ -90,32 +90,32 @@ function renderMysticalSanctumScreen(container) {
       </div>
 
       <!-- Realm Navigation Section Tabs: 7-Tab Responsive Modern Dock -->
-      <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
-        <button class="realm-tab-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-150 border cursor-pointer min-h-[42px] ${activeRealmSection === 'dungeon' ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]' : 'bg-slate-900/70 text-slate-400 border-slate-800'}" data-realm-tab="dungeon">
+      <div class="realm-tab-grid">
+        <button class="realm-tab-btn ${activeRealmSection === 'dungeon' ? 'active' : ''}" data-realm-tab="dungeon">
           <span class="text-sm pointer-events-none">🏛️</span>
           <span class="truncate pointer-events-none">Sanctuary</span>
         </button>
-        <button class="realm-tab-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-150 border cursor-pointer min-h-[42px] ${activeRealmSection === 'zodiac' ? 'bg-rose-500/25 text-rose-200 border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]' : 'bg-slate-900/70 text-slate-400 border-slate-800'}" data-realm-tab="zodiac">
+        <button class="realm-tab-btn ${activeRealmSection === 'zodiac' ? 'active' : ''}" data-realm-tab="zodiac">
           <span class="text-sm pointer-events-none">🌌</span>
           <span class="truncate pointer-events-none">Zodiac</span>
         </button>
-        <button class="realm-tab-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-150 border cursor-pointer min-h-[42px] ${activeRealmSection === 'expeditions' ? 'bg-indigo-500/25 text-indigo-200 border-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.3)]' : 'bg-slate-900/70 text-slate-400 border-slate-800'}" data-realm-tab="expeditions">
+        <button class="realm-tab-btn ${activeRealmSection === 'expeditions' ? 'active' : ''}" data-realm-tab="expeditions">
           <span class="text-sm pointer-events-none">🧭</span>
           <span class="truncate pointer-events-none">Expeditions</span>
         </button>
-        <button class="realm-tab-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-150 border cursor-pointer min-h-[42px] ${activeRealmSection === 'transmute' ? 'bg-fuchsia-500/25 text-fuchsia-200 border-fuchsia-400 shadow-[0_0_12px_rgba(217,70,239,0.3)]' : 'bg-slate-900/70 text-slate-400 border-slate-800'}" data-realm-tab="transmute">
+        <button class="realm-tab-btn ${activeRealmSection === 'transmute' ? 'active' : ''}" data-realm-tab="transmute">
           <span class="text-sm pointer-events-none">⚗️</span>
           <span class="truncate pointer-events-none">Transmute</span>
         </button>
-        <button class="realm-tab-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-150 border cursor-pointer min-h-[42px] ${activeRealmSection === 'energy' ? 'bg-amber-500/25 text-amber-200 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.3)]' : 'bg-slate-900/70 text-slate-400 border-slate-800'}" data-realm-tab="energy">
+        <button class="realm-tab-btn ${activeRealmSection === 'energy' ? 'active' : ''}" data-realm-tab="energy">
           <span class="text-sm pointer-events-none">⚡</span>
           <span class="truncate pointer-events-none">Vault (${currentMaxEnergy})</span>
         </button>
-        <button class="realm-tab-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-150 border cursor-pointer min-h-[42px] ${activeRealmSection === 'potions' ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]' : 'bg-slate-900/70 text-slate-400 border-slate-800'}" data-realm-tab="potions">
+        <button class="realm-tab-btn ${activeRealmSection === 'potions' ? 'active' : ''}" data-realm-tab="potions">
           <span class="text-sm pointer-events-none">🧪</span>
           <span class="truncate pointer-events-none">EXP Pots</span>
         </button>
-        <button class="realm-tab-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-150 border cursor-pointer min-h-[42px] ${activeRealmSection === 'blessings' ? 'bg-purple-500/25 text-purple-200 border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.3)]' : 'bg-slate-900/70 text-slate-400 border-slate-800'}" data-realm-tab="blessings">
+        <button class="realm-tab-btn ${activeRealmSection === 'blessings' ? 'active' : ''}" data-realm-tab="blessings">
           <span class="text-sm pointer-events-none">✨</span>
           <span class="truncate pointer-events-none">Blessings</span>
         </button>
@@ -170,11 +170,11 @@ function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower) {
     <div class="flex flex-col gap-3">
       
       <!-- Chamber Selection Cards -->
-      <div class="grid grid-cols-2 gap-2">
+      <div class="essence-chambers-grid">
         ${ESSENCE_CHAMBERS.map(c => {
           const isSelected = c.id === selectedEssenceChamberId;
           return `
-            <button class="essence-chamber-card relative overflow-hidden rounded-xl p-2.5 flex items-center gap-2.5 text-left transition-all border cursor-pointer ${isSelected ? 'bg-slate-800/90 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]' : 'bg-slate-900/60 border-slate-800'}" 
+            <button class="essence-chamber-card ${isSelected ? 'active' : ''}" 
                     data-chamber-id="${c.id}"
                     style="--ch-color: ${c.color};">
               <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 shadow-sm" style="background: ${c.color}22; border: 1px solid ${c.color};">
@@ -190,7 +190,7 @@ function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower) {
       </div>
 
       <!-- Active Selected Chamber Detail Stage -->
-      <div class="rounded-xl border p-3.5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-md" style="border-color: ${chamber.color}66;">
+      <div class="essence-chamber-stage" style="border-color: ${chamber.color}66;">
         <div class="flex items-center gap-3 mb-3">
           <div class="w-11 h-11 rounded-xl flex items-center justify-center text-2xl shadow-md shrink-0" style="background: ${chamber.color}25; border: 1.5px solid ${chamber.color};">
             ${chamber.icon}
@@ -209,11 +209,11 @@ function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower) {
         <!-- Tier Selection Pills -->
         <div class="mb-3">
           <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Sanctuary Difficulty:</div>
-          <div class="grid grid-cols-4 gap-1.5">
+          <div class="essence-tier-grid">
             ${ESSENCE_DIFFICULTY_TIERS.map(t => {
               const isActive = t.tier === selectedEssenceTierNum;
               return `
-                <button class="essence-tier-btn p-1.5 rounded-lg border flex flex-col items-center justify-center transition-all cursor-pointer min-h-[38px] ${isActive ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'bg-slate-950/60 border-slate-800'}" data-tier="${t.tier}">
+                <button class="essence-tier-btn ${isActive ? 'active' : ''}" data-tier="${t.tier}">
                   <span class="text-[11px] font-extrabold text-white">Tier ${t.tier}</span>
                   <span class="text-[9px] font-bold text-amber-400 mt-0.5">⚡ ${t.energyCost}</span>
                 </button>
@@ -229,7 +229,7 @@ function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower) {
             <span>Yield: <strong class="text-cyan-300">💠 ${tier.minGodEssences}–${tier.maxGodEssences}</strong></span>
           </div>
 
-          <button id="btn-start-essence-trial" class="min-h-[42px] w-full py-2 px-4 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50" style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});" ${canAfford ? '' : 'disabled'}>
+          <button id="btn-start-essence-trial" class="min-h-[44px] w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50" style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});" ${canAfford ? '' : 'disabled'}>
             ${canAfford ? `⚔️ Challenge 3-Wave Trial (⚡ ${tier.energyCost})` : `⚠️ Need ⚡ ${tier.energyCost} Energy`}
           </button>
         </div>
