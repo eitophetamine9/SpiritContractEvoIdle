@@ -285,9 +285,14 @@ export function preloadSpriteSheet(sheetKey) {
   return img;
 }
 
-export function getSheetKeyForSpecies(speciesId) {
-  if (!speciesId) return 'feline_shadow';
-  return SPRITE_MANIFEST.speciesMapping[speciesId] || 'feline_shadow';
+export function getSheetKeyForSpecies(speciesOrId) {
+  if (!speciesOrId) return 'feline_shadow';
+  const id = typeof speciesOrId === 'object'
+    ? (speciesOrId.speciesId || speciesOrId.id || speciesOrId.sheetKey)
+    : speciesOrId;
+  if (!id) return 'feline_shadow';
+  if (SPRITE_MANIFEST.sheets[id]) return id;
+  return SPRITE_MANIFEST.speciesMapping[id] || 'feline_shadow';
 }
 
 export function getSheetKeyForEnemy(enemy) {
@@ -336,7 +341,13 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
 /**
  * Generates HTML string for an animated creature/hero sprite
  */
-export function createAnimatedSpriteHtml(sheetKey, { isFlipped = false, extraClasses = '', glyph = '✨' } = {}) {
+export function createAnimatedSpriteHtml(speciesOrSheetKey, { isFlipped = false, extraClasses = '', glyph = '✨' } = {}) {
+  let sheetKey = 'feline_shadow';
+  if (typeof speciesOrSheetKey === 'string' && SPRITE_MANIFEST.sheets[speciesOrSheetKey]) {
+    sheetKey = speciesOrSheetKey;
+  } else {
+    sheetKey = getSheetKeyForSpecies(speciesOrSheetKey);
+  }
   const path = SPRITE_MANIFEST.sheets[sheetKey]?.path || `/assets/sprites/creatures/${sheetKey}.svg`;
   return `
     <div class="animated-pixel-sprite sprite-${sheetKey} ${isFlipped ? 'flipped-sprite' : ''} ${extraClasses}" style="--sprite-sheet: url('${path}');">
@@ -559,6 +570,10 @@ export class SpriteAnimator {
     containerEl.appendChild(this.canvas);
 
     const loop = (timestamp) => {
+      if (!this.canvas || !this.canvas.isConnected) {
+        this.destroy();
+        return;
+      }
       if (!this.lastTimestamp) this.lastTimestamp = timestamp;
       const deltaSec = Math.min(0.1, (timestamp - this.lastTimestamp) / 1000);
       this.lastTimestamp = timestamp;

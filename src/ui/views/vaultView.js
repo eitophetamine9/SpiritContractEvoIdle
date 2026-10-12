@@ -16,7 +16,7 @@ import { EQUIPMENT_RARITIES, GREEK_GOD_SETS, RELIC_STAR_TIERS } from '../../data
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showSpiritModal, showItemInspectModal } from '../components/modals.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
-import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
+import { createAnimatedSpriteHtml, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 
 let activeCategory = 'spirits'; // 'spirits' | 'relics' | 'weapons'
 let activeRarityFilter = 'ALL';
@@ -153,10 +153,10 @@ export function renderVaultView(container) {
   });
 
   container.innerHTML = `
-    <div class="vault-collection-container flex flex-col gap-3 p-2 text-white">
+    <div class="vault-collection-container">
       
       <!-- Top Card Collection Altar & Hero Banner (with Pixi.js Canvas Viewport) -->
-      <div class="relative overflow-hidden rounded-xl bg-gradient-to-b from-indigo-950/60 via-slate-900/90 to-slate-950 border border-indigo-500/30 p-3 shadow-lg">
+      <div class="vault-hero-banner">
         <!-- Pixi.js Holographic Card Altar Canvas -->
         <div id="vault-pixi-viewport" class="arena-viewport-25d absolute inset-0 pointer-events-none z-0 rounded-xl overflow-hidden opacity-60"></div>
 
@@ -195,14 +195,14 @@ export function renderVaultView(container) {
           </div>
 
           <!-- 3-Category Navigation Switcher -->
-          <div class="grid grid-cols-3 gap-1.5 mt-1">
-            <button class="vault-cat-btn flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer min-h-[38px] ${activeCategory === 'spirits' ? 'bg-indigo-500/30 text-indigo-200 border-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.3)]' : 'bg-slate-900/80 text-slate-400 border-slate-800'}" data-cat="spirits">
+          <div class="vault-category-switcher">
+            <button class="vault-cat-btn ${activeCategory === 'spirits' ? 'active' : ''}" data-cat="spirits">
               <span>⛩️</span> Spirits (${spirits.length})
             </button>
-            <button class="vault-cat-btn flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer min-h-[38px] ${activeCategory === 'relics' ? 'bg-amber-500/30 text-amber-200 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.3)]' : 'bg-slate-900/80 text-slate-400 border-slate-800'}" data-cat="relics">
+            <button class="vault-cat-btn ${activeCategory === 'relics' ? 'active' : ''}" data-cat="relics">
               <span>🔱</span> Relics (${relics.length})
             </button>
-            <button class="vault-cat-btn flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer min-h-[38px] ${activeCategory === 'weapons' ? 'bg-orange-500/30 text-orange-200 border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.3)]' : 'bg-slate-900/80 text-slate-400 border-slate-800'}" data-cat="weapons">
+            <button class="vault-cat-btn ${activeCategory === 'weapons' ? 'active' : ''}" data-cat="weapons">
               <span>⚔️</span> Weapons (${weapons.length})
             </button>
           </div>
@@ -210,16 +210,16 @@ export function renderVaultView(container) {
       </div>
 
       <!-- Real-Time Search & Bulk Actions Bar -->
-      <div class="flex items-center gap-2">
-        <div class="relative flex-1">
+      <div class="vault-search-row">
+        <div class="vault-search-box">
           <input type="text" id="vault-search-input" 
-                 class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400" 
+                 class="vault-search-input" 
                  placeholder="Search by name, set, or stat..." 
                  value="${searchQuery}" />
-          ${searchQuery ? `<button id="btn-clear-search" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">✕</button>` : ''}
+          ${searchQuery ? `<button id="btn-clear-search" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>` : ''}
         </div>
 
-        <button id="btn-toggle-bulk" class="min-h-[34px] px-3 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer ${isBulkMode ? 'bg-red-500/20 border-red-400 text-red-300' : 'bg-slate-900/80 border-slate-700 text-slate-300'}">
+        <button id="btn-toggle-bulk" class="vault-bulk-btn ${isBulkMode ? 'active' : ''}">
           ${isBulkMode ? 'Done' : (activeCategory === 'spirits' ? '📦 Bulk Annul' : '🔨 Bulk Dismantle')}
         </button>
       </div>
@@ -296,6 +296,7 @@ export function renderVaultView(container) {
             const isEquipped = partyIds.includes(s.id);
             const isSelected = selectedForBulk.has(s.id);
             const rarity = getRarityInfo(s.rarity || 'COMMON');
+            const rarityLower = (s.rarity || 'common').toLowerCase();
             const species = SPIRIT_SPECIES[s.speciesId];
             const elem = (species?.element || 'EARTH').toUpperCase();
             const roleKey = s.role || (species ? species.role : 'MAIN_DPS') || 'MAIN_DPS';
@@ -306,10 +307,10 @@ export function renderVaultView(container) {
               WIND: '#ffd32a', LIGHT: '#f1c40f', DARK: '#a55eea'
             };
             const elemColor = ELEM_COLORS[elem] || '#2ed573';
+            const sheetKey = getSheetKeyForSpecies(s.speciesId);
 
             return `
-              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01] ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
-                   style="border-color: ${rarity.color}66;" 
+              <div class="vault-card rarity-${rarityLower} ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
                    data-spirit-id="${s.id}">
                 
                 <!-- Bulk Selection Indicator Overlay -->
@@ -322,24 +323,24 @@ export function renderVaultView(container) {
                 ` : ''}
                 
                 <!-- Card Header Strip -->
-                <div class="flex items-center justify-between gap-1 mb-1.5">
-                  <div class="flex items-center gap-1">
-                    <span class="px-1.5 py-0.2 rounded text-[8px] font-black uppercase" style="background: ${elemColor}22; color: ${elemColor}; border: 1px solid ${elemColor}66;">
+                <div class="vault-card-header">
+                  <div class="vault-card-tags">
+                    <span class="vault-card-tag" style="background: ${elemColor}22; color: ${elemColor}; border: 1px solid ${elemColor}66;">
                       ${elem}
                     </span>
-                    <span class="px-1.5 py-0.2 rounded text-[8px] font-black uppercase" style="background: ${roleInfo.bg}; color: ${roleInfo.color}; border: 1px solid ${roleInfo.border};" title="Role: ${roleInfo.name}">
-                      ${roleInfo.icon} ${roleInfo.name}
+                    <span class="vault-card-tag" style="background: ${roleInfo.bg}; color: ${roleInfo.color}; border: 1px solid ${roleInfo.border};" title="Role: ${roleInfo.name}">
+                      ${roleInfo.name}
                     </span>
                     <span class="text-[9px] font-extrabold text-slate-400">Lv.${s.level}</span>
                     ${(s.ascensionLevel || 0) > 0 ? `
-                      <span class="px-1 py-0.2 rounded text-[8px] font-black ${s.ascensionLevel === 7 ? 'bg-amber-400/30 text-yellow-300 border border-yellow-400 shadow-[0_0_6px_rgba(253,224,71,0.5)]' : 'bg-purple-500/25 text-purple-200 border border-purple-400/40'}">
+                      <span class="vault-card-tag ${s.ascensionLevel === 7 ? 'bg-amber-400/30 text-yellow-300 border border-yellow-400 shadow-[0_0_6px_rgba(253,224,71,0.5)]' : 'bg-purple-500/25 text-purple-200 border border-purple-400/40'}">
                         ★${s.ascensionLevel}${s.ascensionLevel === 7 ? ' MAX' : ''}
                       </span>
                     ` : ''}
                   </div>
 
                   <div class="flex items-center gap-1">
-                    ${isEquipped ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">⛩️ PARTY</span>` : ''}
+                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-emerald-500/25 text-emerald-300 border border-emerald-400/35">⛩️ PARTY</span>` : ''}
                     <button class="btn-card-fav text-xs transition-transform active:scale-125" data-fav-spirit-id="${s.id}" title="Toggle Favorite">
                       ${s.favorite ? '<span class="text-amber-400 font-black">★</span>' : '<span class="text-slate-600">☆</span>'}
                     </button>
@@ -347,27 +348,29 @@ export function renderVaultView(container) {
                 </div>
 
                 <!-- Card Artwork Frame -->
-                <div class="relative w-full aspect-square max-h-24 rounded-xl flex items-center justify-center overflow-hidden mb-2" style="background: radial-gradient(circle, ${rarity.color}20 0%, rgba(10,15,25,0.8) 75%); border: 1px solid ${rarity.color}33;">
-                  <div class="w-16 h-16 pointer-events-none">
-                    ${createSpiritPlaceholderBox(s)}
+                <div class="vault-card-artwork" style="background: radial-gradient(circle, ${rarity.color}25 0%, rgba(10,15,25,0.85) 75%); border-color: ${rarity.color}44;">
+                  <div class="vault-artwork-pedestal">
+                    ${createAnimatedSpriteHtml(sheetKey, { extraClasses: 'vault-creature-sprite', glyph: species?.avatarEmoji || '✨' })}
                   </div>
-                  <span class="absolute bottom-1 right-1.5 text-[8px] font-black uppercase px-1 rounded" style="color: ${rarity.color}; background: rgba(0,0,0,0.6);">
-                    ${rarity.name}
-                  </span>
+                  <div class="vault-card-ribbon rarity-${rarityLower}" style="color: ${rarity.color}; background: rgba(0,0,0,0.75); border: 1px solid ${rarity.color}55;">
+                    ${rarity.name.toUpperCase()}
+                  </div>
                 </div>
 
                 <!-- Card Name & In-Line Rename Button -->
-                <div class="flex items-center justify-between gap-1 mb-1">
-                  <span class="text-xs font-bold text-white truncate flex-1">${s.customName}</span>
-                  <button class="btn-card-rename text-slate-400 hover:text-cyan-300 text-[11px] p-0.5 rounded cursor-pointer" data-rename-spirit-id="${s.id}" data-current-name="${s.customName}" title="Rename Spirit">
-                    ✏️
-                  </button>
+                <div class="vault-card-body">
+                  <div class="vault-card-name-row">
+                    <span class="vault-card-title">${s.customName}</span>
+                    <button class="btn-card-rename text-slate-400 hover:text-cyan-300 text-[11px] p-0.5 rounded cursor-pointer" data-rename-spirit-id="${s.id}" data-current-name="${s.customName}" title="Rename Spirit">
+                      ✏️
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Stats Strip -->
-                <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
-                  <span class="text-amber-400 font-extrabold">⚡ ${s.power.toLocaleString()}</span>
-                  <span class="text-slate-400 text-[9px]">${species?.name || 'Spirit'}</span>
+                <div class="vault-card-footer">
+                  <span class="vault-card-pwr">⚡ ${s.power.toLocaleString()}</span>
+                  <span class="vault-card-sub">${species?.name || 'Spirit'}</span>
                 </div>
 
               </div>
@@ -383,6 +386,7 @@ export function renderVaultView(container) {
             </div>
           ` : filteredRelics.map(r => {
             const rarObj = EQUIPMENT_RARITIES[r.rarity] || EQUIPMENT_RARITIES.COMMON;
+            const rarityLower = (r.rarity || 'common').toLowerCase();
             const isEquipped = !!r.equippedToSpiritId;
             const isSelected = selectedForBulk.has(r.uid);
             const equippedSpirit = isEquipped ? spirits.find(s => s.id === r.equippedToSpiritId) : null;
@@ -391,8 +395,8 @@ export function renderVaultView(container) {
             const starColor = starColors[stars] || '#ffd32a';
 
             return `
-              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01] ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
-                   style="border-color: ${starColor}66;" 
+              <div class="vault-card rarity-${rarityLower} ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
+                   style="border-color: ${starColor}88;" 
                    data-relic-uid="${r.uid}">
                 
                 <!-- Bulk Selection Indicator Overlay -->
@@ -405,13 +409,13 @@ export function renderVaultView(container) {
                 ` : ''}
                 
                 <!-- Card Header -->
-                <div class="flex items-center justify-between gap-1 mb-1.5">
+                <div class="vault-card-header">
                   <span class="text-[9px] font-extrabold" style="color: ${starColor};">
                     ${'★'.repeat(stars)}
                   </span>
                   
                   <div class="flex items-center gap-1">
-                    ${isEquipped ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">✓ ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
+                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/35">✓ ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
                     <button class="btn-card-fav text-xs transition-transform active:scale-125" data-fav-relic-uid="${r.uid}" title="Toggle Favorite">
                       ${r.favorite ? '<span class="text-amber-400 font-black">★</span>' : '<span class="text-slate-600">☆</span>'}
                     </button>
@@ -419,22 +423,26 @@ export function renderVaultView(container) {
                 </div>
 
                 <!-- Card Artwork Frame -->
-                <div class="relative w-full aspect-square max-h-24 rounded-xl flex items-center justify-center overflow-hidden mb-2" style="background: radial-gradient(circle, ${r.color || '#9b59b6'}25 0%, rgba(10,15,25,0.8) 75%); border: 1px solid ${starColor}33;">
-                  ${createAnimatedRelicHtml(r, r.slotTypeId, { extraClasses: 'vault-card-sprite' })}
-                  <span class="absolute bottom-1 right-1.5 text-[8px] font-black uppercase px-1 rounded z-10" style="color: ${rarObj.color}; background: rgba(0,0,0,0.6);">
-                    ${r.slotName || 'Relic'}
-                  </span>
+                <div class="vault-card-artwork" style="background: radial-gradient(circle, ${r.color || '#9b59b6'}25 0%, rgba(10,15,25,0.85) 75%); border-color: ${starColor}44;">
+                  <div class="vault-artwork-pedestal">
+                    ${createAnimatedRelicHtml(r, r.slotTypeId, { extraClasses: 'vault-card-sprite' })}
+                  </div>
+                  <div class="vault-card-ribbon" style="color: ${rarObj.color}; background: rgba(0,0,0,0.75); border: 1px solid ${starColor}55;">
+                    ${r.slotName || 'RELIC'}
+                  </div>
                 </div>
 
                 <!-- Card Name -->
-                <div class="text-xs font-bold truncate text-white mb-0.5" style="color: ${r.accentColor || '#fff'};">
-                  ${r.name}
+                <div class="vault-card-body">
+                  <div class="vault-card-title" style="color: ${r.accentColor || '#fff'};">
+                    ${r.name}
+                  </div>
                 </div>
 
                 <!-- Stats Strip -->
-                <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
+                <div class="vault-card-footer">
                   <span class="text-emerald-400 font-extrabold">+${r.mainStatValue} ${r.mainStatName}</span>
-                  <span class="text-[9px] text-slate-400 truncate">${r.setName ? r.setName.slice(0, 7) : ''}</span>
+                  <span class="vault-card-sub">${r.setName ? r.setName.slice(0, 8) : ''}</span>
                 </div>
 
               </div>
@@ -450,13 +458,14 @@ export function renderVaultView(container) {
             </div>
           ` : filteredWeapons.map(w => {
             const rarObj = EQUIPMENT_RARITIES[w.rarity] || EQUIPMENT_RARITIES.COMMON;
+            const rarityLower = (w.rarity || 'common').toLowerCase();
             const isEquipped = !!w.equippedToSpiritId;
             const isSelected = selectedForBulk.has(w.uid);
             const equippedSpirit = isEquipped ? spirits.find(s => s.id === w.equippedToSpiritId) : null;
 
             return `
-              <div class="vault-card relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900/90 to-slate-950 p-2.5 flex flex-col justify-between transition-all duration-150 cursor-pointer shadow-md hover:scale-[1.01] ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
-                   style="border-color: ${rarObj.color}66;" 
+              <div class="vault-card rarity-${rarityLower} ${isSelected ? 'ring-2 ring-red-500 bg-red-950/20' : ''}" 
+                   style="border-color: ${rarObj.color}88;" 
                    data-weapon-uid="${w.uid}">
                 
                 <!-- Bulk Selection Indicator Overlay -->
@@ -469,14 +478,14 @@ export function renderVaultView(container) {
                 ` : ''}
                 
                 <!-- Card Header -->
-                <div class="flex items-center justify-between gap-1 mb-1.5">
+                <div class="vault-card-header">
                   <span class="text-[9px] font-extrabold" style="color: ${rarObj.color};">
                     ${rarObj.name}
                   </span>
 
                   <div class="flex items-center gap-1">
-                    <span class="px-1 py-0.2 rounded text-[8px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30">+${w.level || 1}</span>
-                    ${isEquipped ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">✓ ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
+                    <span class="px-1.5 py-0.2 rounded text-[8px] font-black bg-amber-500/25 text-amber-300 border border-amber-400/35">+${w.level || 1}</span>
+                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/35">✓ ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
                     <button class="btn-card-fav text-xs transition-transform active:scale-125" data-fav-weapon-uid="${w.uid}" title="Toggle Favorite">
                       ${w.favorite ? '<span class="text-amber-400 font-black">★</span>' : '<span class="text-slate-600">☆</span>'}
                     </button>
@@ -484,20 +493,24 @@ export function renderVaultView(container) {
                 </div>
 
                 <!-- Card Artwork Frame -->
-                <div class="relative w-full aspect-square max-h-24 rounded-xl flex items-center justify-center overflow-hidden mb-2" style="background: radial-gradient(circle, rgba(230, 126, 34, 0.25) 0%, rgba(10,15,25,0.8) 75%); border: 1px solid ${rarObj.color}33;">
-                  ${createAnimatedWeaponHtml(w, { extraClasses: 'vault-card-sprite' })}
-                  <span class="absolute bottom-1 right-1.5 text-[8px] font-black uppercase px-1 rounded z-10" style="color: ${rarObj.color}; background: rgba(0,0,0,0.6);">
-                    ${w.archetype || 'Weapon'}
-                  </span>
+                <div class="vault-card-artwork" style="background: radial-gradient(circle, rgba(230, 126, 34, 0.25) 0%, rgba(10,15,25,0.85) 75%); border-color: ${rarObj.color}44;">
+                  <div class="vault-artwork-pedestal">
+                    ${createAnimatedWeaponHtml(w, { extraClasses: 'vault-card-sprite' })}
+                  </div>
+                  <div class="vault-card-ribbon" style="color: ${rarObj.color}; background: rgba(0,0,0,0.75); border: 1px solid ${rarObj.color}55;">
+                    ${w.archetype || 'WEAPON'}
+                  </div>
                 </div>
 
                 <!-- Card Name -->
-                <div class="text-xs font-bold truncate text-white mb-0.5" style="color: ${rarObj.color};">
-                  ${w.name}
+                <div class="vault-card-body">
+                  <div class="vault-card-title" style="color: ${rarObj.color};">
+                    ${w.name}
+                  </div>
                 </div>
 
                 <!-- Stats Strip -->
-                <div class="pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
+                <div class="vault-card-footer">
                   <span class="text-orange-400 font-extrabold">⚡ +${w.atkPower} PWR</span>
                   <span class="text-[9px] text-amber-300 font-bold">${w.critRate}% Crit</span>
                 </div>

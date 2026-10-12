@@ -521,7 +521,8 @@ function showCombatBanner(container, text, type = 'ult') {
 }
 
 /**
- * Fast-update helper to update health/mana bars and swarm without tearing down DOM elements
+ * Fast-update helper to update health/mana bars and swarm without tearing down DOM elements.
+ * Uses cached element handles and dirty-checking to prevent layout thrashing and allocation churn.
  */
 export function updateMadnessCombatTick(container) {
   const mz = gameState.state.madnessZone;
@@ -530,78 +531,77 @@ export function updateMadnessCombatTick(container) {
 
   // 1. Update Allied Spirits HP/MP/Shields
   partySpirits.forEach((spirit, idx) => {
-    const hpFill = container.querySelector(`#spirit-hp-fill-${idx}`);
-    const shieldFill = container.querySelector(`#spirit-shield-fill-${idx}`);
-    const mpFill = container.querySelector(`#spirit-mp-fill-${idx}`);
+    if (!spirit) return;
     const slot = container.querySelector(`#allied-slot-${idx}`);
+    if (!slot) return;
 
-    if (slot && spirit) {
-      const maxHp = spirit.maxHp || 100;
-      const curHp = typeof spirit.currentHp === 'number' ? spirit.currentHp : maxHp;
-      const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
-      const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
-      const isUltReady = mpPct >= 100;
-      const isFallen = spirit.isFallen || curHp <= 0;
+    const hpFill = slot.querySelector('.hud-hp-fill');
+    const shieldFill = slot.querySelector('.hud-shield-fill');
+    const mpFill = slot.querySelector('.hud-mp-fill');
+    const tauntTag = slot.querySelector('.taunt-active-tag');
 
-      if (hpFill) hpFill.style.width = `${hpPct}%`;
-      if (mpFill) mpFill.style.width = `${mpPct}%`;
-      if (shieldFill) {
-        const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
+    const maxHp = spirit.maxHp || 100;
+    const curHp = typeof spirit.currentHp === 'number' ? spirit.currentHp : maxHp;
+    const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
+    const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
+    const isUltReady = mpPct >= 100;
+    const isFallen = spirit.isFallen || curHp <= 0;
+    const isTaunting = (spirit.tauntTimer || 0) > 0;
+
+    // Dirty-check style width changes to avoid triggering layout recalculations
+    if (hpFill && slot._lastHpPct !== hpPct) {
+      hpFill.style.width = `${hpPct}%`;
+      slot._lastHpPct = hpPct;
+    }
+    if (mpFill && slot._lastMpPct !== mpPct) {
+      mpFill.style.width = `${mpPct}%`;
+      slot._lastMpPct = mpPct;
+    }
+    if (shieldFill) {
+      const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
+      if (slot._lastShieldPct !== shieldPct) {
         shieldFill.style.width = `${shieldPct}%`;
+        slot._lastShieldPct = shieldPct;
       }
+    }
 
-      if (isUltReady) {
-        slot.classList.add('ult-ready');
-      } else {
-        slot.classList.remove('ult-ready');
-      }
+    if (slot._lastUltReady !== isUltReady) {
+      slot.classList.toggle('ult-ready', isUltReady);
+      slot._lastUltReady = isUltReady;
+    }
 
-      if (isFallen) {
-        slot.classList.add('spirit-fallen');
-      } else {
-        slot.classList.remove('spirit-fallen');
-      }
+    if (slot._lastFallen !== isFallen) {
+      slot.classList.toggle('spirit-fallen', isFallen);
+      slot._lastFallen = isFallen;
+    }
 
-      // 3. Dynamic Taunt Status Tracking
-      const isTaunting = (spirit.tauntTimer || 0) > 0;
-      if (isTaunting) {
-        slot.classList.add('taunt-active');
-        let tauntTag = slot.querySelector('.taunt-active-tag');
-        if (!tauntTag) {
-          const spriteContainer = slot.querySelector('.spirit-sprite-container');
-          if (spriteContainer) {
-            tauntTag = document.createElement('div');
-            tauntTag.className = 'taunt-active-tag';
-            tauntTag.textContent = '🛡️ TAUNT';
-            spriteContainer.prepend(tauntTag);
-          }
-        }
-      } else {
-        slot.classList.remove('taunt-active');
-        const tauntTag = slot.querySelector('.taunt-active-tag');
-        if (tauntTag && tauntTag.parentNode) {
-          tauntTag.parentNode.removeChild(tauntTag);
-        }
+    if (slot._lastTaunting !== isTaunting) {
+      slot.classList.toggle('taunt-active', isTaunting);
+      if (tauntTag) {
+        tauntTag.style.display = isTaunting ? 'block' : 'none';
       }
+      slot._lastTaunting = isTaunting;
     }
   });
 
   // 2. Update Swarm Enemies HP
   swarm.forEach((em, sIdx) => {
-    const hpFill = container.querySelector(`#enemy-hp-fill-${sIdx}`);
-    const hpText = container.querySelector(`#enemy-hp-text-${sIdx}`);
+    if (!em) return;
     const slot = container.querySelector(`#enemy-slot-${sIdx}`);
+    if (!slot) return;
 
-    if (slot && em) {
-      const isDead = em.isDefeated || em.hp <= 0;
-      const emHpPct = Math.max(0, Math.min(100, Math.round((em.hp / em.maxHp) * 100)));
+    const hpFill = slot.querySelector('.seamless-enemy-hp-fill');
+    const isDead = em.isDefeated || em.hp <= 0;
+    const emHpPct = Math.max(0, Math.min(100, Math.round((em.hp / em.maxHp) * 100)));
 
-      if (hpFill) hpFill.style.width = `${emHpPct}%`;
-      if (hpText) hpText.textContent = `${Math.ceil(em.hp).toLocaleString()} / ${em.maxHp.toLocaleString()} HP`;
+    if (hpFill && slot._lastEmHpPct !== emHpPct) {
+      hpFill.style.width = `${emHpPct}%`;
+      slot._lastEmHpPct = emHpPct;
+    }
 
-      if (isDead) {
-        slot.classList.add('enemy-defeated');
-      }
+    if (isDead && !slot._isMarkedDead) {
+      slot.classList.add('enemy-defeated');
+      slot._isMarkedDead = true;
     }
   });
 }
@@ -644,7 +644,7 @@ function renderSeamlessMadnessSpirit(slotId, slotData, partySpirits) {
 
       <!-- Animated Creature Asset Only (No Card Box, No Border) -->
       <div class="spirit-sprite-container seamless-sprite-container">
-        ${isTaunting ? '<div class="taunt-active-tag">🛡️ TAUNT</div>' : ''}
+        <div class="taunt-active-tag" style="display: ${isTaunting ? 'block' : 'none'};">🛡️ TAUNT</div>
         <div class="animated-pixel-sprite sprite-${sheetKey}" style="--sprite-sheet: url('/assets/sprites/creatures/${sheetKey}.svg');">
           <div class="sprite-frame-viewer"></div>
           <span class="core-glyph-fallback" style="display: none;">${glyph}</span>

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "./**/*.js";
+@source "../index.html";
 
 /* ==========================================================================
    SPIRIT CONTRACT EVO | IDLE - Dark Fantasy Woodland & Gothic Ruins Theme
@@ -94,13 +96,32 @@ button {
   min-height: 40px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+  background: var(--bg-surface-elevated, #15231b);
+  color: var(--text-main, #edf5ee);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 6px 12px;
-  transition: transform 0.08s ease, filter 0.08s ease;
+  transition: transform 0.08s ease, filter 0.08s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text-main, #edf5ee);
+  background: rgba(12, 17, 28, 0.9);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #ffd152;
+  box-shadow: 0 0 10px rgba(255, 209, 82, 0.25);
 }
 
 /* STRICT RULE: DO NOT USE HOVER STATES. USE ACTIVE FOR TACTILE MOBILE TOUCH */
@@ -5159,103 +5180,7 @@ button:disabled {
   border-radius: 6px;
 }
 
-/* =========================================================================
-   DIAMOND FAST-TRAVEL HUB (REFERENCE 2 & 3 AESTHETIC)
-   ========================================================================= */
 
-.diamond-hub-wrapper {
-  margin: 6px 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.diamond-hub-cluster {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 8px;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
-}
-
-.diamond-mid-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.diamond-node-btn {
-  width: 52px;
-  height: 52px;
-  min-height: 52px;
-  min-width: 52px;
-  transform: rotate(45deg);
-  border: 1.5px solid #d4af37;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #1b263b 0%, #0d131f 100%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 0 8px rgba(212, 175, 55, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.diamond-node-btn:active {
-  transform: rotate(45deg) scale(0.92);
-}
-
-.diamond-node-btn:hover {
-  border-color: #ffd32a;
-  box-shadow: 0 0 14px rgba(255, 211, 42, 0.5);
-}
-
-.diamond-content {
-  transform: rotate(-45deg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.diamond-icon {
-  font-size: 15px;
-  line-height: 1;
-}
-
-.diamond-label {
-  font-size: 8px;
-  font-weight: 900;
-  font-family: var(--font-fantasy);
-  letter-spacing: 0.5px;
-  color: #ffd32a;
-  margin-top: 2px;
-  line-height: 1;
-}
-
-.diamond-center-core {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffd32a 0%, #d4af37 60%, transparent 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 14px rgba(255, 211, 42, 0.7);
-  animation: corePulse 2.5s infinite ease-in-out;
-}
-
-@keyframes corePulse {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.1); filter: brightness(1.3); }
-}
-
-.core-crest {
-  font-size: 14px;
-}
 
 /* ==========================================================================
    VAULT BESTIARY CATEGORY SWITCHER & HIGH-DENSITY GRID
@@ -5832,6 +5757,8 @@ button:disabled {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+  contain: layout style;
+  will-change: transform;
 }
 
 .animated-pixel-sprite .sprite-frame-viewer {
@@ -5845,6 +5772,8 @@ button:disabled {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+  transform: translateZ(0);
+  will-change: background-position;
 }
 
 @keyframes spriteIdleCycle {
@@ -5931,6 +5860,8 @@ button:disabled {
   cursor: pointer;
   transition: transform 0.15s ease;
   user-select: none;
+  contain: layout style;
+  will-change: transform;
 }
 
 .seamless-battle-spirit:hover {
@@ -6340,6 +6271,512 @@ button:disabled {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(241, 196, 15, 0.15);
   backdrop-filter: blur(8px);
 }
+
+/* =========================================================================
+   THE ASTRAL REALM & SANCTUARY VIEW (MYSTICAL VIEW)
+   High-Fantasy Obsidian, Glowing Celestial Accents & Tactile Touch Controls
+   ========================================================================= */
+
+.mystical-realm-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #f1f5f9;
+}
+
+.mystical-hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.22) 0%, rgba(15, 23, 42, 0.95) 75%),
+              linear-gradient(180deg, #1e1b4b 0%, #090d16 100%);
+  border: 1.5px solid rgba(129, 140, 248, 0.35);
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mystical-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(10, 15, 28, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: 11px;
+}
+
+/* 7-Tab Navigation Grid */
+.realm-tab-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+@media (min-width: 440px) {
+  .realm-tab-grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
+
+.realm-tab-btn {
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 12px;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.realm-tab-btn:hover,
+.realm-tab-btn:focus-visible {
+  border-color: rgba(148, 163, 184, 0.6);
+  color: #e2e8f0;
+}
+
+.realm-tab-btn.active,
+.realm-tab-btn[data-active="true"] {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.55) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border-color: #38bdf8;
+  color: #f8fafc;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.realm-tab-btn[data-realm-tab="dungeon"].active {
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+}
+.realm-tab-btn[data-realm-tab="zodiac"].active {
+  border-color: #fb7185;
+  box-shadow: 0 0 14px rgba(251, 113, 133, 0.4);
+}
+.realm-tab-btn[data-realm-tab="expeditions"].active {
+  border-color: #818cf8;
+  box-shadow: 0 0 14px rgba(129, 140, 248, 0.4);
+}
+.realm-tab-btn[data-realm-tab="transmute"].active {
+  border-color: #e879f9;
+  box-shadow: 0 0 14px rgba(232, 121, 249, 0.4);
+}
+.realm-tab-btn[data-realm-tab="energy"].active {
+  border-color: #fbbf24;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
+}
+.realm-tab-btn[data-realm-tab="potions"].active {
+  border-color: #34d399;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.4);
+}
+.realm-tab-btn[data-realm-tab="blessings"].active {
+  border-color: #c084fc;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4);
+}
+
+/* Essence Chambers Grid */
+.essence-chambers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.essence-chamber-card {
+  background: linear-gradient(145deg, rgba(16, 24, 40, 0.95), rgba(9, 13, 24, 0.98));
+  border: 1.5px solid rgba(71, 85, 105, 0.35);
+  border-radius: 12px;
+  padding: 9px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  min-height: 52px;
+}
+
+.essence-chamber-card:hover {
+  border-color: var(--ch-color, #38bdf8);
+}
+
+.essence-chamber-card.active,
+.essence-chamber-card[data-active="true"] {
+  background: linear-gradient(145deg, rgba(24, 37, 65, 0.95), rgba(13, 19, 36, 0.98));
+  border-color: var(--ch-color, #38bdf8);
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.essence-chamber-stage {
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 0%, rgba(30, 58, 138, 0.2) 0%, rgba(10, 15, 28, 0.98) 75%);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Tier Difficulty Buttons */
+.essence-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.essence-tier-btn {
+  background: rgba(13, 20, 36, 0.9);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
+  padding: 6px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.essence-tier-btn.active,
+.essence-tier-btn[data-active="true"] {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: #22d3ee;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+}
+
+/* =========================================================================
+   THE DIVINE VAULT - ARCANE CARD COLLECTION (TCG / GACHA AESTHETIC)
+   ========================================================================= */
+
+.vault-collection-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 16px 0;
+  color: #f1f5f9;
+}
+
+.vault-hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 0%, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0.95) 80%),
+              linear-gradient(180deg, #1e1b4b 0%, #090d16 100%);
+  border: 1.5px solid rgba(99, 102, 241, 0.35);
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.vault-category-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.vault-cat-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vault-cat-btn[data-cat="spirits"].active {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #818cf8;
+  color: #c7d2fe;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
+}
+
+.vault-cat-btn[data-cat="relics"].active {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #fbbf24;
+  color: #fef3c7;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+.vault-cat-btn[data-cat="weapons"].active {
+  background: rgba(249, 115, 22, 0.25);
+  border-color: #fb923c;
+  color: #ffedd5;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
+}
+
+/* Vault Search & Bulk Controls */
+.vault-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vault-search-box {
+  position: relative;
+  flex: 1;
+}
+
+.vault-search-input {
+  width: 100%;
+  background: rgba(13, 20, 36, 0.9);
+  border: 1px solid rgba(71, 85, 105, 0.45);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vault-search-input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 10px rgba(129, 140, 248, 0.3);
+}
+
+.vault-bulk-btn {
+  min-height: 38px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  background: rgba(15, 23, 42, 0.85);
+  color: #cbd5e1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vault-bulk-btn.active {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #f87171;
+  color: #fca5a5;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Vault TCG Card Grid */
+.vault-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 460px) {
+  .vault-card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Dedicated TCG Collectible Card */
+.vault-card {
+  position: relative;
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(20, 28, 48, 0.95) 0%, rgba(9, 13, 24, 0.98) 100%);
+  border: 1.5px solid rgba(71, 85, 105, 0.45);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  user-select: none;
+}
+
+.vault-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+}
+
+.vault-card:active {
+  transform: scale(0.97);
+}
+
+/* Rarity Frame Accents */
+.vault-card.rarity-common {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+.vault-card.rarity-uncommon {
+  border-color: rgba(46, 204, 113, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 10px rgba(46, 204, 113, 0.2);
+}
+.vault-card.rarity-rare {
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 12px rgba(59, 130, 246, 0.25);
+}
+.vault-card.rarity-epic {
+  border-color: rgba(168, 85, 247, 0.75);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 14px rgba(168, 85, 247, 0.3);
+}
+.vault-card.rarity-legendary {
+  border-color: rgba(245, 158, 11, 0.8);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 16px rgba(245, 158, 11, 0.35);
+}
+.vault-card.rarity-mythical,
+.vault-card.rarity-mythic {
+  border-color: rgba(239, 68, 68, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 20px rgba(239, 68, 68, 0.45);
+  animation: mythicalCardPulse 2.5s infinite alternate ease-in-out;
+}
+.vault-card.rarity-transcendent {
+  border-color: #00d2d3;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), 0 0 22px rgba(0, 255, 255, 0.65), inset 0 0 10px rgba(0, 255, 255, 0.2);
+  animation: transcendentCyanStarlight 2.5s infinite alternate;
+}
+
+/* Transcendent Holographic Foil Sheen */
+.vault-card.rarity-transcendent::before {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  background: linear-gradient(115deg, transparent 40%, rgba(0, 255, 255, 0.15) 50%, rgba(255, 159, 243, 0.15) 55%, transparent 65%);
+  pointer-events: none;
+  animation: holoSheen 4s infinite linear;
+  z-index: 2;
+}
+
+@keyframes holoSheen {
+  0% { transform: translate(-30%, -30%); }
+  100% { transform: translate(30%, 30%); }
+}
+
+@keyframes mythicalCardPulse {
+  0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+  100% { box-shadow: 0 0 22px rgba(239, 68, 68, 0.7); }
+}
+
+/* Vault Card Sub-Components */
+.vault-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.vault-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.vault-card-tag {
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 1.5px 4px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+.vault-card-artwork {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.85;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vault-artwork-pedestal {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vault-creature-sprite,
+.vault-card-sprite {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
+  width: 52px;
+  height: 52px;
+}
+.vault-creature-sprite .sprite-frame-viewer,
+.vault-card-sprite .sprite-frame-viewer {
+  width: 52px;
+  height: 52px;
+  background-size: 416px 52px;
+}
+
+.vault-card-ribbon {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 7.5px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding: 2px 4px;
+  text-transform: uppercase;
+  z-index: 5;
+}
+
+.vault-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vault-card-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.vault-card-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.vault-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid rgba(71, 85, 105, 0.3);
+  font-size: 9.5px;
+}
+
+.vault-card-pwr {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  color: #fbbf24;
+}
+
+.vault-card-sub {
+  color: #94a3b8;
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 
 
 

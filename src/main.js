@@ -16,6 +16,8 @@ import {
   showOfflineModal 
 } from './ui/index.js';
 
+import { arenaRenderer } from './render/arenaRenderer.js';
+
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
 const resShardsEl = document.getElementById('res-shards');
@@ -25,29 +27,58 @@ const resEnergyEl = document.getElementById('res-energy');
 const saveStatusEl = document.getElementById('save-status');
 const partyEvolveBadgeEl = document.getElementById('party-evolve-badge');
 
-function updateResourcesDisplay() {
-  if (resEnergyEl && gameState.state.resources) {
-    const res = gameState.state.resources;
-    resEnergyEl.textContent = `${res.energy}/${res.maxEnergy}`;
+let _lastEnergyStr = '';
+let _lastShards = -1;
+let _lastEssence = -1;
+let _lastGodEssences = -1;
+let _lastHasEvolvable = null;
+
+function updateResourcesDisplay(force = false) {
+  if (!gameState.state || !gameState.state.resources) return;
+  const res = gameState.state.resources;
+
+  if (resEnergyEl) {
+    const energyStr = `${res.energy}/${res.maxEnergy}`;
+    if (force || energyStr !== _lastEnergyStr) {
+      resEnergyEl.textContent = energyStr;
+      _lastEnergyStr = energyStr;
+    }
   }
   if (resShardsEl) {
-    resShardsEl.textContent = gameState.state.resources.spiritShards.toLocaleString();
+    if (force || res.spiritShards !== _lastShards) {
+      resShardsEl.textContent = res.spiritShards.toLocaleString();
+      _lastShards = res.spiritShards;
+    }
   }
   if (resEssenceEl) {
-    resEssenceEl.textContent = gameState.state.resources.soulEssence.toLocaleString();
+    if (force || res.soulEssence !== _lastEssence) {
+      resEssenceEl.textContent = res.soulEssence.toLocaleString();
+      _lastEssence = res.soulEssence;
+    }
   }
   if (resGodEssencesEl) {
-    resGodEssencesEl.textContent = (gameState.state.resources.essencesOfTheGods || 0).toLocaleString();
+    const godVal = res.essencesOfTheGods || 0;
+    if (force || godVal !== _lastGodEssences) {
+      resGodEssencesEl.textContent = godVal.toLocaleString();
+      _lastGodEssences = godVal;
+    }
   }
 
   // Update Party Evolve Badge if any spirit is ready to evolve
-  const hasEvolvable = gameState.getPartySpirits().some(s => s.canEvolve);
   if (partyEvolveBadgeEl) {
-    partyEvolveBadgeEl.style.display = hasEvolvable ? 'flex' : 'none';
+    const hasEvolvable = gameState.getPartySpirits().some(s => s.canEvolve);
+    if (force || hasEvolvable !== _lastHasEvolvable) {
+      partyEvolveBadgeEl.style.display = hasEvolvable ? 'flex' : 'none';
+      _lastHasEvolvable = hasEvolvable;
+    }
   }
 }
 
 function switchTab(tabName) {
+  if (activeTab !== tabName) {
+    // Cleanly unmount any active canvas renderer before switching views
+    arenaRenderer.destroy();
+  }
   activeTab = tabName;
   audioManager.handleTabChange(tabName);
 
