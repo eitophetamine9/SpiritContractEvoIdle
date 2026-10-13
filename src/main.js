@@ -109,6 +109,24 @@ function switchTab(tabName) {
     }
   });
 
+  const secondaryTabs = ['trials', 'forge', 'mystical', 'vault', 'index', 'profile'];
+  const navMenuBtn = document.getElementById('nav-menu-toggle');
+  if (navMenuBtn) {
+    if (secondaryTabs.includes(tabName)) {
+      navMenuBtn.classList.add('active');
+    } else {
+      navMenuBtn.classList.remove('active');
+    }
+  }
+
+  document.querySelectorAll('.nav-drawer-item').forEach(item => {
+    if (item.getAttribute('data-tab') === tabName) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
   renderActiveTab();
 }
 
@@ -149,11 +167,60 @@ function renderActiveTab() {
   updateResourcesDisplay();
 }
 
-// Setup Bottom Navigation listeners (1-line unified dock)
+// Setup Bottom Navigation listeners (3 main tabs + Drawer items)
 document.querySelectorAll('.nav-tab[data-tab]').forEach(tab => {
   tab.addEventListener('click', (e) => {
     const tabName = e.currentTarget.getAttribute('data-tab');
     if (tabName && tabName !== activeTab) {
+      switchTab(tabName);
+    }
+  });
+});
+
+// Setup Menu Drawer Toggle and Items
+const navDrawerBackdrop = document.getElementById('nav-drawer-backdrop');
+const navMenuToggleBtn = document.getElementById('nav-menu-toggle');
+const btnCloseNavDrawer = document.getElementById('btn-close-nav-drawer');
+
+const openNavDrawer = () => {
+  if (navDrawerBackdrop) {
+    navDrawerBackdrop.style.display = 'flex';
+  }
+};
+
+const closeNavDrawer = () => {
+  if (navDrawerBackdrop) {
+    navDrawerBackdrop.style.display = 'none';
+  }
+};
+
+if (navMenuToggleBtn) {
+  navMenuToggleBtn.addEventListener('click', () => {
+    if (navDrawerBackdrop && navDrawerBackdrop.style.display === 'flex') {
+      closeNavDrawer();
+    } else {
+      openNavDrawer();
+    }
+  });
+}
+
+if (btnCloseNavDrawer) {
+  btnCloseNavDrawer.addEventListener('click', closeNavDrawer);
+}
+
+if (navDrawerBackdrop) {
+  navDrawerBackdrop.addEventListener('click', (e) => {
+    if (e.target === navDrawerBackdrop) {
+      closeNavDrawer();
+    }
+  });
+}
+
+document.querySelectorAll('.nav-drawer-item[data-tab]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const tabName = e.currentTarget.getAttribute('data-tab');
+    closeNavDrawer();
+    if (tabName) {
       switchTab(tabName);
     }
   });

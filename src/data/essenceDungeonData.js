@@ -66,10 +66,10 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     energyCost: 10,
     minPartyPower: 2500,
     recommendedPower: 2500,
-    minGodEssences: 15,
-    maxGodEssences: 25,
+    minGodEssences: 8,
+    maxGodEssences: 12,
     soulEssenceReward: 1,
-    shardsReward: 30
+    shardsReward: 15
   },
   {
     tier: 2,
@@ -78,10 +78,10 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     energyCost: 12,
     minPartyPower: 10000,
     recommendedPower: 10000,
-    minGodEssences: 40,
-    maxGodEssences: 60,
-    soulEssenceReward: 2,
-    shardsReward: 60
+    minGodEssences: 20,
+    maxGodEssences: 30,
+    soulEssenceReward: 1,
+    shardsReward: 30
   },
   {
     tier: 3,
@@ -90,10 +90,10 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     energyCost: 15,
     minPartyPower: 45000,
     recommendedPower: 45000,
-    minGodEssences: 100,
-    maxGodEssences: 140,
-    soulEssenceReward: 4,
-    shardsReward: 120
+    minGodEssences: 50,
+    maxGodEssences: 70,
+    soulEssenceReward: 2,
+    shardsReward: 60
   },
   {
     tier: 4,
@@ -102,10 +102,10 @@ export const ESSENCE_DIFFICULTY_TIERS = [
     energyCost: 18,
     minPartyPower: 160000,
     recommendedPower: 160000,
-    minGodEssences: 250,
-    maxGodEssences: 350,
-    soulEssenceReward: 8,
-    shardsReward: 250
+    minGodEssences: 125,
+    maxGodEssences: 175,
+    soulEssenceReward: 4,
+    shardsReward: 125
   }
 ];
 

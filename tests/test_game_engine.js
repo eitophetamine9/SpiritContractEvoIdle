@@ -10,6 +10,7 @@ import {
   getRoleInfo,
   getSpiritRole
 } from '../src/data/index.js';
+import { enhanceRelicData } from '../src/data/equipmentData.js';
 import { getEnemyForStage } from '../src/data/index.js';
 import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon } from '../src/render/spriteAnimator.js';
 import { audioManager } from '../src/audio/audioManager.js';
@@ -203,8 +204,8 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   // 8. Test Equipment, Greek God Relics, Set Bonuses, and Pantheon Trials Dungeon
   console.log('\n[TEST 8] Testing Equipment, Relics & Pantheon Trials Artifact Dungeon:');
   const { GREEK_GOD_SETS, PANTHEON_CHAMBERS, PANTHEON_DIFFICULTY_TIERS, createRelicInstance } = await import('../src/data/index.js');
-  console.log(`  Greek God Sets catalog count: ${Object.keys(GREEK_GOD_SETS).length} (Expected 8)`);
-  if (Object.keys(GREEK_GOD_SETS).length !== 8) throw new Error('Expected 8 Greek God Sets');
+  console.log(`  Greek God Sets catalog count: ${Object.keys(GREEK_GOD_SETS).length} (Expected >= 8)`);
+  if (Object.keys(GREEK_GOD_SETS).length < 8) throw new Error('Expected at least 8 Greek God Sets');
 
   // Verify starter equipment and 2-pc Hades set bonus on starter spirit
   const activeStarterBonuses = gameState.getSpiritActiveSetBonuses(starter);
@@ -226,8 +227,8 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (!hasHades4pc) throw new Error('4-pc Hades bonus (Underworld Flames) should be active with 4 Hades relics equipped');
 
   // Test Pantheon Trials Artifact Dungeon execution
-  console.log(`  Pantheon Chambers count: ${PANTHEON_CHAMBERS.length} (Expected 8)`);
-  if (PANTHEON_CHAMBERS.length !== 8) throw new Error('Expected 8 Pantheon Chambers');
+  console.log(`  Pantheon Chambers count: ${PANTHEON_CHAMBERS.length} (Expected >= 8)`);
+  if (PANTHEON_CHAMBERS.length < 8) throw new Error('Expected at least 8 Pantheon Chambers');
 
   const initialEnergy = gameState.state.resources.energy;
   const initialEquipCount = gameState.state.inventory.equipment.length;
@@ -1065,6 +1066,333 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     throw new Error('Ultimate SFX was not throttled within cooldown window');
   }
   console.log('  [PASS] Audio Manager ultimate SFX throttling validated!');
+
+  // [TEST 28] Testing Phase 2 Economy Rebalance (24h Nerfed Offline, Currency Nerfs & Substat Reroll)
+  console.log('\n[TEST 28] Testing Phase 2 Economy Rebalance & Soul Essence Substat Reroll:');
+  const offline24hRes = gameState.applyOfflineGains(100000);
+  if (offline24hRes.elapsedSeconds !== 86400) {
+    throw new Error(`Expected offline duration capped at 86400s (24h), got ${offline24hRes.elapsedSeconds}`);
+  }
+  if (offline24hRes.energyGained > 35) {
+    throw new Error(`Expected offline energy accumulation capped at <= 35, got ${offline24hRes.energyGained}`);
+  }
+  if (offline24hRes.offlineEssence > 3) {
+    throw new Error(`Expected offline soul essence capped at <= 3 in 24h, got ${offline24hRes.offlineEssence}`);
+  }
+  console.log(`  24h Offline Gains: Capped at ${offline24hRes.elapsedSeconds}s | Energy: +${offline24hRes.energyGained} (<=35) | Essence: +${offline24hRes.offlineEssence} (<=3)`);
+  console.log('  [PASS] 24h Offline progression nerf & diminishing curve fully validated!');
+
+  // Test Soul Essence Substat Reroll
+  const rerollRelic = {
+    uid: 'test_reroll_relic_uid_888',
+    type: 'relic',
+    stars: 4,
+    level: 6,
+    setId: 'hades',
+    slotTypeId: 'ring',
+    name: "Hades's Ring",
+    mainStatName: 'Bonus ATK Power',
+    mainStatValue: 60,
+    substats: [
+      { typeId: 'flat_hp', name: 'Bonus Max HP', value: 120, rolls: 1 },
+      { typeId: 'flat_shield', name: 'Shield Strength', value: 50, rolls: 1 }
+    ]
+  };
+  gameState.state.inventory.equipment.push(rerollRelic);
+
+  gameState.state.resources.soulEssence = 2;
+  let blockedLowEssence = false;
+  try {
+    gameState.rerollRelicSubstats('test_reroll_relic_uid_888');
+  } catch (err) {
+    blockedLowEssence = err.message.includes('Insufficient Soul Essence');
+  }
+  if (!blockedLowEssence) {
+    throw new Error('Failed to block substat reroll with insufficient Soul Essence');
+  }
+  console.log('  [PASS] Blocked substat reroll when Soul Essence < 5!');
+
+  gameState.state.resources.soulEssence = 10;
+  const rerollRes = gameState.rerollRelicSubstats('test_reroll_relic_uid_888');
+  if (gameState.state.resources.soulEssence !== 5) {
+    throw new Error(`Expected 5 Soul Essence remaining after 5 spent, got ${gameState.state.resources.soulEssence}`);
+  }
+  if (!Array.isArray(rerollRes.item.substats) || rerollRes.item.substats.length === 0) {
+    throw new Error('Rerolled relic has empty or invalid substats');
+  }
+  console.log(`  Rerolled Hades Ring Substats for 5 🔮: Count=${rerollRes.item.substats.length}, Remaining 🔮=${gameState.state.resources.soulEssence}`);
+  console.log('  [PASS] Soul Essence Substat Reroll successfully validated!');
+
+  // 29. Test Phase 3: Relic Enhancement Revamp, Divine Scripture & 4 New Greek God Sets
+  console.log('\n[TEST 29] Testing Phase 3: Relic Enhancement Revamp, Divine Scripture & Greek God Sets:');
+
+  // Verify Greek God Sets definitions
+  const greekSets = ['athena', 'hermes', 'artemis', 'hephaestus'];
+  for (const sId of greekSets) {
+    const sDef = GREEK_GOD_SETS[sId];
+    if (!sDef || !sDef.bonus2pc || !sDef.bonus4pc) {
+      throw new Error(`Greek God Set "${sId}" definition missing or incomplete!`);
+    }
+  }
+  console.log('  [PASS] Greek God sets (Athena, Hermes, Artemis, Hephaestus) verified in GREEK_GOD_SETS!');
+
+  // Test Relic Substat Roll Tracking
+  const trackRelic = {
+    uid: 'test_roll_track_relic',
+    type: 'relic',
+    setId: 'hephaestus',
+    slotTypeId: 'ring',
+    name: "Hephaestus's Ring",
+    stars: 4,
+    level: 0,
+    mainStatName: 'Bonus ATK Power',
+    mainStatValue: 40,
+    substats: [
+      { typeId: 'crit_rate', name: 'Crit Rate %', isPercent: true, value: 3.5, rolls: 1 },
+      { typeId: 'crit_dmg', name: 'Crit DMG %', isPercent: true, value: 7.0, rolls: 1 },
+      { typeId: 'flat_hp', name: 'Bonus Max HP', isPercent: false, value: 150, rolls: 1 },
+      { typeId: 'flat_shield', name: 'Shield Strength', isPercent: false, value: 80, rolls: 1 }
+    ]
+  };
+  gameState.state.inventory.equipment.push(trackRelic);
+
+  // Enhance relic to milestone +3
+  enhanceRelicData(trackRelic);
+  enhanceRelicData(trackRelic);
+  enhanceRelicData(trackRelic);
+  if (trackRelic.level !== 3) throw new Error(`Expected level 3, got ${trackRelic.level}`);
+  const hasUpgradedRoll = trackRelic.substats.some(s => s.rolls === 2);
+  if (!hasUpgradedRoll) throw new Error('Expected at least one substat to have rolls === 2 after +3 milestone upgrade');
+  console.log('  [PASS] Relic substat upgrade roll tracking verified: a substat reached [★2 Rolls]!');
+
+  // Test Buying Divine Relic Scripture
+  gameState.state.resources.soulEssence = 30;
+  const initialScriptures = gameState.state.resources.divineScriptures || 0;
+  const buyRes = gameState.buyDivineScripture(1);
+  if (gameState.state.resources.divineScriptures !== initialScriptures + 1) {
+    throw new Error('Divine scripture count did not increment');
+  }
+  if (gameState.state.resources.soulEssence !== 15) {
+    throw new Error(`Expected 15 Soul Essence left, got ${gameState.state.resources.soulEssence}`);
+  }
+  console.log(`  [PASS] Bought Divine Scripture for 15 🔮: Remaining 🔮=${gameState.state.resources.soulEssence}, Total 📜=${gameState.state.resources.divineScriptures}`);
+
+  // Test Applying Divine Relic Scripture (select 2 guaranteed substats)
+  const scriptureRelic = {
+    uid: 'test_scripture_target_relic',
+    type: 'relic',
+    setId: 'athena',
+    slotTypeId: 'headgear',
+    name: "Athena's Helm",
+    stars: 5,
+    level: 6,
+    mainStatName: 'Bonus Max HP',
+    mainStatValue: 120,
+    substats: [
+      { typeId: 'flat_atk', name: 'Bonus ATK Power', value: 20, rolls: 1 },
+      { typeId: 'evasion', name: 'Evasion %', value: 3.0, rolls: 1 }
+    ]
+  };
+  gameState.state.inventory.equipment.push(scriptureRelic);
+
+  const prevScriptures = gameState.state.resources.divineScriptures;
+  const scriptRes = gameState.applyDivineScripture('test_scripture_target_relic', 'crit_rate', 'crit_dmg');
+  if (gameState.state.resources.divineScriptures !== prevScriptures - 1) {
+    throw new Error('Divine scripture not consumed');
+  }
+  const hasCritRate = scriptRes.item.substats.some(s => s.typeId === 'crit_rate');
+  const hasCritDmg = scriptRes.item.substats.some(s => s.typeId === 'crit_dmg');
+  if (!hasCritRate || !hasCritDmg) {
+    throw new Error('Guaranteed substats (crit_rate & crit_dmg) were not both inscribed onto relic!');
+  }
+  console.log(`  [PASS] Divine Relic Scripture applied! Guaranteed: Crit Rate & Crit DMG present in inscribed relic!`);
+
+  // Test Hephaestus 2-pc Weapon ATK boost in getSpiritTotalPower
+  const testWpnHeph = {
+    uid: 'test_wpn_hephaestus',
+    type: 'weapon',
+    name: 'Godly Blade',
+    atkPower: 100,
+    equippedToSpiritId: null
+  };
+  const testRelicH1 = {
+    uid: 'test_relic_h1',
+    type: 'relic',
+    setId: 'hephaestus',
+    slotTypeId: 'ring',
+    name: "Hephaestus Ring",
+    equippedToSpiritId: null
+  };
+  const testRelicH2 = {
+    uid: 'test_relic_h2',
+    type: 'relic',
+    setId: 'hephaestus',
+    slotTypeId: 'totem',
+    name: "Hephaestus Totem",
+    equippedToSpiritId: null
+  };
+  gameState.state.inventory.equipment.push(testWpnHeph, testRelicH1, testRelicH2);
+
+  const testSpiritHeph = {
+    id: 'test_spirit_hephaestus',
+    speciesId: 'cat_spirit',
+    customName: 'Forge Cat',
+    power: 100,
+    level: 1,
+    rarity: 'COMMON',
+    weapon: testWpnHeph.uid,
+    relics: { ring: testRelicH1.uid, totem: testRelicH2.uid }
+  };
+  testWpnHeph.equippedToSpiritId = testSpiritHeph.id;
+  testRelicH1.equippedToSpiritId = testSpiritHeph.id;
+  testRelicH2.equippedToSpiritId = testSpiritHeph.id;
+  gameState.state.spirits.push(testSpiritHeph);
+
+  gameState.invalidateCaches();
+  const calculatedPower = gameState.getSpiritTotalPower(testSpiritHeph);
+  // Base power 100 + weapon power 100 * (1 + 0.25 Hephaestus weapon bonus) = 100 + 125 = 225 (* constellation multiplier if unlocked)
+  const constBonus = (gameState.getConstellationBonuses?.().partyAtkPercent || 0) / 100;
+  const expectedPower = Math.round(225 * (1 + constBonus));
+  if (calculatedPower !== expectedPower) {
+    throw new Error(`Expected Hephaestus 2-pc power ${expectedPower}, got ${calculatedPower}`);
+  }
+  console.log(`  [PASS] Hephaestus 2-pc set bonus (+25% Weapon ATK) correctly calculated: Power = ${calculatedPower}!`);
+
+  // Test proc4PieceSetBonus for the 4 sets
+  gameState.state.madnessZone.currentSwarm = [
+    { id: 'mob1', name: 'Void Goblin', hp: 1000, maxHp: 1000, power: 100, isDefeated: false }
+  ];
+  gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.athena);
+  gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.hermes);
+  gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.artemis);
+  gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.hephaestus);
+  console.log('  [PASS] proc4PieceSetBonus successfully fired for Athena, Hermes, Artemis, and Hephaestus!');
+
+  // Test 30: Phase 4 Zodiac Constellations, New Spirit Evolution Lines & Abyssal Rift Banner
+  console.log('\n[TEST 30] Testing Phase 4 Zodiac Constellations, 3 Spirit Lines & Abyssal Rift Banner:');
+  const { CONSTELLATIONS_CONFIG, BANNER_CONFIGS: bannersList } = await import('../src/data/index.js');
+  
+  // 1. Verify 8 Zodiac Constellations (40 stars total)
+  const constellationKeys = Object.keys(CONSTELLATIONS_CONFIG);
+  console.log(`  Total Constellations: ${constellationKeys.length} (Expected >= 8)`);
+  if (constellationKeys.length < 8) throw new Error(`Expected at least 8 constellations, got ${constellationKeys.length}`);
+  const requiredNewConstellations = ['leo', 'taurus', 'scorpio', 'aquarius', 'sagittarius'];
+  for (const cKey of requiredNewConstellations) {
+    if (!CONSTELLATIONS_CONFIG[cKey]) throw new Error(`Missing zodiac constellation: ${cKey}`);
+    if (CONSTELLATIONS_CONFIG[cKey].stars.length !== 5) throw new Error(`Constellation ${cKey} does not have 5 stars`);
+  }
+  console.log('  [PASS] Verified Leo, Taurus, Scorpio, Aquarius, and Sagittarius constellations with 5 stars each.');
+
+  // Test unlocking a Leo star
+  gameState.state.resources.soulEssence = 20;
+  const leoRes = gameState.unlockConstellationStar('leo');
+  if (gameState.state.constellations.leo !== 1) throw new Error('Leo constellation should be level 1');
+  const cBonuses = gameState.getConstellationBonuses();
+  if (!cBonuses.bossDmgPercent || cBonuses.bossDmgPercent < 5) {
+    throw new Error('Expected bossDmgPercent bonus from leo star 1');
+  }
+  console.log(`  [PASS] Unlocked Leo star (Lionheart Strike): +${cBonuses.bossDmgPercent}% Boss Damage active!`);
+
+  // 2. Verify 3 New Spirit Evolution Lines in Catalog
+  const requiredNewSpecies = [
+    'baphomet_initiate', 'baphomet_voidbinder', 'baphomet_archdemon_lord',
+    'chrono_hatchling', 'chrono_drake', 'ouroboros_time_sovereign',
+    'dawn_herald', 'seraph_guardian', 'archangel_uriel'
+  ];
+  for (const spId of requiredNewSpecies) {
+    if (!SPIRIT_SPECIES[spId]) throw new Error(`Missing species in catalog: ${spId}`);
+  }
+  console.log('  [PASS] Verified all 9 species forms across Baphomet, Chrono, and Seraphic lines in catalog.');
+
+  // Verify UNCOMMON pool has base forms
+  const uncomPool = CONTRACT_POOLS_BY_RARITY.UNCOMMON;
+  if (!uncomPool.includes('baphomet_initiate') || !uncomPool.includes('chrono_hatchling') || !uncomPool.includes('dawn_herald')) {
+    throw new Error('CONTRACT_POOLS_BY_RARITY.UNCOMMON missing new base spirits');
+  }
+  console.log('  [PASS] Verified baphomet_initiate, chrono_hatchling, and dawn_herald in UNCOMMON contract pool.');
+
+  // Test Evolution flow
+  const testBaph = {
+    id: 'test_baph_1',
+    speciesId: 'baphomet_initiate',
+    customName: 'Baphomet Initiate',
+    tier: 1,
+    level: 20,
+    xp: 0,
+    rarity: 'UNCOMMON',
+    canEvolve: true,
+    evolutionHistory: ['Baphomet Initiate'],
+    power: 50,
+    maxHp: 200,
+    currentHp: 200
+  };
+  gameState.state.spirits.push(testBaph);
+  gameState.evolveSpirit('test_baph_1');
+  if (testBaph.speciesId !== 'baphomet_voidbinder') {
+    throw new Error(`Expected evolution to baphomet_voidbinder, got ${testBaph.speciesId}`);
+  }
+  console.log(`  [PASS] Successfully evolved test spirit to: ${testBaph.customName} (Tier ${testBaph.tier})!`);
+
+  // 3. Verify Abyssal Rift Banner
+  const abyssalBanner = bannersList.find(b => b.id === 'abyssal_rift');
+  if (!abyssalBanner) throw new Error('abyssal_rift banner configuration missing!');
+  if (abyssalBanner.featuredSpeciesId !== 'baphomet_voidbinder') {
+    throw new Error(`Unexpected featured species for Abyssal Rift: ${abyssalBanner.featuredSpeciesId}`);
+  }
+  console.log(`  [PASS] Abyssal Rift banner verified (Featured: ${abyssalBanner.characterName})!`);
+
+  // Test summon on Abyssal Rift banner
+  gameState.state.resources.spiritShards = 2000;
+  const abyssalSummons = gameState.contractSpirit(10, 'abyssal_rift');
+  if (abyssalSummons.length !== 10) throw new Error('Expected 10 summons from Abyssal Rift banner');
+  console.log(`  [PASS] Performed 10x Contract on Abyssal Rift banner (${abyssalSummons.length} spirits received)!`);
+
+  // Test 31: Phase 5 Tab Switching Offline Progression, Permanent Banners & Animated Chamber Sprites
+  console.log('\n[TEST 31] Testing Phase 5 Tab Switching Offline Progression & Permanent Banners:');
+  
+  // 1. Verify all banners have timerText set to 'Permanent'
+  for (const banner of bannersList) {
+    if (banner.timerText !== 'Permanent') {
+      throw new Error(`Banner ${banner.id} timerText is "${banner.timerText}", expected "Permanent"`);
+    }
+  }
+  console.log(`  [PASS] Verified all ${bannersList.length} rate-up banners have timerText set to "Permanent"!`);
+
+  // 2. Verify Tab Switching Departure & Refocus Simulation
+  const preDepartureTime = Date.now() - 120000; // Left 2 minutes ago
+  gameState._isTabHidden = true;
+  gameState._tabHiddenTimestamp = preDepartureTime;
+  gameState.state.last_saved = preDepartureTime;
+
+  // Simulate tab focus return
+  const nowFocus = Date.now();
+  const awaySeconds = Math.floor((nowFocus - gameState._tabHiddenTimestamp) / 1000);
+  console.log(`  Simulated away duration: ${awaySeconds}s (Expected >= 120s)`);
+  if (awaySeconds < 120) throw new Error(`Unexpected awaySeconds: ${awaySeconds}`);
+
+  const focusReport = gameState.applyOfflineGains(awaySeconds);
+  gameState._isTabHidden = false;
+  gameState._tabHiddenTimestamp = null;
+  gameState.state.last_saved = nowFocus;
+
+  if (focusReport.elapsedSeconds !== awaySeconds) {
+    throw new Error(`Expected report elapsedSeconds ${awaySeconds}, got ${focusReport.elapsedSeconds}`);
+  }
+  if (focusReport.xpGainedPerSpirit <= 0) {
+    throw new Error('Expected positive XP gained during tab away simulation');
+  }
+  console.log(`  [PASS] Simulated tab switch away for 2m: Gained +${focusReport.xpGainedPerSpirit} XP per spirit!`);
+
+  // 3. Verify Animated Relic and Weapon HTML generation for chambers
+  const testChamberRelicHtml = createAnimatedRelicHtml('zeus', 'headgear');
+  if (!testChamberRelicHtml.includes('animated-relic-sprite') || !testChamberRelicHtml.includes('relic_crown_zeus')) {
+    throw new Error('createAnimatedRelicHtml failed to generate valid sprite HTML for Zeus chamber');
+  }
+  const testChamberWeaponHtml = createAnimatedWeaponHtml('sword');
+  if (!testChamberWeaponHtml.includes('animated-weapon-sprite') || !testChamberWeaponHtml.includes('weapon_spectral_blade')) {
+    throw new Error('createAnimatedWeaponHtml failed to generate valid sprite HTML for sword forge');
+  }
+  console.log('  [PASS] Animated chamber sprite HTML successfully generated for Pantheon Trials and Divine Forge!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

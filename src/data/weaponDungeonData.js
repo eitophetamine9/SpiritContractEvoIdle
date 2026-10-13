@@ -90,7 +90,7 @@ export const FORGE_DIFFICULTY_TIERS = [
     energyCost: 10,
     minPartyPower: 200,
     weaponDropCount: 1,
-    shardsReward: 80,
+    shardsReward: 40,
     essenceReward: 1,
     rarityWeights: { COMMON: 55, UNCOMMON: 35, RARE: 10, EPIC: 0, LEGENDARY: 0, MYTHICAL: 0 }
   },
@@ -101,8 +101,8 @@ export const FORGE_DIFFICULTY_TIERS = [
     energyCost: 12,
     minPartyPower: 750,
     weaponDropCount: 1,
-    shardsReward: 180,
-    essenceReward: 2,
+    shardsReward: 90,
+    essenceReward: 1,
     rarityWeights: { COMMON: 20, UNCOMMON: 50, RARE: 25, EPIC: 5, LEGENDARY: 0, MYTHICAL: 0 }
   },
   {
@@ -112,8 +112,8 @@ export const FORGE_DIFFICULTY_TIERS = [
     energyCost: 15,
     minPartyPower: 2200,
     weaponDropCount: 2,
-    shardsReward: 380,
-    essenceReward: 3,
+    shardsReward: 190,
+    essenceReward: 1,
     rarityWeights: { COMMON: 5, UNCOMMON: 25, RARE: 45, EPIC: 20, LEGENDARY: 5, MYTHICAL: 0 }
   },
   {
@@ -123,8 +123,8 @@ export const FORGE_DIFFICULTY_TIERS = [
     energyCost: 18,
     minPartyPower: 6000,
     weaponDropCount: 2,
-    shardsReward: 800,
-    essenceReward: 5,
+    shardsReward: 400,
+    essenceReward: 2,
     rarityWeights: { COMMON: 0, UNCOMMON: 10, RARE: 35, EPIC: 35, LEGENDARY: 16, MYTHICAL: 4 }
   }
 ];

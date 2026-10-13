@@ -1,7 +1,7 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from './pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel, ASCENSION_CONFIG, getRoleInfo } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
-import { GREEK_GOD_SETS, RELIC_SLOT_TYPES, getWeaponEnhanceCost, MAX_WEAPON_LEVEL } from '../../data/equipmentData.js';
+import { GREEK_GOD_SETS, RELIC_SLOT_TYPES, RELIC_SUBSTAT_TYPES, getWeaponEnhanceCost, MAX_WEAPON_LEVEL } from '../../data/equipmentData.js';
 import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
 import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 
@@ -30,7 +30,11 @@ export function showOfflineModal(report, onClaim) {
   const hours = Math.floor(report.elapsedSeconds / 3600);
   const minutes = Math.floor((report.elapsedSeconds % 3600) / 60);
   const seconds = report.elapsedSeconds % 60;
-  const timeStr = `${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s`;
+  const timeParts = [];
+  if (hours > 0) timeParts.push(`${hours}h`);
+  if (minutes > 0 || hours > 0) timeParts.push(`${minutes}m`);
+  timeParts.push(`${seconds}s`);
+  const timeStr = timeParts.join(' ');
 
   let levelUpsHtml = '';
   if (report.levelUps.length > 0) {
@@ -628,8 +632,9 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                   ${isRelic && currentItem.substats && currentItem.substats.length > 0 ? `
                     <div class="equip-card-substats-row" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
                       ${currentItem.substats.map(sub => `
-                        <span style="font-size: 9px; font-weight: 700; color: #a4b0be; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; padding: 1px 4px;">
+                        <span style="font-size: 9px; font-weight: 700; color: #a4b0be; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; padding: 2px 5px; display: inline-flex; align-items: center; gap: 4px;">
                           ${sub.name} <strong style="color: #2ed573;">+${sub.value}${sub.isPercent ? '%' : ''}</strong>
+                          ${sub.rolls && sub.rolls > 1 ? `<span class="substat-roll-badge">[★${sub.rolls} Rolls]</span>` : `<span class="substat-roll-badge-base">[★1 Roll]</span>`}
                         </span>
                       `).join('')}
                     </div>
@@ -656,6 +661,12 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                       <span class="enhance-cost-sub">100 ✨ • 10 🔮</span>
                     </button>
                   ` : ''}
+                  <button class="btn-modal-reroll-slot" id="btn-modal-reroll" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences">
+                    🔮 Reroll (5 🔮)
+                  </button>
+                  <button class="btn-modal-scripture-slot" id="btn-modal-scripture" data-relic-uid="${currentItem.uid}" title="Use Divine Relic Scripture to guarantee 2 substats">
+                    📜 Scripture (${gameState.state.resources.divineScriptures || 0})
+                  </button>
                   <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-relic-uid="${currentItem.uid}" title="View Details, Lore & Reassign">
                     🔍 Details
                   </button>
@@ -824,6 +835,34 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
       } catch (err) {
         alert(err.message);
       }
+    });
+
+    modalRoot.querySelector('#btn-modal-reroll')?.addEventListener('click', () => {
+      const currentEssence = gameState.state.resources.soulEssence || 0;
+      if (currentEssence < 5) {
+        alert(`Insufficient Soul Essence! Need 5 🔮 (You have ${currentEssence} 🔮).`);
+        return;
+      }
+      if (confirm('Spend 5 Soul Essences (🔮) to reroll all substats on this Relic?')) {
+        try {
+          const res = gameState.rerollRelicSubstats(currentItem.uid);
+          try { safePlaySfx('evolution'); } catch {}
+          renderModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+    });
+
+    modalRoot.querySelector('#btn-modal-scripture')?.addEventListener('click', () => {
+      showDivineScriptureModal({
+        relic: currentItem,
+        onUpdate: () => {
+          renderModal();
+          if (onUpdate) onUpdate();
+        }
+      });
     });
 
     modalRoot.querySelector('#btn-modal-inspect-item')?.addEventListener('click', () => {
@@ -1008,14 +1047,27 @@ export function showItemInspectModal({ item, onUpdate }) {
             <!-- Substats Section (For Relics) -->
             ${isRelic && currentItem.substats && currentItem.substats.length > 0 ? `
               <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.08);">
-                <div style="font-size: 11px; font-weight: 800; color: #70a1ff; margin-bottom: 6px;">
-                  SUBSTATS (${currentItem.substats.length}/${stars === 6 ? 5 : stars === 5 ? 4 : stars === 4 ? 4 : 3})
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="font-size: 11px; font-weight: 800; color: #70a1ff;">
+                    SUBSTATS (${currentItem.substats.length}/${stars === 6 ? 5 : stars === 5 ? 4 : stars === 4 ? 4 : 3})
+                  </div>
+                  <div style="display: flex; gap: 4px;">
+                    <button id="btn-reroll-inspect-substats" class="btn-reroll-inspect-substats" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences">
+                      🔮 Reroll (5 🔮)
+                    </button>
+                    <button id="btn-inspect-scripture" class="btn-inspect-scripture" data-relic-uid="${currentItem.uid}" title="Use Divine Relic Scripture to guarantee 2 substats">
+                      📜 Scripture (${gameState.state.resources.divineScriptures || 0})
+                    </button>
+                  </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                   ${currentItem.substats.map(sub => `
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 6px; background: rgba(255,255,255,0.04); border-radius: 4px;">
                       <span style="color: #dfe4ea;">• ${sub.name}</span>
-                      <span style="font-weight: 800; color: #2ed573;">+${sub.value}${sub.isPercent ? '%' : ''}</span>
+                      <div style="display: flex; align-items: center; gap: 5px;">
+                        ${sub.rolls && sub.rolls > 1 ? `<span class="substat-roll-badge">[★${sub.rolls} Rolls]</span>` : `<span class="substat-roll-badge-base">[★1 Roll]</span>`}
+                        <span style="font-weight: 800; color: #2ed573;">+${sub.value}${sub.isPercent ? '%' : ''}</span>
+                      </div>
                     </div>
                   `).join('')}
                 </div>
@@ -1143,6 +1195,36 @@ export function showItemInspectModal({ item, onUpdate }) {
       } catch (err) {
         alert(err.message);
       }
+    });
+
+    // Reroll Relic Substats
+    modalRoot.querySelector('#btn-reroll-inspect-substats')?.addEventListener('click', () => {
+      const currentEssence = gameState.state.resources.soulEssence || 0;
+      if (currentEssence < 5) {
+        alert(`Insufficient Soul Essence! Need 5 🔮 (You have ${currentEssence} 🔮).`);
+        return;
+      }
+      if (confirm('Spend 5 Soul Essences (🔮) to reroll all substats on this Relic?')) {
+        try {
+          const res = gameState.rerollRelicSubstats(currentItem.uid);
+          try { safePlaySfx('evolution'); } catch {}
+          renderModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+    });
+
+    // Divine Scripture on Relic
+    modalRoot.querySelector('#btn-inspect-scripture')?.addEventListener('click', () => {
+      showDivineScriptureModal({
+        relic: currentItem,
+        onUpdate: () => {
+          renderModal();
+          if (onUpdate) onUpdate();
+        }
+      });
     });
 
     // Ascend Relic
@@ -1510,6 +1592,176 @@ export function showSpiritModal(spirit, onUpdate) {
 
   render();
 }
+
+/**
+ * Interactive Modal for Divine Relic Scripture Inscription
+ * Allows player to select 2 guaranteed substats and roll remaining with milestone redistribution
+ */
+export function showDivineScriptureModal({ relic, onUpdate }) {
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot || !relic) return;
+
+  let selectedSubTypes = [];
+
+  const renderScriptureModal = () => {
+    const scriptureCount = gameState.state.resources.divineScriptures || 0;
+    const mainStatName = relic.mainStatName || '';
+    const godSet = relic.setId ? GREEK_GOD_SETS[relic.setId] : null;
+
+    // Filter substats to avoid conflict with main stat
+    const eligibleSubstats = RELIC_SUBSTAT_TYPES.filter(s => {
+      if (mainStatName.includes('HP') && (s.id === 'flat_hp' || s.id === 'percent_hp')) return false;
+      if (mainStatName.includes('ATK') && (s.id === 'flat_atk' || s.id === 'percent_atk')) return false;
+      if (mainStatName.includes('Shield') && s.id === 'flat_shield') return false;
+      if (mainStatName.includes('Mana') && s.id === 'mana_regen') return false;
+      if (mainStatName.includes('Ult') && s.id === 'ult_amp') return false;
+      if (mainStatName.includes('Evasion') && s.id === 'evasion') return false;
+      return true;
+    });
+
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal-card scripture-modal-card" style="max-width: 480px; width: 95%;">
+          <div class="modal-header scripture-modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 24px;">📜</span>
+              <div>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #ffd32a; letter-spacing: 0.5px;">Divine Relic Scripture</h3>
+                <span style="font-size: 10px; color: var(--text-muted);">Inscribe 2 Guaranteed Substats</span>
+              </div>
+            </div>
+            <button id="btn-close-scripture-modal" class="modal-btn-close" style="background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer;">✕</button>
+          </div>
+
+          <div class="scripture-relic-preview" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid ${relic.color || 'rgba(255,255,255,0.1)'}; border-radius: 8px; margin-bottom: 14px;">
+            <div style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+              ${createAnimatedRelicHtml(relic, relic.slotTypeId, { extraClasses: 'socket-animated-sprite' })}
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 13px; font-weight: 800; color: ${relic.color || '#fff'};">
+                ${relic.name} <span style="font-size: 11px; color: #ffd32a;">+${relic.level || 0}</span>
+              </div>
+              <div style="font-size: 10px; color: #a4b0be;">
+                Main: <strong style="color: #2ed573;">+${relic.mainStatValue} ${relic.mainStatName}</strong>
+                ${godSet ? ` • ${godSet.icon} ${godSet.name}` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Scripture stock & Buy info -->
+          <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 211, 42, 0.08); border: 1px solid rgba(255, 211, 42, 0.25); border-radius: 6px; padding: 8px 12px; margin-bottom: 14px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 800; color: #ffd32a;">
+                📜 Owned Scriptures: <span style="font-size: 14px; color: #fff;">${scriptureCount}</span>
+              </div>
+              <div style="font-size: 9px; color: #ccc;">Consumes 1 Scripture per inscription</div>
+            </div>
+            <button id="btn-buy-scripture" class="btn-buy-scripture-action" style="background: linear-gradient(135deg, #8e44ad, #9b59b6); border: 1px solid #be2edd; color: #fff; font-size: 10px; font-weight: 800; padding: 6px 10px; border-radius: 5px; cursor: pointer;">
+              🔮 Buy 1 (15 🔮)
+            </button>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 800; color: #70a1ff; text-transform: uppercase;">
+                Select 2 Guaranteed Substats:
+              </span>
+              <span style="font-size: 10px; font-weight: 800; color: ${selectedSubTypes.length === 2 ? '#2ed573' : '#e74c3c'};">
+                ${selectedSubTypes.length}/2 Selected
+              </span>
+            </div>
+
+            <div class="scripture-substats-picker-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
+              ${eligibleSubstats.map(sub => {
+                const isSelected = selectedSubTypes.includes(sub.id);
+                return `
+                  <div class="scripture-sub-choice ${isSelected ? 'selected' : ''}" data-sub-id="${sub.id}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: ${isSelected ? 'rgba(46, 213, 115, 0.2)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${isSelected ? '#2ed573' : 'rgba(255,255,255,0.08)'}; border-radius: 6px; cursor: pointer; transition: all 0.15s ease;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="font-size: 14px;">${sub.icon}</span>
+                      <span style="font-size: 11px; font-weight: 700; color: ${isSelected ? '#fff' : '#dfe4ea'};">${sub.name}</span>
+                    </div>
+                    <span style="font-size: 11px; font-weight: 900; color: ${isSelected ? '#2ed573' : '#666'};">
+                      ${isSelected ? '✓' : '+'}
+                    </span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <div style="font-size: 10px; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 6px;">
+            ℹ️ The 2 selected substats will be guaranteed on this relic. Remaining slots roll randomly, and all enhancement milestones will be redistributed across them!
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-apply-scripture" class="modal-btn-confirm" ${selectedSubTypes.length !== 2 || scriptureCount < 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed; flex: 1;"' : 'style="flex: 1; background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900;"'}>
+              📜 Inscribe Relic (Use 1 Scripture)
+            </button>
+            <button id="btn-cancel-scripture" class="btn-drawer-action" style="background: #34495e; color: #fff; padding: 8px 16px;">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Event listeners
+    modalRoot.querySelector('#btn-close-scripture-modal')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      if (onUpdate) onUpdate();
+    });
+
+    modalRoot.querySelector('#btn-cancel-scripture')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      if (onUpdate) onUpdate();
+    });
+
+    modalRoot.querySelectorAll('.scripture-sub-choice').forEach(choice => {
+      choice.addEventListener('click', (e) => {
+        const subId = choice.getAttribute('data-sub-id');
+        if (selectedSubTypes.includes(subId)) {
+          selectedSubTypes = selectedSubTypes.filter(id => id !== subId);
+        } else {
+          if (selectedSubTypes.length >= 2) {
+            // Already 2 picked, drop first one
+            selectedSubTypes.shift();
+          }
+          selectedSubTypes.push(subId);
+        }
+        renderScriptureModal();
+      });
+    });
+
+    modalRoot.querySelector('#btn-buy-scripture')?.addEventListener('click', () => {
+      try {
+        const res = gameState.buyDivineScripture(1);
+        try { safePlaySfx('evolution'); } catch {}
+        renderScriptureModal();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    modalRoot.querySelector('#btn-apply-scripture')?.addEventListener('click', () => {
+      if (selectedSubTypes.length !== 2) {
+        alert('Please select exactly 2 guaranteed substats!');
+        return;
+      }
+      try {
+        const res = gameState.applyDivineScripture(relic.uid, selectedSubTypes[0], selectedSubTypes[1]);
+        try { safePlaySfx('evolution'); } catch {}
+        alert(`📜 Successfully inscribed ${relic.name}! Guaranteed: ${selectedSubTypes.map(id => RELIC_SUBSTAT_TYPES.find(s => s.id === id)?.name).join(' & ')}!`);
+        modalRoot.innerHTML = '';
+        if (onUpdate) onUpdate();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  };
+
+  renderScriptureModal();
+}
+
 
 
 

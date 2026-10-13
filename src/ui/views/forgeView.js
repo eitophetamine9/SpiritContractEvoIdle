@@ -12,6 +12,7 @@ import { EQUIPMENT_RARITIES } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 
 let selectedForgeChamberId = 'bladesmith_sanctum';
 let selectedForgeTierNum = 1;
@@ -79,8 +80,8 @@ function renderForgeChambersStage(container) {
           const isSelected = c.id === selectedForgeChamberId;
           return `
             <button class="chamber-card relative overflow-hidden rounded-xl p-2.5 flex items-center gap-2 text-left transition-all border cursor-pointer ${isSelected ? 'selected bg-slate-800/90 border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.25)]' : 'bg-slate-900/60 border-slate-800'}" data-forge-chamber="${c.id}" style="--chamber-color: ${c.color};">
-              <div class="chamber-sigil w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 shadow-sm" style="background: ${c.color}22; border: 1px solid ${c.color};">
-                ${c.icon}
+              <div class="chamber-sigil w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden" style="background: ${c.color}22; border: 1px solid ${c.color};">
+                ${createAnimatedWeaponHtml(c.weaponTypeId || c.id, { extraClasses: 'chamber-sprite-icon' })}
               </div>
               <div class="chamber-info min-w-0 flex-1">
                 <span class="chamber-name text-xs font-bold text-white truncate block">${c.name}</span>
@@ -95,8 +96,8 @@ function renderForgeChambersStage(container) {
       <div class="chamber-active-stage rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border: 2px solid ${chamber.color}; background: linear-gradient(180deg, ${chamber.color}15 0%, rgba(15, 12, 10, 0.95) 100%);">
         
         <div class="stage-header-row flex items-start gap-3.5 mb-4">
-          <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg shrink-0" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color}; background: ${chamber.color}25; border: 2px solid ${chamber.color};">
-            ${chamber.icon}
+          <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color}; background: ${chamber.color}25; border: 2px solid ${chamber.color};">
+            ${createAnimatedWeaponHtml(chamber.weaponTypeId || chamber.id, { extraClasses: 'stage-sigil-sprite-large' })}
           </div>
           <div class="stage-text-block flex-1">
             <h3 class="stage-name text-lg font-black" style="color: ${chamber.accentColor};">${chamber.name}</h3>
@@ -219,14 +220,13 @@ function renderForgeBattleArena(container, battle) {
         <!-- 2.5D Isometric Canvas Viewport Layer (Pixi.js / Canvas Engine) -->
         <div id="arena-viewport-25d" class="arena-viewport-25d absolute inset-0 pointer-events-none z-0 rounded-2xl overflow-hidden"></div>
 
-        <!-- Left Side: Staggered Allied Spirit Formation -->
-        <div class="allied-formation-column relative z-10 flex flex-col gap-2">
+        <!-- Left Side: Seamless Allied Spirit Formation (Uncluttered) -->
+        <div class="allied-formation-column seamless-allied-column relative z-10 flex flex-col gap-2">
           <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-orange-400">Allied Lineup</div>
           
-          <div class="staggered-party-formation flex flex-col gap-2">
+          <div class="staggered-party-formation flex flex-col gap-3">
             ${party.map((spirit, idx) => {
               const species = SPIRIT_SPECIES[spirit.speciesId];
-              const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
               const maxHp = spirit.maxHp || 100;
               const curHp = typeof spirit.currentHp === 'number' ? Math.max(0, spirit.currentHp) : maxHp;
               const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
@@ -234,21 +234,33 @@ function renderForgeBattleArena(container, battle) {
               const isUltReady = mpPct >= 100;
               const isFallen = spirit.isFallen || curHp <= 0;
               const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
+              const sheetKey = getSheetKeyForSpecies(species ? species.id : null);
+              const glyph = species ? (species.avatarEmoji || '✨') : '✨';
 
               return `
-                <div class="spirit-formation-slot slot-active flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/75 border border-slate-800 ${isUltReady ? 'ult-ready border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]' : ''} ${isFallen ? 'spirit-fallen opacity-40' : ''}" id="forge-allied-slot-${idx}">
-                  <div class="spirit-sprite-container w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                    ${createSpiritPlaceholderBox(spirit, { boxClass: 'formation-spirit-box' })}
+                <div class="seamless-battle-spirit ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="forge-allied-slot-${idx}" style="--stagger-offset: ${idx % 2 === 1 ? '12px' : '0px'};">
+                  <!-- Overhead Name & Level Only (Seamless) -->
+                  <div class="seamless-overhead-tag">
+                    <span class="seamless-spirit-name" title="${spirit.customName}">${spirit.customName}</span>
+                    <span class="seamless-spirit-level">Lv.${spirit.level || 1}</span>
                   </div>
 
-                  <div class="spirit-hud-bars flex flex-col gap-1 w-20">
-                    <div class="text-[10px] font-black truncate text-white">${spirit.customName}</div>
-                    <div class="hud-bar-hp w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                      <div class="hud-hp-fill h-full bg-emerald-400 rounded-full" id="forge-spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
-                      ${shieldPct > 0 ? `<div class="hud-shield-fill h-full bg-cyan-400" style="width: ${shieldPct}%;"></div>` : ''}
+                  <!-- Animated Creature Sprite (No Box, No Border) -->
+                  <div class="spirit-sprite-container seamless-sprite-container">
+                    ${createAnimatedSpriteHtml(sheetKey, { glyph })}
+                    ${isUltReady ? `<div class="ult-ready-tag" id="forge-ult-ready-${idx}">✨ ULT</div>` : ''}
+                    ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
+                    <div class="combat-ground-shadow"></div>
+                  </div>
+
+                  <!-- Slim Floating HP & MP Bars -->
+                  <div class="spirit-hud-bars seamless-hud-bars">
+                    <div class="hud-bar-hp">
+                      <div class="hud-hp-fill" id="forge-spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
+                      ${shieldPct > 0 ? `<div class="hud-shield-fill" id="forge-spirit-shield-fill-${idx}" style="width: ${shieldPct}%;"></div>` : ''}
                     </div>
-                    <div class="hud-bar-mp w-full h-1 bg-slate-900 rounded-full overflow-hidden">
-                      <div class="hud-mp-fill h-full bg-amber-400 rounded-full" id="forge-spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
+                    <div class="hud-bar-mp">
+                      <div class="hud-mp-fill" id="forge-spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
                     </div>
                   </div>
                 </div>
@@ -262,13 +274,13 @@ function renderForgeBattleArena(container, battle) {
           <div class="clash-sparks-icon">⚔️</div>
         </div>
 
-        <!-- Right Side: Wave Enemies -->
-        <div class="enemy-formation-column relative z-10 flex flex-col gap-2 items-end">
+        <!-- Right Side: Wave Enemies (Seamless, Uncluttered) -->
+        <div class="enemy-formation-column seamless-enemy-column relative z-10 flex flex-col gap-2 items-end">
           <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-orange-400">
-            ${battle.currentWave === 3 ? `👑 ${chamber.bossName.toUpperCase()}` : `FORGE AUTOMATONS (${swarm.filter(e => !e.isDefeated && e.hp > 0).length}/${swarm.length})`}
+            ${battle.currentWave === 3 ? `👑 TITAN: ${chamber.bossName.toUpperCase()}` : `FORGE AUTOMATONS (${swarm.filter(e => !e.isDefeated && e.hp > 0).length}/${swarm.length})`}
           </div>
 
-          <div class="enemy-swarm-wrapper flex flex-col gap-2" id="forge-enemy-swarm-wrapper">
+          <div class="enemy-swarm-wrapper flex flex-col gap-3 items-end" id="forge-enemy-swarm-wrapper">
             ${swarm.map((em, sIdx) => {
               const isDead = em.isDefeated || em.hp <= 0;
               const maxHp = em.maxHp || 100;
@@ -276,18 +288,24 @@ function renderForgeBattleArena(container, battle) {
               const emHpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
 
               return `
-                <div class="enemy-swarm-slot flex items-center gap-2 p-1.5 rounded-xl bg-slate-950/75 border border-slate-800 ${em.isBoss ? 'boss-slot border-amber-500' : ''} ${isDead ? 'enemy-defeated opacity-30' : ''}" id="forge-enemy-slot-${sIdx}">
-                  <div class="enemy-overhead-card flex flex-col gap-1 w-20 items-end">
-                    <div class="enemy-name-label text-[10px] font-black truncate text-white">${em.name}</div>
-                    <div class="enemy-hp-track w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                      <div id="forge-enemy-hp-fill-${sIdx}" class="enemy-hp-fill h-full bg-orange-500 rounded-full" style="width: ${emHpPct}%;"></div>
+                <div class="seamless-enemy-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="forge-enemy-slot-${sIdx}" style="--stagger-offset: ${sIdx % 2 === 1 ? '-12px' : '0px'};">
+                  <!-- Enemy Details & Floating Health Bar (Overhead, Borderless) -->
+                  <div class="seamless-enemy-overhead">
+                    <div class="seamless-enemy-name">
+                      ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
+                      <span>${em.name}</span>
+                    </div>
+                    <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+
+                    <div class="seamless-enemy-hp-track">
+                      <div id="forge-enemy-hp-fill-${sIdx}" class="seamless-enemy-hp-fill" style="width: ${emHpPct}%;"></div>
                     </div>
                   </div>
 
-                  <div class="enemy-sprite-container w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                    <div class="enemy-placeholder-frame">
-                      ${createEnemyPlaceholderBox(em)}
-                    </div>
+                  <!-- Animated Enemy Sprite with Ground Shadow (No Box, No Border) -->
+                  <div class="enemy-sprite-container seamless-sprite-container">
+                    ${createAnimatedEnemyHtml(em, { extraClasses: 'flipped-sprite' })}
+                    <div class="combat-ground-shadow ${em.isBoss ? 'enemy-shadow' : ''}"></div>
                   </div>
                 </div>
               `;
@@ -374,7 +392,7 @@ export function showForgeVictoryModal(loot, onClose) {
             return `
               <div class="awarded-item-card p-2.5 rounded-xl bg-slate-950/80 border flex flex-col gap-1" style="border-color: ${rarObj.border};">
                 <div class="item-header-row flex items-center gap-2">
-                  <span class="item-icon-frame text-xl">${w.icon}</span>
+                  <div class="item-icon-frame flex items-center justify-center">${createAnimatedWeaponHtml(w, { extraClasses: 'loot-sprite-icon' })}</div>
                   <div class="item-name-col">
                     <div class="item-name text-xs font-black" style="color: ${rarObj.color};">${w.name}</div>
                     <span class="item-rarity-pill text-[10px] font-bold" style="color: ${rarObj.color};">${rarObj.name}</span>

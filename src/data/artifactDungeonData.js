@@ -13,7 +13,7 @@ export const PANTHEON_DIFFICULTY_TIERS = [
     recommendedPower: 1500,
     relicCount: 2,
     rarityWeights: { COMMON: 60, UNCOMMON: 40, RARE: 0, EPIC: 0, LEGENDARY: 0, MYTHICAL: 0 },
-    shardsReward: 25,
+    shardsReward: 12,
     essenceReward: 1
   },
   {
@@ -23,8 +23,8 @@ export const PANTHEON_DIFFICULTY_TIERS = [
     recommendedPower: 6000,
     relicCount: 2,
     rarityWeights: { COMMON: 20, UNCOMMON: 55, RARE: 22, EPIC: 3, LEGENDARY: 0, MYTHICAL: 0 },
-    shardsReward: 60,
-    essenceReward: 2
+    shardsReward: 30,
+    essenceReward: 1
   },
   {
     tier: 3,
@@ -33,8 +33,8 @@ export const PANTHEON_DIFFICULTY_TIERS = [
     recommendedPower: 25000,
     relicCount: 3,
     rarityWeights: { COMMON: 0, UNCOMMON: 25, RARE: 45, EPIC: 25, LEGENDARY: 5, MYTHICAL: 0 },
-    shardsReward: 150,
-    essenceReward: 5
+    shardsReward: 75,
+    essenceReward: 2
   },
   {
     tier: 4,
@@ -43,8 +43,8 @@ export const PANTHEON_DIFFICULTY_TIERS = [
     recommendedPower: 100000,
     relicCount: 3,
     rarityWeights: { COMMON: 0, UNCOMMON: 0, RARE: 20, EPIC: 45, LEGENDARY: 30, MYTHICAL: 5 },
-    shardsReward: 350,
-    essenceReward: 12
+    shardsReward: 175,
+    essenceReward: 6
   }
 ];
 
@@ -152,6 +152,19 @@ export const PANTHEON_CHAMBERS = [
     bossName: 'Hermes Avatar: Zephyr Tempest',
     bossPowerMultiplier: 1.25,
     bossMaxHpMultiplier: 2.0
+  },
+  {
+    id: 'volcanic_forge',
+    name: 'Divine Crucible of Hephaestus',
+    godId: 'hephaestus',
+    godTitle: 'Hephaestus, Smith of the Gods',
+    sigil: '🌋',
+    color: '#e67e22',
+    accentColor: '#d35400',
+    lore: 'Molten depths where divine armaments are hammered in primordial flames, granting catastrophic armor sundering.',
+    bossName: 'Hephaestus Avatar: Magma Colossus',
+    bossPowerMultiplier: 1.35,
+    bossMaxHpMultiplier: 2.3
   }
 ];
 

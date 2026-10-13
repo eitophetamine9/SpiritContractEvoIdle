@@ -1111,21 +1111,38 @@ export const SPIRIT_SPECIES = {
     description: 'The primal ocean itself in sentient colossal form, devouring all discord in crushing whirlpools.',
     evolutions: []
   },
+  'baphomet_initiate': {
+    id: 'baphomet_initiate',
+    name: 'Baphomet Initiate',
+    baseRarity: 'UNCOMMON',
+    element: 'DARK',
+    role: 'SUB_DPS',
+    tier: 1,
+    levelCap: 20,
+    basePower: 22,
+    growthRate: 0.22,
+    avatarEmoji: '🐐',
+    accentColor: '#8e44ad',
+    description: 'A nascent acolyte of the dark occult wielding occult runes and void embers.',
+    evolutions: [
+      { targetSpeciesId: 'baphomet_voidbinder', weight: 100, variant: 'Baphomet, Nether Voidbinder (EPIC)', rarity: 'EPIC', powerMult: 3.5 }
+    ]
+  },
   'baphomet_voidbinder': {
     id: 'baphomet_voidbinder',
     name: 'Baphomet, Nether Voidbinder',
     baseRarity: 'EPIC',
     element: 'DARK',
     role: 'SUB_DPS',
-    tier: 1,
-    levelCap: 40,
+    tier: 2,
+    levelCap: 45,
     basePower: 110,
     growthRate: 0.26,
     avatarEmoji: '🐐🔮',
     accentColor: '#5f27cd',
     description: 'Horned occult binder channeling ethereal void seals, dark hexes, and nether rifts.',
     evolutions: [
-      { targetSpeciesId: 'baphomet_archdemon_lord', probability: 1.0, requiredLevel: 40 }
+      { targetSpeciesId: 'baphomet_archdemon_lord', weight: 100, variant: 'Baphomet, Archdemon Overlord (LEGENDARY)', rarity: 'LEGENDARY', powerMult: 2.2, requiredLevel: 45 }
     ]
   },
   'baphomet_archdemon_lord': {
@@ -1134,13 +1151,111 @@ export const SPIRIT_SPECIES = {
     baseRarity: 'LEGENDARY',
     element: 'DARK',
     role: 'SUB_DPS',
-    tier: 2,
-    levelCap: 60,
-    basePower: 175,
-    growthRate: 0.35,
+    tier: 3,
+    levelCap: 70,
+    basePower: 185,
+    growthRate: 0.36,
     avatarEmoji: '🔱💀',
     accentColor: '#341f97',
     description: 'Ascended demon monarch wielding cataclysmic dark sorceries and obsidian throne authority.',
+    evolutions: []
+  },
+  'chrono_hatchling': {
+    id: 'chrono_hatchling',
+    name: 'Chrono Hatchling',
+    baseRarity: 'UNCOMMON',
+    element: 'WIND',
+    role: 'MAIN_DPS',
+    tier: 1,
+    levelCap: 20,
+    basePower: 24,
+    growthRate: 0.23,
+    avatarEmoji: '🐉⌛',
+    accentColor: '#00cec9',
+    description: 'A temporal whelp manipulating miniature time rifts to warp spacetime.',
+    evolutions: [
+      { targetSpeciesId: 'chrono_drake', weight: 100, variant: 'Chrono Drake (EPIC)', rarity: 'EPIC', powerMult: 3.2 }
+    ]
+  },
+  'chrono_drake': {
+    id: 'chrono_drake',
+    name: 'Chrono Drake',
+    baseRarity: 'EPIC',
+    element: 'WIND',
+    role: 'MAIN_DPS',
+    tier: 2,
+    levelCap: 45,
+    basePower: 115,
+    growthRate: 0.28,
+    avatarEmoji: '🐉⏳',
+    accentColor: '#0984e3',
+    description: 'An ethereal winged dragon that bends timelines and accelerates battle flow.',
+    evolutions: [
+      { targetSpeciesId: 'ouroboros_time_sovereign', weight: 100, variant: 'Ouroboros, Time Sovereign (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 3.0, requiredLevel: 45 }
+    ]
+  },
+  'ouroboros_time_sovereign': {
+    id: 'ouroboros_time_sovereign',
+    name: 'Ouroboros, Time Sovereign',
+    baseRarity: 'MYTHICAL',
+    element: 'WIND',
+    role: 'MAIN_DPS',
+    tier: 3,
+    levelCap: 80,
+    basePower: 265,
+    growthRate: 0.42,
+    avatarEmoji: '♾️🐉',
+    accentColor: '#6c5ce7',
+    description: 'The cosmic entity of eternal cycles who halts and resets temporal destiny.',
+    evolutions: []
+  },
+  'dawn_herald': {
+    id: 'dawn_herald',
+    name: 'Dawn Herald',
+    baseRarity: 'UNCOMMON',
+    element: 'LIGHT',
+    role: 'SUPPORT',
+    tier: 1,
+    levelCap: 20,
+    basePower: 21,
+    growthRate: 0.21,
+    avatarEmoji: '🕊️',
+    accentColor: '#ffeaa7',
+    description: 'A radiant divine messenger signaling sunrise and inspiring holy courage.',
+    evolutions: [
+      { targetSpeciesId: 'seraph_guardian', weight: 100, variant: 'Seraph Guardian (EPIC)', rarity: 'EPIC', powerMult: 3.2 }
+    ]
+  },
+  'seraph_guardian': {
+    id: 'seraph_guardian',
+    name: 'Seraph Guardian',
+    baseRarity: 'EPIC',
+    element: 'LIGHT',
+    role: 'SUPPORT',
+    tier: 2,
+    levelCap: 45,
+    basePower: 105,
+    growthRate: 0.27,
+    avatarEmoji: '🪽🛡️',
+    accentColor: '#fdcb6e',
+    description: 'A winged celestial sentinel shielding allies with blazing holy feathers.',
+    evolutions: [
+      { targetSpeciesId: 'archangel_uriel', weight: 100, variant: 'Archangel Uriel (MYTHICAL)', rarity: 'MYTHICAL', powerMult: 3.0, requiredLevel: 45 }
+    ]
+  },
+  'archangel_uriel': {
+    id: 'archangel_uriel',
+    name: 'Archangel Uriel',
+    baseRarity: 'MYTHICAL',
+    element: 'LIGHT',
+    role: 'SUPPORT',
+    tier: 3,
+    levelCap: 80,
+    basePower: 270,
+    growthRate: 0.44,
+    avatarEmoji: '☀️🪽',
+    accentColor: '#e17055',
+    description: 'The flame of the divine sanctum who incinerates evil and heals the worthy.',
     evolutions: []
   }
 };
@@ -1150,7 +1265,7 @@ export const SPIRIT_SPECIES = {
  */
 export const CONTRACT_POOLS_BY_RARITY = {
   COMMON: ['cat_spirit', 'dog_spirit', 'chicken_spirit', 'caterpillar_spirit'],
-  UNCOMMON: ['bull_spirit', 'lizard_spirit', 'python_spirit'],
+  UNCOMMON: ['bull_spirit', 'lizard_spirit', 'python_spirit', 'baphomet_initiate', 'chrono_hatchling', 'dawn_herald'],
   RARE: ['shark_spirit', 'bear_spirit'],
   EPIC: ['wisp_spirit'],
   LEGENDARY: ['fallen_warrior_spirit']
@@ -1235,7 +1350,7 @@ export const BANNER_CONFIGS = [
     bannerTheme: 'solar',
     accentColor: '#f39c12',
     bgGradient: 'radial-gradient(circle at 50% 35%, rgba(243, 156, 18, 0.45) 0%, rgba(20, 10, 5, 0.95) 75%)',
-    timerText: '4d 12h 9m left',
+    timerText: 'Permanent',
     odds: [
       { rarity: 'COMMON', weight: 54.0 },
       { rarity: 'UNCOMMON', weight: 28.0 },
@@ -1269,7 +1384,7 @@ export const BANNER_CONFIGS = [
     bannerTheme: 'void',
     accentColor: '#9b59b6',
     bgGradient: 'radial-gradient(circle at 50% 35%, rgba(155, 89, 182, 0.45) 0%, rgba(15, 5, 25, 0.95) 75%)',
-    timerText: '4d 12h 9m left',
+    timerText: 'Permanent',
     odds: [
       { rarity: 'COMMON', weight: 54.0 },
       { rarity: 'UNCOMMON', weight: 28.0 },
@@ -1303,7 +1418,7 @@ export const BANNER_CONFIGS = [
     bannerTheme: 'astral',
     accentColor: '#00d2d3',
     bgGradient: 'radial-gradient(circle at 50% 35%, rgba(0, 210, 211, 0.35) 0%, rgba(5, 15, 25, 0.95) 75%)',
-    timerText: '6d 18h 30m left',
+    timerText: 'Permanent',
     odds: [
       { rarity: 'COMMON', weight: 54.0 },
       { rarity: 'UNCOMMON', weight: 27.5 },
@@ -1346,6 +1461,41 @@ export const BANNER_CONFIGS = [
       { rarity: 'LEGENDARY', weight: 1.2 },
       { rarity: 'MYTHICAL', weight: 0.3 }
     ]
+  },
+  {
+    id: 'abyssal_rift',
+    name: 'Abyssal Nether Rift: Baphomet Rate-Up',
+    shortName: 'Abyssal Rift',
+    subtitle: 'High rate-up for Nether Voidbinder Baphomet & Bow of Artemis!',
+    characterName: 'Baphomet, Voidbinder Archdemon',
+    characterTitle: 'Sovereign of the Nether Void',
+    featuredSpeciesId: 'baphomet_voidbinder',
+    featuredRelic: {
+      id: 'relic_bow_artemis',
+      name: 'Moonlight Bow of Artemis',
+      slot: 'weapon',
+      god: 'Artemis Hunt Set',
+      color: '#a29bfe'
+    },
+    element: 'DARK',
+    icon: '🔮',
+    bannerTheme: 'abyssal',
+    accentColor: '#9b59b6',
+    bgGradient: 'radial-gradient(circle at 50% 35%, rgba(142, 68, 173, 0.45) 0%, rgba(10, 5, 20, 0.95) 75%)',
+    timerText: 'Permanent',
+    odds: [
+      { rarity: 'COMMON', weight: 52.0 },
+      { rarity: 'UNCOMMON', weight: 28.0 },
+      { rarity: 'RARE', weight: 12.0 },
+      { rarity: 'EPIC', weight: 5.0 },
+      { rarity: 'LEGENDARY', weight: 2.2 },
+      { rarity: 'MYTHICAL', weight: 0.8 }
+    ],
+    rateUpBonus: {
+      EPIC: 'baphomet_voidbinder',
+      LEGENDARY: 'baphomet_archdemon_lord',
+      rateUpShare: 0.65
+    }
   }
 ];
 
@@ -1807,6 +1957,51 @@ export const SPIRIT_ULTIMATES = {
     name: 'Obsidian Annihilation Rift',
     description: 'Opens a nether rift that tears enemy swarms apart for 6.2x AOE damage.',
     multiplier: 6.2,
+    type: 'AOE_DAMAGE'
+  },
+  'baphomet_initiate': {
+    name: 'Occult Rune Flare',
+    description: 'Strikes the target with concentrated nether embers dealing 3.4x damage.',
+    multiplier: 3.4,
+    type: 'DAMAGE'
+  },
+  'chrono_hatchling': {
+    name: 'Temporal Needle',
+    description: 'Pierces through space-time dealing 3.5x damage.',
+    multiplier: 3.5,
+    type: 'DAMAGE'
+  },
+  'chrono_drake': {
+    name: 'Paradox Chrono Breath',
+    description: 'Exhales an accelerated time continuum for 4.8x AOE damage.',
+    multiplier: 4.8,
+    type: 'AOE_DAMAGE'
+  },
+  'ouroboros_time_sovereign': {
+    name: 'Infinite Epoch Collapse',
+    description: 'Collapses all alternate realities into one strike dealing 10.5x AOE damage.',
+    multiplier: 10.5,
+    type: 'AOE_DAMAGE'
+  },
+  'dawn_herald': {
+    name: 'Morning Radiance',
+    description: 'Calls down warm dawn rays dealing 3.2x damage and restoring 15% team HP.',
+    multiplier: 3.2,
+    healPercent: 15,
+    type: 'AOE_DAMAGE_AND_HEAL'
+  },
+  'seraph_guardian': {
+    name: 'Six-Wing Sanctuary',
+    description: 'Unfurls holy wings dealing 4.5x damage and granting a 25% team shield.',
+    multiplier: 4.5,
+    shieldPercent: 25,
+    type: 'AOE_DAMAGE'
+  },
+  'archangel_uriel': {
+    name: 'Sunfire Judgement of Uriel',
+    description: 'Descends with the sacred pillar of heaven dealing 9.0x AOE damage and shielding all allies for 30%.',
+    multiplier: 9.0,
+    shieldPercent: 30,
     type: 'AOE_DAMAGE'
   }
 };

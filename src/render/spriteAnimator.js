@@ -52,8 +52,16 @@ export const SPRITE_MANIFEST = {
     astraea_celestial_queen: 'celestial_sun',
     leviathan_behemoth: 'draconic_leviathan',
     leviathan_primordial: 'draconic_leviathan',
-    baphomet_voidbinder: 'draconic_leviathan',
-    baphomet_archdemon: 'draconic_leviathan',
+    baphomet_initiate: 'baphomet_nether',
+    baphomet_voidbinder: 'baphomet_nether',
+    baphomet_archdemon_lord: 'baphomet_nether',
+    baphomet_archdemon: 'baphomet_nether',
+    chrono_hatchling: 'chrono_drake',
+    chrono_drake: 'chrono_drake',
+    ouroboros_time_sovereign: 'chrono_drake',
+    dawn_herald: 'seraph_valkyrie',
+    seraph_guardian: 'seraph_valkyrie',
+    archangel_uriel: 'seraph_valkyrie',
     wisp_spirit: 'celestial_sun'
   },
   sheets: {
@@ -156,6 +164,39 @@ export const SPRITE_MANIFEST = {
         hurt: { frames: [7], fps: 6, loop: false }
       }
     },
+    baphomet_nether: {
+      path: '/assets/sprites/creatures/baphomet_nether.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    chrono_drake: {
+      path: '/assets/sprites/creatures/chrono_drake.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    seraph_valkyrie: {
+      path: '/assets/sprites/creatures/seraph_valkyrie.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
     relic_crown_zeus: {
       path: '/assets/sprites/relics/relic_crown_zeus.svg',
       frameCount: 8,
@@ -197,6 +238,61 @@ export const SPRITE_MANIFEST = {
       animations: {
         idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
         attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_shield_athena: {
+      path: '/assets/sprites/relics/relic_shield_athena.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 4, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 8, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_boots_hermes: {
+      path: '/assets/sprites/relics/relic_boots_hermes.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_bow_artemis: {
+      path: '/assets/sprites/relics/relic_bow_artemis.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 4, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 8, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    relic_anvil_hephaestus: {
+      path: '/assets/sprites/relics/relic_anvil_hephaestus.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    divine_relic_scripture: {
+      path: '/assets/sprites/relics/divine_relic_scripture.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 4, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 8, loop: false },
         hurt: { frames: [7], fps: 6, loop: false }
       }
     },
@@ -323,6 +419,21 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
   const godId = typeof relicOrSetId === 'object' ? (relicOrSetId?.setId || relicOrSetId?.godId) : relicOrSetId;
   const slot = typeof relicOrSetId === 'object' ? (relicOrSetId?.slotTypeId || relicOrSetId?.type) : slotType;
 
+  if (godId === 'athena' || slot === 'totem' || slot === 'shield') {
+    return 'relic_shield_athena';
+  }
+  if (godId === 'hermes' || slot === 'charm' || slot === 'boots') {
+    return 'relic_boots_hermes';
+  }
+  if (godId === 'artemis' || slot === 'ring' || slot === 'bow') {
+    return 'relic_bow_artemis';
+  }
+  if (godId === 'hephaestus' || slot === 'anvil' || slot === 'hammer') {
+    return 'relic_anvil_hephaestus';
+  }
+  if (godId === 'divine_scripture' || godId === 'scripture' || slot === 'scripture') {
+    return 'divine_relic_scripture';
+  }
   if (godId === 'zeus' || slot === 'headgear' || slot === 'crown') {
     return 'relic_crown_zeus';
   }
@@ -332,7 +443,7 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
   if (godId === 'poseidon' || slot === 'necklace' || slot === 'trident') {
     return 'relic_trident_poseidon';
   }
-  if (godId === 'apollo' || godId === 'hermes' || godId === 'athena' || slot === 'orb' || slot === 'charm' || slot === 'totem' || slot === 'ring') {
+  if (godId === 'hades' || godId === 'apollo' || slot === 'orb') {
     return 'relic_orb_arcane';
   }
   return 'relic_crown_zeus';

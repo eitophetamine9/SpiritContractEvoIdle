@@ -35,6 +35,7 @@ import {
   getWeaponEnhanceCost,
   ascendRelicData,
   generateRelicSubstats,
+  rerollRelicSubstatsData,
   calculateRelicMainStat
 } from '../data/equipmentData.js';
 import { 
@@ -78,6 +79,8 @@ class GameStateManager {
     this._spiritPowerCache = new Map();
     this._setBonusesCache = new Map();
     this._partyPowerCache = null;
+    this._isTabHidden = false;
+    this._tabHiddenTimestamp = null;
   }
 
   getEquipmentMap() {
@@ -189,23 +192,54 @@ class GameStateManager {
     // Start Real-time AFK Training & Combat ticker
     this.startGameLoop();
 
-    // Attach unload listeners for data safety
-    window.addEventListener('beforeunload', () => this.save());
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        this.save();
-      } else {
-        // App reopened / focused
-        const refocusNow = Date.now();
-        const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - (this.state.last_saved || refocusNow)) / 1000));
-        if (refocusOfflineSec >= 5) {
-          const refocusReport = this.applyOfflineGains(refocusOfflineSec);
-          if (refocusReport) {
-            this.emit('offlineGains', refocusReport);
-          }
+    // Attach unload & lifecycle visibility listeners for offline progression and data safety
+    const handleTabHide = () => {
+      if (this._isTabHidden) return;
+      this._isTabHidden = true;
+      this._tabHiddenTimestamp = Date.now();
+      if (this.state) {
+        this.state.last_saved = this._tabHiddenTimestamp;
+      }
+      this.save(true);
+    };
+
+    const handleTabShow = () => {
+      if (!this._isTabHidden && this._tabHiddenTimestamp === null) return;
+      this._isTabHidden = false;
+      const refocusNow = Date.now();
+      const hiddenTime = this._tabHiddenTimestamp || this.state?.last_saved || refocusNow;
+      this._tabHiddenTimestamp = null;
+
+      const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - hiddenTime) / 1000));
+
+      if (this.state) {
+        this.state.last_saved = refocusNow;
+      }
+      this.save(true);
+
+      // Trigger offline gains if away for at least 4 seconds
+      if (refocusOfflineSec >= 4) {
+        const refocusReport = this.applyOfflineGains(refocusOfflineSec);
+        if (refocusReport) {
+          this.emit('offlineGains', refocusReport);
         }
       }
-    });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleTabHide);
+      window.addEventListener('pagehide', handleTabHide);
+      window.addEventListener('pageshow', handleTabShow);
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          handleTabHide();
+        } else {
+          handleTabShow();
+        }
+      });
+    }
 
     return offlineReport;
   }
@@ -264,6 +298,7 @@ class GameStateManager {
       resources: {
         spiritShards: 300, // Enough for 3 summons right away!
         soulEssence: 0,
+        divineScriptures: 2, // Divine Relic Scripture consumable (select 2 guaranteed substats)
         essencesOfTheGods: 0,
         energy: 60,        // Max 60 Energy base
         maxEnergy: 60,
@@ -275,7 +310,7 @@ class GameStateManager {
       },
       activeDungeonBattle: null,
       activeBlessings: {}, // Temporary 1-hour spirit blessings
-      constellations: { draco: 0, phoenix: 0, pegasus: 0 },
+      constellations: { draco: 0, phoenix: 0, pegasus: 0, leo: 0, taurus: 0, scorpio: 0, aquarius: 0, sagittarius: 0 },
       expeditions: {},
       transmutationsToday: 0,
       lastTransmutationDate: new Date().toDateString(),
@@ -338,6 +373,9 @@ class GameStateManager {
     // Hard cap maxEnergy to 500
     state.resources.maxEnergy = Math.min(500, Math.max(60, state.resources.maxEnergy));
 
+    if (typeof state.resources.divineScriptures !== 'number') {
+      state.resources.divineScriptures = 2;
+    }
     if (typeof state.resources.essencesOfTheGods !== 'number') {
       state.resources.essencesOfTheGods = 0;
     }
@@ -346,7 +384,14 @@ class GameStateManager {
     }
 
     if (!state.constellations || typeof state.constellations !== 'object') {
-      state.constellations = { draco: 0, phoenix: 0, pegasus: 0 };
+      state.constellations = { draco: 0, phoenix: 0, pegasus: 0, leo: 0, taurus: 0, scorpio: 0, aquarius: 0, sagittarius: 0 };
+    } else {
+      const allConstKeys = ['draco', 'phoenix', 'pegasus', 'leo', 'taurus', 'scorpio', 'aquarius', 'sagittarius'];
+      for (const k of allConstKeys) {
+        if (typeof state.constellations[k] !== 'number') {
+          state.constellations[k] = 0;
+        }
+      }
     }
     if (!state.expeditions || typeof state.expeditions !== 'object') {
       state.expeditions = {};
@@ -697,6 +742,10 @@ class GameStateManager {
   startAutoSaver() {
     if (this.saveTimer) clearInterval(this.saveTimer);
     this.saveTimer = setInterval(() => {
+      // Do not auto-save while tab is hidden to prevent overwriting last_saved departure time
+      if (this._isTabHidden || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
+        return;
+      }
       if (this.isDirty) {
         this.save(true);
       }
@@ -716,6 +765,22 @@ class GameStateManager {
     let lastFrameTime = performance.now();
 
     const loop = (timestamp) => {
+      // If tab is hidden or backgrounded, freeze loop delta updates to prevent time-warp jumps
+      if (this._isTabHidden || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
+        lastSecondTime = timestamp;
+        lastFrameTime = timestamp;
+        this.rafId = requestAnimationFrame(loop);
+        return;
+      }
+
+      // If returning from background or pause, clamp large gaps
+      if (timestamp - lastSecondTime > 4000) {
+        lastSecondTime = timestamp;
+      }
+      if (timestamp - lastFrameTime > 2000) {
+        lastFrameTime = timestamp;
+      }
+
       // 1. Every second: add XP to the 5 active Spirits and update energy regeneration
       if (timestamp - lastSecondTime >= 1000) {
         const secondsPassed = Math.floor((timestamp - lastSecondTime) / 1000);
@@ -845,13 +910,18 @@ class GameStateManager {
 
   /**
    * Offline XP & Resources & Energy Calculation when reopening the app
-   * Rebalanced: 24-hour cap before diminishing returns, 20% passive meditation rate
+   * Rebalanced: 24-hour cap, diminishing returns past 8 hours, 6% XP rate, 5% shard salvage, max 35 energy, max 2-3 soul essence
    */
   applyOfflineGains(elapsedSeconds) {
     const cappedSeconds = Math.min(elapsedSeconds, 86400); // 24-hour cap
-    // Passive meditation rate: 20% of active rate
-    const xpRate = this.getXpGainRate() * 0.20;
-    const totalOfflineXp = xpRate * cappedSeconds;
+    // Diminishing returns past 8 hours (28,800s): 50% yield reduction
+    const effectiveSeconds = cappedSeconds <= 28800
+      ? cappedSeconds
+      : 28800 + (cappedSeconds - 28800) * 0.5;
+
+    // Passive meditation rate: 6% of active rate (heavily nerfed from 20%)
+    const xpRate = this.getXpGainRate() * 0.06;
+    const totalOfflineXp = xpRate * effectiveSeconds;
 
     const partySpirits = this.getPartySpirits();
     const levelUps = [];
@@ -900,10 +970,11 @@ class GameStateManager {
       }
     }
 
-    // 2. Offline Energy Accumulation
+    // 2. Offline Energy Accumulation (capped at max 35 offline energy)
     const res = this.state.resources;
+    const maxOfflineEnergy = 35;
     const energyGained = Math.min(
-      res.maxEnergy - res.energy,
+      Math.min(res.maxEnergy - res.energy, maxOfflineEnergy),
       Math.floor(cappedSeconds / ENERGY_REGEN_INTERVAL_SEC)
     );
     if (energyGained > 0) {
@@ -911,7 +982,7 @@ class GameStateManager {
     }
 
     // 3. Offline Madness Zone combat farming on previously unlocked stages
-    // Rebalanced: 25% shard salvage rate, Essence capped at 1 per 2 hours (max 12 in 24h)
+    // Rebalanced: 5% shard salvage rate, Soul Essence ceiling of max 2-3 in 24h
     const partyPower = this.getTotalPartyPower();
     const farmStage = this.state.madnessZone.farmMode 
       ? Math.max(1, this.state.madnessZone.stage - 1)
@@ -919,14 +990,10 @@ class GameStateManager {
 
     const sampleEnemy = getEnemyForStage(farmStage, 3);
     const killTimeSec = Math.max(2, (sampleEnemy.power / Math.max(1, partyPower)) * 4);
-    // Soft-cap diminishing returns past 4 hours (14,400 sec)
-    const effectiveSeconds = cappedSeconds <= 14400 
-      ? cappedSeconds 
-      : 14400 + (cappedSeconds - 14400) * 0.5;
     const estimatedKills = Math.floor(effectiveSeconds / killTimeSec);
-    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.20);
-    const maxOfflineEssence = Math.min(12, Math.floor(cappedSeconds / 7200));
-    const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 60));
+    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.05);
+    const maxOfflineEssence = Math.min(3, Math.floor(cappedSeconds / 28800));
+    const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 400));
 
     this.state.resources.spiritShards += offlineShards;
     this.state.resources.soulEssence += offlineEssence;
@@ -2948,11 +3015,24 @@ class GameStateManager {
 
     let power = spirit.power || 0;
 
+    // Active 2-pc bonuses
+    const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
+    let weaponAtkMultiplier = 1;
+    let damageMultiplier = 1;
+    for (const b of activeBonuses) {
+      if (b.bonus.damageBonus) {
+        damageMultiplier += b.bonus.damageBonus;
+      }
+      if (b.bonus.weaponAtkBonus) {
+        weaponAtkMultiplier += b.bonus.weaponAtkBonus;
+      }
+    }
+
     // Weapon bonus (O(1) lookup)
     if (spirit.weapon) {
       const wpn = this.getEquipmentItemByUid(spirit.weapon);
       if (wpn && wpn.atkPower) {
-        power += wpn.atkPower;
+        power += Math.round(wpn.atkPower * weaponAtkMultiplier);
       }
     }
 
@@ -2978,15 +3058,6 @@ class GameStateManager {
 
     if (percentAtkBonus > 0) {
       power = Math.round(power * (1 + percentAtkBonus / 100));
-    }
-
-    // Active 2-pc damage bonuses (e.g. Hades +10%, Ares +15%, Poseidon +10%)
-    const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
-    let damageMultiplier = 1;
-    for (const b of activeBonuses) {
-      if (b.bonus.damageBonus) {
-        damageMultiplier += b.bonus.damageBonus;
-      }
     }
 
     // Celestial Constellation bonuses (Draco)
@@ -3051,10 +3122,11 @@ class GameStateManager {
         break;
       }
       case 'hermes': {
-        // Swift Support: 3% max HP per second
+        // Caduceus Zephyr: 3% max HP per second and 25 MP to party
         for (const ally of livingSpirits) {
           const heal = Math.round(ally.maxHp * 0.03 * 7);
           ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
+          ally.currentMp = Math.min(ally.maxMp, (ally.currentMp || 0) + 25);
         }
         break;
       }
@@ -3075,9 +3147,9 @@ class GameStateManager {
         break;
       }
       case 'athena': {
-        // Aegis of Olympus: 25% damage reflect buff
+        // Parthenon Bulwark: 20% max HP Aegis Shield to party
         for (const ally of livingSpirits) {
-          ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * 0.10);
+          ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * 0.20);
         }
         break;
       }
@@ -3089,6 +3161,16 @@ class GameStateManager {
           const pierce = Math.max(1, Math.round(highest.maxHp * 0.25));
           highest.hp = Math.max(0, highest.hp - pierce);
           if (highest.hp <= 0) this.onIndividualEnemyKilled(highest);
+        }
+        break;
+      }
+      case 'hephaestus': {
+        // Volcanic Sunder: Shreds 25% enemy DEF/power & deals 15% Max HP fire burst
+        for (const em of livingEnemies) {
+          em.power = Math.max(1, Math.round(em.power * 0.85));
+          const burstDamage = Math.max(1, Math.round(em.maxHp * 0.15));
+          em.hp = Math.max(0, em.hp - burstDamage);
+          if (em.hp <= 0) this.onIndividualEnemyKilled(em);
         }
         break;
       }
@@ -3173,6 +3255,161 @@ class GameStateManager {
     this.emit('equipmentUpdated', { spirit, slotType });
     this.emit('inventoryUpdated', this.state.inventory);
     return { success: true, spirit, slotType };
+  }
+
+  quickEquipBest(spiritOrId) {
+    const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
+    if (!spirit) throw new Error('Spirit not found');
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+
+    let equippedCount = 0;
+
+    // 1. Weapon: Find unequipped weapon (or currently equipped) with highest atkPower
+    const currentWeapon = spirit.weapon ? this.getEquipmentItemByUid(spirit.weapon) : null;
+    const currentWeaponPower = currentWeapon ? (currentWeapon.atkPower || 0) : -1;
+
+    const availableWeapons = equipmentList.filter(e => 
+      e.type === 'weapon' && (!e.equippedToSpiritId || e.equippedToSpiritId === spirit.id)
+    );
+    if (availableWeapons.length > 0) {
+      availableWeapons.sort((a, b) => (b.atkPower || 0) - (a.atkPower || 0));
+      const bestWeapon = availableWeapons[0];
+      if (bestWeapon && (!currentWeapon || (bestWeapon.atkPower || 0) > currentWeaponPower)) {
+        this.equipItem(spirit.id, bestWeapon.uid);
+        equippedCount++;
+      }
+    }
+
+    // 2. Relics: For each slot type in RELIC_SLOT_TYPES
+    if (!spirit.relics) {
+      spirit.relics = { headgear: null, totem: null, ring: null, necklace: null, orb: null, charm: null };
+    }
+
+    for (const slotDef of RELIC_SLOT_TYPES) {
+      const slotId = slotDef.id;
+      const currentRelic = spirit.relics[slotId] ? this.getEquipmentItemByUid(spirit.relics[slotId]) : null;
+      const currentRelicScore = currentRelic 
+        ? (currentRelic.mainStatValue || 0) + (currentRelic.stars || 1) * 20 + (currentRelic.level || 0) * 5 
+        : -1;
+
+      const availableRelics = equipmentList.filter(e => 
+        e.type === 'relic' && 
+        e.slotTypeId === slotId && 
+        (!e.equippedToSpiritId || e.equippedToSpiritId === spirit.id)
+      );
+
+      if (availableRelics.length > 0) {
+        availableRelics.sort((a, b) => {
+          const scoreA = (a.mainStatValue || 0) + (a.stars || 1) * 20 + (a.level || 0) * 5;
+          const scoreB = (b.mainStatValue || 0) + (b.stars || 1) * 20 + (b.level || 0) * 5;
+          return scoreB - scoreA;
+        });
+        const bestRelic = availableRelics[0];
+        const bestScore = (bestRelic.mainStatValue || 0) + (bestRelic.stars || 1) * 20 + (bestRelic.level || 0) * 5;
+        if (bestRelic && (!currentRelic || bestScore > currentRelicScore)) {
+          this.equipItem(spirit.id, bestRelic.uid);
+          equippedCount++;
+        }
+      }
+    }
+
+    this.invalidateCaches();
+    this.save();
+    return { success: true, spirit, equippedCount };
+  }
+
+  rerollRelicSubstats(itemUid, options = {}) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) {
+      throw new Error('Inventory equipment not initialized');
+    }
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Relic not found in inventory');
+    if (item.type !== 'relic') throw new Error('Only Relics can have their substats rerolled!');
+
+    const REROLL_COST = 5;
+    if ((this.state.resources.soulEssence || 0) < REROLL_COST) {
+      throw new Error(`Insufficient Soul Essence! Need ${REROLL_COST} 🔮 (Have: ${this.state.resources.soulEssence || 0} 🔮).`);
+    }
+
+    this.state.resources.soulEssence -= REROLL_COST;
+    rerollRelicSubstatsData(item, options);
+
+    this.invalidateCaches();
+    this.save();
+    this.emit('equipmentUpdated', { item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return {
+      success: true,
+      item,
+      cost: REROLL_COST,
+      remainingEssence: this.state.resources.soulEssence
+    };
+  }
+
+  buyDivineScripture(quantity = 1) {
+    const costPerItem = 15;
+    const qty = Math.max(1, quantity);
+    const totalCost = costPerItem * qty;
+    if ((this.state.resources.soulEssence || 0) < totalCost) {
+      throw new Error(`Insufficient Soul Essence! Need ${totalCost} 🔮 (Have: ${this.state.resources.soulEssence || 0} 🔮).`);
+    }
+
+    this.state.resources.soulEssence -= totalCost;
+    this.state.resources.divineScriptures = (this.state.resources.divineScriptures || 0) + qty;
+
+    this.save();
+    this.emit('resourcesUpdated', this.state.resources);
+    return {
+      success: true,
+      purchased: qty,
+      cost: totalCost,
+      remainingEssence: this.state.resources.soulEssence,
+      totalScriptures: this.state.resources.divineScriptures
+    };
+  }
+
+  applyDivineScripture(itemUid, subType1, subType2) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) {
+      throw new Error('Inventory equipment not initialized');
+    }
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Relic not found in inventory');
+    if (item.type !== 'relic') throw new Error('Only Relics can be inscribed with Divine Scripture!');
+
+    if ((this.state.resources.divineScriptures || 0) < 1) {
+      throw new Error('No Divine Relic Scriptures available! Purchase one for 15 Soul Essences.');
+    }
+
+    if (!subType1 || !subType2) {
+      throw new Error('You must select two guaranteed substats!');
+    }
+    if (subType1 === subType2) {
+      throw new Error('Please select two distinct substats!');
+    }
+
+    const validSub1 = RELIC_SUBSTAT_TYPES.find(s => s.id === subType1);
+    const validSub2 = RELIC_SUBSTAT_TYPES.find(s => s.id === subType2);
+    if (!validSub1 || !validSub2) {
+      throw new Error('Invalid substats selected!');
+    }
+
+    this.state.resources.divineScriptures -= 1;
+    rerollRelicSubstatsData(item, { lockedSubTypes: [subType1, subType2] });
+
+    this.invalidateCaches();
+    this.save();
+    this.emit('equipmentUpdated', { item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return {
+      success: true,
+      item,
+      remainingScriptures: this.state.resources.divineScriptures,
+      lockedSubTypes: [subType1, subType2]
+    };
   }
 
   dismantleEquipment(itemUid) {

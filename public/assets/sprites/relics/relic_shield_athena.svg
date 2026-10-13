@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .s-gold  { fill: #f1c40f; }
+      .s-brass { fill: #d4af37; }
+      .s-bronze{ fill: #b78727; }
+      .s-blue  { fill: #3498db; }
+      .s-glow  { fill: #00d2d3; }
+      .s-white { fill: #ffffff; }
+      .s-shadow{ fill: rgba(0,0,0,0.3); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="13" ry="3.5" class="s-shadow"/>
+    <!-- Outer Rim -->
+    <circle cx="24" cy="24" r="16" class="s-bronze"/>
+    <circle cx="24" cy="24" r="14.5" class="s-brass"/>
+    <circle cx="24" cy="24" r="13" class="s-gold"/>
+    <!-- Inner Aegis Boss -->
+    <circle cx="24" cy="24" r="9" class="s-blue"/>
+    <polygon points="24,17 28,24 24,31 20,24" class="s-white"/>
+    <circle cx="24" cy="24" r="3" class="s-glow"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="11" ry="3" class="s-shadow"/>
+    <circle cx="24" cy="22" r="16" class="s-bronze"/>
+    <circle cx="24" cy="22" r="14.5" class="s-brass"/>
+    <circle cx="24" cy="22" r="13" class="s-gold"/>
+    <circle cx="24" cy="22" r="9" class="s-blue"/>
+    <polygon points="24,15 28,22 24,29 20,22" class="s-white"/>
+    <circle cx="24" cy="22" r="3.5" class="s-glow"/>
+    <circle cx="35" cy="14" r="1.5" class="s-white"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="10" ry="2.8" class="s-shadow"/>
+    <circle cx="24" cy="21" r="16" class="s-bronze"/>
+    <circle cx="24" cy="21" r="14.5" class="s-brass"/>
+    <circle cx="24" cy="21" r="13" class="s-gold"/>
+    <circle cx="24" cy="21" r="9" class="s-blue"/>
+    <polygon points="24,14 28,21 24,28 20,21" class="s-white"/>
+    <circle cx="24" cy="21" r="4" class="s-glow"/>
+    <circle cx="13" cy="14" r="1.5" class="s-white"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="12" ry="3.2" class="s-shadow"/>
+    <circle cx="24" cy="23" r="16" class="s-bronze"/>
+    <circle cx="24" cy="23" r="14.5" class="s-brass"/>
+    <circle cx="24" cy="23" r="13" class="s-gold"/>
+    <circle cx="24" cy="23" r="9" class="s-blue"/>
+    <polygon points="24,16 28,23 24,30 20,23" class="s-white"/>
+    <circle cx="24" cy="23" r="3" class="s-glow"/>
+  </g>
+
+  <!-- Frame 4: Pulse 1 [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="43" rx="13" ry="3.5" class="s-shadow"/>
+    <circle cx="24" cy="24" r="16.5" class="s-brass"/>
+    <circle cx="24" cy="24" r="15" class="s-gold"/>
+    <circle cx="24" cy="24" r="10" class="s-glow"/>
+    <polygon points="24,16 29,24 24,32 19,24" class="s-white"/>
+    <circle cx="24" cy="24" r="4" class="s-gold"/>
+  </g>
+
+  <!-- Frame 5: Pulse 2 [240..288] -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="24" cy="44" rx="12" ry="3" class="s-shadow"/>
+    <circle cx="24" cy="23" r="17" class="s-glow"/>
+    <circle cx="24" cy="23" r="15" class="s-gold"/>
+    <circle cx="24" cy="23" r="10" class="s-blue"/>
+    <polygon points="24,15 29,23 24,31 19,23" class="s-white"/>
+    <circle cx="24" cy="23" r="4.5" class="s-glow"/>
+  </g>
+
+  <!-- Frame 6: Pulse 3 [288..336] -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="44" rx="11" ry="3" class="s-shadow"/>
+    <circle cx="24" cy="22" r="16" class="s-bronze"/>
+    <circle cx="24" cy="22" r="14.5" class="s-brass"/>
+    <circle cx="24" cy="22" r="13" class="s-gold"/>
+    <circle cx="24" cy="22" r="9" class="s-blue"/>
+    <polygon points="24,15 28,22 24,29 20,22" class="s-white"/>
+    <circle cx="24" cy="22" r="3.5" class="s-glow"/>
+  </g>
+
+  <!-- Frame 7: Pulse 4 [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="12" ry="3.2" class="s-shadow"/>
+    <circle cx="24" cy="23" r="16" class="s-bronze"/>
+    <circle cx="24" cy="23" r="14.5" class="s-brass"/>
+    <circle cx="24" cy="23" r="13" class="s-gold"/>
+    <circle cx="24" cy="23" r="9" class="s-blue"/>
+    <polygon points="24,16 28,23 24,30 20,23" class="s-white"/>
+    <circle cx="24" cy="23" r="3" class="s-glow"/>
+  </g>
+</svg>
