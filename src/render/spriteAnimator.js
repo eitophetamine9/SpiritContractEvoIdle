@@ -52,8 +52,16 @@ export const SPRITE_MANIFEST = {
     astraea_celestial_queen: 'celestial_sun',
     leviathan_behemoth: 'draconic_leviathan',
     leviathan_primordial: 'draconic_leviathan',
-    baphomet_voidbinder: 'draconic_leviathan',
-    baphomet_archdemon: 'draconic_leviathan',
+    baphomet_initiate: 'baphomet_nether',
+    baphomet_voidbinder: 'baphomet_nether',
+    baphomet_archdemon_lord: 'baphomet_nether',
+    baphomet_archdemon: 'baphomet_nether',
+    chrono_hatchling: 'chrono_drake',
+    chrono_drake: 'chrono_drake',
+    ouroboros_time_sovereign: 'chrono_drake',
+    dawn_herald: 'seraph_valkyrie',
+    seraph_guardian: 'seraph_valkyrie',
+    archangel_uriel: 'seraph_valkyrie',
     wisp_spirit: 'celestial_sun'
   },
   sheets: {
@@ -147,6 +155,39 @@ export const SPRITE_MANIFEST = {
     },
     enemy_corrupted_serpent: {
       path: '/assets/sprites/creatures/enemy_corrupted_serpent.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    baphomet_nether: {
+      path: '/assets/sprites/creatures/baphomet_nether.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    chrono_drake: {
+      path: '/assets/sprites/creatures/chrono_drake.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    seraph_valkyrie: {
+      path: '/assets/sprites/creatures/seraph_valkyrie.svg',
       frameCount: 8,
       frameWidth: 48,
       frameHeight: 48,

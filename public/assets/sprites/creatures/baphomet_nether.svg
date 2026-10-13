@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .b-robe  { fill: #2d004d; }
+      .b-body  { fill: #4a154b; }
+      .b-lite  { fill: #8e44ad; }
+      .b-horn  { fill: #1a1a2e; }
+      .b-glow  { fill: #c084fc; }
+      .b-eye   { fill: #ff4757; }
+      .b-flame { fill: #a855f7; }
+      .b-gold  { fill: #ffd32a; }
+      .b-hurt  { fill: #ff3838; }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3" fill="rgba(0,0,0,0.35)"/>
+    <!-- Robe / Base -->
+    <path d="M14 42 L24 22 L34 42 Z" class="b-robe"/>
+    <path d="M16 42 L24 26 L32 42 Z" class="b-body"/>
+    <!-- Demon Torso -->
+    <rect x="20" y="20" width="8" height="10" rx="3" class="b-lite"/>
+    <!-- Head -->
+    <polygon points="24,12 18,22 30,22" class="b-body"/>
+    <!-- Horns -->
+    <path d="M20 14 C16 8, 12 10, 10 14 C14 12, 18 12, 19 16 Z" class="b-horn"/>
+    <path d="M28 14 C32 8, 36 10, 38 14 C34 12, 30 12, 29 16 Z" class="b-horn"/>
+    <!-- Occult Eyes -->
+    <circle cx="21" cy="18" r="1.5" class="b-eye"/>
+    <circle cx="27" cy="18" r="1.5" class="b-eye"/>
+    <!-- Hovering Nether Orb -->
+    <circle cx="24" cy="28" r="3" class="b-flame"/>
+    <circle cx="24" cy="28" r="1.5" class="b-glow"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Breathing / Hover) -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="15" ry="3.5" fill="rgba(0,0,0,0.4)"/>
+    <path d="M13 41 L24 21 L35 41 Z" class="b-robe"/>
+    <path d="M15 41 L24 25 L33 41 Z" class="b-body"/>
+    <rect x="20" y="19" width="8" height="10" rx="3" class="b-lite"/>
+    <polygon points="24,11 18,21 30,21" class="b-body"/>
+    <path d="M20 13 C16 7, 12 9, 10 13 C14 11, 18 11, 19 15 Z" class="b-horn"/>
+    <path d="M28 13 C32 7, 36 9, 38 13 C34 11, 30 11, 29 15 Z" class="b-horn"/>
+    <circle cx="21" cy="17" r="1.5" class="b-eye"/>
+    <circle cx="27" cy="17" r="1.5" class="b-eye"/>
+    <circle cx="24" cy="27" r="3.5" class="b-flame"/>
+    <circle cx="24" cy="27" r="1.8" class="b-glow"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3" fill="rgba(0,0,0,0.3)"/>
+    <path d="M15 43 L24 23 L33 43 Z" class="b-robe"/>
+    <path d="M17 43 L24 27 L31 43 Z" class="b-body"/>
+    <rect x="20" y="21" width="8" height="10" rx="3" class="b-lite"/>
+    <polygon points="24,13 18,23 30,23" class="b-body"/>
+    <path d="M20 15 C16 9, 12 11, 10 15 C14 13, 18 13, 19 17 Z" class="b-horn"/>
+    <path d="M28 15 C32 9, 36 11, 38 15 C34 13, 30 13, 29 17 Z" class="b-horn"/>
+    <circle cx="21" cy="19" r="1.5" class="b-eye"/>
+    <circle cx="27" cy="19" r="1.5" class="b-eye"/>
+    <circle cx="24" cy="29" r="3" class="b-flame"/>
+    <circle cx="24" cy="29" r="1.5" class="b-glow"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Aura Flare) -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.5" fill="rgba(0,0,0,0.35)"/>
+    <path d="M14 42 L24 22 L34 42 Z" class="b-robe"/>
+    <path d="M16 42 L24 26 L32 42 Z" class="b-body"/>
+    <rect x="20" y="20" width="8" height="10" rx="3" class="b-lite"/>
+    <polygon points="24,12 18,22 30,22" class="b-body"/>
+    <path d="M20 14 C16 8, 12 10, 10 14 C14 12, 18 12, 19 16 Z" class="b-horn"/>
+    <path d="M28 14 C32 8, 36 10, 38 14 C34 12, 30 12, 29 16 Z" class="b-horn"/>
+    <circle cx="21" cy="18" r="2" class="b-flame"/>
+    <circle cx="27" cy="18" r="2" class="b-flame"/>
+    <circle cx="24" cy="28" r="4.5" class="b-flame"/>
+    <circle cx="24" cy="28" r="2.2" class="b-gold"/>
+  </g>
+
+  <!-- Frame 4: Attack 1 (Anticipation / Arm Raise) -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3" fill="rgba(0,0,0,0.3)"/>
+    <path d="M15 42 L24 22 L33 42 Z" class="b-robe"/>
+    <rect x="18" y="19" width="8" height="10" rx="3" class="b-lite"/>
+    <polygon points="22,11 16,21 28,21" class="b-body"/>
+    <circle cx="19" cy="17" r="1.5" class="b-eye"/>
+    <path d="M26 18 L36 12 L38 14 L28 22 Z" class="b-lite"/>
+    <circle cx="38" cy="12" r="4" class="b-flame"/>
+  </g>
+
+  <!-- Frame 5: Attack 2 (Void Cleave Impact) -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="24" cy="44" rx="16" ry="4" fill="rgba(0,0,0,0.4)"/>
+    <path d="M12 42 L22 22 L32 42 Z" class="b-robe"/>
+    <polygon points="26,12 20,22 32,22" class="b-body"/>
+    <!-- Slashing Arc -->
+    <path d="M30 6 C40 14, 44 26, 36 38 L32 34 C38 24, 34 16, 26 10 Z" class="b-flame"/>
+    <path d="M32 10 C40 18, 42 26, 36 34 Z" class="b-gold"/>
+  </g>
+
+  <!-- Frame 6: Attack 3 (Recovery) -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3" fill="rgba(0,0,0,0.3)"/>
+    <path d="M14 42 L24 22 L34 42 Z" class="b-robe"/>
+    <polygon points="24,12 18,22 30,22" class="b-body"/>
+    <circle cx="21" cy="18" r="1.5" class="b-eye"/>
+    <circle cx="27" cy="18" r="1.5" class="b-eye"/>
+    <circle cx="28" cy="24" r="2.5" class="b-flame"/>
+  </g>
+
+  <!-- Frame 7: Hurt -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="20" cy="44" rx="12" ry="3" fill="rgba(0,0,0,0.3)"/>
+    <path d="M10 42 L18 24 L28 42 Z" class="b-hurt"/>
+    <rect x="14" y="22" width="8" height="10" rx="3" class="b-hurt"/>
+    <polygon points="18,14 12,24 24,24" class="b-body"/>
+    <circle cx="15" cy="20" r="1.5" fill="#fff"/>
+  </g>
+</svg>

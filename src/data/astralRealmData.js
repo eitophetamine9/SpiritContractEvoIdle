@@ -54,6 +54,86 @@ export const CONSTELLATIONS_CONFIG = {
       { node: 4, name: 'Astral Swiftness', cost: 8, bonus: { afkXpBonus: 20 }, desc: '+20% Idle Training Experience' },
       { node: 5, name: 'Celestial Emissary', cost: 12, bonus: { bonusGodEssencesPercent: 25 }, desc: '+25% Bonus 💠 God Essences from Trials' }
     ]
+  },
+  leo: {
+    id: 'leo',
+    name: 'Leo',
+    title: 'The Golden Lion of Valor',
+    icon: '🦁',
+    themeColor: '#eab308',
+    accentColor: '#facc15',
+    description: 'Empowers boss damage amplification, critical ferocity, and merciless execution strikes.',
+    stars: [
+      { node: 1, name: 'Lionheart Strike', cost: 2, bonus: { bossDmgPercent: 5 }, desc: '+5% Boss & Elite Damage' },
+      { node: 2, name: 'Solar Mane', cost: 3, bonus: { critDamage: 8 }, desc: '+8% Critical Hit Damage' },
+      { node: 3, name: 'Apex Predator', cost: 5, bonus: { bossDmgPercent: 10 }, desc: '+10% Boss & Elite Damage' },
+      { node: 4, name: 'Roar of Domination', cost: 8, bonus: { bossDmgPercent: 10 }, desc: '+10% Boss & Elite Damage' },
+      { node: 5, name: 'Sovereign Executioner', cost: 12, bonus: { executionerDmgPercent: 15 }, desc: '+15% Damage against targets below 30% HP' }
+    ]
+  },
+  taurus: {
+    id: 'taurus',
+    name: 'Taurus',
+    title: 'The Iron Bastion',
+    icon: '🐂',
+    themeColor: '#84cc16',
+    accentColor: '#a3e635',
+    description: 'Reinforces guardian aggro, barrier capacitance, and frontline impenetrable fortitude.',
+    stars: [
+      { node: 1, name: 'Colossus Stance', cost: 2, bonus: { tankThreatPercent: 10 }, desc: '+10% Tank Aggro & Threat Multiplier' },
+      { node: 2, name: 'Bastion Horns', cost: 3, bonus: { initialShieldPercent: 12 }, desc: '+12% Team Shielding Capacity' },
+      { node: 3, name: 'Unyielding Hide', cost: 5, bonus: { frontlineMitigationPercent: 10 }, desc: '+10% Frontline Damage Mitigation' },
+      { node: 4, name: 'Earthshaker Vitality', cost: 8, bonus: { tankThreatPercent: 20 }, desc: '+20% Tank Aggro & Threat Multiplier' },
+      { node: 5, name: 'Primordial Bulwark', cost: 12, bonus: { frontlineMitigationPercent: 15 }, desc: '+15% Frontline Damage Mitigation' }
+    ]
+  },
+  scorpio: {
+    id: 'scorpio',
+    name: 'Scorpio',
+    title: 'The Venom Sovereign',
+    icon: '🦂',
+    themeColor: '#a855f7',
+    accentColor: '#c084fc',
+    description: 'Afflicts enemies with caustic armor sundering, amplified toxic burns, and vampiric lifesteal.',
+    stars: [
+      { node: 1, name: 'Piercing Stinger', cost: 2, bonus: { armorPiercePercent: 5 }, desc: '+5% Team Armor Penetration' },
+      { node: 2, name: 'Neurotoxin Potency', cost: 3, bonus: { dotAmpPercent: 10 }, desc: '+10% Damage-over-Time Amplification' },
+      { node: 3, name: 'Carapace Breaker', cost: 5, bonus: { armorPiercePercent: 10 }, desc: '+10% Team Armor Penetration' },
+      { node: 4, name: 'Vampiric Siphon', cost: 8, bonus: { lifeStealPercent: 8 }, desc: '+8% Life Steal on Spirit Attacks' },
+      { node: 5, name: 'Abyssal Envenom', cost: 12, bonus: { dotAmpPercent: 15 }, desc: '+15% Damage-over-Time Amplification' }
+    ]
+  },
+  aquarius: {
+    id: 'aquarius',
+    name: 'Aquarius',
+    title: 'The Cosmic Waterbearer',
+    icon: '🏺',
+    themeColor: '#3b82f6',
+    accentColor: '#60a5fa',
+    description: 'Accelerates combat mana regeneration, starting reserves, and hastens relic ability cooldowns.',
+    stars: [
+      { node: 1, name: 'Astral Spring', cost: 2, bonus: { combatMpRegenPercent: 10 }, desc: '+10% Combat MP Generation' },
+      { node: 2, name: 'Tidal Reservoir', cost: 3, bonus: { startingMpBonus: 20 }, desc: '+20 Starting MP at Battle Outset' },
+      { node: 3, name: 'Celestial Torrent', cost: 5, bonus: { combatMpRegenPercent: 15 }, desc: '+15% Combat MP Generation' },
+      { node: 4, name: 'Chrono Conduit', cost: 8, bonus: { relicCooldownReductionPercent: 15 }, desc: '-15% Relic 4-pc Ability Cooldown' },
+      { node: 5, name: 'Fountain of Eternity', cost: 12, bonus: { combatMpRegenPercent: 25 }, desc: '+25% Combat MP Generation & Quick Cast' }
+    ]
+  },
+  sagittarius: {
+    id: 'sagittarius',
+    name: 'Sagittarius',
+    title: 'The Astral Centaur Archer',
+    icon: '🏹',
+    themeColor: '#10b981',
+    accentColor: '#34d399',
+    description: 'Quickens attack cadence, critical accuracy, and grants devastating double-strike procs.',
+    stars: [
+      { node: 1, name: 'Swift Quiver', cost: 2, bonus: { atkSpdBonusPercent: 10 }, desc: '+10% Basic Attack Speed' },
+      { node: 2, name: 'Sharpshooter Precision', cost: 3, bonus: { critRate: 8 }, desc: '+8% Critical Hit Chance' },
+      { node: 3, name: 'Twin Arrow Flight', cost: 5, bonus: { doubleStrikeChance: 12 }, desc: '+12% Double-Strike Hit Chance' },
+      { node: 4, name: 'Galeforce Stride', cost: 8, bonus: { atkSpdBonusPercent: 15 }, desc: '+15% Basic Attack Speed' },
+      { node: 5, name: 'Celestial Arrow Barrage', cost: 12, bonus: { doubleStrikeChance: 15 }, desc: '+15% Double-Strike Hit Chance' }
+    ]
   }
 };
 

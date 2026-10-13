@@ -424,6 +424,18 @@ function renderConstellationsSectionHtml(res) {
   if (bonuses.bonusAstralDropChance) activeBonusLabels.push(`+${bonuses.bonusAstralDropChance}% Boss 🔮 Drops`);
   if (bonuses.afkXpBonus) activeBonusLabels.push(`+${bonuses.afkXpBonus}% AFK XP`);
   if (bonuses.bonusGodEssencesPercent) activeBonusLabels.push(`+${bonuses.bonusGodEssencesPercent}% Trial 💠 Gods`);
+  if (bonuses.bossDmgPercent) activeBonusLabels.push(`+${bonuses.bossDmgPercent}% Boss DMG`);
+  if (bonuses.executionerDmgPercent) activeBonusLabels.push(`+${bonuses.executionerDmgPercent}% Executioner`);
+  if (bonuses.tankThreatPercent) activeBonusLabels.push(`+${bonuses.tankThreatPercent}% Tank Aggro`);
+  if (bonuses.frontlineMitigationPercent) activeBonusLabels.push(`+${bonuses.frontlineMitigationPercent}% Frontline Def`);
+  if (bonuses.armorPiercePercent) activeBonusLabels.push(`+${bonuses.armorPiercePercent}% Armor Pierce`);
+  if (bonuses.dotAmpPercent) activeBonusLabels.push(`+${bonuses.dotAmpPercent}% DoT Amp`);
+  if (bonuses.lifeStealPercent) activeBonusLabels.push(`+${bonuses.lifeStealPercent}% Life Steal`);
+  if (bonuses.combatMpRegenPercent) activeBonusLabels.push(`+${bonuses.combatMpRegenPercent}% MP Regen`);
+  if (bonuses.startingMpBonus) activeBonusLabels.push(`+${bonuses.startingMpBonus} Start MP`);
+  if (bonuses.relicCooldownReductionPercent) activeBonusLabels.push(`-${bonuses.relicCooldownReductionPercent}% Relic CD`);
+  if (bonuses.atkSpdBonusPercent) activeBonusLabels.push(`+${bonuses.atkSpdBonusPercent}% Atk Speed`);
+  if (bonuses.doubleStrikeChance) activeBonusLabels.push(`+${bonuses.doubleStrikeChance}% Double Strike`);
 
   return `
     <div class="flex flex-col gap-3">

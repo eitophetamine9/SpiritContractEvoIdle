@@ -1268,6 +1268,85 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.hephaestus);
   console.log('  [PASS] proc4PieceSetBonus successfully fired for Athena, Hermes, Artemis, and Hephaestus!');
 
+  // Test 30: Phase 4 Zodiac Constellations, New Spirit Evolution Lines & Abyssal Rift Banner
+  console.log('\n[TEST 30] Testing Phase 4 Zodiac Constellations, 3 Spirit Lines & Abyssal Rift Banner:');
+  const { CONSTELLATIONS_CONFIG, BANNER_CONFIGS: bannersList } = await import('../src/data/index.js');
+  
+  // 1. Verify 8 Zodiac Constellations (40 stars total)
+  const constellationKeys = Object.keys(CONSTELLATIONS_CONFIG);
+  console.log(`  Total Constellations: ${constellationKeys.length} (Expected >= 8)`);
+  if (constellationKeys.length < 8) throw new Error(`Expected at least 8 constellations, got ${constellationKeys.length}`);
+  const requiredNewConstellations = ['leo', 'taurus', 'scorpio', 'aquarius', 'sagittarius'];
+  for (const cKey of requiredNewConstellations) {
+    if (!CONSTELLATIONS_CONFIG[cKey]) throw new Error(`Missing zodiac constellation: ${cKey}`);
+    if (CONSTELLATIONS_CONFIG[cKey].stars.length !== 5) throw new Error(`Constellation ${cKey} does not have 5 stars`);
+  }
+  console.log('  [PASS] Verified Leo, Taurus, Scorpio, Aquarius, and Sagittarius constellations with 5 stars each.');
+
+  // Test unlocking a Leo star
+  gameState.state.resources.soulEssence = 20;
+  const leoRes = gameState.unlockConstellationStar('leo');
+  if (gameState.state.constellations.leo !== 1) throw new Error('Leo constellation should be level 1');
+  const cBonuses = gameState.getConstellationBonuses();
+  if (!cBonuses.bossDmgPercent || cBonuses.bossDmgPercent < 5) {
+    throw new Error('Expected bossDmgPercent bonus from leo star 1');
+  }
+  console.log(`  [PASS] Unlocked Leo star (Lionheart Strike): +${cBonuses.bossDmgPercent}% Boss Damage active!`);
+
+  // 2. Verify 3 New Spirit Evolution Lines in Catalog
+  const requiredNewSpecies = [
+    'baphomet_initiate', 'baphomet_voidbinder', 'baphomet_archdemon_lord',
+    'chrono_hatchling', 'chrono_drake', 'ouroboros_time_sovereign',
+    'dawn_herald', 'seraph_guardian', 'archangel_uriel'
+  ];
+  for (const spId of requiredNewSpecies) {
+    if (!SPIRIT_SPECIES[spId]) throw new Error(`Missing species in catalog: ${spId}`);
+  }
+  console.log('  [PASS] Verified all 9 species forms across Baphomet, Chrono, and Seraphic lines in catalog.');
+
+  // Verify UNCOMMON pool has base forms
+  const uncomPool = CONTRACT_POOLS_BY_RARITY.UNCOMMON;
+  if (!uncomPool.includes('baphomet_initiate') || !uncomPool.includes('chrono_hatchling') || !uncomPool.includes('dawn_herald')) {
+    throw new Error('CONTRACT_POOLS_BY_RARITY.UNCOMMON missing new base spirits');
+  }
+  console.log('  [PASS] Verified baphomet_initiate, chrono_hatchling, and dawn_herald in UNCOMMON contract pool.');
+
+  // Test Evolution flow
+  const testBaph = {
+    id: 'test_baph_1',
+    speciesId: 'baphomet_initiate',
+    customName: 'Baphomet Initiate',
+    tier: 1,
+    level: 20,
+    xp: 0,
+    rarity: 'UNCOMMON',
+    canEvolve: true,
+    evolutionHistory: ['Baphomet Initiate'],
+    power: 50,
+    maxHp: 200,
+    currentHp: 200
+  };
+  gameState.state.spirits.push(testBaph);
+  gameState.evolveSpirit('test_baph_1');
+  if (testBaph.speciesId !== 'baphomet_voidbinder') {
+    throw new Error(`Expected evolution to baphomet_voidbinder, got ${testBaph.speciesId}`);
+  }
+  console.log(`  [PASS] Successfully evolved test spirit to: ${testBaph.customName} (Tier ${testBaph.tier})!`);
+
+  // 3. Verify Abyssal Rift Banner
+  const abyssalBanner = bannersList.find(b => b.id === 'abyssal_rift');
+  if (!abyssalBanner) throw new Error('abyssal_rift banner configuration missing!');
+  if (abyssalBanner.featuredSpeciesId !== 'baphomet_voidbinder') {
+    throw new Error(`Unexpected featured species for Abyssal Rift: ${abyssalBanner.featuredSpeciesId}`);
+  }
+  console.log(`  [PASS] Abyssal Rift banner verified (Featured: ${abyssalBanner.characterName})!`);
+
+  // Test summon on Abyssal Rift banner
+  gameState.state.resources.spiritShards = 2000;
+  const abyssalSummons = gameState.contractSpirit(10, 'abyssal_rift');
+  if (abyssalSummons.length !== 10) throw new Error('Expected 10 summons from Abyssal Rift banner');
+  console.log(`  [PASS] Performed 10x Contract on Abyssal Rift banner (${abyssalSummons.length} spirits received)!`);
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

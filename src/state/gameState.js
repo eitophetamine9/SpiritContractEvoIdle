@@ -277,7 +277,7 @@ class GameStateManager {
       },
       activeDungeonBattle: null,
       activeBlessings: {}, // Temporary 1-hour spirit blessings
-      constellations: { draco: 0, phoenix: 0, pegasus: 0 },
+      constellations: { draco: 0, phoenix: 0, pegasus: 0, leo: 0, taurus: 0, scorpio: 0, aquarius: 0, sagittarius: 0 },
       expeditions: {},
       transmutationsToday: 0,
       lastTransmutationDate: new Date().toDateString(),
@@ -351,7 +351,14 @@ class GameStateManager {
     }
 
     if (!state.constellations || typeof state.constellations !== 'object') {
-      state.constellations = { draco: 0, phoenix: 0, pegasus: 0 };
+      state.constellations = { draco: 0, phoenix: 0, pegasus: 0, leo: 0, taurus: 0, scorpio: 0, aquarius: 0, sagittarius: 0 };
+    } else {
+      const allConstKeys = ['draco', 'phoenix', 'pegasus', 'leo', 'taurus', 'scorpio', 'aquarius', 'sagittarius'];
+      for (const k of allConstKeys) {
+        if (typeof state.constellations[k] !== 'number') {
+          state.constellations[k] = 0;
+        }
+      }
     }
     if (!state.expeditions || typeof state.expeditions !== 'object') {
       state.expeditions = {};
