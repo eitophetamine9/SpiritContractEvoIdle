@@ -7242,58 +7242,283 @@ button:disabled {
   color: var(--text-main);
 }
 
-/* Main Grid Layout */
-.sanctum-layout-grid {
-  display: grid;
-  grid-template-columns: 280px 360px 1fr;
-  gap: 12px;
-  align-items: start;
-}
-
-@media (max-width: 1080px) {
-  .sanctum-layout-grid {
-    grid-template-columns: 260px 1fr;
-  }
-  .sanctum-hero-stage {
-    grid-column: span 2;
-    order: -1;
-  }
-}
-
-@media (max-width: 768px) {
-  .sanctum-layout-grid {
-    grid-template-columns: 1fr;
-  }
-  .sanctum-hero-stage {
-    grid-column: span 1;
-  }
-}
-
-/* Left Rail: Hero Roster Drawer */
-.sanctum-hero-rail {
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 12px;
+/* Portrait Optimized Layout */
+.sanctum-hub-root {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: calc(100vh - 200px);
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 4px 60px 4px;
 }
 
-.sanctum-rail-header {
+/* Portrait Hero Carousel Strip */
+.sanctum-hero-strip-wrapper {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.rail-title {
+.strip-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 11px;
+}
+
+.strip-count-label {
   font-weight: 800;
-  letter-spacing: 0.8px;
   color: var(--text-muted);
 }
 
+.btn-toggle-filters {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffd32a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-toggle-filters.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+}
+
+.strip-filters-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sanctum-hero-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.strip-hero-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  cursor: pointer;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.strip-hero-chip.selected {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+}
+
+.chip-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.chip-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.chip-name {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.chip-sub {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+/* Portrait Hero Stage */
+.sanctum-hero-stage.portrait-stage {
+  padding: 14px;
+  min-height: unset;
+}
+
+/* Concise Primary 4-Stat Grid */
+.concise-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.concise-stat-card {
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.cstat-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cstat-icon {
+  font-size: 14px;
+}
+
+.cstat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.cstat-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd32a;
+  margin-top: 2px;
+}
+
+.cstat-sub {
+  font-size: 9.5px;
+  color: #2ed573;
+}
+
+/* More Info Expand Control */
+.more-info-control-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.btn-toggle-more-info {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #f3e8ff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.btn-toggle-more-info:hover, .btn-toggle-more-info.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+}
+
+.btn-open-dossier-pill {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(241, 196, 15, 0.15);
+  border: 1px solid rgba(241, 196, 15, 0.35);
+  color: #ffd32a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.collapsible-details-container.collapsed {
+  display: none;
+}
+
+.collapsible-details-container.expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Rebirth Sub-Hub Portrait Enhancements */
+.rebirth-current-card {
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.rcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rcard-star-badge {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.rcard-bonus {
+  font-size: 11px;
+  font-weight: 800;
+  color: #2ed573;
+}
+
+.rcard-desc {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.rebirth-expand-toggle-bar {
+  display: flex;
+  margin-top: 4px;
+}
+
+.btn-toggle-rebirth-list {
+  width: 100%;
+  padding: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.rebirth-nodes-track.collapsed {
+  display: none;
+}
+
+.rebirth-nodes-track.expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* Left Rail & Search Box */
 .sanctum-search-box {
   display: flex;
   align-items: center;
