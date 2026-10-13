@@ -319,7 +319,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateResourcesDisplay();
   renderActiveTab();
 
-  if (offlineReport && offlineReport.elapsedSeconds >= 4) {
+  if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
     showOfflineModal(offlineReport, () => {
       renderActiveTab();
     });

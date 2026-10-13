@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .sp-ghost { fill: #0f172a; }
+      .sp-armor { fill: #334155; }
+      .sp-glow  { fill: #06b6d4; }
+      .sp-fire  { fill: #22d3ee; }
+      .sp-blade { fill: #e2e8f0; stroke: #06b6d4; stroke-width: 1; }
+      .sp-eye   { fill: #38bdf8; }
+      .sp-shadow{ fill: rgba(0,0,0,0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.5" class="sp-shadow"/>
+    <!-- Ghostly aura / torn cape -->
+    <path d="M16 22 C10 28, 8 38, 12 43 C15 39, 17 32, 18 26 Z" class="sp-fire" opacity="0.6"/>
+    <path d="M32 22 C38 28, 40 38, 36 43 C33 39, 31 32, 30 26 Z" class="sp-fire" opacity="0.6"/>
+    <!-- Body & plate armor -->
+    <rect x="18" y="20" width="12" height="18" rx="2" class="sp-ghost"/>
+    <rect x="20" y="22" width="8" height="12" class="sp-armor"/>
+    <!-- Pauldrons -->
+    <polygon points="17,20 13,24 19,26" class="sp-armor"/>
+    <polygon points="31,20 35,24 29,26" class="sp-armor"/>
+    <!-- Helmet & glowing visor -->
+    <rect x="19" y="11" width="10" height="10" rx="2" class="sp-armor"/>
+    <rect x="21" y="14" width="6" height="3" class="sp-eye"/>
+    <!-- Spectral Greatsword -->
+    <polygon points="34,14 36,12 38,36 34,36" class="sp-blade"/>
+    <circle cx="36" cy="38" r="2" class="sp-glow"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Hover Up) [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="15" ry="4" class="sp-shadow"/>
+    <path d="M16 21 C10 27, 7 37, 11 42 C14 38, 17 31, 18 25 Z" class="sp-fire" opacity="0.7"/>
+    <path d="M32 21 C38 27, 41 37, 37 42 C34 38, 31 31, 30 25 Z" class="sp-fire" opacity="0.7"/>
+    <rect x="18" y="19" width="12" height="18" rx="2" class="sp-ghost"/>
+    <rect x="20" y="21" width="8" height="12" class="sp-armor"/>
+    <polygon points="17,19 13,23 19,25" class="sp-armor"/>
+    <polygon points="31,19 35,23 29,25" class="sp-armor"/>
+    <rect x="19" y="10" width="10" height="10" rx="2" class="sp-armor"/>
+    <rect x="21" y="13" width="6" height="3" class="sp-eye"/>
+    <polygon points="34,13 36,11 38,35 34,35" class="sp-blade"/>
+    <circle cx="36" cy="37" r="2" class="sp-glow"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Hover Peak) [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3.2" class="sp-shadow"/>
+    <path d="M16 20 C9 26, 8 36, 12 41 C15 37, 17 30, 18 24 Z" class="sp-fire" opacity="0.8"/>
+    <path d="M32 20 C39 26, 40 36, 36 41 C33 37, 31 30, 30 24 Z" class="sp-fire" opacity="0.8"/>
+    <rect x="18" y="18" width="12" height="18" rx="2" class="sp-ghost"/>
+    <rect x="20" y="20" width="8" height="12" class="sp-armor"/>
+    <polygon points="17,18 13,22 19,24" class="sp-armor"/>
+    <polygon points="31,18 35,22 29,24" class="sp-armor"/>
+    <rect x="19" y="9" width="10" height="10" rx="2" class="sp-armor"/>
+    <rect x="21" y="12" width="6" height="3" class="sp-eye"/>
+    <polygon points="34,12 36,10 38,34 34,34" class="sp-blade"/>
+    <circle cx="36" cy="36" r="2.5" class="sp-glow"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Hover Down) [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.5" class="sp-shadow"/>
+    <path d="M16 21 C10 27, 8 37, 12 42 C15 38, 17 31, 18 25 Z" class="sp-fire" opacity="0.6"/>
+    <path d="M32 21 C38 27, 40 37, 36 42 C33 38, 31 31, 30 25 Z" class="sp-fire" opacity="0.6"/>
+    <rect x="18" y="19" width="12" height="18" rx="2" class="sp-ghost"/>
+    <rect x="20" y="21" width="8" height="12" class="sp-armor"/>
+    <polygon points="17,19 13,23 19,25" class="sp-armor"/>
+    <polygon points="31,19 35,23 29,25" class="sp-armor"/>
+    <rect x="19" y="10" width="10" height="10" rx="2" class="sp-armor"/>
+    <rect x="21" y="13" width="6" height="3" class="sp-eye"/>
+    <polygon points="34,13 36,11 38,35 34,35" class="sp-blade"/>
+    <circle cx="36" cy="37" r="2" class="sp-glow"/>
+  </g>
+
+  <!-- Frame 4: Attack Windup [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="22" cy="44" rx="15" ry="3.5" class="sp-shadow"/>
+    <rect x="16" y="20" width="12" height="18" rx="2" class="sp-ghost"/>
+    <rect x="18" y="22" width="8" height="12" class="sp-armor"/>
+    <rect x="17" y="11" width="10" height="10" rx="2" class="sp-armor"/>
+    <rect x="19" y="14" width="6" height="3" class="sp-eye"/>
+    <!-- Blade raised high back -->
+    <polygon points="28,4 32,2 40,24 36,26" class="sp-blade"/>
+    <circle cx="32" cy="2" r="3" class="sp-glow"/>
+  </g>
+
+  <!-- Frame 5: Attack Slash Impact [240..288] -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="26" cy="44" rx="17" ry="4" class="sp-shadow"/>
+    <rect x="20" y="21" width="12" height="17" rx="2" class="sp-ghost"/>
+    <rect x="22" y="23" width="8" height="11" class="sp-armor"/>
+    <rect x="21" y="12" width="10" height="10" rx="2" class="sp-armor"/>
+    <rect x="23" y="15" width="6" height="3" class="sp-eye"/>
+    <!-- Greatsword slashing forward with energy crescent -->
+    <polygon points="10,34 38,28 39,32 10,37" class="sp-blade"/>
+    <path d="M4 18 C14 12, 38 16, 46 36 C38 30, 20 28, 4 18 Z" class="sp-fire" opacity="0.9"/>
+  </g>
+
+  <!-- Frame 6: Attack Follow-through [288..336] -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="25" cy="44" rx="15" ry="3.5" class="sp-shadow"/>
+    <rect x="19" y="20" width="12" height="18" rx="2" class="sp-ghost"/>
+    <rect x="21" y="22" width="8" height="12" class="sp-armor"/>
+    <rect x="20" y="11" width="10" height="10" rx="2" class="sp-armor"/>
+    <rect x="22" y="14" width="6" height="3" class="sp-eye"/>
+    <polygon points="12,38 34,34 35,37 12,41" class="sp-blade"/>
+    <circle cx="35" cy="36" r="2.5" class="sp-glow"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Recoil [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="21" cy="44" rx="12" ry="3" class="sp-shadow"/>
+    <rect x="14" y="22" width="12" height="17" rx="2" fill="#ef4444"/>
+    <rect x="16" y="24" width="8" height="11" class="sp-armor"/>
+    <rect x="15" y="13" width="10" height="10" rx="2" fill="#dc2626"/>
+    <polygon points="26,16 28,14 36,36 32,36" class="sp-blade" opacity="0.7"/>
+  </g>
+</svg>

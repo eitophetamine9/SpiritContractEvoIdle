@@ -41,15 +41,15 @@ export const SPRITE_MANIFEST = {
     bear_of_dreams: 'bovine_earth',
     ursalite: 'bovine_earth',
     high_elf: 'celestial_sun',
-    fallen_warrior: 'feline_shadow',
-    sovereign_warrior: 'bovine_earth',
-    dreadlord_warrior: 'bovine_earth',
+    fallen_warrior: 'spectral_undead',
+    sovereign_warrior: 'spectral_undead',
+    dreadlord_warrior: 'spectral_undead',
     solaris_lion_of_pride: 'celestial_sun',
     solaris_the_one: 'celestial_sun',
     gelda_thousand_ashes: 'feline_shadow',
     gelda_sanguine: 'feline_shadow',
-    astraea_valkyrie: 'celestial_sun',
-    astraea_celestial_queen: 'celestial_sun',
+    astraea_valkyrie: 'seraph_valkyrie',
+    astraea_celestial_queen: 'seraph_valkyrie',
     leviathan_behemoth: 'draconic_leviathan',
     leviathan_primordial: 'draconic_leviathan',
     baphomet_initiate: 'baphomet_nether',
@@ -59,9 +59,9 @@ export const SPRITE_MANIFEST = {
     chrono_hatchling: 'chrono_drake',
     chrono_drake: 'chrono_drake',
     ouroboros_time_sovereign: 'chrono_drake',
-    dawn_herald: 'seraph_valkyrie',
-    seraph_guardian: 'seraph_valkyrie',
-    archangel_uriel: 'seraph_valkyrie',
+    dawn_herald: 'celestial_angel',
+    seraph_guardian: 'celestial_angel',
+    archangel_uriel: 'celestial_angel',
     wisp_spirit: 'celestial_sun'
   },
   sheets: {
@@ -188,6 +188,72 @@ export const SPRITE_MANIFEST = {
     },
     seraph_valkyrie: {
       path: '/assets/sprites/creatures/seraph_valkyrie.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    spectral_undead: {
+      path: '/assets/sprites/creatures/spectral_undead.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    celestial_angel: {
+      path: '/assets/sprites/creatures/celestial_angel.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    enemy_void_wraith: {
+      path: '/assets/sprites/creatures/enemy_void_wraith.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    enemy_infernal_demon: {
+      path: '/assets/sprites/creatures/enemy_infernal_demon.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    enemy_colossus_titan: {
+      path: '/assets/sprites/creatures/enemy_colossus_titan.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 4, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 8, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    enemy_frost_lich: {
+      path: '/assets/sprites/creatures/enemy_frost_lich.svg',
       frameCount: 8,
       frameWidth: 48,
       frameHeight: 48,
@@ -395,24 +461,31 @@ export function getSheetKeyForEnemy(enemy) {
   if (!enemy) return 'enemy_shadow_behemoth';
   const name = (enemy.name || '').toLowerCase();
   const id = (enemy.id || enemy.speciesId || '').toLowerCase();
-  
-  if (enemy.isBoss || name.includes('overlord') || name.includes('behemoth') || name.includes('titan') || name.includes('avatar') || name.includes('hades')) {
-    return 'enemy_shadow_behemoth';
+  const fullText = `${name} ${id}`;
+
+  if (fullText.includes('void') || fullText.includes('wraith') || fullText.includes('madness') || fullText.includes('phantom')) {
+    return 'enemy_void_wraith';
   }
-  if (name.includes('serpent') || name.includes('wyrm') || name.includes('snake') || name.includes('hydra') || name.includes('abyss') || name.includes('leviathan')) {
+  if (fullText.includes('infernal') || fullText.includes('demon') || fullText.includes('flame') || fullText.includes('fire') || fullText.includes('baphomet')) {
+    return 'enemy_infernal_demon';
+  }
+  if (fullText.includes('frost') || fullText.includes('lich') || fullText.includes('ice') || fullText.includes('glacial') || fullText.includes('winter')) {
+    return 'enemy_frost_lich';
+  }
+  if (fullText.includes('titan') || fullText.includes('colossus') || fullText.includes('golem') || fullText.includes('iron') || fullText.includes('earth') || fullText.includes('minotaur')) {
+    return 'enemy_colossus_titan';
+  }
+  if (fullText.includes('serpent') || fullText.includes('wyrm') || fullText.includes('snake') || fullText.includes('hydra') || fullText.includes('leviathan')) {
     return 'enemy_corrupted_serpent';
   }
-  if (name.includes('blaze') || name.includes('fire') || name.includes('phoenix') || name.includes('avian')) {
-    return 'avian_blaze';
+  if (enemy.isBoss || fullText.includes('overlord') || fullText.includes('behemoth') || fullText.includes('avatar') || fullText.includes('hades')) {
+    return 'enemy_shadow_behemoth';
   }
-  if (name.includes('bull') || name.includes('minotaur') || name.includes('golem') || name.includes('earth')) {
-    return 'bovine_earth';
-  }
-  if (name.includes('hound') || name.includes('wolf') || name.includes('cerberus')) {
+  if (fullText.includes('hound') || fullText.includes('wolf') || fullText.includes('cerberus')) {
     return 'canine_guardian';
   }
-  // Default alternating based on name length
-  return (name.length % 2 === 0) ? 'enemy_shadow_behemoth' : 'enemy_corrupted_serpent';
+  // Alternating dynamic fallback
+  return (name.length % 2 === 0) ? 'enemy_shadow_behemoth' : 'enemy_void_wraith';
 }
 
 export function getSheetKeyForRelic(relicOrSetId, slotType) {

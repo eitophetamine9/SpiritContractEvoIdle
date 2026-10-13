@@ -173,12 +173,12 @@ class GameStateManager {
     }
     this.invalidateCaches();
 
-    // Process Offline Progression based on last_saved
+    // Process Offline Progression based on last_saved (Minimum 1 hour / 3600s to claim)
     const now = Date.now();
     const offlineSeconds = Math.max(0, Math.floor((now - (this.state.last_saved || now)) / 1000));
     
     let offlineReport = null;
-    if (offlineSeconds >= 4) {
+    if (offlineSeconds >= 3600) {
       offlineReport = this.applyOfflineGains(offlineSeconds);
     }
 
@@ -219,10 +219,10 @@ class GameStateManager {
       }
       this.save(true);
 
-      // Trigger offline gains if away for at least 4 seconds
-      if (refocusOfflineSec >= 4) {
+      // Trigger offline gains if away for at least 1 hour (3600 seconds)
+      if (refocusOfflineSec >= 3600) {
         const refocusReport = this.applyOfflineGains(refocusOfflineSec);
-        if (refocusReport) {
+        if (refocusReport && refocusReport.canClaim) {
           this.emit('offlineGains', refocusReport);
         }
       }
@@ -914,8 +914,15 @@ class GameStateManager {
    * Offline XP & Resources & Energy Calculation when reopening the app
    * Rebalanced: 24-hour cap, diminishing returns past 8 hours, 6% XP rate, 5% shard salvage, max 35 energy, max 2-3 soul essence
    */
-  applyOfflineGains(elapsedSeconds) {
+  applyOfflineGains(elapsedSeconds, forceClaim = false) {
+    if (typeof elapsedSeconds !== 'number') {
+      const now = Date.now();
+      const last = this.state.last_saved || this.state.lastSaveTime || now;
+      elapsedSeconds = Math.max(0, Math.floor((now - last) / 1000));
+    }
     const cappedSeconds = Math.min(elapsedSeconds, 86400); // 24-hour cap
+    const canClaim = cappedSeconds >= 3600 || forceClaim;
+
     // Diminishing returns past 8 hours (28,800s): 50% yield reduction
     const effectiveSeconds = cappedSeconds <= 28800
       ? cappedSeconds
@@ -997,22 +1004,47 @@ class GameStateManager {
     const maxOfflineEssence = Math.min(3, Math.floor(cappedSeconds / 28800));
     const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 400));
 
-    this.state.resources.spiritShards += offlineShards;
-    this.state.resources.soulEssence += offlineEssence;
-    this.state.stats.shardsEarnedTotal += offlineShards;
-    this.state.stats.totalOfflineTimeSec += cappedSeconds;
+    if (canClaim) {
+      this.state.resources.spiritShards += offlineShards;
+      this.state.resources.soulEssence += offlineEssence;
+      this.state.stats.shardsEarnedTotal += offlineShards;
+      this.state.stats.totalOfflineTimeSec += cappedSeconds;
+      this.save();
+    }
 
-    this.save();
-
-    return {
+    const report = {
       elapsedSeconds: cappedSeconds,
+      canClaim,
+      minClaimTimeSec: 3600,
       xpGainedPerSpirit: Math.round(totalOfflineXp),
       levelUps,
       readyToEvolve,
       offlineShards,
       offlineEssence,
+      offlineGold: Math.round(offlineShards * 1.5),
       energyGained,
       partyCount: partySpirits.length
+    };
+    this.state.offlineSpoils = report;
+    return report;
+  }
+
+  claimIdleSpoils(report, { force = false } = {}) {
+    if (!report) {
+      report = this.state.offlineSpoils;
+    }
+    if (!report || (report.elapsedSeconds < 3600 && !report.canClaim && !force)) {
+      throw new Error(`Idle spoils can only be claimed after at least 1 hour (3,600s) of meditation. Current: ${report ? report.elapsedSeconds : 0}s.`);
+    }
+    this.state.offlineSpoils = null;
+    return {
+      success: true,
+      claimed: true,
+      claimedSeconds: report.elapsedSeconds,
+      offlineShards: report.offlineShards || 0,
+      offlineEssence: report.offlineEssence || 0,
+      soulEssence: report.offlineEssence || 0,
+      gold: report.offlineGold || 0
     };
   }
 

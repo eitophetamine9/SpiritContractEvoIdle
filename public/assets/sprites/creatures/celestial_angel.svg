@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .ca-armor { fill: #f8fafc; }
+      .ca-gold  { fill: #fbbf24; }
+      .ca-wing1 { fill: #fef08a; }
+      .ca-wing2 { fill: #fde047; }
+      .ca-halo  { fill: none; stroke: #f59e0b; stroke-width: 1.5; }
+      .ca-staff { fill: #fef9c3; stroke: #f59e0b; stroke-width: 1; }
+      .ca-eye   { fill: #0284c7; }
+      .ca-hurt  { fill: #ef4444; }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3" fill="rgba(0,0,0,0.25)"/>
+    <ellipse cx="24" cy="8" rx="8" ry="2.5" class="ca-halo"/>
+    <!-- Golden Seraph Wings -->
+    <path d="M20 17 C11 7, 3 9, 1 19 C9 15, 15 17, 20 21 Z" class="ca-wing1"/>
+    <path d="M28 17 C37 7, 45 9, 47 19 C39 15, 33 17, 28 21 Z" class="ca-wing1"/>
+    <path d="M20 21 C13 21, 5 25, 5 33 C11 29, 15 27, 20 25 Z" class="ca-wing2"/>
+    <path d="M28 21 C35 21, 43 25, 43 33 C37 29, 33 27, 28 25 Z" class="ca-wing2"/>
+    <!-- Robe / Plate Armor -->
+    <path d="M18 42 L24 23 L30 42 Z" class="ca-armor"/>
+    <rect x="20" y="19" width="8" height="8" rx="2" class="ca-gold"/>
+    <polygon points="24,11 20,17 28,17" class="ca-armor"/>
+    <circle cx="24" cy="15" r="1.5" class="ca-eye"/>
+    <!-- Solar Miracle Staff -->
+    <line x1="12" y1="14" x2="14" y2="42" class="ca-staff"/>
+    <circle cx="12" cy="12" r="3" class="ca-gold"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Hover Up) -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.5" fill="rgba(0,0,0,0.3)"/>
+    <ellipse cx="24" cy="7" rx="8" ry="2.5" class="ca-halo"/>
+    <path d="M20 16 C11 6, 3 8, 1 18 C9 14, 15 16, 20 20 Z" class="ca-wing1"/>
+    <path d="M28 16 C37 6, 45 8, 47 18 C39 14, 33 16, 28 20 Z" class="ca-wing1"/>
+    <path d="M20 20 C13 20, 5 24, 5 32 C11 28, 15 26, 20 24 Z" class="ca-wing2"/>
+    <path d="M28 20 C35 20, 43 24, 43 32 C37 28, 33 26, 28 24 Z" class="ca-wing2"/>
+    <path d="M18 41 L24 22 L30 41 Z" class="ca-armor"/>
+    <rect x="20" y="18" width="8" height="8" rx="2" class="ca-gold"/>
+    <polygon points="24,10 20,16 28,16" class="ca-armor"/>
+    <circle cx="24" cy="14" r="1.5" class="ca-eye"/>
+    <line x1="12" y1="13" x2="14" y2="41" class="ca-staff"/>
+    <circle cx="12" cy="11" r="3" class="ca-gold"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Hover Peak) -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3" fill="rgba(0,0,0,0.25)"/>
+    <ellipse cx="24" cy="6" rx="8" ry="2.5" class="ca-halo"/>
+    <path d="M20 15 C11 5, 3 7, 1 17 C9 13, 15 15, 20 19 Z" class="ca-wing1"/>
+    <path d="M28 15 C37 5, 45 7, 47 17 C39 13, 33 15, 28 19 Z" class="ca-wing1"/>
+    <path d="M18 40 L24 21 L30 40 Z" class="ca-armor"/>
+    <rect x="20" y="17" width="8" height="8" rx="2" class="ca-gold"/>
+    <polygon points="24,9 20,15 28,15" class="ca-armor"/>
+    <circle cx="24" cy="13" r="1.5" class="ca-eye"/>
+    <line x1="12" y1="12" x2="14" y2="40" class="ca-staff"/>
+    <circle cx="12" cy="10" r="3.5" class="ca-gold"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Hover Down) -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.5" fill="rgba(0,0,0,0.3)"/>
+    <ellipse cx="24" cy="8" rx="8" ry="2.5" class="ca-halo"/>
+    <path d="M20 17 C11 7, 3 9, 1 19 C9 15, 15 17, 20 21 Z" class="ca-wing1"/>
+    <path d="M28 17 C37 7, 45 9, 47 19 C39 15, 33 17, 28 21 Z" class="ca-wing1"/>
+    <path d="M18 42 L24 23 L30 42 Z" class="ca-armor"/>
+    <rect x="20" y="19" width="8" height="8" rx="2" class="ca-gold"/>
+    <polygon points="24,11 20,17 28,17" class="ca-armor"/>
+    <circle cx="24" cy="15" r="1.5" class="ca-eye"/>
+    <line x1="12" y1="14" x2="14" y2="42" class="ca-staff"/>
+    <circle cx="12" cy="12" r="3" class="ca-gold"/>
+  </g>
+
+  <!-- Frame 4: Cast Windup -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="44" rx="15" ry="3.5" fill="rgba(0,0,0,0.3)"/>
+    <ellipse cx="24" cy="7" rx="9" ry="3" class="ca-halo"/>
+    <path d="M18 41 L24 22 L30 41 Z" class="ca-armor"/>
+    <rect x="20" y="18" width="8" height="8" rx="2" class="ca-gold"/>
+    <polygon points="24,10 20,16 28,16" class="ca-armor"/>
+    <!-- Staff raised overhead with sunray -->
+    <line x1="24" y1="4" x2="24" y2="38" class="ca-staff"/>
+    <circle cx="24" cy="4" r="5" class="ca-gold"/>
+  </g>
+
+  <!-- Frame 5: Divine Miracle Ray Blast -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="24" cy="44" rx="18" ry="4.5" fill="rgba(0,0,0,0.4)"/>
+    <ellipse cx="24" cy="6" rx="10" ry="3.5" class="ca-halo"/>
+    <path d="M18 42 L24 23 L30 42 Z" class="ca-armor"/>
+    <!-- Radiant light burst -->
+    <circle cx="24" cy="20" r="14" class="ca-wing1" opacity="0.6"/>
+    <polygon points="24,2 20,18 28,18" class="ca-gold"/>
+    <circle cx="24" cy="20" r="6" class="ca-gold"/>
+  </g>
+
+  <!-- Frame 6: Attack Recovery -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3" fill="rgba(0,0,0,0.3)"/>
+    <ellipse cx="24" cy="8" rx="8" ry="2.5" class="ca-halo"/>
+    <path d="M18 42 L24 23 L30 42 Z" class="ca-armor"/>
+    <circle cx="24" cy="15" r="1.5" class="ca-eye"/>
+    <line x1="16" y1="16" x2="16" y2="42" class="ca-staff"/>
+  </g>
+
+  <!-- Frame 7: Hurt -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="44" rx="12" ry="2.8" fill="rgba(0,0,0,0.2)"/>
+    <path d="M18 43 L24 25 L30 43 Z" fill="#ef4444"/>
+    <rect x="20" y="21" width="8" height="7" rx="2" fill="#dc2626"/>
+    <polygon points="24,13 20,19 28,19" fill="#b91c1c"/>
+  </g>
+</svg>

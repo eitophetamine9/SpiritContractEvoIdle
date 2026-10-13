@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .vw-core  { fill: #0b0716; }
+      .vw-body  { fill: #1e1136; }
+      .vw-shade { fill: #3b1e68; }
+      .vw-glow  { fill: #a855f7; }
+      .vw-eye   { fill: #e879f9; }
+      .vw-flare { fill: #c084fc; }
+      .vw-shadow{ fill: rgba(0,0,0,0.4); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="44" rx="15" ry="3.5" class="vw-shadow"/>
+    <!-- Void tendrils base -->
+    <path d="M14 36 C8 42, 10 46, 16 44 C20 42, 18 36, 16 34 Z" class="vw-shade"/>
+    <path d="M34 36 C40 42, 38 46, 32 44 C28 42, 30 36, 32 34 Z" class="vw-shade"/>
+    <!-- Wraith Cloak / Mist Body -->
+    <path d="M12 20 C10 32, 16 42, 24 43 C32 42, 38 32, 36 20 Z" class="vw-body"/>
+    <circle cx="24" cy="26" r="6" class="vw-core"/>
+    <circle cx="24" cy="26" r="3" class="vw-glow"/>
+    <!-- Hood / Head -->
+    <path d="M16 12 C18 6, 30 6, 32 12 C34 18, 30 22, 24 22 C18 22, 14 18, 16 12 Z" class="vw-core"/>
+    <!-- Piercing violet eyes -->
+    <ellipse cx="21" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+    <ellipse cx="27" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+    <!-- Shadow claws -->
+    <polygon points="10,24 6,28 12,28" class="vw-flare"/>
+    <polygon points="38,24 42,28 36,28" class="vw-flare"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Undulate Up) [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="16" ry="4" class="vw-shadow"/>
+    <path d="M13 35 C7 41, 10 45, 15 43 C19 41, 17 35, 15 33 Z" class="vw-shade"/>
+    <path d="M35 35 C41 41, 38 45, 33 43 C29 41, 31 35, 33 33 Z" class="vw-shade"/>
+    <path d="M11 19 C9 31, 15 41, 24 42 C33 41, 39 31, 37 19 Z" class="vw-body"/>
+    <circle cx="24" cy="25" r="6.5" class="vw-core"/>
+    <circle cx="24" cy="25" r="3.5" class="vw-glow"/>
+    <path d="M16 11 C18 5, 30 5, 32 11 C34 17, 30 21, 24 21 C18 21, 14 17, 16 11 Z" class="vw-core"/>
+    <ellipse cx="21" cy="14" rx="2" ry="1.2" class="vw-eye"/>
+    <ellipse cx="27" cy="14" rx="2" ry="1.2" class="vw-eye"/>
+    <polygon points="9,23 5,27 11,27" class="vw-flare"/>
+    <polygon points="39,23 43,27 37,27" class="vw-flare"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Pulse Flare) [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.2" class="vw-shadow"/>
+    <path d="M15 37 C8 43, 11 47, 17 44 C21 42, 19 36, 17 35 Z" class="vw-shade"/>
+    <path d="M33 37 C40 43, 37 47, 31 44 C27 42, 29 36, 31 35 Z" class="vw-shade"/>
+    <path d="M13 21 C11 33, 17 43, 24 44 C31 43, 37 33, 35 21 Z" class="vw-body"/>
+    <circle cx="24" cy="27" r="7" class="vw-core"/>
+    <circle cx="24" cy="27" r="4.2" class="vw-glow"/>
+    <path d="M16 13 C18 7, 30 7, 32 13 C34 19, 30 23, 24 23 C18 23, 14 19, 16 13 Z" class="vw-core"/>
+    <ellipse cx="21" cy="16" rx="2.2" ry="1.8" class="vw-eye"/>
+    <ellipse cx="27" cy="16" rx="2.2" ry="1.8" class="vw-eye"/>
+    <polygon points="11,25 7,29 13,29" class="vw-flare"/>
+    <polygon points="37,25 41,29 35,29" class="vw-flare"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Hover Down) [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="44" rx="15" ry="3.5" class="vw-shadow"/>
+    <path d="M14 36 C8 42, 10 46, 16 44 C20 42, 18 36, 16 34 Z" class="vw-shade"/>
+    <path d="M34 36 C40 42, 38 46, 32 44 C28 42, 30 36, 32 34 Z" class="vw-shade"/>
+    <path d="M12 20 C10 32, 16 42, 24 43 C32 42, 38 32, 36 20 Z" class="vw-body"/>
+    <circle cx="24" cy="26" r="6" class="vw-core"/>
+    <circle cx="24" cy="26" r="3" class="vw-glow"/>
+    <path d="M16 12 C18 6, 30 6, 32 12 C34 18, 30 22, 24 22 C18 22, 14 18, 16 12 Z" class="vw-core"/>
+    <ellipse cx="21" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+    <ellipse cx="27" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+    <polygon points="10,24 6,28 12,28" class="vw-flare"/>
+    <polygon points="38,24 42,28 36,28" class="vw-flare"/>
+  </g>
+
+  <!-- Frame 4: Attack Windup [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="22" cy="44" rx="16" ry="3.5" class="vw-shadow"/>
+    <path d="M10 18 C8 30, 14 42, 22 43 C30 42, 36 32, 34 20 Z" class="vw-body"/>
+    <circle cx="22" cy="25" r="7" class="vw-glow"/>
+    <circle cx="22" cy="25" r="4" class="vw-core"/>
+    <path d="M14 10 C16 4, 28 4, 30 10 C32 16, 28 20, 22 20 Z" class="vw-core"/>
+    <ellipse cx="19" cy="13" rx="2" ry="1.5" class="vw-eye"/>
+    <ellipse cx="25" cy="13" rx="2" ry="1.5" class="vw-eye"/>
+    <!-- Claws cocked backwards -->
+    <polygon points="4,20 0,26 8,24" class="vw-flare"/>
+    <polygon points="38,16 44,18 36,22" class="vw-flare"/>
+  </g>
+
+  <!-- Frame 5: Attack Slash Impact [240..288] -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="26" cy="44" rx="18" ry="4" class="vw-shadow"/>
+    <path d="M14 20 C12 32, 20 42, 28 43 C36 42, 42 32, 40 20 Z" class="vw-body"/>
+    <circle cx="28" cy="26" r="6" class="vw-core"/>
+    <circle cx="28" cy="26" r="3" class="vw-glow"/>
+    <!-- Massive void swipe arc across front -->
+    <path d="M2 14 C18 4, 38 10, 46 32 C38 22, 22 18, 2 14 Z" class="vw-flare" opacity="0.95"/>
+    <ellipse cx="25" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+    <ellipse cx="31" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+  </g>
+
+  <!-- Frame 6: Attack Recovery [288..336] -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="25" cy="44" rx="15" ry="3.5" class="vw-shadow"/>
+    <path d="M13 20 C11 32, 17 42, 25 43 C33 42, 39 32, 37 20 Z" class="vw-body"/>
+    <circle cx="25" cy="26" r="6" class="vw-core"/>
+    <circle cx="25" cy="26" r="3" class="vw-glow"/>
+    <ellipse cx="22" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+    <ellipse cx="28" cy="15" rx="2" ry="1.5" class="vw-eye"/>
+    <polygon points="12,26 8,30 14,30" class="vw-flare"/>
+    <polygon points="36,26 40,30 34,30" class="vw-flare"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Recoil [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="22" cy="44" rx="12" ry="3" class="vw-shadow"/>
+    <path d="M10 22 C8 32, 14 42, 22 43 C28 42, 34 32, 32 22 Z" fill="#ef4444"/>
+    <circle cx="22" cy="27" r="5" fill="#dc2626"/>
+    <path d="M14 14 C16 8, 26 8, 28 14 C30 20, 26 24, 22 24 Z" fill="#991b1b"/>
+    <ellipse cx="19" cy="17" rx="1.8" ry="1.2" fill="#fca5a5"/>
+    <ellipse cx="25" cy="17" rx="1.8" ry="1.2" fill="#fca5a5"/>
+  </g>
+</svg>

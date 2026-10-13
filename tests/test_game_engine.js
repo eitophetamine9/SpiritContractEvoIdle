@@ -1536,11 +1536,132 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
 
   console.log('  [PASS] All 54 spirits verified in dynamic scaling matrix and role formulas successfully validated!');
 
+  // =========================================================================
+  // [TEST 34] Testing Idle Spoils 1-Hour Minimum Claim Requirement
+  // =========================================================================
+  console.log('\n[TEST 34] Testing Idle Spoils 1-Hour Minimum Claim Requirement:');
+
+  // Case 1: Under 1 hour (e.g. 1,800 seconds = 30 minutes)
+  gameState.state.offlineSpoils = null;
+  gameState.state.last_saved = Date.now() - (1800 * 1000);
+  gameState.state.lastSaveTime = gameState.state.last_saved;
+  const underHourReport = gameState.applyOfflineGains();
+  if (underHourReport.canClaim !== false) {
+    throw new Error(`Expected underHourReport.canClaim to be false, got ${underHourReport.canClaim}`);
+  }
+  if (underHourReport.elapsedSeconds < 1790 || underHourReport.elapsedSeconds > 1810) {
+    throw new Error(`Unexpected elapsedSeconds in underHourReport: ${underHourReport.elapsedSeconds}`);
+  }
+
+  // Attempting to claim before 1 hour must throw an error
+  let blockedUnderHour = false;
+  try {
+    gameState.claimIdleSpoils();
+  } catch (err) {
+    blockedUnderHour = true;
+    console.log(`  [PASS] Blocked claim under 1 hour as expected: "${err.message}"`);
+  }
+  if (!blockedUnderHour) {
+    throw new Error('gameState.claimIdleSpoils() should have thrown an error when elapsed time is under 1 hour');
+  }
+
+  // Case 2: At or over 1 hour (e.g. 3,660 seconds = 1 hour 1 minute)
+  gameState.state.offlineSpoils = null;
+  gameState.state.last_saved = Date.now() - (3660 * 1000);
+  gameState.state.lastSaveTime = gameState.state.last_saved;
+  const overHourReport = gameState.applyOfflineGains();
+  if (overHourReport.canClaim !== true) {
+    throw new Error(`Expected overHourReport.canClaim to be true for >=3600s, got ${overHourReport.canClaim}`);
+  }
+  const prevEssence = gameState.state.resources.soulEssence;
+  const claimedSpoils = gameState.claimIdleSpoils();
+  if (!claimedSpoils || !claimedSpoils.claimed) {
+    throw new Error('gameState.claimIdleSpoils() failed to claim when >= 3600 seconds');
+  }
+  if (gameState.state.offlineSpoils !== null) {
+    throw new Error('Pending offline spoils were not cleared after successful claim');
+  }
+  if (gameState.state.resources.soulEssence < prevEssence) {
+    throw new Error('Resources were not awarded upon claiming idle spoils');
+  }
+  console.log(`  [PASS] Idle spoils claimed successfully after 1 hour: +${claimedSpoils.soulEssence} Soul Essence, +${claimedSpoils.gold} Gold`);
+
+  // =========================================================================
+  // [TEST 35] Testing Expanded Creature and Enemy Animated Sprites
+  // =========================================================================
+  console.log('\n[TEST 35] Testing Expanded Creature and Enemy Animated Sprites:');
+  const requiredSpriteFiles = [
+    'celestial_angel.svg',
+    'spectral_undead.svg',
+    'enemy_void_wraith.svg',
+    'enemy_infernal_demon.svg',
+    'enemy_colossus_titan.svg',
+    'enemy_frost_lich.svg',
+    'baphomet_nether.svg',
+    'chrono_drake.svg',
+    'seraph_valkyrie.svg'
+  ];
+
+  const creaturesDir = path.resolve('./public/assets/sprites/creatures');
+  for (const filename of requiredSpriteFiles) {
+    const fullPath = path.join(creaturesDir, filename);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Required creature/enemy sprite missing on disk: ${fullPath}`);
+    }
+    const stat = fs.statSync(fullPath);
+    if (stat.size < 1000) {
+      throw new Error(`Sprite file suspiciously small (${stat.size} bytes): ${filename}`);
+    }
+  }
+  console.log(`  All ${requiredSpriteFiles.length} creature and enemy sprite SVG sheets physically verified on disk!`);
+
+  // Verify manifest & routing
+  const rawManifest = JSON.parse(fs.readFileSync('./public/assets/sprites/manifest.json', 'utf8'));
+  for (const sheetName of [
+    'spectral_undead', 'celestial_angel', 'seraph_valkyrie', 'baphomet_nether', 
+    'chrono_drake', 'enemy_void_wraith', 'enemy_infernal_demon', 'enemy_colossus_titan', 'enemy_frost_lich'
+  ]) {
+    if (!rawManifest.sheets[sheetName]) {
+      throw new Error(`Manifest missing sheet: ${sheetName}`);
+    }
+    if (!SPRITE_MANIFEST.sheets[sheetName]) {
+      throw new Error(`SPRITE_MANIFEST in code missing sheet: ${sheetName}`);
+    }
+  }
+
+  // Verify getSheetKeyForSpecies mappings
+  if (getSheetKeyForSpecies('fallen_warrior') !== 'spectral_undead') {
+    throw new Error(`Expected fallen_warrior to map to spectral_undead, got ${getSheetKeyForSpecies('fallen_warrior')}`);
+  }
+  if (getSheetKeyForSpecies('archangel_uriel') !== 'celestial_angel') {
+    throw new Error(`Expected archangel_uriel to map to celestial_angel, got ${getSheetKeyForSpecies('archangel_uriel')}`);
+  }
+  if (getSheetKeyForSpecies('baphomet_archdemon_lord') !== 'baphomet_nether') {
+    throw new Error(`Expected baphomet_archdemon_lord to map to baphomet_nether, got ${getSheetKeyForSpecies('baphomet_archdemon_lord')}`);
+  }
+
+  // Verify getSheetKeyForEnemy mappings
+  const { getSheetKeyForEnemy } = await import('../src/render/spriteAnimator.js');
+  if (getSheetKeyForEnemy({ name: 'Void Phantom Lord' }) !== 'enemy_void_wraith') {
+    throw new Error('Enemy with "Void" failed to map to enemy_void_wraith');
+  }
+  if (getSheetKeyForEnemy({ name: 'Infernal Demon Prince' }) !== 'enemy_infernal_demon') {
+    throw new Error('Enemy with "Infernal" failed to map to enemy_infernal_demon');
+  }
+  if (getSheetKeyForEnemy({ name: 'Colossus of the Deep Earth' }) !== 'enemy_colossus_titan') {
+    throw new Error('Enemy with "Colossus" failed to map to enemy_colossus_titan');
+  }
+  if (getSheetKeyForEnemy({ name: 'Glacial Frost Lich' }) !== 'enemy_frost_lich') {
+    throw new Error('Enemy with "Frost" failed to map to enemy_frost_lich');
+  }
+  console.log('  [PASS] Animated creature and enemy sprites, manifest declarations, and routing verified!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
   console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
 });
+
 
 
 

@@ -92,17 +92,35 @@ export function showOfflineModal(report, onClaim) {
           ${evoHtml}
         </div>
 
-        <button id="btn-claim-offline" class="modal-btn-confirm">
-          Claim Idle Spoils
+        ${(report.elapsedSeconds >= 3600 || report.canClaim) ? `
+        <button id="btn-claim-offline" class="modal-btn-confirm" style="background: linear-gradient(135deg, #00d2ff, #70a1ff); font-weight: 800; cursor: pointer;">
+          ✨ Claim Idle Spoils (${timeStr})
         </button>
+        ` : `
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%;">
+          <button id="btn-claim-offline" class="modal-btn-confirm" disabled style="opacity: 0.55; cursor: not-allowed; background: #2f3542; border: 1px solid #57606f;">
+            ⏳ 1 Hour Minimum Required to Claim (${timeStr} / 1h)
+          </button>
+          <button id="btn-dismiss-offline" style="background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; text-decoration: underline;">
+            Dismiss & Continue Meditating
+          </button>
+        </div>
+        `}
       </div>
     </div>
   `;
 
-  document.getElementById('btn-claim-offline')?.addEventListener('click', () => {
-    modalRoot.innerHTML = '';
-    if (onClaim) onClaim();
-  });
+  const canClaim = report.elapsedSeconds >= 3600 || report.canClaim;
+  if (canClaim) {
+    document.getElementById('btn-claim-offline')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      if (onClaim) onClaim();
+    });
+  } else {
+    document.getElementById('btn-dismiss-offline')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+    });
+  }
 }
 
 export function showEvolutionCeremonyModal(evoResult, onDone) {

@@ -41,19 +41,27 @@
     "bear_of_dreams": "bovine_earth",
     "ursalite": "bovine_earth",
     "high_elf": "celestial_sun",
-    "fallen_warrior": "feline_shadow",
-    "sovereign_warrior": "bovine_earth",
-    "dreadlord_warrior": "bovine_earth",
+    "fallen_warrior": "spectral_undead",
+    "sovereign_warrior": "spectral_undead",
+    "dreadlord_warrior": "spectral_undead",
     "solaris_lion_of_pride": "celestial_sun",
     "solaris_the_one": "celestial_sun",
     "gelda_thousand_ashes": "feline_shadow",
     "gelda_sanguine": "feline_shadow",
-    "astraea_valkyrie": "celestial_sun",
-    "astraea_celestial_queen": "celestial_sun",
+    "astraea_valkyrie": "seraph_valkyrie",
+    "astraea_celestial_queen": "seraph_valkyrie",
     "leviathan_behemoth": "draconic_leviathan",
     "leviathan_primordial": "draconic_leviathan",
-    "baphomet_voidbinder": "draconic_leviathan",
-    "baphomet_archdemon": "draconic_leviathan",
+    "baphomet_initiate": "baphomet_nether",
+    "baphomet_voidbinder": "baphomet_nether",
+    "baphomet_archdemon_lord": "baphomet_nether",
+    "baphomet_archdemon": "baphomet_nether",
+    "chrono_hatchling": "chrono_drake",
+    "chrono_drake": "chrono_drake",
+    "ouroboros_time_sovereign": "chrono_drake",
+    "dawn_herald": "celestial_angel",
+    "seraph_guardian": "celestial_angel",
+    "archangel_uriel": "celestial_angel",
     "wisp_spirit": "celestial_sun"
   },
   "sheets": {
@@ -147,6 +155,105 @@
     },
     "enemy_corrupted_serpent": {
       "path": "/assets/sprites/creatures/enemy_corrupted_serpent.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "spectral_undead": {
+      "path": "/assets/sprites/creatures/spectral_undead.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "celestial_angel": {
+      "path": "/assets/sprites/creatures/celestial_angel.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "seraph_valkyrie": {
+      "path": "/assets/sprites/creatures/seraph_valkyrie.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "baphomet_nether": {
+      "path": "/assets/sprites/creatures/baphomet_nether.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "chrono_drake": {
+      "path": "/assets/sprites/creatures/chrono_drake.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "enemy_void_wraith": {
+      "path": "/assets/sprites/creatures/enemy_void_wraith.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "enemy_infernal_demon": {
+      "path": "/assets/sprites/creatures/enemy_infernal_demon.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 5, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 10, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "enemy_colossus_titan": {
+      "path": "/assets/sprites/creatures/enemy_colossus_titan.svg",
+      "frameCount": 8,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "animations": {
+        "idle": { "frames": [0, 1, 2, 3], "fps": 4, "loop": true },
+        "attack": { "frames": [4, 5, 6, 4], "fps": 8, "loop": false },
+        "hurt": { "frames": [7], "fps": 6, "loop": false }
+      }
+    },
+    "enemy_frost_lich": {
+      "path": "/assets/sprites/creatures/enemy_frost_lich.svg",
       "frameCount": 8,
       "frameWidth": 48,
       "frameHeight": 48,
