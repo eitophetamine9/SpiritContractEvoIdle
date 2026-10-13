@@ -6992,6 +6992,89 @@ button:disabled {
   text-overflow: ellipsis;
 }
 
+/* ==========================================================================
+   Phase 3: Relic Enhancement Revamp & Divine Scripture System
+   ========================================================================== */
+
+.substat-roll-badge {
+  font-size: 8px;
+  font-weight: 900;
+  color: #000;
+  background: linear-gradient(135deg, #ffd32a, #f39c12);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 0 6px rgba(255, 211, 42, 0.5);
+  display: inline-block;
+  line-height: 1.1;
+  text-shadow: none;
+}
+
+.substat-roll-badge-base {
+  font-size: 8px;
+  font-weight: 700;
+  color: #747d8c;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  display: inline-block;
+  line-height: 1.1;
+}
+
+.btn-modal-scripture-slot {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.15), rgba(230, 126, 34, 0.2));
+  border: 1px solid #f39c12;
+  color: #ffd32a;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 5px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.btn-modal-scripture-slot:hover {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.35), rgba(230, 126, 34, 0.4));
+  box-shadow: 0 0 8px rgba(243, 156, 18, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-inspect-scripture {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.2), rgba(211, 84, 0, 0.25));
+  border: 1px solid #e67e22;
+  color: #ffd32a;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-inspect-scripture:hover {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.4), rgba(211, 84, 0, 0.45));
+  box-shadow: 0 0 8px rgba(243, 156, 18, 0.4);
+}
+
+.scripture-sub-choice:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.scripture-sub-choice.selected {
+  box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
+}
+
+.btn-buy-scripture-action:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 10px rgba(190, 46, 221, 0.5);
+}
+
+
 
 
 

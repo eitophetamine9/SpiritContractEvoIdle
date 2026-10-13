@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .v-dark  { fill: #2c3e50; }
+      .v-iron  { fill: #7f8c8d; }
+      .v-bronze{ fill: #d35400; }
+      .v-gold  { fill: #f39c12; }
+      .v-magma { fill: #e74c3c; }
+      .v-magma2{ fill: #ff7675; }
+      .v-shadow{ fill: rgba(0,0,0,0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="14" ry="4" class="v-shadow"/>
+    <!-- Anvil Base & Pillar -->
+    <polygon points="12,38 36,38 32,32 16,32" class="v-dark"/>
+    <rect x="18" y="24" width="12" height="8" class="v-iron"/>
+    <!-- Anvil Horn & Face -->
+    <path d="M10,18 L34,18 Q38,20 34,24 L14,24 Z" class="v-bronze"/>
+    <rect x="15" y="16" width="16" height="3" class="v-gold"/>
+    <polygon points="10,18 14,24 10,24" class="v-iron"/>
+    <!-- Molten Magma Channel -->
+    <rect x="18" y="19" width="10" height="2" class="v-magma"/>
+    <circle cx="28" cy="14" r="1.5" class="v-magma2"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="12" ry="3.5" class="v-shadow"/>
+    <polygon points="12,36 36,36 32,30 16,30" class="v-dark"/>
+    <rect x="18" y="22" width="12" height="8" class="v-iron"/>
+    <path d="M10,16 L34,16 Q38,18 34,22 L14,22 Z" class="v-bronze"/>
+    <rect x="15" y="14" width="16" height="3" class="v-gold"/>
+    <polygon points="10,16 14,22 10,22" class="v-iron"/>
+    <rect x="18" y="17" width="10" height="2" class="v-magma"/>
+    <circle cx="29" cy="12" r="1.8" class="v-gold"/>
+    <circle cx="15" cy="11" r="1.2" class="v-magma2"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="11" ry="3.2" class="v-shadow"/>
+    <polygon points="12,35 36,35 32,29 16,29" class="v-dark"/>
+    <rect x="18" y="21" width="12" height="8" class="v-iron"/>
+    <path d="M10,15 L34,15 Q38,17 34,21 L14,21 Z" class="v-bronze"/>
+    <rect x="15" y="13" width="16" height="3" class="v-gold"/>
+    <polygon points="10,15 14,21 10,21" class="v-iron"/>
+    <rect x="18" y="16" width="10" height="2" class="v-magma"/>
+    <circle cx="31" cy="10" r="2" class="v-gold"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="13" ry="3.8" class="v-shadow"/>
+    <polygon points="12,37 36,37 32,31 16,31" class="v-dark"/>
+    <rect x="18" y="23" width="12" height="8" class="v-iron"/>
+    <path d="M10,17 L34,17 Q38,19 34,23 L14,23 Z" class="v-bronze"/>
+    <rect x="15" y="15" width="16" height="3" class="v-gold"/>
+    <polygon points="10,17 14,23 10,23" class="v-iron"/>
+    <rect x="18" y="18" width="10" height="2" class="v-magma"/>
+    <circle cx="20" cy="13" r="1.5" class="v-magma2"/>
+  </g>
+
+  <!-- Frame 4: Pulse 1 [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="43" rx="14" ry="4" class="v-shadow"/>
+    <polygon points="12,38 36,38 32,32 16,32" class="v-dark"/>
+    <rect x="18" y="24" width="12" height="8" class="v-bronze"/>
+    <path d="M10,18 L34,18 Q38,20 34,24 L14,24 Z" class="v-magma"/>
+    <rect x="15" y="16" width="16" height="3" class="v-gold"/>
+    <circle cx="24" cy="20" r="3.5" class="v-magma2"/>
+  </g>
+
+  <!-- Frame 5: Pulse 2 [240..288] -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3.8" class="v-shadow"/>
+    <polygon points="12,37 36,37 32,31 16,31" class="v-dark"/>
+    <rect x="18" y="23" width="12" height="8" class="v-bronze"/>
+    <path d="M10,17 L34,17 Q38,19 34,23 L14,23 Z" class="v-magma"/>
+    <rect x="15" y="15" width="16" height="3" class="v-gold"/>
+    <circle cx="24" cy="19" r="4.5" class="v-gold"/>
+  </g>
+
+  <!-- Frame 6: Pulse 3 [288..336] -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="44" rx="12" ry="3.5" class="v-shadow"/>
+    <polygon points="12,36 36,36 32,30 16,30" class="v-dark"/>
+    <rect x="18" y="22" width="12" height="8" class="v-iron"/>
+    <path d="M10,16 L34,16 Q38,18 34,22 L14,22 Z" class="v-bronze"/>
+    <rect x="15" y="14" width="16" height="3" class="v-gold"/>
+  </g>
+
+  <!-- Frame 7: Pulse 4 [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="13" ry="3.8" class="v-shadow"/>
+    <polygon points="12,37 36,37 32,31 16,31" class="v-dark"/>
+    <rect x="18" y="23" width="12" height="8" class="v-iron"/>
+    <path d="M10,17 L34,17 Q38,19 34,23 L14,23 Z" class="v-bronze"/>
+    <rect x="15" y="15" width="16" height="3" class="v-gold"/>
+  </g>
+</svg>

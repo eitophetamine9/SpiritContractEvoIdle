@@ -152,6 +152,19 @@ export const PANTHEON_CHAMBERS = [
     bossName: 'Hermes Avatar: Zephyr Tempest',
     bossPowerMultiplier: 1.25,
     bossMaxHpMultiplier: 2.0
+  },
+  {
+    id: 'volcanic_forge',
+    name: 'Divine Crucible of Hephaestus',
+    godId: 'hephaestus',
+    godTitle: 'Hephaestus, Smith of the Gods',
+    sigil: '🌋',
+    color: '#e67e22',
+    accentColor: '#d35400',
+    lore: 'Molten depths where divine armaments are hammered in primordial flames, granting catastrophic armor sundering.',
+    bossName: 'Hephaestus Avatar: Magma Colossus',
+    bossPowerMultiplier: 1.35,
+    bossMaxHpMultiplier: 2.3
   }
 ];
 

@@ -101,17 +101,19 @@ export const GREEK_GOD_SETS = {
     accentColor: '#2ecc71',
     icon: '🪽',
     bonus2pc: {
-      name: 'Zephyr Step',
-      description: '+15% Evasion Rate',
-      evasionBonus: 0.15
+      name: 'Zephyr Stride',
+      description: '+15% Atk Spd & +10% Evasion',
+      atkSpdBonus: 0.15,
+      evasionBonus: 0.10
     },
     bonus4pc: {
-      name: 'Swift Support',
-      description: 'Restores 3% Max HP per second to all party members for 7s (45s CD).',
+      name: 'Caduceus Zephyr',
+      description: 'Restores 3% Max HP per sec and 25 MP to all party members for 7s (40s CD).',
       type: 'HOT_AOE',
       healPercentPerSec: 0.03,
+      mpRestore: 25,
       durationSec: 7,
-      cooldownSec: 45
+      cooldownSec: 40
     }
   },
 
@@ -173,18 +175,21 @@ export const GREEK_GOD_SETS = {
     accentColor: '#dfe4ea',
     icon: '🛡️',
     bonus2pc: {
-      name: 'Phalanx Discipline',
-      description: '+15% Max HP & +10% Armor',
+      name: 'Parthenon Phalanx',
+      description: '+15% Team Shield & +12% DEF',
+      shieldBonus: 0.15,
+      defenseBonus: 0.12,
       maxHpBonus: 0.15,
-      armorBonus: 0.10
+      armorBonus: 0.12
     },
     bonus4pc: {
-      name: 'Aegis of Olympus',
-      description: 'Negates next fatal blow and reflects 25% incoming damage back to attackers for 6s (60s CD).',
-      type: 'DEATH_PREVENTION',
+      name: 'Parthenon Bulwark',
+      description: 'Negates next fatal blow, granting all allies a 20% Max HP Aegis shield and reflecting 25% damage (45s CD).',
+      type: 'SHIELD_AND_INVULN',
+      shieldPercentMaxHp: 0.20,
       damageReflect: 0.25,
       durationSec: 6,
-      cooldownSec: 60
+      cooldownSec: 45
     }
   },
 
@@ -197,8 +202,9 @@ export const GREEK_GOD_SETS = {
     accentColor: '#7bed9f',
     icon: '🏹',
     bonus2pc: {
-      name: 'Hunter Instinct',
-      description: '+15% Crit DMG',
+      name: 'Silver Artemis Focus',
+      description: '+12% Crit Rate & +15% Crit DMG',
+      critRateBonus: 0.12,
       critDmgBonus: 0.15
     },
     bonus4pc: {
@@ -207,6 +213,31 @@ export const GREEK_GOD_SETS = {
       type: 'SNIPER_BURST',
       percentEnemyMaxHp: 0.25,
       cooldownSec: 35
+    }
+  },
+
+  hephaestus: {
+    id: 'hephaestus',
+    name: 'Hephaestus Relic Set',
+    god: 'Hephaestus',
+    title: 'Master of the Divine Forge',
+    color: '#e67e22',
+    accentColor: '#d35400',
+    icon: '🌋',
+    bonus2pc: {
+      name: 'Forge Tempering',
+      description: '+25% Weapon ATK & +10% Armor Pierce',
+      weaponAtkBonus: 0.25,
+      armorPierceBonus: 0.10
+    },
+    bonus4pc: {
+      name: 'Volcanic Sunder',
+      description: 'Shreds 25% enemy DEF and erupts dealing 15% Max HP fire burst on attack (30s CD).',
+      type: 'DEF_SHRED_BURST',
+      defShredPercent: 0.25,
+      percentEnemyMaxHp: 0.15,
+      durationSec: 8,
+      cooldownSec: 30
     }
   }
 };

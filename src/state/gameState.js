@@ -265,6 +265,7 @@ class GameStateManager {
       resources: {
         spiritShards: 300, // Enough for 3 summons right away!
         soulEssence: 0,
+        divineScriptures: 2, // Divine Relic Scripture consumable (select 2 guaranteed substats)
         essencesOfTheGods: 0,
         energy: 60,        // Max 60 Energy base
         maxEnergy: 60,
@@ -339,6 +340,9 @@ class GameStateManager {
     // Hard cap maxEnergy to 500
     state.resources.maxEnergy = Math.min(500, Math.max(60, state.resources.maxEnergy));
 
+    if (typeof state.resources.divineScriptures !== 'number') {
+      state.resources.divineScriptures = 2;
+    }
     if (typeof state.resources.essencesOfTheGods !== 'number') {
       state.resources.essencesOfTheGods = 0;
     }
@@ -2951,11 +2955,24 @@ class GameStateManager {
 
     let power = spirit.power || 0;
 
+    // Active 2-pc bonuses
+    const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
+    let weaponAtkMultiplier = 1;
+    let damageMultiplier = 1;
+    for (const b of activeBonuses) {
+      if (b.bonus.damageBonus) {
+        damageMultiplier += b.bonus.damageBonus;
+      }
+      if (b.bonus.weaponAtkBonus) {
+        weaponAtkMultiplier += b.bonus.weaponAtkBonus;
+      }
+    }
+
     // Weapon bonus (O(1) lookup)
     if (spirit.weapon) {
       const wpn = this.getEquipmentItemByUid(spirit.weapon);
       if (wpn && wpn.atkPower) {
-        power += wpn.atkPower;
+        power += Math.round(wpn.atkPower * weaponAtkMultiplier);
       }
     }
 
@@ -2981,15 +2998,6 @@ class GameStateManager {
 
     if (percentAtkBonus > 0) {
       power = Math.round(power * (1 + percentAtkBonus / 100));
-    }
-
-    // Active 2-pc damage bonuses (e.g. Hades +10%, Ares +15%, Poseidon +10%)
-    const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
-    let damageMultiplier = 1;
-    for (const b of activeBonuses) {
-      if (b.bonus.damageBonus) {
-        damageMultiplier += b.bonus.damageBonus;
-      }
     }
 
     // Celestial Constellation bonuses (Draco)
@@ -3054,10 +3062,11 @@ class GameStateManager {
         break;
       }
       case 'hermes': {
-        // Swift Support: 3% max HP per second
+        // Caduceus Zephyr: 3% max HP per second and 25 MP to party
         for (const ally of livingSpirits) {
           const heal = Math.round(ally.maxHp * 0.03 * 7);
           ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
+          ally.currentMp = Math.min(ally.maxMp, (ally.currentMp || 0) + 25);
         }
         break;
       }
@@ -3078,9 +3087,9 @@ class GameStateManager {
         break;
       }
       case 'athena': {
-        // Aegis of Olympus: 25% damage reflect buff
+        // Parthenon Bulwark: 20% max HP Aegis Shield to party
         for (const ally of livingSpirits) {
-          ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * 0.10);
+          ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * 0.20);
         }
         break;
       }
@@ -3092,6 +3101,16 @@ class GameStateManager {
           const pierce = Math.max(1, Math.round(highest.maxHp * 0.25));
           highest.hp = Math.max(0, highest.hp - pierce);
           if (highest.hp <= 0) this.onIndividualEnemyKilled(highest);
+        }
+        break;
+      }
+      case 'hephaestus': {
+        // Volcanic Sunder: Shreds 25% enemy DEF/power & deals 15% Max HP fire burst
+        for (const em of livingEnemies) {
+          em.power = Math.max(1, Math.round(em.power * 0.85));
+          const burstDamage = Math.max(1, Math.round(em.maxHp * 0.15));
+          em.hp = Math.max(0, em.hp - burstDamage);
+          if (em.hp <= 0) this.onIndividualEnemyKilled(em);
         }
         break;
       }
@@ -3266,6 +3285,70 @@ class GameStateManager {
       item,
       cost: REROLL_COST,
       remainingEssence: this.state.resources.soulEssence
+    };
+  }
+
+  buyDivineScripture(quantity = 1) {
+    const costPerItem = 15;
+    const qty = Math.max(1, quantity);
+    const totalCost = costPerItem * qty;
+    if ((this.state.resources.soulEssence || 0) < totalCost) {
+      throw new Error(`Insufficient Soul Essence! Need ${totalCost} 🔮 (Have: ${this.state.resources.soulEssence || 0} 🔮).`);
+    }
+
+    this.state.resources.soulEssence -= totalCost;
+    this.state.resources.divineScriptures = (this.state.resources.divineScriptures || 0) + qty;
+
+    this.save();
+    this.emit('resourcesUpdated', this.state.resources);
+    return {
+      success: true,
+      purchased: qty,
+      cost: totalCost,
+      remainingEssence: this.state.resources.soulEssence,
+      totalScriptures: this.state.resources.divineScriptures
+    };
+  }
+
+  applyDivineScripture(itemUid, subType1, subType2) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) {
+      throw new Error('Inventory equipment not initialized');
+    }
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Relic not found in inventory');
+    if (item.type !== 'relic') throw new Error('Only Relics can be inscribed with Divine Scripture!');
+
+    if ((this.state.resources.divineScriptures || 0) < 1) {
+      throw new Error('No Divine Relic Scriptures available! Purchase one for 15 Soul Essences.');
+    }
+
+    if (!subType1 || !subType2) {
+      throw new Error('You must select two guaranteed substats!');
+    }
+    if (subType1 === subType2) {
+      throw new Error('Please select two distinct substats!');
+    }
+
+    const validSub1 = RELIC_SUBSTAT_TYPES.find(s => s.id === subType1);
+    const validSub2 = RELIC_SUBSTAT_TYPES.find(s => s.id === subType2);
+    if (!validSub1 || !validSub2) {
+      throw new Error('Invalid substats selected!');
+    }
+
+    this.state.resources.divineScriptures -= 1;
+    rerollRelicSubstatsData(item, { lockedSubTypes: [subType1, subType2] });
+
+    this.invalidateCaches();
+    this.save();
+    this.emit('equipmentUpdated', { item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return {
+      success: true,
+      item,
+      remainingScriptures: this.state.resources.divineScriptures,
+      lockedSubTypes: [subType1, subType2]
     };
   }
 
