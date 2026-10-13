@@ -79,6 +79,8 @@ class GameStateManager {
     this._spiritPowerCache = new Map();
     this._setBonusesCache = new Map();
     this._partyPowerCache = null;
+    this._isTabHidden = false;
+    this._tabHiddenTimestamp = null;
   }
 
   getEquipmentMap() {
@@ -190,23 +192,54 @@ class GameStateManager {
     // Start Real-time AFK Training & Combat ticker
     this.startGameLoop();
 
-    // Attach unload listeners for data safety
-    window.addEventListener('beforeunload', () => this.save());
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        this.save();
-      } else {
-        // App reopened / focused
-        const refocusNow = Date.now();
-        const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - (this.state.last_saved || refocusNow)) / 1000));
-        if (refocusOfflineSec >= 5) {
-          const refocusReport = this.applyOfflineGains(refocusOfflineSec);
-          if (refocusReport) {
-            this.emit('offlineGains', refocusReport);
-          }
+    // Attach unload & lifecycle visibility listeners for offline progression and data safety
+    const handleTabHide = () => {
+      if (this._isTabHidden) return;
+      this._isTabHidden = true;
+      this._tabHiddenTimestamp = Date.now();
+      if (this.state) {
+        this.state.last_saved = this._tabHiddenTimestamp;
+      }
+      this.save(true);
+    };
+
+    const handleTabShow = () => {
+      if (!this._isTabHidden && this._tabHiddenTimestamp === null) return;
+      this._isTabHidden = false;
+      const refocusNow = Date.now();
+      const hiddenTime = this._tabHiddenTimestamp || this.state?.last_saved || refocusNow;
+      this._tabHiddenTimestamp = null;
+
+      const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - hiddenTime) / 1000));
+
+      if (this.state) {
+        this.state.last_saved = refocusNow;
+      }
+      this.save(true);
+
+      // Trigger offline gains if away for at least 4 seconds
+      if (refocusOfflineSec >= 4) {
+        const refocusReport = this.applyOfflineGains(refocusOfflineSec);
+        if (refocusReport) {
+          this.emit('offlineGains', refocusReport);
         }
       }
-    });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleTabHide);
+      window.addEventListener('pagehide', handleTabHide);
+      window.addEventListener('pageshow', handleTabShow);
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          handleTabHide();
+        } else {
+          handleTabShow();
+        }
+      });
+    }
 
     return offlineReport;
   }
@@ -709,6 +742,10 @@ class GameStateManager {
   startAutoSaver() {
     if (this.saveTimer) clearInterval(this.saveTimer);
     this.saveTimer = setInterval(() => {
+      // Do not auto-save while tab is hidden to prevent overwriting last_saved departure time
+      if (this._isTabHidden || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
+        return;
+      }
       if (this.isDirty) {
         this.save(true);
       }
@@ -728,6 +765,22 @@ class GameStateManager {
     let lastFrameTime = performance.now();
 
     const loop = (timestamp) => {
+      // If tab is hidden or backgrounded, freeze loop delta updates to prevent time-warp jumps
+      if (this._isTabHidden || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
+        lastSecondTime = timestamp;
+        lastFrameTime = timestamp;
+        this.rafId = requestAnimationFrame(loop);
+        return;
+      }
+
+      // If returning from background or pause, clamp large gaps
+      if (timestamp - lastSecondTime > 4000) {
+        lastSecondTime = timestamp;
+      }
+      if (timestamp - lastFrameTime > 2000) {
+        lastFrameTime = timestamp;
+      }
+
       // 1. Every second: add XP to the 5 active Spirits and update energy regeneration
       if (timestamp - lastSecondTime >= 1000) {
         const secondsPassed = Math.floor((timestamp - lastSecondTime) / 1000);

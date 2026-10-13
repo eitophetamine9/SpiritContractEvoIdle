@@ -12,7 +12,7 @@ import { EQUIPMENT_RARITIES } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
-import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 
 let selectedForgeChamberId = 'bladesmith_sanctum';
 let selectedForgeTierNum = 1;
@@ -80,8 +80,8 @@ function renderForgeChambersStage(container) {
           const isSelected = c.id === selectedForgeChamberId;
           return `
             <button class="chamber-card relative overflow-hidden rounded-xl p-2.5 flex items-center gap-2 text-left transition-all border cursor-pointer ${isSelected ? 'selected bg-slate-800/90 border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.25)]' : 'bg-slate-900/60 border-slate-800'}" data-forge-chamber="${c.id}" style="--chamber-color: ${c.color};">
-              <div class="chamber-sigil w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 shadow-sm" style="background: ${c.color}22; border: 1px solid ${c.color};">
-                ${c.icon}
+              <div class="chamber-sigil w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden" style="background: ${c.color}22; border: 1px solid ${c.color};">
+                ${createAnimatedWeaponHtml(c.weaponTypeId || c.id, { extraClasses: 'chamber-sprite-icon' })}
               </div>
               <div class="chamber-info min-w-0 flex-1">
                 <span class="chamber-name text-xs font-bold text-white truncate block">${c.name}</span>
@@ -96,8 +96,8 @@ function renderForgeChambersStage(container) {
       <div class="chamber-active-stage rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border: 2px solid ${chamber.color}; background: linear-gradient(180deg, ${chamber.color}15 0%, rgba(15, 12, 10, 0.95) 100%);">
         
         <div class="stage-header-row flex items-start gap-3.5 mb-4">
-          <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg shrink-0" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color}; background: ${chamber.color}25; border: 2px solid ${chamber.color};">
-            ${chamber.icon}
+          <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color}; background: ${chamber.color}25; border: 2px solid ${chamber.color};">
+            ${createAnimatedWeaponHtml(chamber.weaponTypeId || chamber.id, { extraClasses: 'stage-sigil-sprite-large' })}
           </div>
           <div class="stage-text-block flex-1">
             <h3 class="stage-name text-lg font-black" style="color: ${chamber.accentColor};">${chamber.name}</h3>
@@ -392,7 +392,7 @@ export function showForgeVictoryModal(loot, onClose) {
             return `
               <div class="awarded-item-card p-2.5 rounded-xl bg-slate-950/80 border flex flex-col gap-1" style="border-color: ${rarObj.border};">
                 <div class="item-header-row flex items-center gap-2">
-                  <span class="item-icon-frame text-xl">${w.icon}</span>
+                  <div class="item-icon-frame flex items-center justify-center">${createAnimatedWeaponHtml(w, { extraClasses: 'loot-sprite-icon' })}</div>
                   <div class="item-name-col">
                     <div class="item-name text-xs font-black" style="color: ${rarObj.color};">${w.name}</div>
                     <span class="item-rarity-pill text-[10px] font-bold" style="color: ${rarObj.color};">${rarObj.name}</span>

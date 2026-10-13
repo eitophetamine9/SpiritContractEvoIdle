@@ -1347,6 +1347,53 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (abyssalSummons.length !== 10) throw new Error('Expected 10 summons from Abyssal Rift banner');
   console.log(`  [PASS] Performed 10x Contract on Abyssal Rift banner (${abyssalSummons.length} spirits received)!`);
 
+  // Test 31: Phase 5 Tab Switching Offline Progression, Permanent Banners & Animated Chamber Sprites
+  console.log('\n[TEST 31] Testing Phase 5 Tab Switching Offline Progression & Permanent Banners:');
+  
+  // 1. Verify all banners have timerText set to 'Permanent'
+  for (const banner of bannersList) {
+    if (banner.timerText !== 'Permanent') {
+      throw new Error(`Banner ${banner.id} timerText is "${banner.timerText}", expected "Permanent"`);
+    }
+  }
+  console.log(`  [PASS] Verified all ${bannersList.length} rate-up banners have timerText set to "Permanent"!`);
+
+  // 2. Verify Tab Switching Departure & Refocus Simulation
+  const preDepartureTime = Date.now() - 120000; // Left 2 minutes ago
+  gameState._isTabHidden = true;
+  gameState._tabHiddenTimestamp = preDepartureTime;
+  gameState.state.last_saved = preDepartureTime;
+
+  // Simulate tab focus return
+  const nowFocus = Date.now();
+  const awaySeconds = Math.floor((nowFocus - gameState._tabHiddenTimestamp) / 1000);
+  console.log(`  Simulated away duration: ${awaySeconds}s (Expected >= 120s)`);
+  if (awaySeconds < 120) throw new Error(`Unexpected awaySeconds: ${awaySeconds}`);
+
+  const focusReport = gameState.applyOfflineGains(awaySeconds);
+  gameState._isTabHidden = false;
+  gameState._tabHiddenTimestamp = null;
+  gameState.state.last_saved = nowFocus;
+
+  if (focusReport.elapsedSeconds !== awaySeconds) {
+    throw new Error(`Expected report elapsedSeconds ${awaySeconds}, got ${focusReport.elapsedSeconds}`);
+  }
+  if (focusReport.xpGainedPerSpirit <= 0) {
+    throw new Error('Expected positive XP gained during tab away simulation');
+  }
+  console.log(`  [PASS] Simulated tab switch away for 2m: Gained +${focusReport.xpGainedPerSpirit} XP per spirit!`);
+
+  // 3. Verify Animated Relic and Weapon HTML generation for chambers
+  const testChamberRelicHtml = createAnimatedRelicHtml('zeus', 'headgear');
+  if (!testChamberRelicHtml.includes('animated-relic-sprite') || !testChamberRelicHtml.includes('relic_crown_zeus')) {
+    throw new Error('createAnimatedRelicHtml failed to generate valid sprite HTML for Zeus chamber');
+  }
+  const testChamberWeaponHtml = createAnimatedWeaponHtml('sword');
+  if (!testChamberWeaponHtml.includes('animated-weapon-sprite') || !testChamberWeaponHtml.includes('weapon_spectral_blade')) {
+    throw new Error('createAnimatedWeaponHtml failed to generate valid sprite HTML for sword forge');
+  }
+  console.log('  [PASS] Animated chamber sprite HTML successfully generated for Pantheon Trials and Divine Forge!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

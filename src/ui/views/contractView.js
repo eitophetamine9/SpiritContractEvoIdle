@@ -223,7 +223,7 @@ export function renderContractView(container, onNavigateToIndex) {
             border: 1px solid rgba(255,118,117,0.4);
             backdrop-filter: blur(6px);
           ">
-            ⏳ ${activeBanner.timerText}
+            ${activeBanner.timerText === 'Permanent' ? '✨ Permanent Altar' : `⏳ ${activeBanner.timerText}`}
           </div>
 
           <!-- Central Dual Showcase Pedestal: Animated Hero + Animated Relic Artifact -->

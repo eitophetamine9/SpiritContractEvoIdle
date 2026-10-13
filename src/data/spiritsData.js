@@ -1350,7 +1350,7 @@ export const BANNER_CONFIGS = [
     bannerTheme: 'solar',
     accentColor: '#f39c12',
     bgGradient: 'radial-gradient(circle at 50% 35%, rgba(243, 156, 18, 0.45) 0%, rgba(20, 10, 5, 0.95) 75%)',
-    timerText: '4d 12h 9m left',
+    timerText: 'Permanent',
     odds: [
       { rarity: 'COMMON', weight: 54.0 },
       { rarity: 'UNCOMMON', weight: 28.0 },
@@ -1384,7 +1384,7 @@ export const BANNER_CONFIGS = [
     bannerTheme: 'void',
     accentColor: '#9b59b6',
     bgGradient: 'radial-gradient(circle at 50% 35%, rgba(155, 89, 182, 0.45) 0%, rgba(15, 5, 25, 0.95) 75%)',
-    timerText: '4d 12h 9m left',
+    timerText: 'Permanent',
     odds: [
       { rarity: 'COMMON', weight: 54.0 },
       { rarity: 'UNCOMMON', weight: 28.0 },
@@ -1418,7 +1418,7 @@ export const BANNER_CONFIGS = [
     bannerTheme: 'astral',
     accentColor: '#00d2d3',
     bgGradient: 'radial-gradient(circle at 50% 35%, rgba(0, 210, 211, 0.35) 0%, rgba(5, 15, 25, 0.95) 75%)',
-    timerText: '6d 18h 30m left',
+    timerText: 'Permanent',
     odds: [
       { rarity: 'COMMON', weight: 54.0 },
       { rarity: 'UNCOMMON', weight: 27.5 },
@@ -1482,7 +1482,7 @@ export const BANNER_CONFIGS = [
     bannerTheme: 'abyssal',
     accentColor: '#9b59b6',
     bgGradient: 'radial-gradient(circle at 50% 35%, rgba(142, 68, 173, 0.45) 0%, rgba(10, 5, 20, 0.95) 75%)',
-    timerText: '7d 00h 00m left',
+    timerText: 'Permanent',
     odds: [
       { rarity: 'COMMON', weight: 52.0 },
       { rarity: 'UNCOMMON', weight: 28.0 },

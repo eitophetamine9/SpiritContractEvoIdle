@@ -30,7 +30,11 @@ export function showOfflineModal(report, onClaim) {
   const hours = Math.floor(report.elapsedSeconds / 3600);
   const minutes = Math.floor((report.elapsedSeconds % 3600) / 60);
   const seconds = report.elapsedSeconds % 60;
-  const timeStr = `${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s`;
+  const timeParts = [];
+  if (hours > 0) timeParts.push(`${hours}h`);
+  if (minutes > 0 || hours > 0) timeParts.push(`${minutes}m`);
+  timeParts.push(`${seconds}s`);
+  const timeStr = timeParts.join(' ');
 
   let levelUpsHtml = '';
   if (report.levelUps.length > 0) {
