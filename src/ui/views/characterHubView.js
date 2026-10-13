@@ -24,7 +24,7 @@ import {
   createAnimatedWeaponHtml 
 } from '../../render/spriteAnimator.js';
 import { audioManager } from '../../audio/audioManager.js';
-import { showEvolutionCeremonyModal } from '../components/modals.js';
+import { showEvolutionCeremonyModal, showDetailedAttributesModal } from '../components/modals.js';
 
 let currentSelectedSpiritId = null;
 let activeSubHub = 'attributes'; // 'attributes', 'weapons', 'relics', 'rebirths', 'talents'
@@ -436,6 +436,10 @@ function renderAttributesSubHub(spirit) {
           </div>
         </div>
       </div>
+
+      <button class="btn-sanctum-action" id="btn-open-detailed-dossier" style="margin-top: 2px;">
+        📜 Open Detailed Attribute Dossier (16 Parameters)
+      </button>
 
       <!-- Dynamic Scaling Profile Breakdown Card -->
       <div class="scaling-profile-card">
@@ -860,6 +864,15 @@ function attachSanctumListeners(container, selectedSpirit) {
  */
 function attachSubHubListeners(container, selectedSpirit) {
   if (!container || typeof container.querySelector !== 'function') return;
+  
+  // Detailed Attribute Dossier button
+  const btnDossier = container.querySelector('#btn-open-detailed-dossier');
+  if (btnDossier) {
+    btnDossier.addEventListener('click', () => {
+      showDetailedAttributesModal(selectedSpirit);
+    });
+  }
+
   // Level Up button
   const btnLevelUp = container.querySelector('#btn-sanctum-levelup');
   if (btnLevelUp) {

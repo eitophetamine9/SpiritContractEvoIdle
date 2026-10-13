@@ -1713,7 +1713,22 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (!mockContainer.innerHTML.includes('Ultimate Art')) {
     throw new Error('Ultimate ability talent missing from Talents sub-hub');
   }
-  console.log('  [PASS] Talents Sub-Hub and combat ability cards verified!');
+  // 6. Test Detailed Attributes Breakdown Modal
+  const { showDetailedAttributesModal } = await import('../src/ui/components/modals.js');
+  const modalMock = { innerHTML: '', querySelector() { return null; } };
+  const prevGetEl = global.document?.getElementById;
+  if (!global.document) global.document = {};
+  global.document.getElementById = (id) => id === 'modal-root' ? modalMock : null;
+  showDetailedAttributesModal(gameState.state.spirits[0]);
+  if (!modalMock.innerHTML.includes('COMBAT ATTRIBUTE DOSSIER')) {
+    throw new Error('Detailed Attributes modal failed to render dossier');
+  }
+  if (!modalMock.innerHTML.includes('OFFENSIVE CAPABILITIES') || !modalMock.innerHTML.includes('DEFENSIVE MITIGATION')) {
+    throw new Error('Dossier categories missing from modal');
+  }
+  global.document.getElementById = prevGetEl;
+  console.log('  [PASS] Detailed Attributes Dossier Modal verified (16 Parameters)!');
+
   console.log('  [PASS] Dedicated Spirit Sanctum Hub fully verified across all 5 sub-hubs!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);

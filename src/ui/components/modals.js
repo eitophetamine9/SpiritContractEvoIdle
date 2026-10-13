@@ -1,5 +1,13 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from './pixelBox.js';
-import { SPIRIT_SPECIES, getRarityInfo, getXpRequiredForLevel, ASCENSION_CONFIG, getRoleInfo } from '../../data/spiritsData.js';
+import { 
+  SPIRIT_SPECIES, 
+  getRarityInfo, 
+  getXpRequiredForLevel, 
+  ASCENSION_CONFIG, 
+  REBIRTH_CONFIG,
+  getRoleInfo,
+  getScalingProfile 
+} from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
 import { GREEK_GOD_SETS, RELIC_SLOT_TYPES, RELIC_SUBSTAT_TYPES, getWeaponEnhanceCost, MAX_WEAPON_LEVEL } from '../../data/equipmentData.js';
 import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
@@ -1779,6 +1787,168 @@ export function showDivineScriptureModal({ relic, onUpdate }) {
 
   renderScriptureModal();
 }
+
+/**
+ * Detailed Attributes Breakdown Dossier Modal (16 Discrete Parameters)
+ */
+export function showDetailedAttributesModal(spirit) {
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot || !spirit) return;
+
+  const species = SPIRIT_SPECIES[spirit.speciesId] || {};
+  const rarityInfo = getRarityInfo(spirit.rarity);
+  const roleInfo = getRoleInfo(spirit.speciesId);
+  const scaling = getScalingProfile(spirit.speciesId);
+  const combatStats = gameState.getSpiritCombatStats(spirit);
+  const attrs = combatStats?.attributes || {};
+  const rebirthTier = spirit.rebirthLevel || 0;
+
+  // Compute damage mitigation
+  const defVal = attrs.def?.total || combatStats.def || 10;
+  const mitigationPct = ((defVal / (defVal + 350)) * 100).toFixed(1);
+
+  modalRoot.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal-box detailed-stats-modal" style="max-width: 620px; width: 95%; max-height: 90vh; overflow-y: auto;">
+        
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">📜</span>
+            <div>
+              <h3 style="margin: 0; font-family: var(--font-fantasy); color: #ffd32a;">
+                ${spirit.customName || species.name} — COMBAT ATTRIBUTE DOSSIER
+              </h3>
+              <span style="font-size: 11px; color: var(--text-muted);">
+                ${rarityInfo.name} • ${species.element} • ${roleInfo.name} • Tier ${rebirthTier > 0 ? `⭐${rebirthTier}` : '⭐0'}
+              </span>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-detailed-stats">✕</button>
+        </div>
+
+        <div class="detailed-stats-body" style="display: flex; flex-direction: column; gap: 14px; padding: 12px 0;">
+          
+          <!-- Category 1: Offensive Parameters -->
+          <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,71,87,0.25); border-radius: 8px; padding: 10px 12px;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #ff4757; margin-bottom: 8px;">
+              ⚔️ OFFENSIVE CAPABILITIES & CRITICAL RATINGS
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; font-size: 11px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Total Attack Potency:</span>
+                <strong style="color: #ff6b81;">${(attrs.atk?.total || combatStats.atk).toLocaleString()}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Base Attack:</span>
+                <span>${(attrs.atk?.base || 0).toLocaleString()}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Gear & Buff Bonus:</span>
+                <span style="color: #2ed573;">+${(attrs.atk?.bonus || 0).toLocaleString()} (+${attrs.atk?.percent || 0}%)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Critical Strike Rate:</span>
+                <strong style="color: #ffd32a;">${(attrs.critRate?.total || combatStats.critRate || 5).toFixed(1)}%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Critical Strike Damage:</span>
+                <strong style="color: #ffa502;">${(attrs.critDmg?.total || combatStats.critDmg || 150).toFixed(1)}%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Ultimate Amplification:</span>
+                <strong style="color: #e056fd;">+${(attrs.ultAmp?.total || combatStats.ultAmp || 0).toFixed(1)}%</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 2: Defensive & Survival Parameters -->
+          <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(30,144,255,0.25); border-radius: 8px; padding: 10px 12px;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #1e90ff; margin-bottom: 8px;">
+              🛡️ DEFENSIVE MITIGATION & VITALITY
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; font-size: 11px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Maximum Vitality (HP):</span>
+                <strong style="color: #2ed573;">${(attrs.hp?.total || combatStats.maxHp).toLocaleString()}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Base Vitality:</span>
+                <span>${(attrs.hp?.base || 0).toLocaleString()}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Armor / Defense (DEF):</span>
+                <strong style="color: #70a1ff;">${(attrs.def?.total || combatStats.def).toLocaleString()}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Damage Mitigation:</span>
+                <strong style="color: #2ed573;">${mitigationPct}% Reduced Damage</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Gear Vitality Bonus:</span>
+                <span style="color: #2ed573;">+${(attrs.hp?.bonus || 0).toLocaleString()} (+${attrs.hp?.percent || 0}%)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Gear Armor Bonus:</span>
+                <span style="color: #2ed573;">+${(attrs.def?.bonus || 0).toLocaleString()} (+${attrs.def?.percent || 0}%)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 3: Energy, Cadence & Rebirth -->
+          <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(241,196,15,0.25); border-radius: 8px; padding: 10px 12px;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #ffd32a; margin-bottom: 8px;">
+              ⚡ ENERGY REPLENISHMENT & REBIRTH MULTIPLIERS
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; font-size: 11px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Mana Replenish Cadence:</span>
+                <strong>${(attrs.manaReplenish?.total || combatStats.manaReplenish || 100).toFixed(1)}% (10 MP/s)</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Combat Starting MP:</span>
+                <span>${rebirthTier >= 1 ? '+20 MP (Rebirth I)' : '0 MP'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Current Rebirth Tier:</span>
+                <strong style="color: #ffd32a;">Tier ${rebirthTier > 0 ? `⭐${rebirthTier}` : '⭐0'}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Rebirth All-Stat Multiplier:</span>
+                <strong style="color: #ffd32a;">+${rebirthTier > 0 ? (REBIRTH_CONFIG[rebirthTier - 1]?.bonusPercent || 0) : 0}%</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category 4: Dynamic Archetype Scaling Profile -->
+          <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(168,85,247,0.25); border-radius: 8px; padding: 10px 12px;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #a855f7; margin-bottom: 8px;">
+              🔮 54-SPIRIT DYNAMIC SCALING ARCHETYPE
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
+              <div><strong>Archetype Title:</strong> ${scaling.title} (${roleInfo.name})</div>
+              <div><strong>Primary Scaling Stat:</strong> % ${scaling.primaryStat.toUpperCase()}</div>
+              <div><strong>Secondary Scaling Stat:</strong> % ${scaling.secondaryStat.toUpperCase()}${scaling.canCrit ? ' (Can Critically Strike)' : ''}</div>
+              <div><strong>Scaling Formula:</strong> ${scaling.formulaDesc}</div>
+              <div><strong>Tactical Footprint:</strong> Base Threat ${roleInfo.baseThreat} • Optimal ${roleInfo.optimalColumnLabel}</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
+          <button class="btn-sanctum-action" id="btn-close-detailed-stats-footer" style="max-width: 120px;">
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  modalRoot.querySelector('#btn-close-detailed-stats')?.addEventListener('click', closeActiveModal);
+  modalRoot.querySelector('#btn-close-detailed-stats-footer')?.addEventListener('click', closeActiveModal);
+}
+
 
 
 
