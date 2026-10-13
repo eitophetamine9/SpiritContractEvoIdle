@@ -35,6 +35,7 @@ import {
   getWeaponEnhanceCost,
   ascendRelicData,
   generateRelicSubstats,
+  rerollRelicSubstatsData,
   calculateRelicMainStat
 } from '../data/equipmentData.js';
 import { 
@@ -845,13 +846,18 @@ class GameStateManager {
 
   /**
    * Offline XP & Resources & Energy Calculation when reopening the app
-   * Rebalanced: 24-hour cap before diminishing returns, 20% passive meditation rate
+   * Rebalanced: 24-hour cap, diminishing returns past 8 hours, 6% XP rate, 5% shard salvage, max 35 energy, max 2-3 soul essence
    */
   applyOfflineGains(elapsedSeconds) {
     const cappedSeconds = Math.min(elapsedSeconds, 86400); // 24-hour cap
-    // Passive meditation rate: 20% of active rate
-    const xpRate = this.getXpGainRate() * 0.20;
-    const totalOfflineXp = xpRate * cappedSeconds;
+    // Diminishing returns past 8 hours (28,800s): 50% yield reduction
+    const effectiveSeconds = cappedSeconds <= 28800
+      ? cappedSeconds
+      : 28800 + (cappedSeconds - 28800) * 0.5;
+
+    // Passive meditation rate: 6% of active rate (heavily nerfed from 20%)
+    const xpRate = this.getXpGainRate() * 0.06;
+    const totalOfflineXp = xpRate * effectiveSeconds;
 
     const partySpirits = this.getPartySpirits();
     const levelUps = [];
@@ -900,10 +906,11 @@ class GameStateManager {
       }
     }
 
-    // 2. Offline Energy Accumulation
+    // 2. Offline Energy Accumulation (capped at max 35 offline energy)
     const res = this.state.resources;
+    const maxOfflineEnergy = 35;
     const energyGained = Math.min(
-      res.maxEnergy - res.energy,
+      Math.min(res.maxEnergy - res.energy, maxOfflineEnergy),
       Math.floor(cappedSeconds / ENERGY_REGEN_INTERVAL_SEC)
     );
     if (energyGained > 0) {
@@ -911,7 +918,7 @@ class GameStateManager {
     }
 
     // 3. Offline Madness Zone combat farming on previously unlocked stages
-    // Rebalanced: 25% shard salvage rate, Essence capped at 1 per 2 hours (max 12 in 24h)
+    // Rebalanced: 5% shard salvage rate, Soul Essence ceiling of max 2-3 in 24h
     const partyPower = this.getTotalPartyPower();
     const farmStage = this.state.madnessZone.farmMode 
       ? Math.max(1, this.state.madnessZone.stage - 1)
@@ -919,14 +926,10 @@ class GameStateManager {
 
     const sampleEnemy = getEnemyForStage(farmStage, 3);
     const killTimeSec = Math.max(2, (sampleEnemy.power / Math.max(1, partyPower)) * 4);
-    // Soft-cap diminishing returns past 4 hours (14,400 sec)
-    const effectiveSeconds = cappedSeconds <= 14400 
-      ? cappedSeconds 
-      : 14400 + (cappedSeconds - 14400) * 0.5;
     const estimatedKills = Math.floor(effectiveSeconds / killTimeSec);
-    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.20);
-    const maxOfflineEssence = Math.min(12, Math.floor(cappedSeconds / 7200));
-    const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 60));
+    const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.05);
+    const maxOfflineEssence = Math.min(3, Math.floor(cappedSeconds / 28800));
+    const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 400));
 
     this.state.resources.spiritShards += offlineShards;
     this.state.resources.soulEssence += offlineEssence;
@@ -3234,6 +3237,36 @@ class GameStateManager {
     this.invalidateCaches();
     this.save();
     return { success: true, spirit, equippedCount };
+  }
+
+  rerollRelicSubstats(itemUid, options = {}) {
+    if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) {
+      throw new Error('Inventory equipment not initialized');
+    }
+    const item = this.state.inventory.equipment.find(e => e.uid === itemUid);
+    if (!item) throw new Error('Relic not found in inventory');
+    if (item.type !== 'relic') throw new Error('Only Relics can have their substats rerolled!');
+
+    const REROLL_COST = 5;
+    if ((this.state.resources.soulEssence || 0) < REROLL_COST) {
+      throw new Error(`Insufficient Soul Essence! Need ${REROLL_COST} 🔮 (Have: ${this.state.resources.soulEssence || 0} 🔮).`);
+    }
+
+    this.state.resources.soulEssence -= REROLL_COST;
+    rerollRelicSubstatsData(item, options);
+
+    this.invalidateCaches();
+    this.save();
+    this.emit('equipmentUpdated', { item });
+    this.emit('inventoryUpdated', this.state.inventory);
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return {
+      success: true,
+      item,
+      cost: REROLL_COST,
+      remainingEssence: this.state.resources.soulEssence
+    };
   }
 
   dismantleEquipment(itemUid) {

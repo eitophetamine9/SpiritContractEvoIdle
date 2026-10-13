@@ -1066,6 +1066,62 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log('  [PASS] Audio Manager ultimate SFX throttling validated!');
 
+  // [TEST 28] Testing Phase 2 Economy Rebalance (24h Nerfed Offline, Currency Nerfs & Substat Reroll)
+  console.log('\n[TEST 28] Testing Phase 2 Economy Rebalance & Soul Essence Substat Reroll:');
+  const offline24hRes = gameState.applyOfflineGains(100000);
+  if (offline24hRes.elapsedSeconds !== 86400) {
+    throw new Error(`Expected offline duration capped at 86400s (24h), got ${offline24hRes.elapsedSeconds}`);
+  }
+  if (offline24hRes.energyGained > 35) {
+    throw new Error(`Expected offline energy accumulation capped at <= 35, got ${offline24hRes.energyGained}`);
+  }
+  if (offline24hRes.offlineEssence > 3) {
+    throw new Error(`Expected offline soul essence capped at <= 3 in 24h, got ${offline24hRes.offlineEssence}`);
+  }
+  console.log(`  24h Offline Gains: Capped at ${offline24hRes.elapsedSeconds}s | Energy: +${offline24hRes.energyGained} (<=35) | Essence: +${offline24hRes.offlineEssence} (<=3)`);
+  console.log('  [PASS] 24h Offline progression nerf & diminishing curve fully validated!');
+
+  // Test Soul Essence Substat Reroll
+  const rerollRelic = {
+    uid: 'test_reroll_relic_uid_888',
+    type: 'relic',
+    stars: 4,
+    level: 6,
+    setId: 'hades',
+    slotTypeId: 'ring',
+    name: "Hades's Ring",
+    mainStatName: 'Bonus ATK Power',
+    mainStatValue: 60,
+    substats: [
+      { typeId: 'flat_hp', name: 'Bonus Max HP', value: 120, rolls: 1 },
+      { typeId: 'flat_shield', name: 'Shield Strength', value: 50, rolls: 1 }
+    ]
+  };
+  gameState.state.inventory.equipment.push(rerollRelic);
+
+  gameState.state.resources.soulEssence = 2;
+  let blockedLowEssence = false;
+  try {
+    gameState.rerollRelicSubstats('test_reroll_relic_uid_888');
+  } catch (err) {
+    blockedLowEssence = err.message.includes('Insufficient Soul Essence');
+  }
+  if (!blockedLowEssence) {
+    throw new Error('Failed to block substat reroll with insufficient Soul Essence');
+  }
+  console.log('  [PASS] Blocked substat reroll when Soul Essence < 5!');
+
+  gameState.state.resources.soulEssence = 10;
+  const rerollRes = gameState.rerollRelicSubstats('test_reroll_relic_uid_888');
+  if (gameState.state.resources.soulEssence !== 5) {
+    throw new Error(`Expected 5 Soul Essence remaining after 5 spent, got ${gameState.state.resources.soulEssence}`);
+  }
+  if (!Array.isArray(rerollRes.item.substats) || rerollRes.item.substats.length === 0) {
+    throw new Error('Rerolled relic has empty or invalid substats');
+  }
+  console.log(`  Rerolled Hades Ring Substats for 5 🔮: Count=${rerollRes.item.substats.length}, Remaining 🔮=${gameState.state.resources.soulEssence}`);
+  console.log('  [PASS] Soul Essence Substat Reroll successfully validated!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

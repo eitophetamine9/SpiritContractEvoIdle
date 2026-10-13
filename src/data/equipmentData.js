@@ -333,6 +333,76 @@ export function generateRelicSubstats({ stars = 3, mainStatName = '' } = {}) {
 }
 
 /**
+ * Rerolls all substats on a relic for 5 Soul Essences.
+ * Preserves level, stars, and set, while rolling fresh substats and re-applying upgrades for milestones (+3, +6, +9, +12, +15).
+ */
+export function rerollRelicSubstatsData(relic, { lockedSubTypes = [] } = {}) {
+  const stars = relic.stars || 3;
+  const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
+
+  const targetCount = tier.minInitialSubs === tier.maxInitialSubs
+    ? tier.minInitialSubs
+    : tier.minInitialSubs + Math.floor(Math.random() * (tier.maxInitialSubs - tier.minInitialSubs + 1));
+
+  const mainStatName = relic.mainStatName || '';
+  const availablePool = RELIC_SUBSTAT_TYPES.filter(s => {
+    if (mainStatName.includes('HP') && (s.id === 'flat_hp' || s.id === 'percent_hp')) return false;
+    if (mainStatName.includes('ATK') && (s.id === 'flat_atk' || s.id === 'percent_atk')) return false;
+    if (mainStatName.includes('Shield') && s.id === 'flat_shield') return false;
+    if (mainStatName.includes('Mana') && s.id === 'mana_regen') return false;
+    if (mainStatName.includes('Ult') && s.id === 'ult_amp') return false;
+    if (mainStatName.includes('Evasion') && s.id === 'evasion') return false;
+    return true;
+  });
+
+  const newSubstats = [];
+
+  // Lock in guaranteed substats if provided (e.g. Divine Relic Scripture)
+  if (Array.isArray(lockedSubTypes)) {
+    for (const lockedId of lockedSubTypes) {
+      const subType = RELIC_SUBSTAT_TYPES.find(s => s.id === lockedId);
+      if (subType && !newSubstats.some(s => s.typeId === lockedId)) {
+        newSubstats.push(rollSingleSubstat(subType));
+      }
+    }
+  }
+
+  // Fill remaining slots
+  const remainingPool = availablePool.filter(s => !newSubstats.some(ns => ns.typeId === s.id));
+  const shuffled = [...remainingPool].sort(() => Math.random() - 0.5);
+  while (newSubstats.length < targetCount && shuffled.length > 0) {
+    newSubstats.push(rollSingleSubstat(shuffled.pop()));
+  }
+
+  // Re-apply milestone upgrades for existing level (+3, +6, +9, +12, +15)
+  const currentLevel = relic.level || 0;
+  const milestones = Math.floor(currentLevel / 3);
+  for (let m = 0; m < milestones; m++) {
+    if (newSubstats.length < tier.maxSubCapacity) {
+      const usedIds = newSubstats.map(s => s.typeId);
+      const unpickedPool = RELIC_SUBSTAT_TYPES.filter(s => !usedIds.includes(s.id));
+      if (unpickedPool.length > 0) {
+        const picked = unpickedPool[Math.floor(Math.random() * unpickedPool.length)];
+        newSubstats.push(rollSingleSubstat(picked));
+      }
+    } else {
+      const idx = Math.floor(Math.random() * newSubstats.length);
+      const targetSub = newSubstats[idx];
+      const subType = RELIC_SUBSTAT_TYPES.find(s => s.id === targetSub.typeId);
+      if (subType) {
+        const addRaw = subType.min + Math.random() * (subType.max - subType.min);
+        const addVal = subType.isPercent ? parseFloat(addRaw.toFixed(1)) : Math.round(addRaw);
+        targetSub.value = subType.isPercent ? parseFloat((targetSub.value + addVal).toFixed(1)) : targetSub.value + addVal;
+        targetSub.rolls = (targetSub.rolls || 1) + 1;
+      }
+    }
+  }
+
+  relic.substats = newSubstats;
+  return relic;
+}
+
+/**
  * Enhances a relic by 1 level (up to maxLevel), unlocking or upgrading substats at milestone levels
  */
 export function enhanceRelicData(relic) {

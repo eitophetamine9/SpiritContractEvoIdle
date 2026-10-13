@@ -656,6 +656,9 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                       <span class="enhance-cost-sub">100 ✨ • 10 🔮</span>
                     </button>
                   ` : ''}
+                  <button class="btn-modal-reroll-slot" id="btn-modal-reroll" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences">
+                    🔮 Reroll (5 🔮)
+                  </button>
                   <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-relic-uid="${currentItem.uid}" title="View Details, Lore & Reassign">
                     🔍 Details
                   </button>
@@ -823,6 +826,24 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
         if (onUpdate) onUpdate();
       } catch (err) {
         alert(err.message);
+      }
+    });
+
+    modalRoot.querySelector('#btn-modal-reroll')?.addEventListener('click', () => {
+      const currentEssence = gameState.state.resources.soulEssence || 0;
+      if (currentEssence < 5) {
+        alert(`Insufficient Soul Essence! Need 5 🔮 (You have ${currentEssence} 🔮).`);
+        return;
+      }
+      if (confirm('Spend 5 Soul Essences (🔮) to reroll all substats on this Relic?')) {
+        try {
+          const res = gameState.rerollRelicSubstats(currentItem.uid);
+          try { safePlaySfx('evolution'); } catch {}
+          renderModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
       }
     });
 
@@ -1008,8 +1029,13 @@ export function showItemInspectModal({ item, onUpdate }) {
             <!-- Substats Section (For Relics) -->
             ${isRelic && currentItem.substats && currentItem.substats.length > 0 ? `
               <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.08);">
-                <div style="font-size: 11px; font-weight: 800; color: #70a1ff; margin-bottom: 6px;">
-                  SUBSTATS (${currentItem.substats.length}/${stars === 6 ? 5 : stars === 5 ? 4 : stars === 4 ? 4 : 3})
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="font-size: 11px; font-weight: 800; color: #70a1ff;">
+                    SUBSTATS (${currentItem.substats.length}/${stars === 6 ? 5 : stars === 5 ? 4 : stars === 4 ? 4 : 3})
+                  </div>
+                  <button id="btn-reroll-inspect-substats" class="btn-reroll-inspect-substats" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences">
+                    🔮 Reroll (5 🔮)
+                  </button>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px;">
                   ${currentItem.substats.map(sub => `
@@ -1142,6 +1168,25 @@ export function showItemInspectModal({ item, onUpdate }) {
         if (onUpdate) onUpdate();
       } catch (err) {
         alert(err.message);
+      }
+    });
+
+    // Reroll Relic Substats
+    modalRoot.querySelector('#btn-reroll-inspect-substats')?.addEventListener('click', () => {
+      const currentEssence = gameState.state.resources.soulEssence || 0;
+      if (currentEssence < 5) {
+        alert(`Insufficient Soul Essence! Need 5 🔮 (You have ${currentEssence} 🔮).`);
+        return;
+      }
+      if (confirm('Spend 5 Soul Essences (🔮) to reroll all substats on this Relic?')) {
+        try {
+          const res = gameState.rerollRelicSubstats(currentItem.uid);
+          try { safePlaySfx('evolution'); } catch {}
+          renderModal();
+          if (onUpdate) onUpdate();
+        } catch (err) {
+          alert(err.message);
+        }
       }
     });
 

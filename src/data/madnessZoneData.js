@@ -31,18 +31,20 @@ export function getSwarmForStage(stage, subStage) {
     : Math.pow(1.28, 4) * Math.pow(1.18, stage - 5);
   const waveScale = 1 + (subStage - 1) * 0.18;
 
-  // Rebalanced total shard & essence rewards for the wave (curbed late-stage inflation)
-  const totalShardReward = isBossWave 
+  // Rebalanced total shard & essence rewards (curbed inflation: 60% cut to normal waves, essence restricted)
+  const rawShardReward = isBossWave 
     ? (stage === 1 
-        ? 23 
-        : Math.round(23 + Math.min(stage - 1, 15) * 3 + Math.sqrt(Math.max(0, stage - 16)) * 6))
+        ? 12 
+        : Math.round(12 + Math.min(stage - 1, 15) * 1.5 + Math.sqrt(Math.max(0, stage - 16)) * 3))
     : (stage === 1
-        ? Math.max(2, Math.round(2 + subStage * 0.8))
-        : Math.max(2, Math.round(2 + Math.min(stage - 1, 15) * 1.0 + Math.sqrt(Math.max(0, stage - 16)) * 1.5 + subStage * 0.8)));
+        ? Math.max(1, Math.round((2 + subStage * 0.8) * 0.40))
+        : Math.max(1, Math.round((2 + Math.min(stage - 1, 15) * 1.0 + Math.sqrt(Math.max(0, stage - 16)) * 1.5 + subStage * 0.8) * 0.40)));
+  const totalShardReward = Math.max(1, rawShardReward);
 
+  // Normal mob essence drops removed completely (0%). Milestone floor bosses drop 1.
   const totalEssenceReward = isBossWave 
-    ? Math.max(1, Math.floor(1 + (stage - 1) * 0.5)) 
-    : (Math.random() < 0.05 ? 1 : 0);
+    ? (stage === 1 || stage % 5 === 0 ? 1 : 0)
+    : 0;
 
   if (isBossWave) {
     // Boss wave: 1 Overlord Boss + 2 Royal Guards
