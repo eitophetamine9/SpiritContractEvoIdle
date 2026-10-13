@@ -1656,11 +1656,72 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log('  [PASS] Animated creature and enemy sprites, manifest declarations, and routing verified!');
 
+  // =========================================================================
+  // [TEST 36] Testing Spirit Sanctum Hub Dedicated View & 5 Sub-Hubs Architecture
+  // =========================================================================
+  console.log('\n[TEST 36] Testing Spirit Sanctum Hub Dedicated View & 5 Sub-Hubs Architecture:');
+  const { renderCharacterHubView } = await import('../src/ui/views/characterHubView.js');
+
+  const mockContainer = {
+    innerHTML: '',
+    querySelector(sel) { return null; },
+    querySelectorAll(sel) { return []; }
+  };
+
+  // 1. Render default (Attributes sub-hub)
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'attributes' });
+  if (!mockContainer.innerHTML.includes('SPIRIT SANCTUM HUB')) {
+    throw new Error('Sanctum Hub header missing in rendered output');
+  }
+  if (!mockContainer.innerHTML.includes('7-CORE ATTRIBUTES TOTAL & PERCENTAGE BREAKDOWN')) {
+    throw new Error('Attributes sub-hub 7-Core dual attributes breakdown missing');
+  }
+  if (!mockContainer.innerHTML.includes('Max HP') || !mockContainer.innerHTML.includes('Attack (ATK)') || !mockContainer.innerHTML.includes('CRIT Rate')) {
+    throw new Error('Specific core attributes missing from rendered attributes table');
+  }
+  console.log('  [PASS] Attributes Sub-Hub and 7-Core dual attributes breakdown verified!');
+
+  // 2. Render Weapons sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'weapons' });
+  if (!mockContainer.innerHTML.includes('EQUIPPED ARMAMENT') && !mockContainer.innerHTML.includes('No Weapon Equipped')) {
+    throw new Error('Weapons sub-hub failed to render');
+  }
+  console.log('  [PASS] Weapons Sub-Hub rendering verified!');
+
+  // 3. Render Relics sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'relics' });
+  if (!mockContainer.innerHTML.includes('GREEK GOD CONSECRATED SET BONUSES')) {
+    throw new Error('Relics sub-hub Greek God sets missing in rendered output');
+  }
+  console.log('  [PASS] Relics Sub-Hub and Greek God sets tracking verified!');
+
+  // 4. Render Rebirths sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'rebirths' });
+  if (!mockContainer.innerHTML.includes('CELESTIAL REBIRTH NEXUS (REBIRTH I TO VII)')) {
+    throw new Error('Rebirths sub-hub celestial constellation nexus missing');
+  }
+  if (!mockContainer.innerHTML.includes('Tier 1') || !mockContainer.innerHTML.includes('Tier 7')) {
+    throw new Error('Rebirth tiers 1 through 7 missing from Rebirths sub-hub');
+  }
+  console.log('  [PASS] Rebirths Sub-Hub and 7-Tier constellation progression verified!');
+
+  // 5. Render Talents sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'talents' });
+  if (!mockContainer.innerHTML.includes('COMBAT TALENTS & SACRED ARTS')) {
+    throw new Error('Talents sub-hub missing from rendered output');
+  }
+  if (!mockContainer.innerHTML.includes('Ultimate Art')) {
+    throw new Error('Ultimate ability talent missing from Talents sub-hub');
+  }
+  console.log('  [PASS] Talents Sub-Hub and combat ability cards verified!');
+  console.log('  [PASS] Dedicated Spirit Sanctum Hub fully verified across all 5 sub-hubs!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
   console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
 });
+
 
 
 

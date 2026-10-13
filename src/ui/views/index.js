@@ -8,3 +8,4 @@ export * from './indexView.js';
 export * from './dungeonView.js';
 export * from './forgeView.js';
 export * from './mysticalView.js';
+export * from './characterHubView.js';

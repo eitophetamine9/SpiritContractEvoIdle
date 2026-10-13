@@ -69,6 +69,9 @@ export function renderPartyView(container) {
 
         <div style="display: flex; gap: 8px; align-items: center;">
           <span class="bag-count-pill" title="Total weapons & relics in your equipment inventory">🎒 ${bagCount} Relics</span>
+          <button id="btn-party-sanctum-link" class="trials-link-pill sanctum-link-pill" title="Open Dedicated Spirit Sanctum Hub">
+            🌟 Sanctum
+          </button>
           <button id="btn-party-trials-link" class="trials-link-pill" title="Jump to Pantheon Trials">
             🏛️ Trials
           </button>
@@ -980,5 +983,10 @@ function attachEventListeners(container) {
   // Jump to Trials tab button
   document.getElementById('btn-party-trials-link')?.addEventListener('click', () => {
     document.querySelector('[data-tab="trials"]')?.click();
+  });
+
+  // Jump to Sanctum Hub button
+  document.getElementById('btn-party-sanctum-link')?.addEventListener('click', () => {
+    document.querySelector('[data-tab="sanctum"]')?.click();
   });
 }
