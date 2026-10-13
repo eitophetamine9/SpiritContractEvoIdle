@@ -62,32 +62,11 @@
       <!-- Active Screen View Content -->
       <main id="view-container" class="view-content"></main>
 
-      <!-- Fixed Bottom Navigation (1-Line Unified Responsive Dock) -->
+      <!-- Fixed Bottom Navigation (3 Main Icons + Menu Drawer) -->
       <nav class="bottom-nav" id="bottom-nav-dock">
-        <button id="nav-party" class="nav-tab" data-tab="party" title="Hero Party & Pedestal">
-          <span class="tab-icon">⛩️</span>
-          <span class="tab-label">Hero</span>
-          <span id="party-evolve-badge" class="nav-badge" style="display: none;">!</span>
-        </button>
-
         <button id="nav-madness" class="nav-tab active" data-tab="madness" title="Madness Zone Combat">
           <span class="tab-icon">⚔️</span>
           <span class="tab-label">Madness</span>
-        </button>
-
-        <button id="nav-trials" class="nav-tab" data-tab="trials" title="Pantheon Relic Trials">
-          <span class="tab-icon">🏛️</span>
-          <span class="tab-label">Trials</span>
-        </button>
-
-        <button id="nav-forge" class="nav-tab" data-tab="forge" title="The Divine Forge (Weapon Dungeon)">
-          <span class="tab-icon">🔨</span>
-          <span class="tab-label">Forge</span>
-        </button>
-
-        <button id="nav-mystical" class="nav-tab" data-tab="mystical" title="The Mystical Realm & Sanctuary of the Gods">
-          <span class="tab-icon">✨</span>
-          <span class="tab-label">Realm</span>
         </button>
 
         <button id="nav-contract" class="nav-tab" data-tab="contract" title="Summon & Contract Altar">
@@ -95,16 +74,80 @@
           <span class="tab-label">Summon</span>
         </button>
 
-        <button id="nav-vault" class="nav-tab" data-tab="vault" title="Vault & Card Collection">
-          <span class="tab-icon">📜</span>
-          <span class="tab-label">Vault</span>
+        <button id="nav-party" class="nav-tab" data-tab="party" title="Hero Party & Pedestal">
+          <span class="tab-icon">⛩️</span>
+          <span class="tab-label">Party</span>
+          <span id="party-evolve-badge" class="nav-badge" style="display: none;">!</span>
         </button>
 
-        <button id="nav-index" class="nav-tab" data-tab="index" title="Bestiary & Evolution Compendium">
-          <span class="tab-icon">📖</span>
-          <span class="tab-label">Index</span>
+        <button id="nav-menu-toggle" class="nav-tab nav-burger-btn" title="Open Realms & Features Menu">
+          <span class="tab-icon">☰</span>
+          <span class="tab-label">Menu</span>
         </button>
       </nav>
+
+      <!-- Slide-Up Menu Drawer Layer for Secondary Tabs -->
+      <div id="nav-drawer-backdrop" class="nav-drawer-backdrop" style="display: none;">
+        <div id="nav-drawer-panel" class="nav-drawer-panel">
+          <div class="nav-drawer-header">
+            <div class="nav-drawer-title">
+              <span class="nav-drawer-icon">⛩️</span>
+              <span>Sanctums & Realms</span>
+            </div>
+            <button id="btn-close-nav-drawer" class="nav-drawer-close-btn" title="Close Menu">✕</button>
+          </div>
+
+          <div class="nav-drawer-grid">
+            <button class="nav-drawer-item" data-tab="trials" title="Pantheon Relic Trials">
+              <span class="drawer-item-icon">🏛️</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Trials</span>
+                <span class="drawer-item-desc">Greek God Relics</span>
+              </div>
+            </button>
+
+            <button class="nav-drawer-item" data-tab="forge" title="The Divine Forge (Weapon Dungeon)">
+              <span class="drawer-item-icon">🔨</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Forge</span>
+                <span class="drawer-item-desc">Smelt Weapons</span>
+              </div>
+            </button>
+
+            <button class="nav-drawer-item" data-tab="mystical" title="The Mystical Realm">
+              <span class="drawer-item-icon">✨</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Realm</span>
+                <span class="drawer-item-desc">Zodiac & Essences</span>
+              </div>
+            </button>
+
+            <button class="nav-drawer-item" data-tab="vault" title="The Arcane Vault">
+              <span class="drawer-item-icon">📜</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Vault</span>
+                <span class="drawer-item-desc">Card Collection</span>
+              </div>
+            </button>
+
+            <button class="nav-drawer-item" data-tab="index" title="Bestiary & Evolution Lineages">
+              <span class="drawer-item-icon">📖</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Index</span>
+                <span class="drawer-item-desc">Spirit Bestiary</span>
+              </div>
+            </button>
+
+            <button class="nav-drawer-item" data-tab="profile" title="Contractor Profile">
+              <span class="drawer-item-icon">🧙‍♂️</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Profile</span>
+                <span class="drawer-item-desc">Stats & Records</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- Modal Injection Layer -->
       <div id="modal-root"></div>

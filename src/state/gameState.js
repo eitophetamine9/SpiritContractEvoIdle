@@ -3175,6 +3175,67 @@ class GameStateManager {
     return { success: true, spirit, slotType };
   }
 
+  quickEquipBest(spiritOrId) {
+    const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
+    if (!spirit) throw new Error('Spirit not found');
+    const equipmentList = (this.state.inventory && this.state.inventory.equipment) || [];
+
+    let equippedCount = 0;
+
+    // 1. Weapon: Find unequipped weapon (or currently equipped) with highest atkPower
+    const currentWeapon = spirit.weapon ? this.getEquipmentItemByUid(spirit.weapon) : null;
+    const currentWeaponPower = currentWeapon ? (currentWeapon.atkPower || 0) : -1;
+
+    const availableWeapons = equipmentList.filter(e => 
+      e.type === 'weapon' && (!e.equippedToSpiritId || e.equippedToSpiritId === spirit.id)
+    );
+    if (availableWeapons.length > 0) {
+      availableWeapons.sort((a, b) => (b.atkPower || 0) - (a.atkPower || 0));
+      const bestWeapon = availableWeapons[0];
+      if (bestWeapon && (!currentWeapon || (bestWeapon.atkPower || 0) > currentWeaponPower)) {
+        this.equipItem(spirit.id, bestWeapon.uid);
+        equippedCount++;
+      }
+    }
+
+    // 2. Relics: For each slot type in RELIC_SLOT_TYPES
+    if (!spirit.relics) {
+      spirit.relics = { headgear: null, totem: null, ring: null, necklace: null, orb: null, charm: null };
+    }
+
+    for (const slotDef of RELIC_SLOT_TYPES) {
+      const slotId = slotDef.id;
+      const currentRelic = spirit.relics[slotId] ? this.getEquipmentItemByUid(spirit.relics[slotId]) : null;
+      const currentRelicScore = currentRelic 
+        ? (currentRelic.mainStatValue || 0) + (currentRelic.stars || 1) * 20 + (currentRelic.level || 0) * 5 
+        : -1;
+
+      const availableRelics = equipmentList.filter(e => 
+        e.type === 'relic' && 
+        e.slotTypeId === slotId && 
+        (!e.equippedToSpiritId || e.equippedToSpiritId === spirit.id)
+      );
+
+      if (availableRelics.length > 0) {
+        availableRelics.sort((a, b) => {
+          const scoreA = (a.mainStatValue || 0) + (a.stars || 1) * 20 + (a.level || 0) * 5;
+          const scoreB = (b.mainStatValue || 0) + (b.stars || 1) * 20 + (b.level || 0) * 5;
+          return scoreB - scoreA;
+        });
+        const bestRelic = availableRelics[0];
+        const bestScore = (bestRelic.mainStatValue || 0) + (bestRelic.stars || 1) * 20 + (bestRelic.level || 0) * 5;
+        if (bestRelic && (!currentRelic || bestScore > currentRelicScore)) {
+          this.equipItem(spirit.id, bestRelic.uid);
+          equippedCount++;
+        }
+      }
+    }
+
+    this.invalidateCaches();
+    this.save();
+    return { success: true, spirit, equippedCount };
+  }
+
   dismantleEquipment(itemUid) {
     if (!this.state.inventory || !Array.isArray(this.state.inventory.equipment)) return;
     const index = this.state.inventory.equipment.findIndex(e => e.uid === itemUid);

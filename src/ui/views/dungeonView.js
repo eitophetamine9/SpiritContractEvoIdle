@@ -333,8 +333,10 @@ function renderPantheonBattleArena(container, battle) {
               const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
               const sheetKey = getSheetKeyForSpecies(species ? species.id : null);
 
+              const glyph = species ? (species.avatarEmoji || '✨') : '✨';
+
               return `
-                <div class="seamless-trial-slot spirit-formation-slot ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="trial-allied-slot-${idx}">
+                <div class="seamless-battle-spirit seamless-trial-slot ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="trial-allied-slot-${idx}" style="--stagger-offset: ${idx % 2 === 1 ? '12px' : '0px'};">
                   
                   <!-- Overhead Name & Level Only (Seamless) -->
                   <div class="seamless-overhead-tag">
@@ -344,7 +346,7 @@ function renderPantheonBattleArena(container, battle) {
 
                   <!-- Animated Creature Sprite (No Box, No Border) -->
                   <div class="spirit-sprite-container seamless-sprite-container">
-                    ${createAnimatedSpriteHtml(sheetKey)}
+                    ${createAnimatedSpriteHtml(sheetKey, { glyph })}
                     ${isUltReady ? `<div class="ult-ready-tag" id="trial-ult-ready-${idx}">✨ ULT</div>` : ''}
                     ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
                     <div class="combat-ground-shadow"></div>
@@ -386,7 +388,7 @@ function renderPantheonBattleArena(container, battle) {
               const emHpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
 
               return `
-                <div class="seamless-enemy-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="trial-enemy-slot-${sIdx}">
+                <div class="seamless-enemy-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="trial-enemy-slot-${sIdx}" style="--stagger-offset: ${sIdx % 2 === 1 ? '-12px' : '0px'};">
                   
                   <!-- Enemy Details & Floating Health Bar (Overhead, Borderless) -->
                   <div class="seamless-enemy-overhead">

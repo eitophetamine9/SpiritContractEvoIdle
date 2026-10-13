@@ -15,6 +15,7 @@ import { CONSTELLATIONS_CONFIG, EXPEDITIONS_CONFIG, TRANSMUTATION_CONFIG } from 
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 
 let selectedEssenceChamberId = 'olympian_nexus';
 let selectedEssenceTierNum = 1;
@@ -1122,28 +1123,46 @@ function renderEssenceBattleArena(container, battle) {
         <!-- 2.5D Isometric Canvas Viewport Layer -->
         <div id="arena-viewport-25d" class="arena-viewport-25d absolute inset-0 pointer-events-none z-0 rounded-xl overflow-hidden"></div>
 
-        <!-- Left Side: Staggered Allied Spirit Formation -->
-        <div class="allied-formation-column relative z-10 flex flex-col gap-1.5">
-          <div class="text-[9px] font-black uppercase tracking-widest text-cyan-400">Allied Lineup</div>
-          <div class="flex flex-col gap-1.5">
+        <!-- Left Side: Seamless Allied Spirit Formation (Uncluttered) -->
+        <div class="allied-formation-column seamless-allied-column relative z-10 flex flex-col gap-2">
+          <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-cyan-400">Allied Lineup</div>
+          <div class="staggered-party-formation flex flex-col gap-3">
             ${party.map((spirit, idx) => {
+              const species = SPIRIT_SPECIES[spirit.speciesId];
               const maxHp = spirit.maxHp || 100;
               const curHp = typeof spirit.currentHp === 'number' ? Math.max(0, spirit.currentHp) : maxHp;
               const hpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
               const mpPct = Math.max(0, Math.min(100, Math.round(spirit.currentMp || 0)));
               const isUltReady = mpPct >= 100;
               const isFallen = spirit.isFallen || curHp <= 0;
+              const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
+              const sheetKey = getSheetKeyForSpecies(species ? species.id : null);
+              const glyph = species ? (species.avatarEmoji || '✨') : '✨';
 
               return `
-                <div class="flex items-center gap-1.5 p-1 rounded-lg bg-slate-950/80 border border-slate-800 ${isUltReady ? 'border-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.3)]' : ''} ${isFallen ? 'opacity-40' : ''}">
-                  <div class="w-8 h-8 rounded-md overflow-hidden shrink-0">${createSpiritPlaceholderBox(spirit)}</div>
-                  <div class="flex flex-col gap-0.5 w-16">
-                    <div class="text-[9px] font-bold truncate text-white">${spirit.customName}</div>
-                    <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
-                      <div class="h-full bg-emerald-400 rounded-full" style="width: ${hpPct}%;"></div>
+                <div class="seamless-battle-spirit ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="essence-allied-slot-${idx}" style="--stagger-offset: ${idx % 2 === 1 ? '12px' : '0px'};">
+                  <!-- Overhead Name & Level Only (Seamless) -->
+                  <div class="seamless-overhead-tag">
+                    <span class="seamless-spirit-name" title="${spirit.customName}">${spirit.customName}</span>
+                    <span class="seamless-spirit-level">Lv.${spirit.level || 1}</span>
+                  </div>
+
+                  <!-- Animated Creature Sprite (No Box, No Border) -->
+                  <div class="spirit-sprite-container seamless-sprite-container">
+                    ${createAnimatedSpriteHtml(sheetKey, { glyph })}
+                    ${isUltReady ? `<div class="ult-ready-tag" id="essence-ult-ready-${idx}">✨ ULT</div>` : ''}
+                    ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
+                    <div class="combat-ground-shadow"></div>
+                  </div>
+
+                  <!-- Slim Floating HP & MP Bars -->
+                  <div class="spirit-hud-bars seamless-hud-bars">
+                    <div class="hud-bar-hp">
+                      <div class="hud-hp-fill" id="essence-spirit-hp-fill-${idx}" style="width: ${hpPct}%;"></div>
+                      ${shieldPct > 0 ? `<div class="hud-shield-fill" id="essence-spirit-shield-fill-${idx}" style="width: ${shieldPct}%;"></div>` : ''}
                     </div>
-                    <div class="w-full h-0.5 bg-slate-900 rounded-full overflow-hidden">
-                      <div class="h-full bg-cyan-400 rounded-full" style="width: ${mpPct}%;"></div>
+                    <div class="hud-bar-mp">
+                      <div class="hud-mp-fill" id="essence-spirit-mp-fill-${idx}" style="width: ${mpPct}%;"></div>
                     </div>
                   </div>
                 </div>
@@ -1153,31 +1172,42 @@ function renderEssenceBattleArena(container, battle) {
         </div>
 
         <!-- Center Combat Clash Point -->
-        <div class="relative z-10 text-xl animate-pulse">
-          ⚔️
+        <div class="combat-clash-divider relative z-10 text-2xl animate-pulse">
+          <div class="clash-sparks-icon">⚔️</div>
         </div>
 
-        <!-- Right Side: Wave Enemies -->
-        <div class="enemy-formation-column relative z-10 flex flex-col gap-1.5 items-end">
-          <div class="text-[9px] font-black uppercase tracking-widest text-red-400">
-            ${battle.currentWave === 3 ? '👑 Boss Avatar' : `Guardians (${livingEnemies.length}/${swarm.length})`}
+        <!-- Right Side: Wave Enemies (Seamless, Uncluttered) -->
+        <div class="enemy-formation-column seamless-enemy-column relative z-10 flex flex-col gap-2 items-end">
+          <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-red-400">
+            ${battle.currentWave === 3 ? '👑 BOSS AVATAR' : `GUARDIANS (${livingEnemies.length}/${swarm.length})`}
           </div>
-          <div class="flex flex-col gap-1.5">
-            ${swarm.map(em => {
+          <div class="enemy-swarm-wrapper flex flex-col gap-3 items-end" id="essence-enemy-swarm-wrapper">
+            ${swarm.map((em, sIdx) => {
               const isDead = em.isDefeated || em.hp <= 0;
               const maxHp = em.maxHp || 100;
               const curHp = typeof em.hp === 'number' ? Math.max(0, em.hp) : maxHp;
               const emHpPct = Math.max(0, Math.min(100, Math.round((curHp / maxHp) * 100)));
 
               return `
-                <div class="flex items-center gap-1.5 p-1 rounded-lg bg-slate-950/80 border border-slate-800 ${em.isBoss ? 'border-amber-500' : ''} ${isDead ? 'opacity-30' : ''}">
-                  <div class="flex flex-col gap-0.5 w-16 items-end">
-                    <div class="text-[9px] font-bold truncate text-white" style="color: ${chamber.color};">${em.name}</div>
-                    <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
-                      <div class="h-full bg-red-400 rounded-full" style="width: ${emHpPct}%;"></div>
+                <div class="seamless-enemy-slot ${em.isBoss ? 'boss-slot' : ''} ${isDead ? 'enemy-defeated' : ''}" id="essence-enemy-slot-${sIdx}" style="--stagger-offset: ${sIdx % 2 === 1 ? '-12px' : '0px'};">
+                  <!-- Enemy Details & Floating Health Bar (Overhead, Borderless) -->
+                  <div class="seamless-enemy-overhead">
+                    <div class="seamless-enemy-name">
+                      ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
+                      <span>${em.name}</span>
+                    </div>
+                    <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+
+                    <div class="seamless-enemy-hp-track">
+                      <div id="essence-enemy-hp-fill-${sIdx}" class="seamless-enemy-hp-fill" style="width: ${emHpPct}%;"></div>
                     </div>
                   </div>
-                  <div class="w-8 h-8 rounded-md overflow-hidden shrink-0">${createEnemyPlaceholderBox(em)}</div>
+
+                  <!-- Animated Enemy Sprite with Ground Shadow (No Box, No Border) -->
+                  <div class="enemy-sprite-container seamless-sprite-container">
+                    ${createAnimatedEnemyHtml(em, { extraClasses: 'flipped-sprite' })}
+                    <div class="combat-ground-shadow ${em.isBoss ? 'enemy-shadow' : ''}"></div>
+                  </div>
                 </div>
               `;
             }).join('')}

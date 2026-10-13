@@ -325,22 +325,22 @@ button:disabled {
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   z-index: 50;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 1px;
-  padding: 0 2px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 0 4px;
 }
 
 .nav-tab {
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #8b9bb4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 3px 0;
+  padding: 4px 0;
   min-height: 100%;
   position: relative;
   cursor: pointer;
@@ -348,15 +348,15 @@ button:disabled {
 }
 
 .nav-tab .tab-icon {
-  font-size: 16px;
+  font-size: 19px;
   line-height: 1.1;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 
 .nav-tab .tab-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.1px;
+  letter-spacing: 0.2px;
   line-height: 1;
 }
 
@@ -369,51 +369,139 @@ button:disabled {
   content: '';
   position: absolute;
   top: 0;
-  left: 8%;
-  right: 8%;
+  left: 12%;
+  right: 12%;
   height: 3px;
   background: linear-gradient(90deg, #ffd32a, #f39c12);
   box-shadow: 0 0 12px rgba(255, 211, 42, 0.9);
   border-radius: 0 0 3px 3px;
 }
 
-/* Center Madness Tab: Highlighted & prominent */
-.nav-tab-center {
-  background: rgba(33, 53, 39, 0.35);
-  border-left: 1px solid rgba(39, 59, 46, 0.4);
-  border-right: 1px solid rgba(39, 59, 46, 0.4);
+.nav-burger-btn .tab-icon {
+  font-size: 18px;
 }
 
-.nav-tab-center .tab-icon {
-  font-size: 20px;
-  filter: drop-shadow(0 0 6px rgba(46, 204, 113, 0.4));
+/* Nav Drawer Floating Sheet */
+.nav-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.18s ease-out;
 }
 
-.nav-tab-center.active {
-  background: linear-gradient(180deg, rgba(46, 204, 113, 0.25) 0%, rgba(14, 23, 18, 0.9) 100%);
-  color: #2ed573;
+.nav-drawer-panel {
+  width: 100%;
+  max-width: 480px;
+  background: linear-gradient(180deg, #131b2e 0%, #0a0e1a 100%);
+  border-top: 1.5px solid rgba(255, 215, 0, 0.4);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.9);
+  padding: 16px 16px 28px 16px;
+  animation: slideUpDrawer 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.nav-tab-center.active .tab-label {
-  color: #2ed573;
-  text-shadow: 0 0 8px rgba(46, 213, 115, 0.6);
+@keyframes slideUpDrawer {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
-.nav-drawer-toggle,
-.nav-drawer-back {
-  background: rgba(14, 23, 18, 0.6);
-  color: var(--text-gold);
+.nav-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.nav-drawer-toggle .tab-icon,
-.nav-drawer-back .tab-icon {
+.nav-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-cinzel, 'Cinzel', serif);
   font-size: 14px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.nav-drawer-close-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  font-size: 13px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-drawer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.nav-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.nav-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.nav-drawer-item:hover,
+.nav-drawer-item.active {
+  background: rgba(255, 211, 42, 0.12);
+  border-color: rgba(255, 211, 42, 0.5);
+  transform: translateY(-1px);
+}
+
+.drawer-item-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.drawer-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-item-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.drawer-item-desc {
+  font-size: 9.5px;
+  color: #94a3b8;
 }
 
 .nav-badge {
   position: absolute;
-  top: 6px;
-  right: 14px;
+  top: 4px;
+  right: 18px;
   background: #ff4757;
   color: #ffffff;
   font-size: 10px;
@@ -4806,6 +4894,87 @@ button:disabled {
 
 .featured-spirit-wrapper.pedestal-pulse-evo {
   filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.8));
+}
+
+.pedestal-hero-sprite-container {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pedestal-hero-animated-sprite {
+  transform: scale(2.2);
+  transform-origin: center bottom;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.7));
+}
+
+.token-hero-animated-sprite {
+  transform: scale(0.75);
+  transform-origin: center center;
+}
+
+.roster-thumb-sprite-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(20, 30, 25, 0.9) 0%, rgba(10, 15, 12, 0.95) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.roster-card-animated-sprite {
+  transform: scale(1.15);
+  transform-origin: center center;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+}
+
+.formation-tile-animated-sprite {
+  transform: scale(0.75);
+  transform-origin: center center;
+}
+
+.btn-quick-equip {
+  min-height: 28px;
+  padding: 2px 10px;
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.25), rgba(212, 175, 55, 0.15));
+  border: 1px solid #ffd32a;
+  border-radius: 6px;
+  color: #ffd32a;
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(255, 211, 42, 0.2);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-quick-equip:hover {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.4), rgba(212, 175, 55, 0.3));
+  box-shadow: 0 0 12px rgba(255, 211, 42, 0.4);
+}
+
+.btn-quick-equip:active {
+  transform: scale(0.95);
+}
+
+.btn-quick-equip-card {
+  min-height: 28px;
+  padding: 2px 8px;
+  background: rgba(241, 196, 15, 0.15);
+  border: 1px solid rgba(255, 211, 42, 0.6);
+  border-radius: 5px;
+  color: #ffd32a;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.btn-quick-equip-card:active {
+  transform: scale(0.94);
 }
 
 /* 3D Pedestal Base Elements */

@@ -13,7 +13,7 @@ import { RELIC_SLOT_TYPES, GREEK_GOD_SETS } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showEvolutionCeremonyModal, showEquipmentSlotModal, showItemInspectModal } from '../components/modals.js';
 import { audioManager } from '../../audio/audioManager.js';
-import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
+import { createAnimatedRelicHtml, createAnimatedWeaponHtml, createAnimatedSpriteHtml } from '../../render/spriteAnimator.js';
 
 let activeViewMode = 'showcase'; // 'showcase', 'formation', or 'roster'
 let selectedPartyIndex = 0;
@@ -250,7 +250,7 @@ function renderTileSlotHtml(slotData, slotId) {
       <!-- Tile Avatar & Identity -->
       <div class="tile-spirit-row">
         <div class="tile-avatar-box">
-          ${createSpiritPlaceholderBox(spirit, { width: '36px', height: '36px' })}
+          ${createAnimatedSpriteHtml(spirit, { extraClasses: 'formation-tile-animated-sprite' })}
         </div>
         <div class="tile-spirit-info">
           <div class="tile-spirit-name" title="${spirit.customName}">${spirit.customName}</div>
@@ -341,7 +341,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                       style="border-color: ${isSelected ? '#ffd32a' : memRarity.color};"
                       title="${member.customName} (Lv. ${member.level})">
                 <span class="token-sprite-box">
-                  ${createSpiritPlaceholderBox(member, { width: '32px', height: '32px' })}
+                  ${createAnimatedSpriteHtml(member, { extraClasses: 'token-hero-animated-sprite' })}
                 </span>
                 <span class="token-level-tag">Lv.${member.level}</span>
                 ${member.canEvolve ? '<span class="token-evo-pip">⚡</span>' : ''}
@@ -357,7 +357,9 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
 
           <!-- Featured Spirit Sprite on Stage -->
           <div class="featured-spirit-wrapper ${spirit.canEvolve ? 'pedestal-pulse-evo' : ''}">
-            ${createSpiritPlaceholderBox(spirit, { width: '130px', height: '130px', isCapped: spirit.canEvolve })}
+            <div class="pedestal-hero-sprite-container">
+              ${createAnimatedSpriteHtml(spirit, { extraClasses: 'pedestal-hero-animated-sprite' })}
+            </div>
           </div>
 
           <!-- 3D Pedestal Base with Glowing Rune Ring -->
@@ -475,8 +477,13 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
       <!-- Lower Section: 1 Weapon + 6 Relics Matrix & Active Set Bonuses -->
       <div class="pedestal-equipment-rack">
         <div class="equipment-section-header">
-          <span class="equip-rack-title">⚔️ Divine Arsenal & 6 Relics</span>
-          <span class="equip-rack-sub">Tap any socket to upgrade artifacts (+1 to +15) or swap gear</span>
+          <div>
+            <span class="equip-rack-title">⚔️ Divine Arsenal & 6 Relics</span>
+            <span class="equip-rack-sub">Tap any socket to upgrade artifacts (+1 to +15) or swap gear</span>
+          </div>
+          <button class="btn-quick-equip" data-action="quick-equip" data-spirit-id="${spirit.id}" title="Equip highest-stat available weapon & relics">
+            ⚡ Quick Equip Best
+          </button>
         </div>
 
         <div class="equipment-sockets-row">
@@ -646,8 +653,8 @@ function renderRosterModeHtml(partySpirits) {
           <div class="party-card-expanded ${spirit.canEvolve ? 'evolvable' : ''}" id="party-card-${spirit.id}">
             
             <div class="party-card-main-row">
-              <div class="spirit-thumb-box">
-                ${createSpiritPlaceholderBox(spirit, { isCapped: spirit.canEvolve })}
+              <div class="spirit-thumb-box roster-thumb-sprite-box">
+                ${createAnimatedSpriteHtml(spirit, { extraClasses: 'roster-card-animated-sprite' })}
               </div>
 
               <div class="party-card-info">
@@ -674,6 +681,9 @@ function renderRosterModeHtml(partySpirits) {
               </div>
 
               <div class="party-card-actions">
+                <button class="btn-quick-equip-card" data-action="quick-equip" data-spirit-id="${spirit.id}" title="Equip highest-stat gear">
+                  ⚡ Auto Equip
+                </button>
                 ${spirit.canEvolve ? `
                   <button class="btn-evolve" data-action="evolve" data-id="${spirit.id}">
                     ⚡ EVOLVE (RNG)
@@ -828,6 +838,20 @@ function attachEventListeners(container) {
       selectedPartyIndex = idx;
       audioManager.playSfx('tap');
       renderPartyView(container);
+    });
+  });
+
+  // Quick Equip Best Gear
+  container.querySelectorAll('[data-action="quick-equip"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const spiritId = e.currentTarget.getAttribute('data-spirit-id');
+      try {
+        const res = gameState.quickEquipBest(spiritId);
+        audioManager.playSfx('equip');
+        renderPartyView(container);
+      } catch (err) {
+        alert(err.message);
+      }
     });
   });
 
