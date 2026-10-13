@@ -3,6 +3,8 @@ import {
   CONTRACT_POOLS_BY_RARITY,
   BANNER_CONFIGS,
   ASCENSION_CONFIG,
+  REBIRTH_CONFIG,
+  getScalingProfile,
   rollContractSpirit,
   rollAstralContractSpirit,
   rollBannerContractSpirit,
@@ -1068,12 +1070,20 @@ class GameStateManager {
     let bonusHp = 0;
     let bonusCritRate = 0;
     let bonusCritDmg = 0;
+    let bonusUltAmp = 0;
+    let bonusManaReplenish = 0;
+    let atkPercentBonus = 0;
+    let defPercentBonus = 0;
+    let hpPercentBonus = 0;
 
     if (spirit.weapon) {
       const wpn = this.getEquipmentItemByUid(spirit.weapon);
       if (wpn) {
         if (wpn.atkPower) bonusAtk += wpn.atkPower;
         if (wpn.critRate) bonusCritRate += wpn.critRate;
+        if (wpn.critDmg) bonusCritDmg += wpn.critDmg;
+        if (wpn.ultAmp) bonusUltAmp += wpn.ultAmp;
+        if (wpn.manaReplenish) bonusManaReplenish += wpn.manaReplenish;
       }
     }
 
@@ -1090,10 +1100,44 @@ class GameStateManager {
               else if (sub.typeId === 'crit_dmg') bonusCritDmg += (sub.value || 0);
               else if (sub.typeId === 'flat_hp') bonusHp += (sub.value || 0);
               else if (sub.typeId === 'flat_shield') bonusDef += Math.round((sub.value || 0) * 0.25);
+              else if (sub.typeId === 'atk_percent') atkPercentBonus += (sub.value || 0);
+              else if (sub.typeId === 'def_percent') defPercentBonus += (sub.value || 0);
+              else if (sub.typeId === 'hp_percent') hpPercentBonus += (sub.value || 0);
+              else if (sub.typeId === 'ult_amp') bonusUltAmp += (sub.value || 0);
+              else if (sub.typeId === 'mana_replenish') bonusManaReplenish += (sub.value || 0);
             }
           }
         }
       }
+    }
+
+    // Set bonuses (2-pc Greek God sets)
+    const activeBonuses = this.getSpiritActiveSetBonuses ? this.getSpiritActiveSetBonuses(spirit) : [];
+    for (const b of activeBonuses) {
+      if (b.bonus) {
+        if (b.bonus.atkPercentBonus) atkPercentBonus += b.bonus.atkPercentBonus;
+        if (b.bonus.defPercentBonus) defPercentBonus += b.bonus.defPercentBonus;
+        if (b.bonus.critRateBonus) bonusCritRate += b.bonus.critRateBonus;
+        if (b.bonus.critDmgBonus) bonusCritDmg += b.bonus.critDmgBonus;
+        if (b.bonus.ultAmpBonus) bonusUltAmp += b.bonus.ultAmpBonus;
+        if (b.bonus.manaReplenishBonus) bonusManaReplenish += Math.round(b.bonus.manaReplenishBonus * 100);
+      }
+    }
+
+    // Rebirth / Ascension Passives (⭐1 to ⭐7)
+    const rebirthTier = spirit.ascensionLevel !== undefined ? spirit.ascensionLevel : (spirit.rebirthLevel || 0);
+    if (rebirthTier >= 1) {
+      // Rebirth I: Primary scaling stat boosted by +5%
+      const primStat = baseStats.scalingProfile ? baseStats.scalingProfile.primaryStat : 'atk';
+      if (primStat === 'atk') atkPercentBonus += 5;
+      else if (primStat === 'def') defPercentBonus += 5;
+      else if (primStat === 'hp') hpPercentBonus += 5;
+      else if (primStat === 'manaReplenish') bonusManaReplenish += 5;
+    }
+    if (rebirthTier >= 7) {
+      // Rebirth VII: +10% Crit Rate, +30% Crit DMG
+      bonusCritRate += 10;
+      bonusCritDmg += 30;
     }
 
     // Column Perks:
@@ -1107,20 +1151,101 @@ class GameStateManager {
     const threatMult = colDef ? colDef.threatMultiplier : 1.0;
     const effectiveThreat = Math.max(1, Math.round(baseStats.threat * threatMult));
 
-    const finalAtk = Math.max(1, Math.round((baseStats.atk + bonusAtk) * atkColumnMult));
-    const finalDef = Math.max(1, Math.round((baseStats.def + bonusDef) * defColumnMult));
-    const finalCritRate = Math.min(75, baseStats.critRate + bonusCritRate);
+    const totalAtkBonus = Math.round(baseStats.atk * (atkPercentBonus / 100)) + bonusAtk;
+    const finalAtk = Math.max(1, Math.round((baseStats.atk + totalAtkBonus) * atkColumnMult));
+
+    const totalDefBonus = Math.round(baseStats.def * (defPercentBonus / 100)) + bonusDef;
+    const finalDef = Math.max(1, Math.round((baseStats.def + totalDefBonus) * defColumnMult));
+
+    const totalHpBonus = Math.round(baseStats.maxHp * (hpPercentBonus / 100)) + bonusHp;
+    const finalMaxHp = Math.max(80, baseStats.maxHp + totalHpBonus);
+
+    const finalCritRate = Math.min(100, Math.max(5, baseStats.critRate + bonusCritRate));
     const finalCritDmg = baseStats.critDmg + bonusCritDmg;
+    const finalUltAmp = Math.max(0, (baseStats.ultAmp || 0) + bonusUltAmp);
+    const finalManaReplenish = Math.max(100, 100 + bonusManaReplenish);
+
+    // Dual-Tier 7 Core Attributes Breakdown
+    const attributes = {
+      hp: {
+        name: 'Max HP',
+        symbol: '💚',
+        base: baseStats.maxHp,
+        bonus: finalMaxHp - baseStats.maxHp,
+        total: finalMaxHp,
+        percent: hpPercentBonus,
+        unit: ''
+      },
+      atk: {
+        name: 'ATK Power',
+        symbol: '⚔️',
+        base: baseStats.atk,
+        bonus: finalAtk - baseStats.atk,
+        total: finalAtk,
+        percent: atkPercentBonus,
+        unit: ''
+      },
+      def: {
+        name: 'Defense',
+        symbol: '🛡️',
+        base: baseStats.def,
+        bonus: finalDef - baseStats.def,
+        total: finalDef,
+        percent: defPercentBonus,
+        unit: ''
+      },
+      critRate: {
+        name: 'CRIT Rate',
+        symbol: '🎯',
+        base: baseStats.attributes?.critRate?.base || 5,
+        bonus: finalCritRate - (baseStats.attributes?.critRate?.base || 5),
+        total: finalCritRate,
+        percent: finalCritRate,
+        unit: '%'
+      },
+      critDmg: {
+        name: 'CRIT DMG',
+        symbol: '💥',
+        base: 150,
+        bonus: Math.max(0, finalCritDmg - 150),
+        total: finalCritDmg,
+        percent: finalCritDmg,
+        unit: '%'
+      },
+      ultAmp: {
+        name: 'Ult Amp',
+        symbol: '🔮',
+        base: 0,
+        bonus: finalUltAmp,
+        total: finalUltAmp,
+        percent: finalUltAmp,
+        unit: '%'
+      },
+      manaReplenish: {
+        name: 'Mana Replenish',
+        symbol: '⚡',
+        base: 100,
+        bonus: finalManaReplenish - 100,
+        total: finalManaReplenish,
+        percent: finalManaReplenish,
+        unit: '%'
+      }
+    };
 
     const statsResult = {
       role: baseStats.role,
       roleInfo: baseStats.roleInfo,
+      scalingProfile: baseStats.scalingProfile,
+      rebirthLevel: rebirthTier,
+      ascensionLevel: rebirthTier,
       atk: finalAtk,
       def: finalDef,
-      maxHp: baseStats.maxHp + bonusHp,
+      maxHp: finalMaxHp,
       spd: baseStats.spd,
       critRate: finalCritRate,
       critDmg: finalCritDmg,
+      ultAmp: finalUltAmp,
+      manaReplenish: finalManaReplenish,
       healAmp: healAmpMult,
       baseThreat: baseStats.threat,
       threatMultiplier: threatMult,
@@ -1129,7 +1254,8 @@ class GameStateManager {
       formationColumn: colKey,
       columnPerk: colDef ? colDef.perkName : 'Flank Perk',
       tauntTimer: spirit.tauntTimer || 0,
-      isTaunting: (spirit.tauntTimer || 0) > 0
+      isTaunting: (spirit.tauntTimer || 0) > 0,
+      attributes
     };
 
     if (!this._combatStatsCache) this._combatStatsCache = new Map();
@@ -1391,10 +1517,22 @@ class GameStateManager {
     const role = spiritStats ? spiritStats.role : getSpiritRole(spirit.speciesId);
 
     // TANK SPECIAL: Activate 6-second Taunt Lock and grant party shield
+    const scaling = spiritStats?.scalingProfile || getScalingProfile(spirit.speciesId);
+    const rebirthTier = spirit.ascensionLevel !== undefined ? spirit.ascensionLevel : (spirit.rebirthLevel || 0);
+    const rebirthBurstMult = (rebirthTier >= 3) ? 1.25 : 1.0;
+    const rebirthScalingRatioMult = (rebirthTier >= 5) ? 1.20 : 1.0;
+
+    // TANK SPECIAL: Activate 6-second Taunt Lock and grant party shield
     if (role === 'TANK') {
       spirit.tauntTimer = 6.0;
-      const tankDef = spiritStats ? spiritStats.def : 40;
-      const tankShieldAmount = Math.max(40, Math.round(tankDef * 2.5));
+      let tankShieldAmount = 40;
+      if (scaling && scaling.primaryStat === 'def') {
+        const tankDef = spiritStats ? spiritStats.def : 40;
+        tankShieldAmount = Math.max(40, Math.round(tankDef * (scaling.shieldRatio || 2.5) * rebirthScalingRatioMult));
+      } else {
+        const tankHp = spiritStats ? spiritStats.maxHp : (spirit.maxHp || 400);
+        tankShieldAmount = Math.max(40, Math.round(tankHp * (scaling.shieldRatio || 0.30) * rebirthScalingRatioMult));
+      }
       for (const ally of livingSpirits) {
         ally.shieldHp = (ally.shieldHp || 0) + tankShieldAmount;
       }
@@ -1419,7 +1557,7 @@ class GameStateManager {
     let totalHealingDone = 0;
     const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
     const ultAmpMult = 1 + ((constBonuses.ultAmp || 0) / 100);
-    const ascUltMult = ((spirit.ascensionLevel >= 5) ? 1.20 : 1.0) * ultAmpMult * critMult;
+    let ascUltMult = ((spirit.ascensionLevel >= 5) ? 1.20 : 1.0) * ultAmpMult * critMult * rebirthBurstMult;
 
     switch (ult.type) {
       case 'AOE_DAMAGE': {
@@ -1436,7 +1574,12 @@ class GameStateManager {
       case 'DAMAGE': {
         if (livingEnemies.length > 0) {
           const target = livingEnemies[0];
-          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier * ascUltMult));
+          let dmgMult = ascUltMult;
+          if (role === 'MAIN_DPS' && target.maxHp && (target.hp / target.maxHp) <= 0.35) {
+            dmgMult *= 1.35; // Execute bonus under 35% HP
+            if (rebirthTier >= 6) dmgMult *= 1.35; // Rebirth VI Zenith Executioner
+          }
+          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier * dmgMult));
           target.hp = Math.max(0, target.hp - damage);
           totalDamageDealt = damage;
           if (target.hp <= 0) {
@@ -1449,7 +1592,12 @@ class GameStateManager {
         if (livingEnemies.length > 0) {
           const sorted = [...livingEnemies].sort((a, b) => a.hp - b.hp);
           const target = sorted[0];
-          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier * ascUltMult));
+          let dmgMult = ascUltMult;
+          if (target.maxHp && (target.hp / target.maxHp) <= 0.35) {
+            dmgMult *= 1.35;
+            if (rebirthTier >= 6) dmgMult *= 1.35;
+          }
+          const damage = Math.max(1, Math.round(spirit.power * ult.multiplier * dmgMult));
           target.hp = Math.max(0, target.hp - damage);
           totalDamageDealt = damage;
           if (target.hp <= 0) {
@@ -1459,35 +1607,77 @@ class GameStateManager {
         break;
       }
       case 'HEAL': {
-        const healRatio = ((ult.healPercent || 30) / 100) * healAmp;
-        // Revive 1 fallen ally with healRatio HP if someone is fallen
-        if (fallenSpirits.length > 0) {
+        let baseHealAmount = null;
+        if (scaling && scaling.primaryStat === 'hp') {
+          const sourceHp = spiritStats ? spiritStats.maxHp : (spirit.maxHp || 500);
+          const ratio = (scaling.healRatio || 0.14) * rebirthScalingRatioMult;
+          baseHealAmount = Math.max(30, Math.round((sourceHp * ratio + (scaling.healBase || 100)) * healAmp * rebirthBurstMult));
+        } else if (scaling && scaling.primaryStat === 'atk') {
+          const sourceAtk = spiritStats ? spiritStats.atk : (spirit.power || 50);
+          const ratio = (scaling.healRatio || 1.6) * rebirthScalingRatioMult;
+          let critHealMult = 1.0;
+          if (scaling.canCrit && spiritStats) {
+            const critRoll = Math.random() * 100;
+            if (critRoll < spiritStats.critRate) {
+              critHealMult = (spiritStats.critDmg / 100) * (scaling.critHealMult || 1.0);
+            }
+          }
+          baseHealAmount = Math.max(30, Math.round((sourceAtk * ratio + (scaling.healBase || 80)) * healAmp * critHealMult * rebirthBurstMult));
+        }
+
+        // Rebirth VI: Healer signature single-battle revive
+        if (rebirthTier >= 6 && !spirit._rebirthReviveUsed && fallenSpirits.length > 0) {
           const allyToRevive = fallenSpirits[0];
           allyToRevive.isFallen = false;
-          allyToRevive.currentHp = Math.max(1, Math.round(allyToRevive.maxHp * healRatio));
+          allyToRevive.currentHp = Math.max(1, Math.round(allyToRevive.maxHp * 0.50));
+          spirit._rebirthReviveUsed = true;
+          totalHealingDone += allyToRevive.currentHp;
+        } else if (fallenSpirits.length > 0) {
+          const allyToRevive = fallenSpirits[0];
+          allyToRevive.isFallen = false;
+          allyToRevive.currentHp = baseHealAmount ? Math.min(allyToRevive.maxHp, baseHealAmount) : Math.max(1, Math.round(allyToRevive.maxHp * 0.30));
           totalHealingDone += allyToRevive.currentHp;
         }
+
         for (const ally of livingSpirits) {
-          const heal = Math.round(ally.maxHp * healRatio);
+          const heal = baseHealAmount ? Math.min(ally.maxHp, baseHealAmount) : Math.round(ally.maxHp * ((ult.healPercent || 30) / 100) * healAmp);
           ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
           totalHealingDone += heal;
         }
         break;
       }
       case 'SUPPORT': {
-        const healRatio = ((ult.healPercent || 20) / 100) * healAmp;
+        let baseHealAmount = null;
+        if (scaling && scaling.primaryStat === 'hp') {
+          const sourceHp = spiritStats ? spiritStats.maxHp : (spirit.maxHp || 500);
+          const ratio = (scaling.healRatio || 0.12) * rebirthScalingRatioMult;
+          baseHealAmount = Math.max(20, Math.round((sourceHp * ratio + 50) * healAmp * rebirthBurstMult));
+        } else if (scaling && scaling.primaryStat === 'atk') {
+          const sourceAtk = spiritStats ? spiritStats.atk : (spirit.power || 50);
+          const ratio = (scaling.healRatio || 1.2) * rebirthScalingRatioMult;
+          baseHealAmount = Math.max(20, Math.round((sourceAtk * ratio + 50) * healAmp * rebirthBurstMult));
+        }
         const shieldRatio = (ult.shieldPercent || 20) / 100;
+
         if (fallenSpirits.length > 0) {
           const allyToRevive = fallenSpirits[0];
           allyToRevive.isFallen = false;
-          allyToRevive.currentHp = Math.max(1, Math.round(allyToRevive.maxHp * healRatio));
+          allyToRevive.currentHp = baseHealAmount ? Math.min(allyToRevive.maxHp, baseHealAmount) : Math.max(1, Math.round(allyToRevive.maxHp * 0.20));
           totalHealingDone += allyToRevive.currentHp;
         }
+
         for (const ally of livingSpirits) {
-          const heal = Math.round(ally.maxHp * healRatio);
-          ally.currentHp = Math.min(ally.maxHp, ally.currentHp + heal);
+          const effHeal = baseHealAmount ? Math.min(ally.maxHp, baseHealAmount) : Math.round(ally.maxHp * ((ult.healPercent || 20) / 100) * healAmp);
+          ally.currentHp = Math.min(ally.maxHp, ally.currentHp + effHeal);
           ally.shieldHp = (ally.shieldHp || 0) + Math.round(ally.maxHp * shieldRatio);
-          totalHealingDone += heal;
+          totalHealingDone += effHeal;
+        }
+
+        // Rebirth VI: Support restores +15 MP to all allies
+        if (rebirthTier >= 6) {
+          for (const ally of livingSpirits) {
+            ally.currentMp = Math.min(ally.maxMp || 100, (ally.currentMp || 0) + 15);
+          }
         }
         break;
       }
@@ -2498,6 +2688,7 @@ class GameStateManager {
 
     // Elevate target spirit
     target.ascensionLevel = nextTier;
+    target.rebirthLevel = nextTier;
     const species = SPIRIT_SPECIES[target.speciesId];
     if (species) {
       target.power = calculateSpiritPower(species, target.level, target.rarity, target.ascensionLevel);
@@ -2513,6 +2704,7 @@ class GameStateManager {
     this.save();
 
     this.emit('spiritAscended', { spirit: target, newTier: nextTier, config });
+    this.emit('spiritRebirthed', { spirit: target, newTier: nextTier, config });
     this.emit('resourcesUpdated', res);
     this.emit('partyUpdated', this.getPartySpirits());
 
@@ -2521,8 +2713,13 @@ class GameStateManager {
       spirit: target,
       newTier: nextTier,
       bonusPercent: config.bonusPercent,
-      perk: config.perk
+      perk: config.perk,
+      uniqueAddition: config.uniqueAddition
     };
+  }
+
+  rebirthSpirit(targetSpiritId, duplicateSpiritIds = []) {
+    return this.ascendSpirit(targetSpiritId, duplicateSpiritIds);
   }
 
   // =========================================================================
