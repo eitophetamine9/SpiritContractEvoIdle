@@ -13,6 +13,7 @@ import {
   renderStatsView,
   renderProfileView,
   renderIndexView,
+  renderCharacterHubView,
   showOfflineModal 
 } from './ui/index.js';
 
@@ -109,7 +110,7 @@ function switchTab(tabName) {
     }
   });
 
-  const secondaryTabs = ['trials', 'forge', 'mystical', 'vault', 'index', 'profile'];
+  const secondaryTabs = ['sanctum', 'trials', 'forge', 'mystical', 'vault', 'index', 'profile'];
   const navMenuBtn = document.getElementById('nav-menu-toggle');
   if (navMenuBtn) {
     if (secondaryTabs.includes(tabName)) {
@@ -154,6 +155,9 @@ function renderActiveTab() {
       break;
     case 'vault':
       renderVaultView(viewContainer);
+      break;
+    case 'sanctum':
+      renderCharacterHubView(viewContainer);
       break;
     case 'index':
       renderIndexView(viewContainer);
@@ -319,7 +323,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateResourcesDisplay();
   renderActiveTab();
 
-  if (offlineReport && offlineReport.elapsedSeconds >= 4) {
+  if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
     showOfflineModal(offlineReport, () => {
       renderActiveTab();
     });

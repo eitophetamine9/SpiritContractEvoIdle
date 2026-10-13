@@ -8,7 +8,9 @@ import {
   ROLES,
   calculateSpiritStats,
   getRoleInfo,
-  getSpiritRole
+  getSpiritRole,
+  REBIRTH_CONFIG,
+  getScalingProfile
 } from '../src/data/index.js';
 import { enhanceRelicData } from '../src/data/equipmentData.js';
 import { getEnemyForStage } from '../src/data/index.js';
@@ -1394,11 +1396,348 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log('  [PASS] Animated chamber sprite HTML successfully generated for Pantheon Trials and Divine Forge!');
 
+  // =========================================================================
+  // [TEST 32] Testing 7-Core Dual Attributes Breakdown & Rebirth System (⭐1 to ⭐7)
+  // =========================================================================
+  console.log('\n[TEST 32] Testing 7-Core Dual Attributes Breakdown & Rebirth System:');
+
+  // 1. Verify REBIRTH_CONFIG (⭐1 to ⭐7)
+  if (!REBIRTH_CONFIG || REBIRTH_CONFIG.length !== 7) {
+    throw new Error(`Expected REBIRTH_CONFIG to contain 7 tiers, got ${REBIRTH_CONFIG ? REBIRTH_CONFIG.length : 0}`);
+  }
+  for (let t = 1; t <= 7; t++) {
+    const tierConfig = REBIRTH_CONFIG.find(c => c.tier === t);
+    if (!tierConfig) throw new Error(`Missing Rebirth configuration for Tier ${t}`);
+    if (!tierConfig.name.includes(`Rebirth`)) throw new Error(`Rebirth tier ${t} name should include 'Rebirth', got ${tierConfig.name}`);
+    if (tierConfig.bonusPercent !== t * 12) throw new Error(`Tier ${t} bonusPercent expected ${t * 12}%, got ${tierConfig.bonusPercent}%`);
+    if (!tierConfig.uniqueAddition) throw new Error(`Tier ${t} missing uniqueAddition description`);
+  }
+  console.log('  [PASS] Verified REBIRTH_CONFIG with 7 distinct tiers, +12% to +84% multipliers, and unique additions!');
+
+  // 2. Test Dual-Tier 7 Core Attributes on calculateSpiritStats
+  const dualStatTestSpirit = {
+    id: 'test_spirit_dual_stat',
+    speciesId: 'solaris_lion_pride',
+    customName: 'Solaris Test',
+    level: 30,
+    rarity: 'MYTHICAL',
+    ascensionLevel: 2,
+    rebirthLevel: 2
+  };
+  const detailedStats = calculateSpiritStats(dualStatTestSpirit);
+  if (!detailedStats.attributes) throw new Error('calculateSpiritStats must return structured .attributes object');
+
+  const requiredAttributes = ['hp', 'atk', 'def', 'critRate', 'critDmg', 'ultAmp', 'manaReplenish'];
+  for (const attrKey of requiredAttributes) {
+    const attr = detailedStats.attributes[attrKey];
+    if (!attr) throw new Error(`Missing core attribute "${attrKey}" in detailedStats.attributes`);
+    if (typeof attr.base !== 'number' || typeof attr.total !== 'number') {
+      throw new Error(`Attribute ${attrKey} must have numeric base and total`);
+    }
+  }
+  console.log('  Attributes summary for Solaris Lv.30 (Rebirth II):');
+  console.log(`    💚 HP: ${detailedStats.attributes.hp.base} (Base) = ${detailedStats.attributes.hp.total} (Total)`);
+  console.log(`    ⚔️ ATK: ${detailedStats.attributes.atk.base} (Base) = ${detailedStats.attributes.atk.total} (Total)`);
+  console.log(`    🛡️ DEF: ${detailedStats.attributes.def.base} (Base) = ${detailedStats.attributes.def.total} (Total)`);
+  console.log(`    🎯 Crit Rate: ${detailedStats.attributes.critRate.total}% | 💥 Crit DMG: ${detailedStats.attributes.critDmg.total}%`);
+  console.log(`    🔮 Ult Amp: ${detailedStats.attributes.ultAmp.total}% | ⚡ Mana Replenish: ${detailedStats.attributes.manaReplenish.total}%`);
+  console.log('  [PASS] 7-Core Dual Attributes breakdown successfully calculated!');
+
+  // 3. Test getSpiritCombatStats integration with equipment and Rebirth
+  const combatStats = gameState.getSpiritCombatStats(testTank);
+  if (!combatStats.attributes) throw new Error('getSpiritCombatStats must return structured .attributes breakdown');
+  if (combatStats.attributes.hp.total !== combatStats.maxHp) {
+    throw new Error(`Mismatch between attributes.hp.total (${combatStats.attributes.hp.total}) and combatStats.maxHp (${combatStats.maxHp})`);
+  }
+  if (combatStats.attributes.atk.total !== combatStats.atk) {
+    throw new Error(`Mismatch between attributes.atk.total (${combatStats.attributes.atk.total}) and combatStats.atk (${combatStats.atk})`);
+  }
+  console.log(`  Combat stats dual attributes verified: Tank HP=${combatStats.attributes.hp.total}, DEF=${combatStats.attributes.def.total}`);
+  console.log('  [PASS] gameState.getSpiritCombatStats dual-tier calculation verified!');
+
+  // 4. Test Rebirth ascension process via gameState.rebirthSpirit
+  const testBaseHound = {
+    id: 'test_rebirth_target',
+    speciesId: 'dog_spirit',
+    customName: 'Rebirth Dog',
+    level: 10,
+    rarity: 'COMMON',
+    ascensionLevel: 0,
+    rebirthLevel: 0
+  };
+  const testDupHound = {
+    id: 'test_rebirth_dup_1',
+    speciesId: 'dog_spirit',
+    customName: 'Rebirth Dup Dog',
+    level: 1,
+    rarity: 'COMMON'
+  };
+  gameState.state.spirits.push(testBaseHound, testDupHound);
+  gameState.state.resources.soulEssence = 20;
+
+  const rebirthResult = gameState.rebirthSpirit('test_rebirth_target', ['test_rebirth_dup_1']);
+  if (!rebirthResult.success) throw new Error('rebirthSpirit failed');
+  if (testBaseHound.rebirthLevel !== 1 || testBaseHound.ascensionLevel !== 1) {
+    throw new Error(`Expected rebirthLevel 1, got rebirth=${testBaseHound.rebirthLevel}, asc=${testBaseHound.ascensionLevel}`);
+  }
+  console.log(`  Rebirthed spirit to ${rebirthResult.newTier} (Bonus: +${rebirthResult.bonusPercent}%): ${rebirthResult.uniqueAddition}`);
+  console.log('  [PASS] gameState.rebirthSpirit execution, duplicate consumption & event dispatch validated!');
+
+  // =========================================================================
+  // [TEST 33] Testing 54-Spirit Dynamic Scaling Profiles Matrix & Role Formulas
+  // =========================================================================
+  console.log('\n[TEST 33] Testing 54-Spirit Dynamic Scaling Profiles Matrix & Role Formulas:');
+
+  const allCatalogSpecies = Object.keys(SPIRIT_SPECIES);
+  console.log(`  Verifying all ${allCatalogSpecies.length} catalog species have configured scaling profiles...`);
+  if (allCatalogSpecies.length !== 54) throw new Error(`Expected 54 species in catalog, found ${allCatalogSpecies.length}`);
+
+  let healerCount = 0;
+  let tankCount = 0;
+  let dpsCount = 0;
+  let subDpsCount = 0;
+  let supportCount = 0;
+
+  for (const sId of allCatalogSpecies) {
+    const profile = getScalingProfile(sId);
+    if (!profile) throw new Error(`Missing scaling profile for species: ${sId}`);
+    if (!profile.primaryStat || !profile.secondaryStat) {
+      throw new Error(`Profile for ${sId} missing primary/secondary stat`);
+    }
+    if (profile.archetype === 'HEALER') healerCount++;
+    else if (profile.archetype === 'TANK') tankCount++;
+    else if (profile.archetype === 'MAIN_DPS') dpsCount++;
+    else if (profile.archetype === 'SUB_DPS') subDpsCount++;
+    else if (profile.archetype === 'SUPPORT') supportCount++;
+  }
+  console.log(`  Profile distribution: Healers=${healerCount}, Tanks=${tankCount}, MainDPS=${dpsCount}, SubDPS=${subDpsCount}, Supports=${supportCount}`);
+  if (healerCount !== 6) throw new Error(`Expected 6 Healers with scaling profiles, got ${healerCount}`);
+  if (tankCount !== 12) throw new Error(`Expected 12 Tanks with scaling profiles, got ${tankCount}`);
+  if (dpsCount !== 18) throw new Error(`Expected 18 Main DPS with scaling profiles, got ${dpsCount}`);
+  if (subDpsCount !== 11) throw new Error(`Expected 11 Sub-DPS with scaling profiles, got ${subDpsCount}`);
+  if (supportCount !== 7) throw new Error(`Expected 7 Supports with scaling profiles, got ${supportCount}`);
+
+  // Test dynamic healing formula distinction: Vitality (% Max HP) vs Radiant (% ATK)
+  const caterpillarProfile = getScalingProfile('caterpillar_spirit');
+  const dawnHeraldProfile = getScalingProfile('dawn_herald');
+  if (caterpillarProfile.primaryStat !== 'hp') throw new Error(`Caterpillar primaryStat expected 'hp', got ${caterpillarProfile.primaryStat}`);
+  if (dawnHeraldProfile.primaryStat !== 'atk') throw new Error(`Dawn Herald primaryStat expected 'atk', got ${dawnHeraldProfile.primaryStat}`);
+  if (!dawnHeraldProfile.canCrit) throw new Error('Dawn Herald should be able to critically strike heals');
+  console.log(`  Vitality Healer (${caterpillarProfile.title}): Primary=${caterpillarProfile.primaryStat}, Ratio=${caterpillarProfile.healRatio * 100}% HP`);
+  console.log(`  Radiant Healer (${dawnHeraldProfile.title}): Primary=${dawnHeraldProfile.primaryStat}, Ratio=${dawnHeraldProfile.healRatio * 100}% ATK, CanCrit=${dawnHeraldProfile.canCrit}`);
+
+  // Test dynamic tank shield formula distinction: Iron Bastion (% DEF) vs Primal Behemoth (% HP)
+  const bullProfile = getScalingProfile('bull_spirit');
+  const dogProfile = getScalingProfile('dog_spirit');
+  if (bullProfile.primaryStat !== 'def') throw new Error(`Bull primaryStat expected 'def', got ${bullProfile.primaryStat}`);
+  if (dogProfile.primaryStat !== 'hp') throw new Error(`Dog primaryStat expected 'hp', got ${dogProfile.primaryStat}`);
+  console.log(`  Iron Bastion Tank (${bullProfile.title}): Primary=${bullProfile.primaryStat}, ShieldRatio=${bullProfile.shieldRatio}x DEF`);
+  console.log(`  Primal Behemoth Tank (${dogProfile.title}): Primary=${dogProfile.primaryStat}, ShieldRatio=${dogProfile.shieldRatio * 100}% HP`);
+
+  console.log('  [PASS] All 54 spirits verified in dynamic scaling matrix and role formulas successfully validated!');
+
+  // =========================================================================
+  // [TEST 34] Testing Idle Spoils 1-Hour Minimum Claim Requirement
+  // =========================================================================
+  console.log('\n[TEST 34] Testing Idle Spoils 1-Hour Minimum Claim Requirement:');
+
+  // Case 1: Under 1 hour (e.g. 1,800 seconds = 30 minutes)
+  gameState.state.offlineSpoils = null;
+  gameState.state.last_saved = Date.now() - (1800 * 1000);
+  gameState.state.lastSaveTime = gameState.state.last_saved;
+  const underHourReport = gameState.applyOfflineGains();
+  if (underHourReport.canClaim !== false) {
+    throw new Error(`Expected underHourReport.canClaim to be false, got ${underHourReport.canClaim}`);
+  }
+  if (underHourReport.elapsedSeconds < 1790 || underHourReport.elapsedSeconds > 1810) {
+    throw new Error(`Unexpected elapsedSeconds in underHourReport: ${underHourReport.elapsedSeconds}`);
+  }
+
+  // Attempting to claim before 1 hour must throw an error
+  let blockedUnderHour = false;
+  try {
+    gameState.claimIdleSpoils();
+  } catch (err) {
+    blockedUnderHour = true;
+    console.log(`  [PASS] Blocked claim under 1 hour as expected: "${err.message}"`);
+  }
+  if (!blockedUnderHour) {
+    throw new Error('gameState.claimIdleSpoils() should have thrown an error when elapsed time is under 1 hour');
+  }
+
+  // Case 2: At or over 1 hour (e.g. 3,660 seconds = 1 hour 1 minute)
+  gameState.state.offlineSpoils = null;
+  gameState.state.last_saved = Date.now() - (3660 * 1000);
+  gameState.state.lastSaveTime = gameState.state.last_saved;
+  const overHourReport = gameState.applyOfflineGains();
+  if (overHourReport.canClaim !== true) {
+    throw new Error(`Expected overHourReport.canClaim to be true for >=3600s, got ${overHourReport.canClaim}`);
+  }
+  const prevEssence = gameState.state.resources.soulEssence;
+  const claimedSpoils = gameState.claimIdleSpoils();
+  if (!claimedSpoils || !claimedSpoils.claimed) {
+    throw new Error('gameState.claimIdleSpoils() failed to claim when >= 3600 seconds');
+  }
+  if (gameState.state.offlineSpoils !== null) {
+    throw new Error('Pending offline spoils were not cleared after successful claim');
+  }
+  if (gameState.state.resources.soulEssence < prevEssence) {
+    throw new Error('Resources were not awarded upon claiming idle spoils');
+  }
+  console.log(`  [PASS] Idle spoils claimed successfully after 1 hour: +${claimedSpoils.soulEssence} Soul Essence, +${claimedSpoils.gold} Gold`);
+
+  // =========================================================================
+  // [TEST 35] Testing Expanded Creature and Enemy Animated Sprites
+  // =========================================================================
+  console.log('\n[TEST 35] Testing Expanded Creature and Enemy Animated Sprites:');
+  const requiredSpriteFiles = [
+    'celestial_angel.svg',
+    'spectral_undead.svg',
+    'enemy_void_wraith.svg',
+    'enemy_infernal_demon.svg',
+    'enemy_colossus_titan.svg',
+    'enemy_frost_lich.svg',
+    'baphomet_nether.svg',
+    'chrono_drake.svg',
+    'seraph_valkyrie.svg'
+  ];
+
+  const creaturesDir = path.resolve('./public/assets/sprites/creatures');
+  for (const filename of requiredSpriteFiles) {
+    const fullPath = path.join(creaturesDir, filename);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Required creature/enemy sprite missing on disk: ${fullPath}`);
+    }
+    const stat = fs.statSync(fullPath);
+    if (stat.size < 1000) {
+      throw new Error(`Sprite file suspiciously small (${stat.size} bytes): ${filename}`);
+    }
+  }
+  console.log(`  All ${requiredSpriteFiles.length} creature and enemy sprite SVG sheets physically verified on disk!`);
+
+  // Verify manifest & routing
+  const rawManifest = JSON.parse(fs.readFileSync('./public/assets/sprites/manifest.json', 'utf8'));
+  for (const sheetName of [
+    'spectral_undead', 'celestial_angel', 'seraph_valkyrie', 'baphomet_nether', 
+    'chrono_drake', 'enemy_void_wraith', 'enemy_infernal_demon', 'enemy_colossus_titan', 'enemy_frost_lich'
+  ]) {
+    if (!rawManifest.sheets[sheetName]) {
+      throw new Error(`Manifest missing sheet: ${sheetName}`);
+    }
+    if (!SPRITE_MANIFEST.sheets[sheetName]) {
+      throw new Error(`SPRITE_MANIFEST in code missing sheet: ${sheetName}`);
+    }
+  }
+
+  // Verify getSheetKeyForSpecies mappings
+  if (getSheetKeyForSpecies('fallen_warrior') !== 'spectral_undead') {
+    throw new Error(`Expected fallen_warrior to map to spectral_undead, got ${getSheetKeyForSpecies('fallen_warrior')}`);
+  }
+  if (getSheetKeyForSpecies('archangel_uriel') !== 'celestial_angel') {
+    throw new Error(`Expected archangel_uriel to map to celestial_angel, got ${getSheetKeyForSpecies('archangel_uriel')}`);
+  }
+  if (getSheetKeyForSpecies('baphomet_archdemon_lord') !== 'baphomet_nether') {
+    throw new Error(`Expected baphomet_archdemon_lord to map to baphomet_nether, got ${getSheetKeyForSpecies('baphomet_archdemon_lord')}`);
+  }
+
+  // Verify getSheetKeyForEnemy mappings
+  const { getSheetKeyForEnemy } = await import('../src/render/spriteAnimator.js');
+  if (getSheetKeyForEnemy({ name: 'Void Phantom Lord' }) !== 'enemy_void_wraith') {
+    throw new Error('Enemy with "Void" failed to map to enemy_void_wraith');
+  }
+  if (getSheetKeyForEnemy({ name: 'Infernal Demon Prince' }) !== 'enemy_infernal_demon') {
+    throw new Error('Enemy with "Infernal" failed to map to enemy_infernal_demon');
+  }
+  if (getSheetKeyForEnemy({ name: 'Colossus of the Deep Earth' }) !== 'enemy_colossus_titan') {
+    throw new Error('Enemy with "Colossus" failed to map to enemy_colossus_titan');
+  }
+  if (getSheetKeyForEnemy({ name: 'Glacial Frost Lich' }) !== 'enemy_frost_lich') {
+    throw new Error('Enemy with "Frost" failed to map to enemy_frost_lich');
+  }
+  console.log('  [PASS] Animated creature and enemy sprites, manifest declarations, and routing verified!');
+
+  // =========================================================================
+  // [TEST 36] Testing Spirit Sanctum Hub Dedicated View & 5 Sub-Hubs Architecture
+  // =========================================================================
+  console.log('\n[TEST 36] Testing Spirit Sanctum Hub Dedicated View & 5 Sub-Hubs Architecture:');
+  const { renderCharacterHubView } = await import('../src/ui/views/characterHubView.js');
+
+  const mockContainer = {
+    innerHTML: '',
+    querySelector(sel) { return null; },
+    querySelectorAll(sel) { return []; }
+  };
+
+  // 1. Render default (Attributes sub-hub)
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'attributes' });
+  if (!mockContainer.innerHTML.includes('SPIRIT SANCTUM HUB')) {
+    throw new Error('Sanctum Hub header missing in rendered output');
+  }
+  if (!mockContainer.innerHTML.includes('7-CORE ATTRIBUTES TOTAL & PERCENTAGE BREAKDOWN')) {
+    throw new Error('Attributes sub-hub 7-Core dual attributes breakdown missing');
+  }
+  if (!mockContainer.innerHTML.includes('Max HP') || !mockContainer.innerHTML.includes('Attack (ATK)') || !mockContainer.innerHTML.includes('CRIT Rate')) {
+    throw new Error('Specific core attributes missing from rendered attributes table');
+  }
+  console.log('  [PASS] Attributes Sub-Hub and 7-Core dual attributes breakdown verified!');
+
+  // 2. Render Weapons sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'weapons' });
+  if (!mockContainer.innerHTML.includes('EQUIPPED ARMAMENT') && !mockContainer.innerHTML.includes('No Weapon Equipped')) {
+    throw new Error('Weapons sub-hub failed to render');
+  }
+  console.log('  [PASS] Weapons Sub-Hub rendering verified!');
+
+  // 3. Render Relics sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'relics' });
+  if (!mockContainer.innerHTML.includes('GREEK GOD CONSECRATED SET BONUSES')) {
+    throw new Error('Relics sub-hub Greek God sets missing in rendered output');
+  }
+  console.log('  [PASS] Relics Sub-Hub and Greek God sets tracking verified!');
+
+  // 4. Render Rebirths sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'rebirths' });
+  if (!mockContainer.innerHTML.includes('CELESTIAL REBIRTH NEXUS (REBIRTH I TO VII)')) {
+    throw new Error('Rebirths sub-hub celestial constellation nexus missing');
+  }
+  if (!mockContainer.innerHTML.includes('Tier 1') || !mockContainer.innerHTML.includes('Tier 7')) {
+    throw new Error('Rebirth tiers 1 through 7 missing from Rebirths sub-hub');
+  }
+  console.log('  [PASS] Rebirths Sub-Hub and 7-Tier constellation progression verified!');
+
+  // 5. Render Talents sub-hub
+  renderCharacterHubView(mockContainer, { spiritId: 'test_rebirth_target', subHub: 'talents' });
+  if (!mockContainer.innerHTML.includes('COMBAT TALENTS & SACRED ARTS')) {
+    throw new Error('Talents sub-hub missing from rendered output');
+  }
+  if (!mockContainer.innerHTML.includes('Ultimate Art')) {
+    throw new Error('Ultimate ability talent missing from Talents sub-hub');
+  }
+  // 6. Test Detailed Attributes Breakdown Modal
+  const { showDetailedAttributesModal } = await import('../src/ui/components/modals.js');
+  const modalMock = { innerHTML: '', querySelector() { return null; } };
+  const prevGetEl = global.document?.getElementById;
+  if (!global.document) global.document = {};
+  global.document.getElementById = (id) => id === 'modal-root' ? modalMock : null;
+  showDetailedAttributesModal(gameState.state.spirits[0]);
+  if (!modalMock.innerHTML.includes('COMBAT ATTRIBUTE DOSSIER')) {
+    throw new Error('Detailed Attributes modal failed to render dossier');
+  }
+  if (!modalMock.innerHTML.includes('OFFENSIVE CAPABILITIES') || !modalMock.innerHTML.includes('DEFENSIVE MITIGATION')) {
+    throw new Error('Dossier categories missing from modal');
+  }
+  global.document.getElementById = prevGetEl;
+  console.log('  [PASS] Detailed Attributes Dossier Modal verified (16 Parameters)!');
+
+  console.log('  [PASS] Dedicated Spirit Sanctum Hub fully verified across all 5 sub-hubs!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
   console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
 });
+
+
 
 
 

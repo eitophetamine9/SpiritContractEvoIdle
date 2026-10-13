@@ -1,16 +1,17 @@
 # Spirit Contract Evo | Idle - System & Technical Documentation
 
-This document contains detailed system specifications, mathematical formulations, economy balancing curves, evolution horizon tables, and architecture references for Spirit Contract Evo Idle.
+This document provides system specifications, mathematical formulations, economy balancing curves, evolution horizon tables, combat engine rules, and architecture references for Spirit Contract Evo | Idle.
 
 ---
 
-## 1. System Architecture & State Machine
+## 1. System Architecture & Reactive State Machine
 
 ### 1.1 State Architecture
-The game operates on a single reactive state manager (`GameStateManager`) implemented in `src/state/gameState.js`.
-- **Pub/Sub System**: Subscriptions allow UI views to respond reactively to ticks, saves, level caps, stage unlocks, and combat events without tight coupling.
-- **Tick Interval**: Active simulation ticks every 250ms (4 ticks per second).
-- **Save Engine**: State automatically saves to `localStorage` every 15 seconds, during floor unlocks, summons, evolutions, and on page unload (`beforeunload` / `visibilitychange`).
+The engine operates on a single reactive state manager (`GameStateManager`) defined in `src/state/gameState.js`.
+- **Pub/Sub Dispatch**: Components and view renderers register listeners via `gameState.on(event, handler)` and `gameState.subscribe(handler)`. Updates emit selectively on ticks, floor unlocks, summons, evolutions, gear changes, and rebirth events.
+- **Simulation Loop**: Active combat and AFK timers tick every 250ms (4 ticks per second).
+- **Tab Switching & Visibility Tracking**: The engine tracks window focus via `visibilitychange` events. Time spent away from the active tab is computed precisely and credited toward passive XP without interrupting background timers.
+- **Persistence Engine**: State auto-saves to `localStorage` every 15 seconds, immediately upon floor clears, summon ceremonies, evolutions, and on page unload (`beforeunload` and `visibilitychange`).
 
 ### 1.2 State Schema
 ```typescript
@@ -20,14 +21,18 @@ interface GameState {
   resources: {
     spiritShards: number;
     soulEssence: number;
+    essencesOfTheGods: number;
     energy: number;
     maxEnergy: number;
     energySecondsAccumulator: number;
     resonanceTier: number;
   };
   spirits: SpiritInstance[];
-  party: string[];               // IDs of active party (max 5)
-  hallOfFame: string[];          // IDs of showcase spirits (max 5)
+  party: string[];               // IDs of active combat party (max 5)
+  formation: {                   // 3x3 Tactical Grid placement
+    [slotKey: string]: string;   // e.g., 'f1', 'f2', 'f3', 'm1', 'm2', 'm3', 'b1', 'b2', 'b3'
+  };
+  hallOfFame: string[];          // IDs of showcase pedestal spirits (max 5)
   discoveredSpeciesIds: string[]; // Bestiary discovery registry
   madnessZone: {
     currentStage: number;
@@ -36,6 +41,12 @@ interface GameState {
     unlockedStages: number[];
     isAutoCombat: boolean;
     combatSpeed: number;         // 1 or 2
+    lastSpoilClaimTimestamp: number; // Idle meditation claim timer
+  };
+  constellations: {
+    [constellationId: string]: {
+      unlockedStars: number[];
+    };
   };
   stats: {
     totalSpiritsContracted: number;
@@ -54,7 +65,7 @@ interface GameState {
 ### 2.1 Rarity Multipliers
 Rarity acts as a core stat multiplier across base power and level progression:
 
-| Rarity Tier | Identifier | Multiplier | Accent Hex | Border Flare |
+| Rarity Tier | Identifier | Multiplier | Accent Hex | Border Visual |
 | :--- | :--- | :---: | :---: | :--- |
 | Tier 1 | COMMON | 1.00x | `#bdc3c7` | Slate grey border |
 | Tier 2 | UNCOMMON | 1.18x | `#2ecc71` | Emerald border |
@@ -64,445 +75,210 @@ Rarity acts as a core stat multiplier across base power and level progression:
 | Tier 6 | MYTHICAL | 2.80x | `#e74c3c` | Pulsing ruby glow |
 | Tier 7 | TRANSCENDENT | 4.00x | `#00ffff` | Cyan starlight flare |
 
-### 2.2 Power Calculation Formula
-For any spirit at Level $L$:
+### 2.2 Base Power Calculation
+For any spirit instance at Level $L$:
 $$\text{Power} = \lfloor \text{BasePower} \times (1 + (L - 1) \times \text{GrowthRate}) \times \text{RarityMultiplier} \rfloor \times (1 + \text{ResonanceTier} \times 0.05)$$
 
 ---
 
-## 3. Spirit Species & Evolution Horizons
+## 3. 7-Core Dual Attributes System
 
-### 3.1 Base Contract Spirits (Level Cap & Branch Horizons)
+Every spirit computes two-tier attributes combining base values, equipment flat bonuses, and percentage modifiers.
 
-| Base Spirit | Rarity | Cap | Evolution Branches & Odds |
-| :--- | :--- | :---: | :--- |
-| **Cat Spirit** | Common | Lv. 10 | 80% Furious Cat (Uncommon, 2.2x), 20% Elemental Cat (Epic, 3.5x) |
-| **Dog Spirit** | Common | Lv. 10 | 80% Vitality Dog (Uncommon, 2.2x), 20% Guardian Dog (Epic, 3.5x) |
-| **Chicken Spirit** | Common | Lv. 10 | 90% Battle Chicken (Uncommon, 2.0x), 10% Dino Genus Chicken (Legendary, 4.0x) |
-| **Caterpillar Spirit** | Common | Lv. 10 | 90% Elegant Butterfly (Uncommon, 2.0x), 10% Mystical Butterfly (Legendary, 4.0x) |
-| **Bull Spirit** | Uncommon | Lv. 15 | 80% Raging Bull (Uncommon, 2.2x), 15% Elemental Bull (Epic, 3.2x), 5% Minotaur (Mythical, 4.5x) |
-| **Lizard Spirit** | Uncommon | Lv. 15 | 80% Multi-venom Lizard (Uncommon, 2.2x), 15% Komodo Dragon (Epic, 3.2x), 5% Drake (Mythical, 4.5x) |
-| **Python Spirit** | Uncommon | Lv. 15 | 80% HighLord Python (Uncommon, 2.2x), 15% Huge Albino Anaconda (Epic, 3.2x), 5% Wyrm (Mythical, 4.5x) |
-| **Shark Spirit** | Rare | Lv. 20 | 90% Great White Shark (Epic, 2.5x), 8% Megalodon (Mythical, 3.8x), 2% Cosmic Oceanic Devourer (Transcendent, 5.5x) |
-| **Bear Spirit** | Rare | Lv. 20 | 90% HighLord Bear (Epic, 2.5x), 8% Bear of Dreams (Mythical, 3.8x), 2% Cosmic Bear Ursalite (Transcendent, 5.5x) |
-| **Wisp Spirit** | Epic | Lv. 25 | 100% High Elf (Mythical, 3.5x) |
-| **Fallen Warrior Spirit** | Legendary | Lv. 30 | 99% Sovereign Warrior (Mythical, 3.0x), 1% DreadLord Warrior (Transcendent, 6.0x) |
-| **Baphomet, Nether Voidbinder** | Epic | Lv. 40 | 100% Baphomet, Archdemon Overlord (Legendary, Cap: Lv. 60) |
-| **Astraea, Star-Forged Valkyrie** | Legendary | Lv. 50 | 100% Astraea, Celestial Queen (Mythical, Cap: Lv. 80) |
-| **Leviathan, Tidal Behemoth** | Legendary | Lv. 50 | 100% Leviathan, Primordial Ocean (Mythical, Cap: Lv. 80) |
-| **Solaris, Lion Sin of Pride** | Mythical | Lv. 60 | 100% Solaris, The One Ultimate (Transcendent, Cap: Lv. 100) |
-| **Gelda, Thousand Ashes Empress** | Mythical | Lv. 60 | 100% Gelda, Sanguine Sovereign (Transcendent, Cap: Lv. 100) |
+### 3.1 Dual Attributes Mathematical Model
+For any attribute $A \in \{\text{HP}, \text{ATK}, \text{DEF}\}$:
+$$\text{Total}(A) = \lfloor (\text{Base}(A) + \text{BonusFlat}(A)) \times (1 + \frac{\text{PercentMod}(A)}{100}) \times (1 + \text{RebirthMult}) \rfloor$$
 
-### 3.2 Complete Evolutionary Horizons & Bestiary Classifications (47 Species)
+For percentage attributes $A \in \{\text{CritRate}, \text{CritDMG}, \text{UltAmp}, \text{ManaReplenish}\}$:
+$$\text{Total}(A) = \text{Base}(A) + \text{GearBonus}(A) + \text{SetBonus}(A) + \text{RebirthBonus}(A)$$
 
-All 47 collectible spirit species in the game catalog broken down across all seven rarity tiers:
+### 3.2 7-Core Attributes Summary
 
-| Rarity Tier | Species Count | Complete Roster of Species |
-| :--- | :---: | :--- |
-| **COMMON** | 4 | Cat Spirit, Dog Spirit, Chicken Spirit, Caterpillar Spirit |
-| **UNCOMMON** | 10 | Bull Spirit, Lizard Spirit, Python Spirit, Furious Cat, Vitality Dog, Battle Chicken, Elegant Butterfly, Raging Bull, Multi-venom Lizard, HighLord Python |
-| **RARE** | 2 | Shark Spirit, Bear Spirit |
-| **EPIC** | 9 | Wisp Spirit, Elemental Cat, Guardian Dog, Elemental Bull, Komodo Dragon, Huge Albino Anaconda, Great White Shark, HighLord Bear, Baphomet (Nether Voidbinder) |
-| **LEGENDARY** | 6 | Fallen Warrior Spirit, Dino Genus Chicken, Mystical Butterfly, Astraea (Star-Forged Valkyrie), Leviathan (Tidal Behemoth), Baphomet (Archdemon Overlord) |
-| **MYTHICAL** | 11 | Minotaur, Drake, Wyrm, Megalodon, Bear of Dreams, High Elf, Sovereign Warrior, Solaris (Lion Sin of Pride), Gelda (Thousand Ashes Empress), Astraea (Celestial Queen), Leviathan (Primordial Ocean) |
-| **TRANSCENDENT** | 5 | Cosmic Oceanic Devourer, Cosmic Bear Ursalite, DreadLord Warrior, Solaris (The One Ultimate), Gelda (Sanguine Sovereign) |
+1. **Max Health (HP)**:
+   - Primary survivability metric. Supports Tank absorption and Healer HP-based restorations.
+   - Base Formula: $\max(80, \text{round}(\text{basePower} \times 12 \times (1 + (L - 1) \times 0.22) \times \text{rarityMultiplier}))$.
+2. **Attack Power (ATK)**:
+   - Dictates regular damage dealt, weapon power scaling, and offensive healer output.
+   - Base Formula: $\max(12, \text{round}(\text{basePower} \times 1.2 \times (1 + (L - 1) \times 0.16) \times \text{rarityMultiplier}))$.
+3. **Defense (DEF)**:
+   - Mitigates incoming damage across all combat modes.
+   - Base Formula: $\max(8, \text{round}(\text{basePower} \times 0.65 \times (1 + (L - 1) \times 0.14) \times \text{rarityMultiplier}))$.
+4. **Critical Rate (CRIT Rate)**:
+   - Base value: 5.0%. Scaled via weapon upgrades, relic substats, and Rebirth perks. Hard cap: 100.0%.
+5. **Critical Damage (CRIT DMG)**:
+   - Base value: 150.0%. Amplifies critical strikes upon trigger. Hard cap: 500.0%.
+6. **Ultimate Amplification (Ult Amp)**:
+   - Base value: 0.0%. Directly increases ultimate skill damage and shield/heal magnitude.
+7. **Mana Replenishment (Mana Replenish)**:
+   - Base value: 100.0%. Modulates natural combat mana generation rate (Base: +20 MP/sec).
 
 ---
 
-## 4. Tower Biomes & Madness Zone Progression
+## 4. 54-Spirit Dynamic Scaling Profiles Matrix
 
-The tower features 100 base floors spanning 6 biomes, looping infinitely with the "Enchanted" prefix past Floor 100:
+All 54 species in the catalog are mapped to distinct dynamic scaling profiles that dictate how their skills and ultimates interact with the 7-Core attributes.
 
-| Floors | Biome Name | Identifier | Environmental Visuals |
+### 4.1 Archetype Categories & Formulas
+
+| Archetype | Primary Stat | Scaling Formula | Secondary Scaling |
 | :--- | :--- | :--- | :--- |
-| **1 to 10** | Mystical Swamp | `mystical_swamp` | Murky waters, bioluminescent spores, toxic crawlers |
-| **11 to 20** | Mystical Winterland | `mystical_winterland` | Frost-covered crags, crystalline auroras, frost stalkers |
-| **21 to 40** | Dark Castle | `dark_castle` | Gothic spires, iron gargoyles, shadowed knights |
-| **41 to 60** | Abyssal Sunken Depths | `abyssal_depths` | Submerged coral ruins, luminescent leviathans |
-| **61 to 80** | Volcanic Hellfire Caldera | `volcanic_caldera` | Molten obsidian veins, ash clouds, infernal drakes |
-| **81 to 100** | Celestial Primordial Sanctum | `primordial_sanctum` | Astral spires, cosmic constellations, ethereal sovereigns |
-| **101+** | Enchanted Cycle (Looping) | Prefix: `enchanted_` | Infinite repetition with 1.4x stat scaling per 100 floors |
+| **Vitality Healer** | Max HP | $\text{Heal} = \text{Max HP} \times 0.12 \times (1 + \frac{\text{UltAmp}}{100})$ | Team Shield = 15% Max HP |
+| **Radiant Healer** | ATK | $\text{Heal} = \text{ATK} \times 1.40 \times (1 + \frac{\text{UltAmp}}{100})$ | Can Critically Heal (CRIT Rate/DMG) |
+| **Iron Bastion Tank** | DEF | $\text{Shield} = \text{DEF} \times 2.0 \times (1 + \frac{\text{UltAmp}}{100})$ | Taunt Lock: Intercepts 100% of single-target attacks |
+| **Primal Behemoth Tank**| Max HP | $\text{Shield} = \text{Max HP} \times 0.22 \times (1 + \frac{\text{UltAmp}}{100})$ | Vanguard Counter-Attack: 8% Max HP physical |
+| **Burst DPS** | ATK | $\text{Damage} = \text{ATK} \times 3.20 \times (1 + \frac{\text{UltAmp}}{100})$ | CRIT Enabled, Single-Target / Boss Shred |
+| **AOE Swarm DPS** | ATK | $\text{Damage} = \text{ATK} \times 1.85 \times (1 + \frac{\text{UltAmp}}{100})$ | Hits all living swarm targets simultaneously |
+| **Tactical Support** | Mana / ATK | Grants Team Shields + Energy Charge (+25 MP) | Cleanses debuffs, boosts ally ATK by 20% |
+
+### 4.2 Species Catalog & Role Distribution (54 Spirits)
+The complete 54-spirit roster is distributed across 5 tactical combat roles:
+- **Healers (6)**: Lepidopteran Vitality Healer, Radiant Seraphic Herald, High Elf Luminary, Bear of Dreams, Mystical Butterfly, Wisp Initiate.
+- **Tanks (12)**: Iron Vanguard Bull, Primal Earth Hound, Bovine Colossus, Drake Bastion, Minotaur Sovereign, Wyrm Guardian, Komodo Bulwark, and related evolutions.
+- **Main DPS (18)**: Abyssal Apex Shark, Solaris The One Ultimate, Baphomet Voidbinder Archdemon, DreadLord Warrior, Star Valkyrie Astraea, Dino Genus Chicken, Sovereign Warrior, and related forms.
+- **Sub DPS (11)**: Shadow Feline, Battle Cockatrice, Nether Stiletto Drake, Flame Avian, Multi-venom Lurker, and related forms.
+- **Supports (7)**: Canine Aegis, Chrono Temporal Guardian, Dawn Herald, Guardian Hound, and allied buffer forms.
 
 ---
 
-## 5. Offline Progression & Economy Math
+## 5. Celestial Rebirth System (Tier 1 to Tier 7)
 
-### 5.1 24-Hour Offline Engine
-Offline progress is calculated upon session initialization:
-- **Elapsed Duration**: $\Delta t = \min(t_{\text{current}} - t_{\text{last\_saved}}, 86400)$ seconds.
-- **Active Training Rate**:
-  $$\text{Active XP/sec} = 3.0 \times \left(1 + 0.08 \times (\text{Highest Floor} - 1)\right)$$
-- **Offline XP Rate**: 20% of active training rate:
-  $$\text{Offline XP} = \Delta t \times (\text{Active XP/sec} \times 0.20)$$
-- **Offline Shards**: 25% of active rate based on the player's highest unlocked floor.
-- **Offline Soul Essence**: 1 Essence granted per 2 hours offline (maximum 12 Essence per full 24-hour cycle).
+The Rebirth System allows players to sacrifice duplicate copies of spirits along with Soul Essences to elevate a spirit through 7 Celestial Rebirth tiers.
 
-### 5.2 Energy Engine
-- Base Cap: 60 Energy.
-- Regeneration: +1 Energy every 30 seconds.
-- Cost: 10 Energy to unlock each new floor. Completed floors are permanently free to replay (0 Energy).
-- Essence Expansion: Permanently adds +10 to Max Energy per upgrade.
+### 5.1 Rebirth Progression Table
 
----
+| Rebirth Tier | Duplicates Required | Soul Essence Cost | Stat Multiplier | Combat Trait Unlocked |
+| :---: | :---: | :---: | :---: | :--- |
+| Tier 1 | 1 Copy | 1 Essence | +12% Base Stats | Starts combat with +20 MP; primary scaling stat boosted by +5%. |
+| Tier 2 | 1 Copy | 1 Essence | +24% Base Stats | Basic strike cooldown reduced by 10%. |
+| Tier 3 | 2 Copies | 2 Essence | +36% Base Stats | Celestial Quickening: Starts combat with +15 bonus MP. |
+| Tier 4 | 2 Copies | 3 Essence | +48% Base Stats | Defensive barrier absorbing 10% Max HP on wave start. |
+| Tier 5 | 3 Copies | 4 Essence | +60% Base Stats | Divine Surge: Ultimate skill damage and potency amplified by +20%. |
+| Tier 6 | 3 Copies | 5 Essence | +72% Base Stats | Critical Hit Chance increased by +5%. |
+| Tier 7 | 4 Copies | 8 Essence | +84% Base Stats | Sovereign Focus: +10% Crit Rate, +25% Crit DMG, and Golden Card Border. |
 
-## 6. Testing & Quality Assurance
-
-The codebase includes automated test suites covering all game subsystems:
-- `test_game_engine.js`: Validates contract roster distribution, 1,000-pull astral contract probabilities, shard drop economy curves, energy regeneration, biome tier assignment, Spirit HP and Ultimates, Swarm formations, and Two-Way Combat simulation.
-- `run_probability_tests.js`: Executes 100-pull simulations on Normal and Astral summons, plus 100 simulated evolutions for every base spirit species to verify RNG tables.
-- `test_ui_components.js`: Validates Bestiary tile grid generation, Bestiary inspect modal markup, and visual Hall of Fame assignment logic.
+### 5.2 Rebirth Invariants
+1. **Species Uniformity**: Duplicates must share the exact `speciesId` of the base spirit.
+2. **Locking Safeguards**: Spirits currently placed in the active 5-member party or marked as favorites are strictly protected from sacrifice.
+3. **Evolution Persistence**: Rebirth tier and all unlocked traits persist permanently across evolutionary transformations.
 
 ---
 
-## 7. Two-Way Combat Engine & Ultimates System
+## 6. Spirit Sanctum Hub Architecture
 
-### 7.1 Allied Spirit Stats (HP, MP, Shields)
-- **Max HP Calculation**:
-  $$\text{Max HP} = \max(80, \text{round}(\text{basePower} \times 12 \times (1 + (\text{level} - 1) \times 0.22) \times \text{rarityMultiplier}))$$
-- **Mana (MP) Accumulation**:
-  - Maximum MP: 100.
-  - Automatic Battle Accumulation: +20 MP/sec during active combat.
-  - Active Tapping: Manual party attack clicks award +10 MP to all living party spirits.
-- **Shields**:
-  - Granted by Support Ultimates (e.g. Dog Spirit).
-  - Shields absorb incoming enemy damage before health deduction.
+The Spirit Sanctum Hub serves as the dedicated character management dashboard. Designed with a portrait-first layout, it keeps primary views uncluttered while offering depth on demand.
 
-### 7.2 Ultimates Catalog
-At 100 MP, spirits unleash their species-specific Ultimate skill:
-- **AOE_DAMAGE**: Deals heavy multi-target damage across all living enemies in the swarm (e.g. Cat Spirit, Bull Spirit, Wyrm).
-- **DAMAGE / EXECUTE**: Deals concentrated damage to the lead enemy or executes the lowest-health enemy (e.g. Chicken Spirit, Minotaur).
-- **SUPPORT**: Restores HP to living allies, grants team shields, and revives 1 fallen ally if any are knocked out (e.g. Dog Spirit).
-- **HEAL**: Large party heal and fallen ally revival (e.g. Caterpillar Spirit, Elegant Butterfly).
-- **AOE_DAMAGE_AND_HEAL**: Hybrid burst dealing swarm damage while restoring party health (e.g. Mystical Butterfly, Bear of Dreams, High Elf).
-
-### 7.3 Enemy Swarms & Counter-Attacks
-- **Wave Formation**:
-  - Waves 1 to 4: Swarms of 1 to 4 corrupted minions with staggered attack timers.
-  - Wave 5 (Boss Wave): 1 Overlord Boss accompanied by 2 Royal Guard Sentinels.
-- **Counter-Attacks**:
-  - Each enemy attacks on an individual cooldown (2.2s to 2.8s), targeting the frontline living spirit.
-  - Knocked-out spirits enter the KO state until revived by support spirits, floor victory, or party regrouping.
-- **Victory and Wipeout Rules**:
-  - **Floor Victory**: Defeating the wave 5 boss revives all fallen and damaged spirits to 100% Max HP.
-  - **Party Wipeout**: If all active party members fall in combat, the party safely resets to Wave 1 of the current floor with 100% Max HP restored and zero loss of progression, items, or currency.
+### 6.1 Layout & Component Structure
+- **Hero Carousel Strip**: Horizontally scrollable top strip displaying all contracted spirits with role icons, levels, and Rebirth stars. Includes collapsible search and role filtering chips (DPS, Sub-DPS, Tank, Support, Healer).
+- **Hero Stage Viewport**: Renders the active spirit's animated pixel sprite, elemental affinity, role badge, combat power, and manual Strike/Flinch test controls.
+- **Uncluttered Attributes Card**: Displays a clean 2x2 grid of essential metrics (Max HP, ATK, DEF, CRIT Rate / DMG) alongside an interactive level progression bar.
+- **More Info Expander**: Toggling the "More Info" button expands an inline panel revealing the full 7-Core dual attributes breakdown and the spirit's active scaling matrix formula.
+- **16-Parameter Dossier**: A dedicated modal accessible from the hub displaying categorized statistics: Primary Offense, Survivability, Tactical Flow, and Divine Multipliers.
+- **5 Sub-Hub Navigation**:
+  1. **Attributes**: Core stats, level-up controls, evolution ceremony triggers, and scaling details.
+  2. **Weapons**: Equipped armament socket, forge stats, and quick enhancement (+1 to +15).
+  3. **Relics**: 6 relic sockets (Headgear, Totem, Ring, Necklace, Orb, Charm), star tiers, and Greek God set bonus trackers.
+  4. **Rebirths**: Interactive 7-tier celestial node tree showing required materials and stat gains.
+  5. **Talents**: Detailed combat role traits, ultimate skill breakdowns, and positioning perks.
 
 ---
 
-## 8. Equipment, Greek God Relics & The Pantheon Trials
+## 7. 3x3 Tactical Grid & Combat Engine
+
+### 7.1 Formation Layout & Rules
+Party placement uses a 9-slot grid structured as 3 columns:
+- **Frontline (`f1`, `f2`, `f3`)**: Vanguard position. Preferred by Tanks. Units gain +15% DEF and a 2.0x Threat multiplier.
+- **Midline (`m1`, `m2`, `m3`)**: Core combat line. Preferred by DPS and Supports. Units gain standard 1.0x Threat.
+- **Backline (`b1`, `b2`, `b3`)**: Sanctuary position. Preferred by Healers. Units gain +15% Healing potency and a 0.5x Threat multiplier. **Constraint**: Maximum 1 spirit may be positioned in the Backline simultaneously.
+
+### 7.2 Threat Footprint & Aggro Targeting
+Enemies select targets using weighted probability based on effective Threat:
+$$P(\text{Target}_i) = \frac{\text{Threat}_i}{\sum_{j} \text{Threat}_j}$$
+- Frontline Tanks typically possess over 65% of the total party threat footprint.
+- **Taunt Lock**: When a Tank unleashes their Ultimate, they activate a 6-second Taunt Lock, intercepting 100% of enemy single-target strikes.
+
+### 7.3 Defense Mitigation Curve
+Incoming raw physical and magical damage is mitigated by Defense according to:
+$$\text{Mitigation Factor} = \frac{100}{100 + \text{DEF} \times 0.2857}$$
+$$\text{Damage Taken} = \lfloor \text{Raw Damage} \times \text{Mitigation Factor} \rfloor$$
+- 0 DEF: 0% mitigation (1.00x damage taken).
+- 350 DEF: 50% mitigation (0.50x damage taken).
+- 700 DEF: 67% mitigation (0.33x damage taken).
+
+---
+
+## 8. Equipment, Greek God Relics & The Divine Forge
 
 ### 8.1 Equipment Sockets
-Each contracted spirit possesses seven dedicated equipment slots:
-- **1 Weapon Slot**: Main offensive armament providing raw ATK Power, Critical Rate, and Ultimate Amplification. Weapon archetypes include Spectral Blade, Celestial Bow, Astral Scepter, Primordial Claws, Shadow Dagger, and Titan Mallet.
-- **6 Relic Slots**:
-  1. **Headgear**: Grants Maximum Health Points (HP).
-  2. **Totem**: Grants Defensive Shield Capacity.
-  3. **Ring**: Grants Bonus ATK Power and Critical Strike damage.
-  4. **Necklace**: Grants Mana Replenishment and energy recovery rate.
-  5. **Orb**: Grants Ultimate Amplification and magical mitigation.
-  6. **Charm**: Grants Evasion Rating and attack cadence.
+Every spirit can equip 1 Weapon and 6 Relics:
+- **1 Weapon**: Spectral Blade, Celestial Bow, Astral Staff, Primordial Claws, Shadow Dagger, or Titan Mallet.
+- **6 Relics**: Headgear (HP), Totem (Shield/DEF), Ring (ATK/Crit), Necklace (Mana Replenish), Orb (Ult Amp), Charm (Evasion/Speed).
 
-### 8.2 Greek God Relic Sets & Set Bonuses
-Relics belong to one of eight Olympian God sets. Equipping matching set pieces activates two-piece (2pc) and four-piece (4pc) passive blessings:
+### 8.2 8 Olympian God Relic Sets
 
 | God Set | 2-Piece Set Bonus | 4-Piece Set Bonus |
 | :--- | :--- | :--- |
-| **Hades** | +10% Damage, +5% Mana Replenish | **Underworld Flames**: Unleashes dark flames dealing 5% enemy Max HP as damage-over-time for 7 seconds (15s cooldown). |
-| **Zeus** | +20% Mana Replenish Rate | **Divine Retribution**: Strikes all enemies with instant lightning dealing 15% enemy Max HP (45s cooldown). |
-| **Poseidon** | +10% Damage, +5% Ultimate Amplification | **Oceanic Surge**: Grants +15% team damage buff and 15% Max HP water shield to all spirits (45s cooldown). |
-| **Hermes** | +15% Evasion, +5% Mana Replenish | **Swift Support**: Every 30 seconds, automatically cleanses debuffs and charges the Ultimate gauges of living spirits by +25 MP. |
-| **Ares** | +15% Damage Bonus | **War of Olympus**: Enters a berserk battle trance granting +35% Attack Power for 10 seconds (25s cooldown). |
-| **Apollo** | +10% Damage, +10% Mana Replenish | **Sun Radiance**: Emits solar light that heals all allies for 20% Max HP and burns enemies for 10% current HP (35s cooldown). |
-| **Athena** | +15% Shield Strength, +5% Damage | **Aegis Bulwark**: Grants an impenetrable defensive barrier absorbing up to 25% team Max HP (40s cooldown). |
-| **Artemis** | +10% Critical Strike Chance, +10% Damage | **Hunters True Strike**: Fires focused arrows targeting the highest-health enemy dealing 25% single-target burst damage (20s cooldown). |
+| **Hades** | +10% Damage, +5% Mana Replenish | Underworld Flames: Deals 5% enemy Max HP as DoT for 7s (15s CD). |
+| **Zeus** | +20% Mana Replenish Rate | Divine Retribution: Instant lightning striking all enemies for 15% Max HP (45s CD). |
+| **Poseidon** | +10% Damage, +5% Ult Amp | Oceanic Surge: +15% team damage buff and 15% Max HP water shield (45s CD). |
+| **Hermes** | +15% Evasion, +5% Mana Replenish | Swift Support: Cleanses debuffs and charges living allies by +25 MP every 30s. |
+| **Ares** | +15% Damage Bonus | War of Olympus: Trance granting +35% ATK for 10s (25s CD). |
+| **Apollo** | +10% Damage, +10% Mana Replenish | Sun Radiance: Heals team for 20% Max HP and burns enemies for 10% current HP (35s CD). |
+| **Athena** | +15% Shield Strength, +5% Damage | Aegis Bulwark: Impenetrable barrier absorbing up to 25% team Max HP (40s CD). |
+| **Artemis** | +10% Crit Rate, +10% Damage | Hunters True Strike: Fires focused arrows dealing 25% single-target burst (20s CD). |
 
-### 8.3 The Pantheon Trials (Artifact Dungeon & 3-Wave Combat Arena)
-The Pantheon Trials provide a dedicated dungeon instance for targeted relic farming with a 3-wave combat arena:
-- **Chambers**: 8 dedicated god chambers corresponding to each Olympian deity (Crypt of the Underworld, Sky Sanctum of Olympus, Abyssal Trench, Crossroads of the Wind, Colosseum of War, Temple of the Sun, Citadel of Wisdom, Silver Woods).
-- **3-Wave Combat Encounters**:
-  - **Wave 1**: 2 Divine Sentinels.
-  - **Wave 2**: 2 Sacred Temple Guardians.
-  - **Wave 3 (Boss)**: Olympian God Avatar Boss flanked by Royal Temple Protectors.
-- **Combat Mechanics**: Living spirits automatically attack and charge Mana. Reaching 100 MP triggers team Ultimates. Players can execute manual Divine Strikes to accelerate boss decimation. Defeat allows regrouping with zero penalty; victory yields targeted God Relics.
-- **Difficulty Tiers & Energy Costs**:
-  - **Disciple Trial (Tier 1)**: Costs 10 Energy. Recommended Power: 150 PWR. Drops 2 targeted relics + 25 Madness Shards + 1 Soul Essence.
-  - **Champion Trial (Tier 2)**: Costs 12 Energy. Recommended Power: 800 PWR. Drops 3 targeted relics + 50 Madness Shards + 2 Soul Essence.
-  - **Sovereign Trial (Tier 3)**: Costs 15 Energy. Recommended Power: 3,500 PWR. Drops 3 targeted relics + 100 Madness Shards + 4 Soul Essence.
-  - **Divine Trial (Tier 4)**: Costs 18 Energy. Recommended Power: 12,000 PWR. Drops 4 targeted relics + 250 Madness Shards + 8 Soul Essence.
-- **Madness Tower Overlord Boss Caches**:
-  - Overlord Bosses (Wave 5 of every floor) have a 35% chance to drop a random Relic Cache upon defeat, providing supplemental relic drops during idle tower progression.
-
-### 8.4 The Divine Forge (Dedicated Weapon Dungeon)
-The Divine Forge provides a standalone dungeon instance dedicated to forging specialized spirit weapons:
-- **Forge Chambers**:
-  1. **Bladesmith Sanctum**: Forges Spectral Blades, Astral Greatswords, and Katana armaments.
-  2. **Archers Grove**: Forges Celestial Recurves, Astral Longbows, and Crossbow armaments.
-  3. **Arcane Spire**: Forges Astral Staves, Mystic Wands, and Spellbound Rods.
-  4. **Behemoth Den**: Forges Primordial Claws, Beast Gauntlets, and Spiked Knuckles.
-  5. **Shadow Armory**: Forges Shadow Daggers, Twin Blades, and Nether Stilettos.
-  6. **Titans Anvil**: Forges Titan Mallets, Warhammers, and Earthshaker Maces.
-- **Difficulty Tiers**:
-  - **Apprentice Forge (Tier 1)**: Costs 8 Energy. Recommended Power: 120 PWR. Drops 1-2 targeted weapons.
-  - **Artisan Forge (Tier 2)**: Costs 12 Energy. Recommended Power: 650 PWR. Drops 2 targeted weapons.
-  - **Master Forge (Tier 3)**: Costs 15 Energy. Recommended Power: 2,800 PWR. Drops 2-3 targeted weapons.
-  - **Celestial Forge (Tier 4)**: Costs 18 Energy. Recommended Power: 10,000 PWR. Drops 3 targeted weapons.
-- **Combat Arena**: Features 3 waves of combat (Forge Minions, Elite Automatons, and the Colossus Forge Master) before awarding weapon loot.
-- **Weapon Enhancement Engine (+1 to +15)**:
-  - Weapons can be upgraded from +1 up to +15 using Spirit Shards and Essences of the Gods.
-  - Upgrading directly from the **Hero socket modal**, **Hero equipment drawer**, or **Vault inspection modal**.
-  - Each level increases primary **ATK Power** scaled to weapon rarity multiplier.
-  - Every 3 milestone levels (+3, +6, +9, +12, +15), weapons gain +1% Critical Rate (up to 35%) and +2% Ultimate Amplification (up to 45%).
-  - At +15, weapons display the glowing `✓ +15 MAX` golden crest.
-
-### 8.5 Relic Star Tiers (3★-6★), Substats & Ascension
-- **Star Ratings (3★ to 6★)**:
-  - **3★ Relics**: Drop with 1-2 random substats (max capacity: 3).
-  - **4★ Relics**: Drop with 2-3 random substats (max capacity: 4).
-  - **5★ Relics**: Drop with 3-4 random substats (max capacity: 4).
-  - **6★ Ascended Relics**: Attainable only via Ascension at Level 15; unlocks a 5th empowered substat slot with divine multiplier.
-- **Random Substat Pool**:
-  - `Crit Chance` (+1.5% to +4.0%)
-  - `Crit Damage` (+8.0% to +20.0%)
-  - `Attack Power %` (+3.0% to +8.0%)
-  - `Health %` (+4.0% to +10.0%)
-  - `Attack Speed %` (+2.0% to +6.0%)
-  - `Flat ATK` (+15 to +50)
-  - `Flat HP` (+80 to +250)
-- **Enhancement & Ascension Engine**:
-  - Relics enhance from +1 to +15 using Spirit Shards and Essences of the Gods. Every 3 levels (+3, +6, +9, +12, +15), an existing substat is rolled for a major enhancement upgrade.
-  - At +15, 5★ relics can undergo **Divine Ascension** consuming 50 Essences of the Gods, elevating them to 6★ with golden prismatic borders and unlocking the 5th substat.
-- **Dismantling**: Unequipped relics and weapons can be dismantled to reclaim Spirit Shards and Essences of the Gods.
+### 8.3 Substat Rerolling
+Using 5 Soul Essences, players can reroll all randomized substats on any relic or weapon to optimize stat distributions.
 
 ---
 
-## 9. The Sanctuary of the Gods & Mystical Realm
+## 9. Offline Progression, Tab Switching & Idle Spoils
 
-The Mystical Realm (`mysticalView.js`) represents the celestial core for essence harvesting, elixir consumption, and divine favor:
-- **Essence Chambers**:
-  1. **Olympian Nexus**: Drops Essences of the Gods with lightning affinity.
-  2. **Titan Depths**: Drops Essences of the Gods with primordial stone affinity.
-  3. **Celestial Core**: Drops high-yield Essences of the Gods and bonus Soul Essence.
-  4. **Primordial Abyss**: High-difficulty chamber yielding massive quantities of Essences of the Gods.
-- **Astral EXP Potions**:
-  - **Lesser Astral Elixir**: Grants +10,000 XP (Costs 100 Shards & 5 Essences).
-  - **Greater Astral Elixir**: Grants +50,000 XP (Costs 400 Shards & 20 Essences).
-  - **Supreme Astral Elixir**: Grants +200,000 XP (Costs 1,200 Shards & 50 Essences).
-  - **Transcendent Astral Elixir**: Grants +1,000,000 XP (Costs 4,500 Shards & 150 Essences).
-- **Timed 1-Hour Combat Blessings**:
-  - Players can activate divine blessings that persist across all game modes for 1 hour:
-    - **Blessing of Ares**: +20% Total Party Damage.
-    - **Blessing of Athena**: +25% Shield Strength & +10% Damage.
-    - **Blessing of Hermes**: +15% Party Attack Speed & Evasion.
-    - **Blessing of Apollo**: +20% Healing & Ultimate Power.
-    - **Blessing of Zeus**: +25% Mana Replenish Rate & Lightning Shock.
-    - **Blessing of Poseidon**: +15% Damage & Tidal Water Shield.
-    - **Blessing of Hades**: +15% Critical Damage & Lifesteal.
-    - **Blessing of Artemis**: +15% Critical Strike Chance.
+### 9.1 24-Hour Diminishing Engine
+Offline training simulates gains up to a 24-hour cap (86,400s) with balanced progression curves:
+- **Offline XP**: 20% of active training rate based on the player's highest unlocked floor.
+- **Offline Shards**: 25% of active shard rate.
+- **Offline Soul Essence**: 1 Essence per 2 hours (up to 12 Essence per full 24-hour period).
+
+### 9.2 1-Hour Minimum Idle Spoils Rule
+To prevent rapid-fire claim abuse and encourage deliberate play sessions:
+- Idle meditation spoils can only be claimed if at least 1 hour (3,600 seconds) has elapsed since the last claim or session initialization.
+- If less than 3,600 seconds have accumulated, the claim button is disabled with a real-time countdown timer.
+
+### 9.3 Tab-Switching Compensation
+When switching browser tabs, the engine calculates the duration away via document visibility timestamps. Accumulated XP is distributed across all active party members immediately upon returning.
 
 ---
 
-## 10. Multi-Banner Gacha Altar & Milestones
+## 10. Multi-Banner Summon Altar
 
-The Contract Altar (`contractView.js`) features multi-banner rate-ups and milestone rewards:
-- **Multi-Banner Carousel**:
-  - **Solaris Rate-Up Banner**: Elevated odds for Light/Solar celestial spirits.
-  - **Primordial Sanctum Banner**: Rate-up for Earth & Dark behemoths.
-  - **Olympian Pantheon Banner**: Rate-up for mythological and warrior spirits.
-  - **Standard Astral Banner**: Balanced collection pool across all 47 spirit species.
-- **Bulk Summoning**: Instant 1x, 10x, and 30x multi-pulls with celebratory rare fanfare.
-- **Summoner Level & Milestone Tracks**: Every contract grants Summoner XP. Achieving summon count milestones (10, 20, 30, 50, 100 pulls) awards bonus Shards, Essences, and Astral Elixirs.
-
----
-
-## 11. High-Fantasy UI Architecture & 2.5D Viewports
-
-### 11.1 Pixi.js 2.5D Isometric Rendering Engine
-The arena viewport engine (`arenaRenderer.js`) is integrated across the Madness Zone, Pantheon Trials, The Divine Forge, and the Mystical Realm:
-- **Pixi.js (v8.x) WebGL Canvas**: Hardware-accelerated rendering featuring dynamic isometric planes, runic circles, elemental weather effects (embers, rain, leaves, lightning), and grounded character shadows.
-- **GSAP Tweens & Camera Dynamics**: Smooth combat lunges, ultimate activation pulses, screen-shake transients, and floating combat text.
-
-### 11.2 The Divine Vault (TCG Card Collection)
-The Vault (`vaultView.js`) implements a collectible card layout:
-- **3 Distinct Categories**: Dedicated tabs for ⛩️ Spirits, 🔱 Relics, and ⚔️ Weapons.
-- **Custom Filter Sliders**: Utilizes `.index-filter-scroll` matching the Bestiary Index, featuring the signature glowing green scrollbar thumb (`#27ae60`), mouse-wheel horizontal scrolling, and horizontal scroll position retention across re-renders.
-- **Bulk Annulment**: Multi-select mode with visual red checkbox indicators (`✓`), Commons/Uncommons quick-select buttons, and a "Select All (Filtered)" action with favorite and party protection.
-- **In-Line Customization**: Instant star favorite locking and custom spirit renaming.
-
-### 11.3 Unified 8-Column Mobile Navigation Dock
-The primary bottom navigation bar is constructed as a responsive 8-column single-line dock fitting mobile screens with zero horizontal overflow:
-- **Hero**: Active party formation, pedestal showcase, and equipment sockets.
-- **Tower**: Madness Zone 2.5D tower combat and wave progression.
-- **Trials**: The Pantheon Trials relic dungeon and 3-wave god battles.
-- **Forge**: The Divine Forge weapon dungeon and chamber selection.
-- **Realm**: The Sanctuary of the Gods, essence chambers, EXP potions, and blessings.
-- **Summon**: Multi-banner contract altar and summoner milestones.
-- **Vault**: TCG Card Collection for Spirits, Relics, and Weapons.
-- **Index**: Terraria-style Spirit Bestiary Compendium.
+The Contract Altar features multi-banner rate-ups with permanent availability:
+- **Featured Banners**:
+  - Solaris Rate-Up (Light / Solar celestial affinity).
+  - Primordial Sanctum (Earth / Dark behemoths).
+  - Olympian Pantheon (Mythological warriors).
+  - Abyssal Rift (Nether void and oceanic leviathans).
+  - Standard Astral (Universal 54-spirit pool).
+- **Banner Permanence**: All rate-up banners are permanently available, allowing players to target preferred spirits without artificial time pressure.
+- **Bulk Contracts**: Supports 1x, 10x, and 30x multi-pulls with celebratory rare fanfare.
 
 ---
 
-## 12. Audio Engine Architecture & Sound Events
+## 11. Animated Pixel Sprite Pipeline
 
-### 12.1 Hybrid Audio Architecture
-The audio engine (`audioManager.js`) provides zero-latency playback using HTML5 Audio and the Web Audio API:
-- **Background Music (BGM)**:
-  - `sanctum_ambient.wav`: Atmospheric minor-key pad with ethereal harmonic arpeggios for Sanctum and Vault navigation.
-  - `battle_madness.wav`: Rhythmic 120 BPM combat pulse with synth bass drive for the Madness Tower.
-  - `trials_pantheon.wav`: Solemn brass and orchestral progression for the Pantheon Trials dungeon.
-- **Sound Effects (SFX)**:
-  - `attack_hit.wav`: Melee impact transient on manual and automated party strikes.
-  - `crit_hit.wav`: Resonant sub-bass critical blow when set bonus passives trigger.
-  - `ultimate_cast.wav`: Ascending energy vortex burst on full 100 MP ultimate release.
-  - `level_up.wav`: Four-note ascending celestial chime.
-  - `evolution_fanfare.wav`: Regal four-chord victory fanfare on successful spirit evolution.
-  - `dungeon_reward.wav`: Sparkling bell chime on artifact dungeon clearance.
-  - `button_tap.wav`: Crisp tactile click on navigation and gear equip.
-
-### 12.2 Lifecycle & User Gesture Compliance
-In accordance with modern browser autoplay policies, audio context initialization and track playback automatically unlock upon the player's first user interaction (touch or click). User audio preferences (mute state, music volume, SFX volume) are persisted in local storage.
+### 11.1 Sprite Specifications
+- **Format**: Lightweight vector SVG spritesheets.
+- **Layout**: 384x48px sheets containing eight 48x48px frames (4 Idle, 3 Attack, 1 Hurt/Reaction).
+- **Total Manifest**: 33 active spritesheet assets:
+  - 9 Creature families (Feline, Canine, Avian, Bovine, Insect, Leviathan, Sun Celestial, Nether Voidbinder, Chrono Temporal).
+  - 6 Enemy champions and overlords.
+  - 6 Divine forged weapon archetypes.
+  - 12 Greek God relics and chamber insignia.
 
 ---
 
-## 13. Spirit Ascension System (★1 to ★7)
+## 12. Verification & Automated Test Suites
 
-### 13.1 Overview & Mathematical Scaling
-The Spirit Ascension System allows players to utilize duplicate copies of spirits obtained from contract pulls to permanently augment a target spirit's stats and unlock milestone combat traits.
-
-Base stat scaling follows:
-$$\text{Effective Base Stat} = \text{Base Stat} \times (1 + \text{Ascension Level} \times 0.12)$$
-
-| Ascension Tier | Duplicates Required | Astral Essence Cost | Stat Multiplier | Combat Trait Unlocked | Visual Treatment |
-| :---: | :---: | :---: | :---: | :--- | :--- |
-| ★1 | 1 Copy | 1 🔮 | +12% Total Stats | — | Bronze Star Badge (`★1`) |
-| ★2 | 1 Copy | 1 🔮 | +24% Total Stats | — | Silver Star Badge (`★2`) |
-| ★3 | 2 Copies | 2 🔮 | +36% Total Stats | **Celestial Quickening**: Spirit enters combat with +15 starting MP | Gold Star Badge (`★3`) |
-| ★4 | 2 Copies | 3 🔮 | +48% Total Stats | — | Gold Star Badge (`★4`) |
-| ★5 | 3 Copies | 4 🔮 | +60% Total Stats | **Divine Surge**: Ultimate Skill damage/effect amplified by +20% | Emerald Star Badge (`★5`) |
-| ★6 | 3 Copies | 5 🔮 | +72% Total Stats | — | Amethyst Star Badge (`★6`) |
-| ★7 (MAX) | 4 Copies | 8 🔮 | +84% Total Stats | **Sovereign Focus**: +10% Critical Hit Chance, +25% Critical Hit Damage | Glowing Golden Frame + (`★7 MAX`) |
-
-### 13.2 Ascension Rules & Evolution Preservation
-1. **Species Match**: Duplicate spirits must belong to the exact same species identifier (e.g. `cat_spirit`).
-2. **Locking Protections**: Spirits marked as favorites or currently equipped in the active 5-slot combat party are protected and ineligible for sacrifice.
-3. **Evolution Horizon Inheritance**: When a spirit evolves, its `ascensionLevel` and all associated combat perks are permanently carried forward to the evolved species form.
-
----
-
-## 14. Astral Realm Overhaul & Expansion
-
-### 14.1 Pure Astral Currency Economy
-The Astral Realm has been decoupled from standard Spirit Shards:
-- **🔮 Astral Essences (`soulEssence`)**: Rare catalysts harvested from Essence Dungeons, Constellation milestones, Expeditions, and the Transmutation Circle.
-- **💠 Essences of the Gods (`essencesOfTheGods`)**: Divine reagents awarded from Pantheon Trials, Sanctuary Dungeons, and relic dismantling.
-- **Zero-Shard Rule**: Upgrading Energy Capacity, brewing Astral EXP Elixirs, and invoking Divine Blessings require exclusively 🔮 and 💠, completely eliminating shard sink pressure in the sanctum.
-
-### 14.2 Celestial Constellations (Zodiac Passive Trees)
-Players can permanently illuminate 5 star nodes across 3 Zodiac Constellations using 🔮 Astral Essences:
-
-#### 1. Draco (The Dragon of Fury - Offensive Tree)
-- **Node 1 (Dragon Claw)**: +4% All Spirit ATK Power (Cost: 2 🔮)
-- **Node 2 (Scaled Vigor)**: +6% All Spirit ATK Power (Cost: 3 🔮)
-- **Node 3 (Draconic Focus)**: +5% Critical Hit Chance (Cost: 5 🔮)
-- **Node 4 (Infernal Wrath)**: +15% Critical Hit Damage (Cost: 8 🔮)
-- **Node 5 (Dragon Sovereign)**: +20% Ultimate Skill Amplification (Cost: 12 🔮)
-
-#### 2. Phoenix (The Immortal Flame - Vitality & Defense Tree)
-- **Node 1 (Kindled Spark)**: +5% All Spirit Max HP (Cost: 2 🔮)
-- **Node 2 (Blazing Plume)**: +8% All Spirit Max HP (Cost: 3 🔮)
-- **Node 3 (Aegis of Ashes)**: +10% Max HP Initial Shield on combat start/wave clear (Cost: 5 🔮)
-- **Node 4 (Solar Rebirth)**: +15% Healing & Regeneration (Cost: 8 🔮)
-- **Node 5 (Eternal Avatar)**: +10% Permanent Damage Mitigation (Cost: 12 🔮)
-
-#### 3. Pegasus (The Harbinger of Starlight - Velocity & Utility Tree)
-- **Node 1 (Zephyr Stride)**: +10% Faster Natural Energy Regen Interval (Cost: 2 🔮)
-- **Node 2 (Aether Hooves)**: +20 Max Energy Vault Capacity (Cost: 3 🔮)
-- **Node 3 (Cosmic Siphon)**: +25% Chance for Extra 🔮 Astral Drop from Overlord Bosses (Cost: 5 🔮)
-- **Node 4 (Astral Swiftness)**: +20% Idle AFK Training Experience (Cost: 8 🔮)
-- **Node 5 (Celestial Emissary)**: +25% Bonus 💠 God Essences from Trials (Cost: 12 🔮)
-
-### 14.3 Astral Expeditions (Idle Spirit Dispatch)
-Idle spirits not in the active combat party can be dispatched into cosmic rifts for idle foraging:
-
-| Fissure ID | Name | Duration | Team Size | Element Affinity | Base Loot Yields |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| `starlight_fissure` | Starlight Fissure | 2 Hours | 1 Spirit | WIND | 1–2 🔮 Astral, 15–25 💠 Gods, 100 💎 Shards |
-| `nebula_abyss` | Nebula Abyss | 6 Hours | 2 Spirits | WATER | 3–5 🔮 Astral, 35–55 💠 Gods, 300 💎 Shards, 50% Relic Drop |
-| `primordial_void` | Primordial Void | 12 Hours | 3 Spirits | LIGHT | 8–12 🔮 Astral, 80–120 💠 Gods, 800 💎 Shards, 100% Relic Drop |
-
-- **Elemental Synergy**: Including at least 1 spirit matching the fissure's recommended affinity applies a **1.25x (+25%) multiplier** to all generated rewards.
-
-### 14.4 Astral Transmutation Circle (Anti-Oversaturation Protocol)
-To ensure late-game economy health and prevent hyper-inflation of Spirit Shards:
-$$\text{Shard Cost} = 1,000 + (\text{Transmutations Today} \times 250) \text{ 💎}$$
-$$\text{God Essence Cost} = 10 \text{ 💠}$$
-$$\text{Reward} = 1 \text{ 🔮 Astral Essence}$$
-The escalation counter resets daily at midnight.
-
----
-
-## 15. The Divine Vault: Bulk Management & Dismantle Engine
-
-### 15.1 Unified Collection Management
-The Divine Vault provides streamlined bulk operations across all three collectible item categories:
-- **⛩️ Spirits (Bulk Annul)**: Release unwanted spirits back into the ether to reclaim Spirit Shards.
-- **🔱 Relics (Bulk Dismantle)**: Deconstruct excess Greek God relics into Spirit Shards and Essences of the Gods.
-- **⚔️ Weapons (Bulk Dismantle)**: Smelt obsolete forged weapons into Spirit Shards.
-
-### 15.2 Bulk Filter Profiles & Safety Protocols
-- **Contextual Filtering**:
-  - **Spirits**: Quick-select `Commons` and `Uncommons`.
-  - **Relics**: Quick-select `3★ Stars` and `4★ Stars`.
-  - **Weapons**: Quick-select `Commons` and `Uncommons`.
-  - **Global Filters**: `Select All` (respects current rarity and slot/element filters) and `Clear`.
-- **Locking Safety Guarantees**:
-  - **Active Party & Equipped Gear**: Spirits in the 5-member party or equipment currently worn by any spirit (`equippedToSpiritId`) cannot be selected for bulk operations.
-  - **Favorite Locking**: Any item with `favorite: true` is permanently protected from bulk actions; toggling a favorite immediately purges the item from the selection set.
-- **Dynamic Yield Preview**: Displays real-time estimated returns (💎 Spirit Shards and 💠 Essences of the Gods) prior to confirming the transaction.
-
----
-
-## 16. Relic & Weapon Dismantle Economy
-
-### 16.1 Essence of the Gods Yield Formulas
-Dismantling artifacts (relics) rewards both Spirit Shards and Essences of the Gods based on Star Tier ($S$) and Enhancement Level ($L$):
-
-$$\text{Shards Gained} = \lfloor \text{TierBaseShards} \times (1 + (\max(1, L) - 1) \times 0.15) \rfloor$$
-$$\text{Essences of the Gods Gained} = \max(\text{TierBaseEssences}, \text{TierBaseEssences} + \max(0, L - 1) \times 2)$$
-
-| Star Tier | Tier Label | Base Dismantle Shards | Base Dismantle Essences (Lv. 1) | Max Level ($L$) |
-| :---: | :---: | :---: | :---: | :---: |
-| 3★ | Adept | 50 💎 | 5 💠 | 9 |
-| 4★ | Master | 150 💎 | 15 💠 | 12 |
-| 5★ | Ascended | 350 💎 | 30 💠 | 15 |
-| 6★ | Divine | 800 💎 | 60 💠 | 15 |
-
-- **Guaranteed Base Yield**: An un-enhanced (Lv. 1) relic is guaranteed to return 100% of its star tier's base essences (e.g., minimum 5 💠 for 3★, 15 💠 for 4★).
-- **Weapons Dismantle**: Yields $25 \times \max(1, L)$ Spirit Shards upon deconstruction.
-
----
-
-## 17. 2D Animated Pixel Sprite Engine & Audio Architecture
-
-### 17.1 Sprite Animation Controller (`SpriteAnimator`)
-The game implements a lightweight, framework-agnostic sprite animator leveraging CSS background-step animations and modular SVG spritesheets:
-- **Frame Specifications**: 384x48px sheets with eight 48x48px frames (4 Idle, 3 Attack, 1 Hurt/Flash).
-- **Sheet Roster (19 Sheets Total)**:
-  - **Hero Creatures (7 Sheets)**: `feline_shadow`, `canine_guardian`, `avian_blaze`, `bovine_earth`, `insect_chrysalis`, `draconic_leviathan`, `celestial_sun`.
-  - **Enemies (2 Sheets)**: `enemy_shadow_behemoth`, `enemy_corrupted_serpent`.
-  - **Relics (4 Sheets)**: `relic_crown_zeus`, `relic_blade_ares`, `relic_trident_poseidon`, `relic_orb_arcane`.
-  - **Weapons (6 Sheets)**: `weapon_spectral_blade`, `weapon_celestial_bow`, `weapon_astral_staff`, `weapon_primordial_claws`, `weapon_shadow_dagger`, `weapon_titan_mallet`.
-- **Display Scaling Tokens**:
-  - `.socket-animated-sprite`: Scaled to 32x32px for hero pedestal and roster slots.
-  - `.vault-card-sprite`: Scaled to 56x56px for collection cards.
-  - `.inspect-animated-sprite`: Scaled to 72x72px for modal inspection pedestals.
-
-### 17.2 Audio Engine & Anti-Spam Throttling
-- **Master Level Calibration**: Default SFX and BGM volumes calibrated to `0.35` for balanced acoustics.
-- **Ultimate SFX Throttling**:
-  - Global 1,400ms debounce window on `playSfx('ult')` prevents audio cacophony during concurrent multi-hero ultimate bursts.
-  - Dedicated gain attenuation ($0.55 \times \text{sfxVolume}$) prevents waveform clipping.
-- **Combat Pacing**: Base automatic mana regeneration paced to $20 \text{ MP/s}$, and active tapping charges $+10 \text{ MP}$ per click.
-
-
-
-
-
+The codebase is protected by automated test suites validating engine mechanics, balance curves, and UI components:
+- `tests/test_game_engine.js`: 36 tests covering contract rosters, Monte Carlo RNG, 7-Core dual attributes, 54-spirit scaling matrix, Rebirth progression, 3x3 tactical grid rules, threat aggro, defense mitigation, 1-hour idle spoils threshold, and Spirit Sanctum Hub rendering.
+- `tests/test_ui_components.js`: Validates component markup, drawer transitions, and inspect modals.
+- `tests/run_probability_tests.js`: Monte Carlo verification across 100-pull and 100-evolution iterations.

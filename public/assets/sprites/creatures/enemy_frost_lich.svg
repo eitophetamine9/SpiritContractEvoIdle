@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .fl-robe  { fill: #082f49; }
+      .fl-ice   { fill: #38bdf8; }
+      .fl-frost { fill: #bae6fd; }
+      .fl-core  { fill: #0284c7; }
+      .fl-staff { fill: #f0f9ff; stroke: #0284c7; stroke-width: 1; }
+      .fl-eye   { fill: #e0f2fe; }
+      .fl-shadow{ fill: rgba(0,0,0,0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.5" class="fl-shadow"/>
+    <!-- Floating crystalline ice shards -->
+    <polygon points="10,22 8,28 12,28" class="fl-frost"/>
+    <polygon points="38,22 36,28 40,28" class="fl-frost"/>
+    <!-- Robe / Ice Shell -->
+    <path d="M16 42 L24 18 L32 42 Z" class="fl-robe"/>
+    <polygon points="24,20 20,28 28,28" class="fl-ice"/>
+    <polygon points="24,28 21,36 27,36" class="fl-core"/>
+    <!-- Floating Crown / Head -->
+    <polygon points="24,8 18,16 30,16" class="fl-ice"/>
+    <circle cx="21" cy="14" r="1.5" class="fl-eye"/>
+    <circle cx="27" cy="14" r="1.5" class="fl-eye"/>
+    <!-- Frost Scepter -->
+    <line x1="36" y1="12" x2="36" y2="40" class="fl-staff"/>
+    <polygon points="36,8 32,14 40,14" class="fl-frost"/>
+    <circle cx="36" cy="11" r="2.5" class="fl-ice"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Hover Up) [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="15" ry="4" class="fl-shadow"/>
+    <polygon points="9,21 7,27 11,27" class="fl-frost"/>
+    <polygon points="39,21 37,27 41,27" class="fl-frost"/>
+    <path d="M16 41 L24 17 L32 41 Z" class="fl-robe"/>
+    <polygon points="24,19 20,27 28,27" class="fl-ice"/>
+    <polygon points="24,27 21,35 27,35" class="fl-core"/>
+    <polygon points="24,7 18,15 30,15" class="fl-ice"/>
+    <circle cx="21" cy="13" r="1.5" class="fl-eye"/>
+    <circle cx="27" cy="13" r="1.5" class="fl-eye"/>
+    <line x1="36" y1="11" x2="36" y2="39" class="fl-staff"/>
+    <polygon points="36,7 32,13 40,13" class="fl-frost"/>
+    <circle cx="36" cy="10" r="2.5" class="fl-ice"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Hover Peak) [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3.2" class="fl-shadow"/>
+    <polygon points="10,20 8,26 12,26" class="fl-frost"/>
+    <polygon points="38,20 36,26 40,26" class="fl-frost"/>
+    <path d="M16 40 L24 16 L32 40 Z" class="fl-robe"/>
+    <polygon points="24,18 20,26 28,26" class="fl-ice"/>
+    <polygon points="24,26 21,34 27,34" class="fl-core"/>
+    <polygon points="24,6 18,14 30,14" class="fl-ice"/>
+    <circle cx="21" cy="12" r="1.8" class="fl-eye"/>
+    <circle cx="27" cy="12" r="1.8" class="fl-eye"/>
+    <line x1="36" y1="10" x2="36" y2="38" class="fl-staff"/>
+    <polygon points="36,6 32,12 40,12" class="fl-frost"/>
+    <circle cx="36" cy="9" r="3" class="fl-ice"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Hover Down) [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="3.5" class="fl-shadow"/>
+    <polygon points="10,22 8,28 12,28" class="fl-frost"/>
+    <polygon points="38,22 36,28 40,28" class="fl-frost"/>
+    <path d="M16 42 L24 18 L32 42 Z" class="fl-robe"/>
+    <polygon points="24,20 20,28 28,28" class="fl-ice"/>
+    <polygon points="24,28 21,36 27,36" class="fl-core"/>
+    <polygon points="24,8 18,16 30,16" class="fl-ice"/>
+    <circle cx="21" cy="14" r="1.5" class="fl-eye"/>
+    <circle cx="27" cy="14" r="1.5" class="fl-eye"/>
+    <line x1="36" y1="12" x2="36" y2="40" class="fl-staff"/>
+    <polygon points="36,8 32,14 40,14" class="fl-frost"/>
+    <circle cx="36" cy="11" r="2.5" class="fl-ice"/>
+  </g>
+
+  <!-- Frame 4: Attack Windup [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="22" cy="44" rx="15" ry="3.5" class="fl-shadow"/>
+    <path d="M14 42 L22 18 L30 42 Z" class="fl-robe"/>
+    <polygon points="22,8 16,16 28,16" class="fl-ice"/>
+    <!-- Scepter raised overhead -->
+    <line x1="28" y1="4" x2="36" y2="34" class="fl-staff"/>
+    <circle cx="28" cy="4" r="5" class="fl-ice"/>
+    <circle cx="28" cy="4" r="2.5" class="fl-frost"/>
+  </g>
+
+  <!-- Frame 5: Attack Blizzard Blast [240..288] -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="26" cy="44" rx="18" ry="4" class="fl-shadow"/>
+    <path d="M18 42 L26 18 L34 42 Z" class="fl-robe"/>
+    <polygon points="26,8 20,16 32,16" class="fl-ice"/>
+    <!-- Glacial spike barrage forward -->
+    <polygon points="12,24 2,28 12,32" class="fl-frost"/>
+    <polygon points="16,14 4,18 16,22" class="fl-ice"/>
+    <circle cx="8" cy="24" r="6" class="fl-frost" opacity="0.6"/>
+  </g>
+
+  <!-- Frame 6: Attack Recovery [288..336] -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="25" cy="44" rx="15" ry="3.5" class="fl-shadow"/>
+    <path d="M17 42 L25 18 L33 42 Z" class="fl-robe"/>
+    <polygon points="25,8 19,16 31,16" class="fl-ice"/>
+    <line x1="35" y1="14" x2="35" y2="42" class="fl-staff"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Recoil [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="21" cy="44" rx="12" ry="3" class="fl-shadow"/>
+    <path d="M14 42 L22 20 L30 42 Z" fill="#ef4444"/>
+    <polygon points="22,10 16,18 28,18" fill="#dc2626"/>
+    <circle cx="19" cy="15" r="1.2" fill="#fca5a5"/>
+    <circle cx="25" cy="15" r="1.2" fill="#fca5a5"/>
+  </g>
+</svg>

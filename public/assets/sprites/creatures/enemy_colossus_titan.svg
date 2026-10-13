@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .ct-stone { fill: #334155; }
+      .ct-rock  { fill: #475569; }
+      .ct-moss  { fill: #15803d; }
+      .ct-rune  { fill: #10b981; }
+      .ct-eye   { fill: #34d399; }
+      .ct-shadow{ fill: rgba(0,0,0,0.4); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="44" rx="17" ry="4" class="ct-shadow"/>
+    <!-- Huge Granite Fists -->
+    <rect x="8" y="24" width="7" height="12" rx="2" class="ct-stone"/>
+    <rect x="33" y="24" width="7" height="12" rx="2" class="ct-stone"/>
+    <!-- Torso -->
+    <rect x="15" y="16" width="18" height="22" rx="3" class="ct-rock"/>
+    <!-- Moss & Earth growths -->
+    <path d="M15 16 L22 16 L19 22 Z" class="ct-moss"/>
+    <path d="M33 16 L26 16 L29 22 Z" class="ct-moss"/>
+    <!-- Glowing Runes -->
+    <polygon points="24,20 20,28 28,28" class="ct-rune"/>
+    <rect x="23" y="28" width="2" height="6" class="ct-rune"/>
+    <!-- Monolithic Head -->
+    <rect x="18" y="8" width="12" height="10" rx="2" class="ct-stone"/>
+    <circle cx="21" cy="13" r="1.5" class="ct-eye"/>
+    <circle cx="27" cy="13" r="1.5" class="ct-eye"/>
+    <!-- Boulder Legs -->
+    <rect x="16" y="38" width="6" height="6" rx="1" class="ct-stone"/>
+    <rect x="26" y="38" width="6" height="6" rx="1" class="ct-stone"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Breathe / Heavy Settle) [48..96] -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="18" ry="4.5" class="ct-shadow"/>
+    <rect x="7" y="25" width="8" height="12" rx="2" class="ct-stone"/>
+    <rect x="33" y="25" width="8" height="12" rx="2" class="ct-stone"/>
+    <rect x="14" y="17" width="20" height="21" rx="3" class="ct-rock"/>
+    <path d="M14 17 L21 17 L18 23 Z" class="ct-moss"/>
+    <path d="M34 17 L27 17 L30 23 Z" class="ct-moss"/>
+    <polygon points="24,21 20,29 28,29" class="ct-rune"/>
+    <rect x="23" y="29" width="2" height="6" class="ct-rune"/>
+    <rect x="18" y="9" width="12" height="10" rx="2" class="ct-stone"/>
+    <circle cx="21" cy="14" r="1.5" class="ct-eye"/>
+    <circle cx="27" cy="14" r="1.5" class="ct-eye"/>
+    <rect x="15" y="38" width="7" height="6" rx="1" class="ct-stone"/>
+    <rect x="26" y="38" width="7" height="6" rx="1" class="ct-stone"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Rise Peak) [96..144] -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="16" ry="3.8" class="ct-shadow"/>
+    <rect x="8" y="23" width="7" height="12" rx="2" class="ct-stone"/>
+    <rect x="33" y="23" width="7" height="12" rx="2" class="ct-stone"/>
+    <rect x="15" y="15" width="18" height="23" rx="3" class="ct-rock"/>
+    <path d="M15 15 L22 15 L19 21 Z" class="ct-moss"/>
+    <path d="M33 15 L26 15 L29 21 Z" class="ct-moss"/>
+    <polygon points="24,19 20,27 28,27" class="ct-rune"/>
+    <rect x="23" y="27" width="2" height="6" class="ct-rune"/>
+    <rect x="18" y="7" width="12" height="10" rx="2" class="ct-stone"/>
+    <circle cx="21" cy="12" r="1.8" class="ct-eye"/>
+    <circle cx="27" cy="12" r="1.8" class="ct-eye"/>
+    <rect x="16" y="38" width="6" height="6" rx="1" class="ct-stone"/>
+    <rect x="26" y="38" width="6" height="6" rx="1" class="ct-stone"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Settle) [144..192] -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="44" rx="17" ry="4" class="ct-shadow"/>
+    <rect x="8" y="24" width="7" height="12" rx="2" class="ct-stone"/>
+    <rect x="33" y="24" width="7" height="12" rx="2" class="ct-stone"/>
+    <rect x="15" y="16" width="18" height="22" rx="3" class="ct-rock"/>
+    <path d="M15 16 L22 16 L19 22 Z" class="ct-moss"/>
+    <path d="M33 16 L26 16 L29 22 Z" class="ct-moss"/>
+    <polygon points="24,20 20,28 28,28" class="ct-rune"/>
+    <rect x="23" y="28" width="2" height="6" class="ct-rune"/>
+    <rect x="18" y="8" width="12" height="10" rx="2" class="ct-stone"/>
+    <circle cx="21" cy="13" r="1.5" class="ct-eye"/>
+    <circle cx="27" cy="13" r="1.5" class="ct-eye"/>
+    <rect x="16" y="38" width="6" height="6" rx="1" class="ct-stone"/>
+    <rect x="26" y="38" width="6" height="6" rx="1" class="ct-stone"/>
+  </g>
+
+  <!-- Frame 4: Attack Windup [192..240] -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="22" cy="44" rx="16" ry="3.8" class="ct-shadow"/>
+    <rect x="13" y="16" width="18" height="22" rx="3" class="ct-rock"/>
+    <rect x="16" y="8" width="12" height="10" rx="2" class="ct-stone"/>
+    <!-- Massive fist raised up high -->
+    <rect x="30" y="6" width="12" height="14" rx="3" class="ct-stone"/>
+    <polygon points="36,8 32,14 40,14" class="ct-rune"/>
+  </g>
+
+  <!-- Frame 5: Attack Tectonic Smash [240..288] -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="26" cy="44" rx="20" ry="5" class="ct-shadow"/>
+    <rect x="16" y="17" width="20" height="21" rx="3" class="ct-rock"/>
+    <rect x="18" y="10" width="12" height="10" rx="2" class="ct-stone"/>
+    <!-- Boulder fist smashing ground with emerald earth shockwave -->
+    <rect x="6" y="32" width="14" height="12" rx="2" class="ct-stone"/>
+    <polygon points="2,44 8,36 14,44" class="ct-rune"/>
+    <polygon points="16,44 22,34 26,44" class="ct-rune"/>
+  </g>
+
+  <!-- Frame 6: Attack Recovery [288..336] -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="25" cy="44" rx="17" ry="4" class="ct-shadow"/>
+    <rect x="15" y="16" width="18" height="22" rx="3" class="ct-rock"/>
+    <rect x="18" y="8" width="12" height="10" rx="2" class="ct-stone"/>
+    <rect x="10" y="30" width="9" height="11" rx="2" class="ct-stone"/>
+  </g>
+
+  <!-- Frame 7: Hurt / Recoil [336..384] -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="21" cy="44" rx="14" ry="3.2" class="ct-shadow"/>
+    <rect x="12" y="18" width="18" height="20" rx="3" fill="#ef4444"/>
+    <rect x="15" y="10" width="12" height="10" rx="2" fill="#dc2626"/>
+    <circle cx="18" cy="15" r="1.2" fill="#fca5a5"/>
+    <circle cx="24" cy="15" r="1.2" fill="#fca5a5"/>
+  </g>
+</svg>
