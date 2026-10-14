@@ -23,6 +23,22 @@ let activeRealmSection = 'dungeon'; // 'dungeon' | 'zodiac' | 'expeditions' | 'd
 let selectedConstellationId = 'draco';
 let isCosmicBoonsOpen = false;
 
+export function setActiveRealmSection(tab) {
+  activeRealmSection = tab;
+}
+
+export function getActiveRealmSection() {
+  return activeRealmSection;
+}
+
+export function setSelectedConstellationId(cId) {
+  selectedConstellationId = cId;
+}
+
+export function getSelectedConstellationId() {
+  return selectedConstellationId;
+}
+
 export function renderMysticalView(container) {
   const battle = gameState.state.activeDungeonBattle;
 

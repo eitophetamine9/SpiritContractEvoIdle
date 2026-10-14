@@ -240,7 +240,7 @@ if (!indexHtml.includes('>Madness<')) {
 console.log('[PASS] Bottom nav dock label verified as Madness.');
 
 // 10. Test Astral Realm View Expansion (Zodiac, Expeditions, Transmute)
-import { renderMysticalView } from '../src/ui/views/mysticalView.js';
+import { renderMysticalView, setActiveRealmSection, setSelectedConstellationId } from '../src/ui/views/mysticalView.js';
 const mysticalContainer = {
   innerHTML: '',
   querySelector: () => ({ addEventListener: () => {} }),
@@ -417,6 +417,110 @@ if (!partyEquipContainer.innerHTML.includes('animated-weapon-sprite') ||
   throw new Error('Party View character equipment missing animated weapon or relic sprites!');
 }
 console.log('[PASS] Animated Relics & Weapons in Vault and Character Equipment validated.');
+
+// 15. Test Astral Realm Single-Focus Constellation Selector & Star-Chart Stage
+setActiveRealmSection('zodiac');
+setSelectedConstellationId('draco');
+const zodiacContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderMysticalView(zodiacContainer);
+if (!zodiacContainer.innerHTML.includes('constellation-chips-scroll') ||
+    !zodiacContainer.innerHTML.includes('constellation-chip-btn') ||
+    !zodiacContainer.innerHTML.includes('constellation-showcase-stage') ||
+    !zodiacContainer.innerHTML.includes('constellation-star-grid') ||
+    !zodiacContainer.innerHTML.includes('cosmic-boons-drawer')) {
+  throw new Error('Zodiac View missing Single-Focus Constellation chips, showcase stage, or boons drawer!');
+}
+console.log('[PASS] Astral Realm Single-Focus Constellation Selector & Star-Chart Stage verified.');
+
+// 16. Test Dwarven's Forge Section in Astral Realm
+setActiveRealmSection('dwarven');
+const dwarvenContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderMysticalView(dwarvenContainer);
+if (!dwarvenContainer.innerHTML.includes('dwarven-master-sprite') ||
+    !dwarvenContainer.innerHTML.includes('btn-buy-dwarven-scripture') ||
+    !dwarvenContainer.innerHTML.includes('btn-buy-dwarven-reshaper') ||
+    !dwarvenContainer.innerHTML.includes('divine_relic_scripture') ||
+    !dwarvenContainer.innerHTML.includes('relic_anvil_hephaestus')) {
+  throw new Error('Dwarven Forge section missing animated Vulcan master, scripture, or reshaper items!');
+}
+console.log("[PASS] Dwarven's Forge tab with animated Vulcan master and relic icons verified.");
+
+// 17. Test Madness View Swarm Floors 2-Column Layout
+gameState.state.madnessZone.stage = 3; // Floor 3 is a Swarm Floor
+gameState.state.madnessZone.subStage = 4;
+gameState.spawnMadnessEnemy();
+const swarmMadnessContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderMadnessView(swarmMadnessContainer);
+if (!swarmMadnessContainer.innerHTML.includes('large-swarm') ||
+    !swarmMadnessContainer.innerHTML.includes('grid-template-columns: repeat(2, 1fr)')) {
+  throw new Error('Madness Zone Swarm Floor (Floor 3) failed to render large-swarm 2-column grid!');
+}
+console.log('[PASS] Madness View Swarm Floor 2-column layout (Floors ending in 3 or 7) verified.');
+
+// 18. Test Tier 4 Dungeon Combat UI Layout
+import { GREEK_GOD_SETS, WEAPON_TYPES } from '../src/data/equipmentData.js';
+gameState.startDungeonTrial('pantheon', 'underworld_crypt', 4);
+const battle = gameState.state.activeDungeonBattle;
+battle.currentWave = 3;
+battle.currentSwarm = gameState.generateDungeonWave('pantheon', 'underworld_crypt', 4, 3);
+
+const t4BattleContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderDungeonView(t4BattleContainer);
+if (!t4BattleContainer.innerHTML.includes('AVATAR') ||
+    !t4BattleContainer.innerHTML.includes('BARRIER') ||
+    !t4BattleContainer.innerHTML.includes('seamless-enemy-shield-fill') ||
+    !t4BattleContainer.innerHTML.includes('Overlord')) {
+  throw new Error('Tier 4 Dungeon Battle arena missing Overlord Attendants or Divine Barrier HUD!');
+}
+gameState.exitDungeonBattle();
+console.log('[PASS] Tier 4 Dungeon Battle UI with Dual Overlord Attendants & Divine Barrier verified.');
+
+// 19. Test Dedicated Offensive Tank (Hephaestus) & Pure Defensive Tank (Atlas) Sets
+const hephSet = GREEK_GOD_SETS.hephaestus;
+if (!hephSet || hephSet.bonus4pc.type !== 'OFFENSIVE_TANK_ERUPTION') {
+  throw new Error('Hephaestus set missing bonus4pc type OFFENSIVE_TANK_ERUPTION!');
+}
+if (hephSet.bonus2pc.defToAtkRatio !== 0.25 || hephSet.bonus4pc.tauntDurationSec !== 4) {
+  throw new Error('Hephaestus DEF-to-ATK conversion or taunt duration invalid!');
+}
+
+const atlasSet = GREEK_GOD_SETS.atlas;
+if (!atlasSet || atlasSet.bonus4pc.type !== 'GUARDIAN_INTERCEPTION') {
+  throw new Error('Atlas set missing bonus4pc type GUARDIAN_INTERCEPTION!');
+}
+if (atlasSet.bonus4pc.teamDamageReduction !== 0.12 || atlasSet.bonus4pc.shieldPercentMaxHp !== 0.30) {
+  throw new Error('Atlas party damage mitigation or shield percent invalid!');
+}
+console.log('[PASS] Dedicated Offensive Tank (Hephaestus) & Pure Defensive Tank (Atlas) sets verified.');
+
+// 20. Test 12 Weapon Archetypes & Diverse Passives
+if (!Array.isArray(WEAPON_TYPES) || WEAPON_TYPES.length !== 12) {
+  throw new Error(`Expected 12 weapon archetypes in WEAPON_TYPES array, got ${WEAPON_TYPES?.length}`);
+}
+const expectedWeaponIds = ['sword', 'bow', 'staff', 'claw', 'dagger', 'hammer', 'scythe', 'shield', 'grimoire', 'warhammer', 'halberd', 'tome'];
+for (const wId of expectedWeaponIds) {
+  const wObj = WEAPON_TYPES.find(w => w.id === wId);
+  if (!wObj || !wObj.name || !wObj.primaryStat || !wObj.abilityName || !wObj.abilityDesc) {
+    throw new Error(`Weapon archetype "${wId}" missing name, primaryStat, or ability`);
+  }
+}
+console.log('[PASS] All 12 Weapon Archetypes with unique primary stats and combat abilities verified.');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

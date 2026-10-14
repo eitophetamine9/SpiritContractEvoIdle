@@ -278,7 +278,7 @@ The Contract Altar features multi-banner rate-ups with permanent availability:
 
 ## 12. Verification & Automated Test Suites
 
-The codebase is protected by automated test suites validating engine mechanics, balance curves, and UI components:
-- `tests/test_game_engine.js`: 36 tests covering contract rosters, Monte Carlo RNG, 7-Core dual attributes, 54-spirit scaling matrix, Rebirth progression, 3x3 tactical grid rules, threat aggro, defense mitigation, 1-hour idle spoils threshold, and Spirit Sanctum Hub rendering.
-- `tests/test_ui_components.js`: Validates component markup, drawer transitions, and inspect modals.
+The codebase is protected by extensive automated test suites validating engine mechanics, balance curves, and UI components:
+- `tests/test_game_engine.js`: 42 comprehensive tests covering contract rosters, Monte Carlo RNG, 7-Core dual attributes, 54-spirit scaling matrix, Rebirth progression, 3x3 tactical grid rules, threat aggro, defense mitigation, 1-hour idle spoils threshold, Spirit Sanctum Hub, polynomial enemy scaling, 4–6 enemy swarms on floors ending in 3 or 7, 12 weapon archetypes, Dwarven's Forge weekly quotas, 5x daily transmutation limits, Tier 4 dungeon mechanics (Overlord attendants, 25% Divine Boss Barrier, 45s Cataclysm Enrage), animated Overlord boss spritesheets, 2.5D ambient structures, and Single-Focus Constellation star-chart progression.
+- `tests/test_ui_components.js`: 20 comprehensive tests validating Bestiary grid & inspection, Hall of Fame picker, Madness 3x3 tactical grid, floor navigation, trial battle arenas, bottom dock labels, Astral Realm 8-tab dock, Single-Focus Constellation selector & active star-chart stage, Dwarven's Forge animated Vulcan master & items, large-swarm 2-column grid layout, Tier 4 combat HUD with Overlords and Divine Barrier, Hephaestus and Atlas tank set declarations, and 12 weapon archetypes.
 - `tests/run_probability_tests.js`: Monte Carlo verification across 100-pull and 100-evolution iterations.
