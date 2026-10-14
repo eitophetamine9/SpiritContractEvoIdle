@@ -300,7 +300,8 @@ class GameStateManager {
       resources: {
         spiritShards: 300, // Enough for 3 summons right away!
         soulEssence: 0,
-        divineScriptures: 2, // Divine Relic Scripture consumable (select 2 guaranteed substats)
+        divineScriptures: 0, // Divine Relic Scripture consumable (select 2 guaranteed substats)
+        relicReshapers: 0,   // Relic Reshaper consumable (rerolls relic substats)
         essencesOfTheGods: 0,
         energy: 60,        // Max 60 Energy base
         maxEnergy: 60,
@@ -314,6 +315,11 @@ class GameStateManager {
       activeBlessings: {}, // Temporary 1-hour spirit blessings
       constellations: { draco: 0, phoenix: 0, pegasus: 0, leo: 0, taurus: 0, scorpio: 0, aquarius: 0, sagittarius: 0 },
       expeditions: {},
+      dwarvenForge: {
+        weekKey: '',
+        scripturesPurchasedThisWeek: 0,
+        reshapersPurchasedThisWeek: 0
+      },
       transmutationsToday: 0,
       lastTransmutationDate: new Date().toDateString(),
       spirits: [starterSpirit],
@@ -378,11 +384,22 @@ class GameStateManager {
     if (typeof state.resources.divineScriptures !== 'number') {
       state.resources.divineScriptures = 2;
     }
+    if (typeof state.resources.relicReshapers !== 'number') {
+      state.resources.relicReshapers = 0;
+    }
     if (typeof state.resources.essencesOfTheGods !== 'number') {
       state.resources.essencesOfTheGods = 0;
     }
     if (typeof state.resources.energySecondsAccumulator !== 'number') {
       state.resources.energySecondsAccumulator = 0;
+    }
+
+    if (!state.dwarvenForge || typeof state.dwarvenForge !== 'object') {
+      state.dwarvenForge = {
+        weekKey: '',
+        scripturesPurchasedThisWeek: 0,
+        reshapersPurchasedThisWeek: 0
+      };
     }
 
     if (!state.constellations || typeof state.constellations !== 'object') {
@@ -3014,6 +3031,11 @@ class GameStateManager {
     }
 
     const currentCount = this.state.transmutationsToday || 0;
+    const maxQuota = TRANSMUTATION_CONFIG.dailyQuota || 5;
+    if (currentCount >= maxQuota) {
+      throw new Error(`Daily transmutation limit reached (${maxQuota}/${maxQuota})! Please return tomorrow.`);
+    }
+
     // Anti-oversaturation scaling: 1000 base + 250 per transmutation today
     const shardCost = TRANSMUTATION_CONFIG.shardCost + currentCount * 250;
     const godCost = TRANSMUTATION_CONFIG.godEssenceCost;
@@ -3639,12 +3661,17 @@ class GameStateManager {
     if (!item) throw new Error('Relic not found in inventory');
     if (item.type !== 'relic') throw new Error('Only Relics can have their substats rerolled!');
 
-    const REROLL_COST = 5;
-    if ((this.state.resources.soulEssence || 0) < REROLL_COST) {
-      throw new Error(`Insufficient Soul Essence! Need ${REROLL_COST} 🔮 (Have: ${this.state.resources.soulEssence || 0} 🔮).`);
+    const res = this.state.resources;
+    let usedReshaper = false;
+    if ((res.relicReshapers || 0) >= 1) {
+      res.relicReshapers -= 1;
+      usedReshaper = true;
+    } else if ((res.soulEssence || 0) >= 5) {
+      res.soulEssence -= 5;
+    } else {
+      throw new Error('Insufficient Soul Essence or Relic Reshapers! Purchase a Relic Reshaper from the Dwarven\'s Forge in the Astral Realm (Need 1 Relic Reshaper or 5 Soul Essence).');
     }
 
-    this.state.resources.soulEssence -= REROLL_COST;
     rerollRelicSubstatsData(item, options);
 
     this.invalidateCaches();
@@ -3656,8 +3683,137 @@ class GameStateManager {
     return {
       success: true,
       item,
-      cost: REROLL_COST,
-      remainingEssence: this.state.resources.soulEssence
+      usedReshaper,
+      remainingReshapers: res.relicReshapers || 0,
+      remainingEssence: res.soulEssence || 0
+    };
+  }
+
+  getDwarvenWeekKey(d = new Date()) {
+    const date = new Date(d.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    const weekNum = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    return `${date.getFullYear()}-W${weekNum}`;
+  }
+
+  checkDwarvenForgeWeekReset() {
+    const currentWeek = this.getDwarvenWeekKey();
+    if (!this.state.dwarvenForge || typeof this.state.dwarvenForge !== 'object') {
+      this.state.dwarvenForge = {
+        weekKey: currentWeek,
+        scripturesPurchasedThisWeek: 0,
+        reshapersPurchasedThisWeek: 0
+      };
+    } else if (this.state.dwarvenForge.weekKey !== currentWeek) {
+      this.state.dwarvenForge.weekKey = currentWeek;
+      this.state.dwarvenForge.scripturesPurchasedThisWeek = 0;
+      this.state.dwarvenForge.reshapersPurchasedThisWeek = 0;
+    }
+  }
+
+  buyDivineScriptureFromDwarvenForge(quantity = 1) {
+    this.checkDwarvenForgeWeekReset();
+    const qty = Math.max(1, quantity);
+    const forge = this.state.dwarvenForge;
+    const currentWeekly = forge.scripturesPurchasedThisWeek || 0;
+    const weeklyLimit = 3;
+
+    if (currentWeekly + qty > weeklyLimit) {
+      throw new Error(`Weekly purchase limit reached for Divine Scripture (${currentWeekly}/${weeklyLimit} this week)! Resets every Monday.`);
+    }
+
+    const shardCost = 5000 * qty;
+    const godCost = 40 * qty;
+    const soulCost = 15 * qty;
+
+    const res = this.state.resources;
+    if ((res.spiritShards || 0) < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost.toLocaleString()} 💎 (Have: ${(res.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+    if ((res.essencesOfTheGods || 0) < godCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${godCost} 💠 (Have: ${res.essencesOfTheGods || 0} 💠).`);
+    }
+    if ((res.soulEssence || 0) < soulCost) {
+      throw new Error(`Insufficient Soul Essence! Need ${soulCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+
+    res.spiritShards -= shardCost;
+    res.essencesOfTheGods -= godCost;
+    res.soulEssence -= soulCost;
+    res.divineScriptures = (res.divineScriptures || 0) + qty;
+    forge.scripturesPurchasedThisWeek = currentWeekly + qty;
+
+    this.save();
+    this.emit('resourcesUpdated', res);
+    this.emit('dwarvenForgePurchased', {
+      item: 'divineScripture',
+      quantity: qty,
+      scripturesPurchasedThisWeek: forge.scripturesPurchasedThisWeek
+    });
+
+    return {
+      success: true,
+      purchased: qty,
+      shardCost,
+      godCost,
+      soulCost,
+      remainingScriptures: res.divineScriptures,
+      purchasedThisWeek: forge.scripturesPurchasedThisWeek,
+      weeklyLimit
+    };
+  }
+
+  buyRelicReshaper(quantity = 1) {
+    this.checkDwarvenForgeWeekReset();
+    const qty = Math.max(1, quantity);
+    const forge = this.state.dwarvenForge;
+    const currentWeekly = forge.reshapersPurchasedThisWeek || 0;
+    const weeklyLimit = 12;
+
+    if (currentWeekly + qty > weeklyLimit) {
+      throw new Error(`Weekly purchase limit reached for Relic Reshaper (${currentWeekly}/${weeklyLimit} this week)! Resets every Monday.`);
+    }
+
+    const shardCost = 1500 * qty;
+    const godCost = 12 * qty;
+    const soulCost = 4 * qty;
+
+    const res = this.state.resources;
+    if ((res.spiritShards || 0) < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost.toLocaleString()} 💎 (Have: ${(res.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+    if ((res.essencesOfTheGods || 0) < godCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${godCost} 💠 (Have: ${res.essencesOfTheGods || 0} 💠).`);
+    }
+    if ((res.soulEssence || 0) < soulCost) {
+      throw new Error(`Insufficient Soul Essence! Need ${soulCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+
+    res.spiritShards -= shardCost;
+    res.essencesOfTheGods -= godCost;
+    res.soulEssence -= soulCost;
+    res.relicReshapers = (res.relicReshapers || 0) + qty;
+    forge.reshapersPurchasedThisWeek = currentWeekly + qty;
+
+    this.save();
+    this.emit('resourcesUpdated', res);
+    this.emit('dwarvenForgePurchased', {
+      item: 'relicReshaper',
+      quantity: qty,
+      reshapersPurchasedThisWeek: forge.reshapersPurchasedThisWeek
+    });
+
+    return {
+      success: true,
+      purchased: qty,
+      shardCost,
+      godCost,
+      soulCost,
+      remainingReshapers: res.relicReshapers,
+      purchasedThisWeek: forge.reshapersPurchasedThisWeek,
+      weeklyLimit
     };
   }
 
@@ -4681,9 +4837,9 @@ class GameStateManager {
 
   buyExpPotion(arg1, arg2) {
     const POTIONS = {
-      lesser_elixir: { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 0, essenceGodCost: 5, soulEssenceCost: 1 },
-      grand_elixir: { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 0, essenceGodCost: 15, soulEssenceCost: 3 },
-      divine_ambrosia: { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 0, essenceGodCost: 40, soulEssenceCost: 10 }
+      lesser_elixir: { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 1200, essenceGodCost: 10, soulEssenceCost: 1 },
+      grand_elixir: { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 3000, essenceGodCost: 25, soulEssenceCost: 3 },
+      divine_ambrosia: { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 7500, essenceGodCost: 60, soulEssenceCost: 10 }
     };
 
     const potionId = POTIONS[arg1] ? arg1 : arg2;
@@ -4696,9 +4852,17 @@ class GameStateManager {
     if (!spirit) throw new Error('Target Spirit not found in collection!');
 
     const res = this.state.resources;
-    if ((res.soulEssence || 0) < pot.soulEssenceCost) throw new Error(`Insufficient Astral Essence! Need ${pot.soulEssenceCost} 🔮, have ${res.soulEssence || 0} 🔮.`);
-    if ((res.essencesOfTheGods || 0) < pot.essenceGodCost) throw new Error(`Insufficient Essences of the Gods! Need ${pot.essenceGodCost} 💠, have ${res.essencesOfTheGods || 0} 💠.`);
+    if (pot.shardCost && (res.spiritShards || 0) < pot.shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${pot.shardCost.toLocaleString()} 💎 (Have: ${(res.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+    if ((res.soulEssence || 0) < pot.soulEssenceCost) {
+      throw new Error(`Insufficient Astral Essence! Need ${pot.soulEssenceCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+    if ((res.essencesOfTheGods || 0) < pot.essenceGodCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${pot.essenceGodCost} 💠 (Have: ${res.essencesOfTheGods || 0} 💠).`);
+    }
 
+    if (pot.shardCost > 0) res.spiritShards -= pot.shardCost;
     if (pot.soulEssenceCost > 0) res.soulEssence -= pot.soulEssenceCost;
     if (pot.essenceGodCost > 0) res.essencesOfTheGods -= pot.essenceGodCost;
 

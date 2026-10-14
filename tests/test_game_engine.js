@@ -365,18 +365,20 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Cleared "Olympian Nexus" [Tier 1]! Gained ${essenceDungeonResult.essencesAwarded} Essences of the Gods & ${essenceDungeonResult.soulEssenceAwarded} Soul Essence.`);
   if (essenceDungeonResult.essencesAwarded <= 0) throw new Error('Should award Essences of the Gods');
 
-  // Test EXP Potions (0 Shards, consumes 1 Astral Essence + 5 God Essences)
+  // Test EXP Potions (Buffed: 1,200 Shards + 10 God Essences + 1 Astral Essence)
   const testSpirit = gameState.state.spirits[0];
   const preXp = testSpirit.xp;
-  gameState.state.resources.spiritShards = 1000;
+  gameState.state.resources.spiritShards = 5000;
   gameState.state.resources.essencesOfTheGods = 50;
   gameState.state.resources.soulEssence = 20;
   const initialShards = gameState.state.resources.spiritShards;
+  const initialGods = gameState.state.resources.essencesOfTheGods;
   const initialAstral = gameState.state.resources.soulEssence;
   gameState.buyExpPotion(testSpirit.id, 'lesser_elixir');
   console.log(`  Used Lesser Astral Elixir on ${testSpirit.customName}: XP ${preXp} -> ${testSpirit.xp} (+10,000 XP)`);
   if (testSpirit.xp < preXp + 10000 && testSpirit.level === 1) throw new Error('EXP potion failed to grant XP');
-  if (gameState.state.resources.spiritShards !== initialShards) throw new Error('EXP potion should NOT consume regular shards!');
+  if (gameState.state.resources.spiritShards !== initialShards - 1200) throw new Error('EXP potion should consume 1200 shards!');
+  if (gameState.state.resources.essencesOfTheGods !== initialGods - 10) throw new Error('EXP potion should consume 10 God Essences!');
   if (gameState.state.resources.soulEssence !== initialAstral - 1) throw new Error('EXP potion should consume 1 Astral Essence!');
 
   // Test Combat Blessings
@@ -1102,6 +1104,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   };
   gameState.state.inventory.equipment.push(rerollRelic);
 
+  gameState.state.resources.relicReshapers = 0;
   gameState.state.resources.soulEssence = 2;
   let blockedLowEssence = false;
   try {
@@ -1854,6 +1857,131 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     throw new Error('Bastion Citadel chamber should drop shields');
   }
   console.log('  [PASS] All 12 Divine Forge chambers validated with targeted weapon archetype drops!');
+
+  // =========================================================================
+  // 39. Test Phase 4: Dwarven's Forge, 5x Daily Transmutation, Buffed Potions & Relic Reshapers
+  // =========================================================================
+  console.log('\n[TEST 39] Testing Phase 4: Dwarven\'s Forge, Weekly Caps, 5x Transmutation & Buffed Potions:');
+
+  // A. 5x Daily Transmutation Limit
+  // Fund enough resources for transmutations
+  gameState.state.resources.spiritShards = 50000;
+  gameState.state.resources.essencesOfTheGods = 500;
+  // Bring count up to 5
+  while ((gameState.state.transmutationsToday || 0) < 5) {
+    gameState.transmuteShardsToAstralEssence();
+  }
+  console.log(`  Completed transmutations today: ${gameState.state.transmutationsToday}/5`);
+  if (gameState.state.transmutationsToday !== 5) {
+    throw new Error(`Expected 5 transmutations today, got ${gameState.state.transmutationsToday}`);
+  }
+
+  // 6th transmutation should fail with daily cap error
+  let transCapBlocked = false;
+  try {
+    gameState.transmuteShardsToAstralEssence();
+  } catch (err) {
+    transCapBlocked = true;
+    console.log(`  [PASS] Blocked 6th transmutation: "${err.message}"`);
+  }
+  if (!transCapBlocked) throw new Error('6th transmutation must be blocked by 5x daily cap!');
+
+  // B. Dwarven's Forge: Divine Relic Scripture (3/week limit, tri-currency cost)
+  gameState.state.resources.spiritShards = 100000;
+  gameState.state.resources.essencesOfTheGods = 500;
+  gameState.state.resources.soulEssence = 200;
+
+  const initScriptures = gameState.state.resources.divineScriptures || 0;
+  const initShards = gameState.state.resources.spiritShards;
+  const initGods = gameState.state.resources.essencesOfTheGods;
+  const initSoul = gameState.state.resources.soulEssence;
+
+  // Buy 1 scripture
+  const scripBuy1 = gameState.buyDivineScriptureFromDwarvenForge(1);
+  console.log(`  Bought Divine Scripture 1: ${scripBuy1.purchasedThisWeek}/${scripBuy1.weeklyLimit} this week`);
+  if (gameState.state.resources.divineScriptures !== initScriptures + 1) throw new Error('Scriptures count not incremented');
+  if (gameState.state.resources.spiritShards !== initShards - 5000) throw new Error('5000 shards not deducted');
+  if (gameState.state.resources.essencesOfTheGods !== initGods - 40) throw new Error('40 god essences not deducted');
+  if (gameState.state.resources.soulEssence !== initSoul - 15) throw new Error('15 soul essence not deducted');
+
+  // Buy 2 more scriptures to reach 3/week cap
+  gameState.buyDivineScriptureFromDwarvenForge(2);
+  console.log(`  Bought 2 more scriptures -> ${gameState.state.dwarvenForge.scripturesPurchasedThisWeek}/3`);
+  if (gameState.state.dwarvenForge.scripturesPurchasedThisWeek !== 3) throw new Error('Should have 3 scriptures purchased this week');
+
+  // 4th purchase attempt must throw weekly limit error
+  let scriptureCapBlocked = false;
+  try {
+    gameState.buyDivineScriptureFromDwarvenForge(1);
+  } catch (err) {
+    scriptureCapBlocked = true;
+    console.log(`  [PASS] Blocked 4th weekly scripture purchase: "${err.message}"`);
+  }
+  if (!scriptureCapBlocked) throw new Error('Divine Scripture weekly purchase limit of 3 must be enforced');
+
+  // C. Dwarven's Forge: Relic Reshaper (12/week limit, tri-currency cost)
+  const initReshapers = gameState.state.resources.relicReshapers || 0;
+  const preReshaperShards = gameState.state.resources.spiritShards;
+  const preReshaperGods = gameState.state.resources.essencesOfTheGods;
+  const preReshaperSoul = gameState.state.resources.soulEssence;
+
+  const resBuy1 = gameState.buyRelicReshaper(1);
+  console.log(`  Bought Relic Reshaper 1: ${resBuy1.purchasedThisWeek}/${resBuy1.weeklyLimit} this week`);
+  if (gameState.state.resources.relicReshapers !== initReshapers + 1) throw new Error('Relic Reshapers count not incremented');
+  if (gameState.state.resources.spiritShards !== preReshaperShards - 1500) throw new Error('1500 shards not deducted');
+  if (gameState.state.resources.essencesOfTheGods !== preReshaperGods - 12) throw new Error('12 god essences not deducted');
+  if (gameState.state.resources.soulEssence !== preReshaperSoul - 4) throw new Error('4 soul essence not deducted');
+
+  // Buy 11 more reshapers to hit 12/week cap
+  gameState.buyRelicReshaper(11);
+  console.log(`  Bought 11 more reshapers -> ${gameState.state.dwarvenForge.reshapersPurchasedThisWeek}/12`);
+  if (gameState.state.dwarvenForge.reshapersPurchasedThisWeek !== 12) throw new Error('Should have 12 reshapers purchased this week');
+
+  // 13th purchase attempt must throw weekly limit error
+  let reshaperCapBlocked = false;
+  try {
+    gameState.buyRelicReshaper(1);
+  } catch (err) {
+    reshaperCapBlocked = true;
+    console.log(`  [PASS] Blocked 13th weekly reshaper purchase: "${err.message}"`);
+  }
+  if (!reshaperCapBlocked) throw new Error('Relic Reshaper weekly purchase limit of 12 must be enforced');
+
+  // D. Relic Reshaper Consumable usage in rerollRelicSubstats
+  const testRelicForReroll = createRelicInstance({ setId: 'atlas', slotTypeId: 'headgear', rarity: 'EPIC', level: 1 });
+  gameState.state.inventory.equipment.push(testRelicForReroll);
+  const reshaperCountBefore = gameState.state.resources.relicReshapers;
+  const rerollResult = gameState.rerollRelicSubstats(testRelicForReroll.uid);
+  console.log(`  Reforged Relic with Relic Reshaper: usedReshaper = ${rerollResult.usedReshaper}, remaining = ${rerollResult.remainingReshapers}`);
+  if (!rerollResult.usedReshaper) throw new Error('Expected rerollRelicSubstats to consume Relic Reshaper item');
+  if (gameState.state.resources.relicReshapers !== reshaperCountBefore - 1) throw new Error('Reshapers count not decremented');
+
+  // E. Buffed EXP Potion Tri-Currency Pricing
+  const testPartySpirit = gameState.getPartySpirits()[0];
+  gameState.state.resources.spiritShards = 1200;
+  gameState.state.resources.essencesOfTheGods = 10;
+  gameState.state.resources.soulEssence = 1;
+
+  const xpBefore = testPartySpirit.xp;
+  gameState.buyExpPotion('lesser_elixir', testPartySpirit.id);
+  console.log(`  Bought Lesser Astral Elixir with buffed costs: Shards left = ${gameState.state.resources.spiritShards}, Gods = ${gameState.state.resources.essencesOfTheGods}, Soul = ${gameState.state.resources.soulEssence}`);
+  if (gameState.state.resources.spiritShards !== 0) throw new Error('Expected 1200 shards deducted');
+  if (gameState.state.resources.essencesOfTheGods !== 0) throw new Error('Expected 10 god essences deducted');
+  if (gameState.state.resources.soulEssence !== 0) throw new Error('Expected 1 soul essence deducted');
+  if (testPartySpirit.xp <= xpBefore) throw new Error('Expected spirit XP to increase');
+
+  // Insufficient shards should fail
+  let potShardBlocked = false;
+  try {
+    gameState.state.resources.spiritShards = 500; // Need 1200
+    gameState.state.resources.essencesOfTheGods = 10;
+    gameState.state.resources.soulEssence = 1;
+    gameState.buyExpPotion('lesser_elixir', testPartySpirit.id);
+  } catch (err) {
+    potShardBlocked = true;
+    console.log(`  [PASS] Blocked potion purchase with insufficient shards: "${err.message}"`);
+  }
+  if (!potShardBlocked) throw new Error('Potion purchase must fail with insufficient shards');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

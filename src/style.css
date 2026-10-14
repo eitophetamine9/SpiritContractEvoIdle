@@ -6599,16 +6599,16 @@ button:disabled {
   font-size: 11px;
 }
 
-/* 7-Tab Navigation Grid */
+/* 8-Tab Navigation Grid */
 .realm-tab-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 
-@media (min-width: 440px) {
+@media (min-width: 560px) {
   .realm-tab-grid {
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(8, 1fr);
   }
 }
 
@@ -6670,6 +6670,10 @@ button:disabled {
 .realm-tab-btn[data-realm-tab="blessings"].active {
   border-color: #c084fc;
   box-shadow: 0 0 14px rgba(192, 132, 252, 0.4);
+}
+.realm-tab-btn[data-realm-tab="dwarven"].active {
+  border-color: #f97316;
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
 }
 
 /* Essence Chambers Grid */
