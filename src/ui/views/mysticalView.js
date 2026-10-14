@@ -15,7 +15,7 @@ import { CONSTELLATIONS_CONFIG, EXPEDITIONS_CONFIG, TRANSMUTATION_CONFIG } from 
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
-import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
 
 let selectedEssenceChamberId = 'olympian_nexus';
 let selectedEssenceTierNum = 1;
@@ -1441,15 +1441,20 @@ function renderEssenceBattleArena(container, battle) {
 
       <!-- Victory / Defeat Banners -->
       ${battle.status === 'victory' && battle.loot ? `
-        <div class="rounded-xl border border-amber-400/60 bg-slate-900 p-3 shadow-xl flex flex-col items-center text-center gap-1.5">
-          <div class="text-xs font-black text-amber-300">🏆 SANCTUM TRIAL CLEARED!</div>
-          <div class="text-[11px] text-slate-300">
-            Earned: <strong class="text-cyan-300">+${battle.loot.godEssencesGained} Essences</strong>, 
-            <strong class="text-emerald-300">+${battle.loot.shardsGained} Shards</strong>
+        <div class="rounded-xl border border-amber-400/60 bg-slate-900 p-3 shadow-xl flex items-center justify-between gap-3">
+          <div class="flex flex-col text-left gap-1">
+            <div class="text-xs font-black text-amber-300">🏆 SANCTUM TRIAL CLEARED!</div>
+            <div class="text-[11px] text-slate-300">
+              Earned: <strong class="text-cyan-300">+${battle.loot.godEssencesGained} Essences</strong>, 
+              <strong class="text-emerald-300">+${battle.loot.shardsGained} Shards</strong>
+            </div>
+            <button id="btn-collect-essence-loot" class="min-h-[34px] px-4 py-1.5 rounded-lg font-bold text-xs text-slate-950 cursor-pointer shadow bg-gradient-to-r from-cyan-400 to-emerald-300 mt-1">
+              Collect Spoils to Sanctum
+            </button>
           </div>
-          <button id="btn-collect-essence-loot" class="min-h-[38px] w-full py-1.5 rounded-lg font-bold text-xs text-slate-950 cursor-pointer shadow bg-gradient-to-r from-cyan-400 to-emerald-300">
-            Collect Spoils to Sanctum
-          </button>
+          <div class="victory-animated-chest-wrap">
+            ${createAnimatedChestHtml()}
+          </div>
         </div>
       ` : ''}
 
@@ -1484,6 +1489,9 @@ function renderEssenceBattleArena(container, battle) {
   // Event Listeners
   container.querySelector('#btn-essence-strike')?.addEventListener('click', () => {
     gameState.manualDungeonStrike();
+    if (typeof arenaRenderer?.triggerClashImpact === 'function') {
+      arenaRenderer.triggerClashImpact(null, null, true);
+    }
     arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
     renderMysticalView(container);
   });

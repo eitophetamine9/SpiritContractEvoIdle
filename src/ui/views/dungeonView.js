@@ -11,7 +11,7 @@ import { GREEK_GOD_SETS, EQUIPMENT_RARITIES } from '../../data/equipmentData.js'
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
-import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, getSheetKeyForEnemy, createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, getSheetKeyForEnemy, createAnimatedRelicHtml, createAnimatedWeaponHtml, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
 
 let selectedChamberId = 'underworld_crypt';
 let selectedTierNum = 1;
@@ -202,12 +202,17 @@ export function showDungeonVictoryModal(loot, onClose) {
   modalEl.innerHTML = `
     <div class="pantheon-victory-modal max-w-lg w-full rounded-2xl bg-slate-900 border overflow-hidden shadow-2xl text-white" style="border: 2px solid ${loot.chamber.color};">
       
-      <div class="victory-header p-4 flex items-center gap-3.5" style="background: linear-gradient(135deg, ${loot.chamber.color}33, #000);">
-        <div class="victory-sigil text-4xl">${loot.chamber.sigil}</div>
-        <div class="victory-title-col">
-          <span class="victory-sub text-[10px] font-black uppercase tracking-widest text-amber-400">TRIAL VICTORIOUS</span>
-          <h3 class="victory-name text-lg font-black text-white">${loot.chamber.name} Cleared!</h3>
-          <span class="victory-tier-tag text-xs text-slate-300">${loot.tier.name}</span>
+      <div class="victory-header p-4 flex items-center justify-between gap-3.5" style="background: linear-gradient(135deg, ${loot.chamber.color}33, #000);">
+        <div class="flex items-center gap-3.5">
+          <div class="victory-sigil text-4xl">${loot.chamber.sigil}</div>
+          <div class="victory-title-col">
+            <span class="victory-sub text-[10px] font-black uppercase tracking-widest text-amber-400">TRIAL VICTORIOUS</span>
+            <h3 class="victory-name text-lg font-black text-white">${loot.chamber.name} Cleared!</h3>
+            <span class="victory-tier-tag text-xs text-slate-300">${loot.tier.name}</span>
+          </div>
+        </div>
+        <div class="victory-animated-chest-wrap">
+          ${createAnimatedChestHtml()}
         </div>
       </div>
 
@@ -453,6 +458,9 @@ function renderPantheonBattleArena(container, battle) {
   if (btnStrike) {
     btnStrike.addEventListener('click', () => {
       gameState.manualDungeonStrike();
+      if (typeof arenaRenderer?.triggerClashImpact === 'function') {
+        arenaRenderer.triggerClashImpact(null, null, true);
+      }
       arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
       renderDungeonView(container);
     });

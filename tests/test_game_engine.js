@@ -14,7 +14,8 @@ import {
 } from '../src/data/index.js';
 import { enhanceRelicData, WEAPON_TYPES, createWeaponInstance } from '../src/data/equipmentData.js';
 import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot } from '../src/data/index.js';
-import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon } from '../src/render/spriteAnimator.js';
+import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml } from '../src/render/spriteAnimator.js';
+import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import fs from 'fs';
 import path from 'path';
@@ -2049,6 +2050,98 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Cataclysm Enrage triggered at 45s: Enraged = ${t4Boss.isEnraged} | Power: ${bossPwrBeforeEnrage} -> ${t4Boss.power}`);
   if (!t4Boss.isEnraged) throw new Error('Boss should become enraged at 45s');
   if (t4Boss.power !== Math.round(bossPwrBeforeEnrage * 1.5)) throw new Error('Boss power should increase by 50% on enrage');
+
+  // Test 41: Phase 6 Animated Assets, Overlord Sprites, 2.5D Ambient Structures & Victory Chest
+  console.log('\n[TEST 41] Testing Phase 6 Animated Assets, Overlord Sprites, 2.5D Ambient Structures & Victory Chest:');
+
+  // A. Verify New SVG Sprite Files Exist
+  const spriteDir = path.resolve('public/assets/sprites/creatures');
+  const relicDir = path.resolve('public/assets/sprites/relics');
+
+  const expectedSvgFiles = [
+    { dir: spriteDir, file: 'enemy_kraken_overlord.svg', name: 'Abyssal Kraken Overlord' },
+    { dir: spriteDir, file: 'enemy_hellfire_wyrm.svg', name: 'Hellfire Wyrm Sovereign' },
+    { dir: spriteDir, file: 'enemy_blighted_chimera.svg', name: 'Blighted Chimera Primordial' },
+    { dir: spriteDir, file: 'avatar_olympian_god.svg', name: 'Olympian God Avatar' },
+    { dir: spriteDir, file: 'forge_vulcan_automaton.svg', name: 'Vulcan Smelter Automaton' },
+    { dir: relicDir, file: 'victory_treasure_chest.svg', name: 'Animated Victory Relic Cache' }
+  ];
+
+  for (const item of expectedSvgFiles) {
+    const fullPath = path.join(item.dir, item.file);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Required Phase 6 sprite file missing: ${item.file}`);
+    }
+    const stat = fs.statSync(fullPath);
+    if (stat.size < 500) {
+      throw new Error(`Sprite file ${item.file} is suspiciously small (${stat.size} bytes)`);
+    }
+    console.log(`  [PASS] Verified SVG sprite asset: ${item.file} (${stat.size} bytes) for ${item.name}!`);
+  }
+
+  // B. Verify Registration in SPRITE_MANIFEST
+  const expectedSheets = [
+    'enemy_kraken_overlord',
+    'enemy_hellfire_wyrm',
+    'enemy_blighted_chimera',
+    'avatar_olympian_god',
+    'forge_vulcan_automaton',
+    'victory_treasure_chest'
+  ];
+
+  for (const sheetKey of expectedSheets) {
+    if (!SPRITE_MANIFEST.sheets[sheetKey]) {
+      throw new Error(`Sheet ${sheetKey} not registered in SPRITE_MANIFEST.sheets`);
+    }
+  }
+  console.log(`  [PASS] Verified all 6 new sheets registered in SPRITE_MANIFEST.sheets!`);
+
+  // C. Verify Enemy Sheet Routing in getSheetKeyForEnemy
+  const testRoutingEnemies = [
+    { enemy: { name: 'Abyssal Kraken Sovereign', isBoss: true }, expected: 'enemy_kraken_overlord' },
+    { enemy: { name: 'Sunken Benthic Leviathan', isBoss: true }, expected: 'enemy_kraken_overlord' },
+    { enemy: { name: 'Hellfire Wyrm Patriarch', isBoss: true }, expected: 'enemy_hellfire_wyrm' },
+    { enemy: { name: 'Volcanic Magma Wyrm', isBoss: true }, expected: 'enemy_hellfire_wyrm' },
+    { enemy: { name: 'Blighted Chimera Sovereign', isBoss: true }, expected: 'enemy_blighted_chimera' },
+    { enemy: { name: 'Toxic Spore Beast', isBoss: true }, expected: 'enemy_blighted_chimera' },
+    { enemy: { name: 'Vulcan Smelter Automaton', isBoss: true }, expected: 'forge_vulcan_automaton' },
+    { enemy: { name: 'Forge Clockwork Golem', isBoss: true }, expected: 'forge_vulcan_automaton' },
+    { enemy: { name: 'Avatar of Zeus', isBoss: true }, expected: 'avatar_olympian_god' },
+    { enemy: { name: 'Ares War Primordial', isBoss: true }, expected: 'avatar_olympian_god' }
+  ];
+
+  for (const route of testRoutingEnemies) {
+    const key = getSheetKeyForEnemy(route.enemy);
+    if (key !== route.expected) {
+      throw new Error(`Routing mismatch for "${route.enemy.name}": expected ${route.expected}, got ${key}`);
+    }
+  }
+  console.log('  [PASS] Verified accurate keyword & archetype routing in getSheetKeyForEnemy!');
+
+  // D. Verify Animated Victory Treasure Chest HTML
+  const chestHtml = createAnimatedChestHtml({ extraClasses: 'custom-chest' });
+  if (!chestHtml.includes('animated-treasure-chest') || !chestHtml.includes('victory_treasure_chest.svg')) {
+    throw new Error(`createAnimatedChestHtml output invalid: ${chestHtml}`);
+  }
+  console.log('  [PASS] Verified createAnimatedChestHtml generates valid animated treasure chest element!');
+
+  // E. Verify 2.5D Arena Renderer Ambient Structures & Dynamic Clash
+  if (typeof arenaRenderer.triggerClashImpact !== 'function') {
+    throw new Error('arenaRenderer.triggerClashImpact method missing');
+  }
+  if (typeof arenaRenderer.drawOlympianPillar !== 'function') {
+    throw new Error('arenaRenderer.drawOlympianPillar method missing');
+  }
+  if (typeof arenaRenderer.drawVulcanForgeBasin !== 'function') {
+    throw new Error('arenaRenderer.drawVulcanForgeBasin method missing');
+  }
+  if (typeof arenaRenderer.drawAetherialCorePulsar !== 'function') {
+    throw new Error('arenaRenderer.drawAetherialCorePulsar method missing');
+  }
+  if (typeof arenaRenderer.drawBiomeMonolith !== 'function') {
+    throw new Error('arenaRenderer.drawBiomeMonolith method missing');
+  }
+  console.log('  [PASS] Verified 2.5D Arena Renderer ambient monoliths, pillars, forge basin, pulsar, and clash sparks!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

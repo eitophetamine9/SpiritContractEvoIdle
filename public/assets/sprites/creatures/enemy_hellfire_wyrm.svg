@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .w-obsidian { fill: #1a0f12; }
+      .w-dark     { fill: #3f1015; }
+      .w-red      { fill: #b91c1c; }
+      .w-magma    { fill: #f97316; }
+      .w-gold     { fill: #facc15; }
+      .w-flame    { fill: #fef08a; }
+      .w-horn     { fill: #7f1d1d; }
+      .w-shadow   { fill: rgba(0,0,0,0.35); }
+      .w-hurt     { fill: #ef4444; }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 (Coiled Sovereign Stance) -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="16" ry="3.5" class="w-shadow"/>
+    <!-- Serpentine lower body loop -->
+    <path d="M10 38 Q18 32 26 38 Q34 42 38 36 Q32 30 20 32 Z" class="w-dark"/>
+    <path d="M14 36 Q22 34 28 38 Q34 40 36 37" stroke="#f97316" stroke-width="1.5" fill="none"/>
+    <!-- Horns / Crest -->
+    <polygon points="26,14 34,4 28,11" class="w-horn"/>
+    <polygon points="22,12 28,3 24,9" class="w-magma"/>
+    <polygon points="18,15 14,7 19,12" class="w-horn"/>
+    <!-- Serpentine Neck & Head -->
+    <path d="M16 34 Q18 20 25 15 Q34 16 36 22 Q32 28 24 30 Z" class="w-obsidian"/>
+    <path d="M18 32 Q20 22 26 18 Q32 20 33 24 Q30 28 24 29 Z" class="w-red"/>
+    <!-- Snout & Molten Maw -->
+    <polygon points="34,20 42,22 35,26" class="w-magma"/>
+    <polygon points="37,21 40,22 37,24" class="w-flame"/>
+    <!-- Eye & Flame brow -->
+    <circle cx="30" cy="18" r="2" class="w-gold"/>
+    <ellipse cx="30" cy="18" rx="0.7" ry="1.4" class="w-obsidian"/>
+    <!-- Dorsal flame spines -->
+    <polygon points="20,24 16,19 22,21" class="w-magma"/>
+    <polygon points="22,29 18,25 24,27" class="w-gold"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Breath Inhale & Magma Swell) -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="43" rx="17" ry="4" class="w-shadow"/>
+    <path d="M10 39 Q18 33 26 39 Q34 43 38 37 Q32 31 20 33 Z" class="w-dark"/>
+    <path d="M14 37 Q22 35 28 39 Q34 41 36 38" stroke="#facc15" stroke-width="1.8" fill="none"/>
+    <polygon points="26,13 34,3 28,10" class="w-horn"/>
+    <polygon points="22,11 28,2 24,8" class="w-magma"/>
+    <polygon points="18,14 14,6 19,11" class="w-horn"/>
+    <path d="M16 34 Q17 19 25 14 Q35 15 37 22 Q33 28 24 30 Z" class="w-obsidian"/>
+    <path d="M18 32 Q19 21 26 17 Q33 19 34 24 Q31 28 24 29 Z" class="w-magma"/>
+    <polygon points="35,20 43,22 36,27" class="w-magma"/>
+    <polygon points="37,21 41,23 37,25" class="w-flame"/>
+    <circle cx="31" cy="17" r="2.2" class="w-flame"/>
+    <ellipse cx="31" cy="17" rx="0.8" ry="1.5" class="w-obsidian"/>
+    <!-- Magma chest glow flare -->
+    <circle cx="24" cy="24" r="3" class="w-flame"/>
+    <polygon points="19,23 15,18 21,20" class="w-flame"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Rise & Flickering Embers) -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="43" rx="15" ry="3.2" class="w-shadow"/>
+    <path d="M10 37 Q18 31 26 37 Q34 41 38 35 Q32 29 20 31 Z" class="w-dark"/>
+    <path d="M14 35 Q22 33 28 37 Q34 39 36 36" stroke="#f97316" stroke-width="1.5" fill="none"/>
+    <polygon points="26,12 34,2 28,9" class="w-horn"/>
+    <polygon points="22,10 28,1 24,7" class="w-magma"/>
+    <polygon points="18,13 14,5 19,10" class="w-horn"/>
+    <path d="M16 33 Q18 19 25 13 Q34 14 36 21 Q32 27 24 29 Z" class="w-obsidian"/>
+    <path d="M18 31 Q20 20 26 16 Q32 18 33 23 Q30 27 24 28 Z" class="w-red"/>
+    <polygon points="34,19 42,21 35,25" class="w-magma"/>
+    <polygon points="37,20 40,21 37,23" class="w-flame"/>
+    <circle cx="30" cy="16" r="2" class="w-gold"/>
+    <polygon points="20,22 16,17 22,19" class="w-magma"/>
+    <circle cx="38" cy="12" r="1" class="w-gold"/>
+    <circle cx="28" cy="8" r="1.2" class="w-flame"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Serpent Snarl) -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="16" ry="3.5" class="w-shadow"/>
+    <path d="M10 38 Q18 32 26 38 Q34 42 38 36 Q32 30 20 32 Z" class="w-dark"/>
+    <polygon points="26,14 34,4 28,11" class="w-horn"/>
+    <polygon points="22,12 28,3 24,9" class="w-magma"/>
+    <path d="M16 34 Q18 20 25 15 Q34 16 36 22 Q32 28 24 30 Z" class="w-obsidian"/>
+    <polygon points="34,19 43,20 35,23" class="w-magma"/>
+    <polygon points="34,23 43,26 35,27" class="w-magma"/>
+    <polygon points="38,21 40,23 38,24" class="w-flame"/>
+    <circle cx="30" cy="18" r="2.2" class="w-flame"/>
+    <ellipse cx="30" cy="18" rx="0.7" ry="1.5" class="w-obsidian"/>
+  </g>
+
+  <!-- Frame 4: Attack 1 (Coil Back & Ignite Core) -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="22" cy="43" rx="15" ry="3.5" class="w-shadow"/>
+    <path d="M8 38 Q16 32 24 38 Q32 42 36 36 Q30 30 18 32 Z" class="w-dark"/>
+    <polygon points="22,15 28,5 24,12" class="w-horn"/>
+    <polygon points="18,13 22,4 20,10" class="w-magma"/>
+    <path d="M12 34 Q14 20 20 16 Q30 17 32 24 Q28 30 20 31 Z" class="w-obsidian"/>
+    <circle cx="24" cy="22" r="5" class="w-flame"/>
+    <circle cx="26" cy="19" r="2" class="w-gold"/>
+  </g>
+
+  <!-- Frame 5: Attack 2 (Hellfire Flame Jet & Lunge) -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="26" cy="43" rx="18" ry="4" class="w-shadow"/>
+    <path d="M10 38 Q18 34 28 38 Q36 40 40 36 Z" class="w-dark"/>
+    <!-- Lunging draconic neck -->
+    <path d="M14 36 Q22 24 34 18 Q40 20 38 28 Q28 34 18 36 Z" class="w-obsidian"/>
+    <polygon points="34,15 42,7 36,13" class="w-horn"/>
+    <!-- Wide open jaw -->
+    <polygon points="36,18 44,14 40,22" class="w-red"/>
+    <polygon points="36,24 44,28 38,22" class="w-red"/>
+    <!-- Massive Hellfire Breath Cone -->
+    <polygon points="42,16 48,10 48,32 42,26" class="w-magma"/>
+    <polygon points="43,18 48,14 48,28 43,24" class="w-gold"/>
+    <polygon points="44,20 48,18 48,24 44,22" class="w-flame"/>
+    <circle cx="34" cy="18" r="2" class="w-flame"/>
+  </g>
+
+  <!-- Frame 6: Attack 3 (Recoil Smoke & Embers) -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="43" rx="16" ry="3.5" class="w-shadow"/>
+    <path d="M10 38 Q18 32 26 38 Q34 42 38 36 Z" class="w-dark"/>
+    <path d="M16 34 Q18 22 26 17 Q34 18 35 24 Q31 29 24 31 Z" class="w-obsidian"/>
+    <polygon points="26,14 33,5 28,11" class="w-horn"/>
+    <circle cx="30" cy="19" r="2" class="w-gold"/>
+    <circle cx="38" cy="22" r="2.5" class="w-magma"/>
+    <circle cx="44" cy="20" r="1.5" class="w-gold"/>
+  </g>
+
+  <!-- Frame 7: Hurt (Flinch & Lava Splatter) -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="20" cy="43" rx="14" ry="3.2" class="w-shadow"/>
+    <path d="M8 38 Q16 34 24 38 Q30 42 34 37 Z" class="w-dark"/>
+    <path d="M12 35 Q14 24 20 19 Q28 20 28 27 Q24 32 16 33 Z" class="w-hurt"/>
+    <polygon points="20,16 26,7 22,13" class="w-horn"/>
+    <circle cx="23" cy="21" r="2" class="w-gold"/>
+    <!-- Crackling hurt sparks -->
+    <polygon points="26,16 30,12 28,19" class="w-flame"/>
+    <polygon points="29,24 33,21 31,27" class="w-flame"/>
+  </g>
+</svg>

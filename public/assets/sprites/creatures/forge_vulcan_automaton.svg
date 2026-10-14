@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .f-iron   { fill: #1c1917; }
+      .f-bronze { fill: #451a03; }
+      .f-brass  { fill: #b45309; }
+      .f-gold   { fill: #f59e0b; }
+      .f-magma  { fill: #ea580c; }
+      .f-fire   { fill: #fde047; }
+      .f-steam  { fill: #e2e8f0; }
+      .f-shadow { fill: rgba(0,0,0,0.45); }
+      .f-hurt   { fill: #ef4444; }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 (Molten Smelter Stance) -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="16" ry="4" class="f-shadow"/>
+    <!-- Exhaust Chimneys on Back -->
+    <rect x="15" y="8" width="4" height="8" class="f-bronze"/>
+    <rect x="29" y="8" width="4" height="8" class="f-bronze"/>
+    <polygon points="14,8 17,5 20,8" class="f-brass"/>
+    <polygon points="28,8 31,5 34,8" class="f-brass"/>
+    <circle cx="17" cy="4" r="1.5" class="f-steam"/>
+    <circle cx="31" cy="4" r="1.5" class="f-steam"/>
+    <!-- Heavy Golem Torso -->
+    <rect x="13" y="16" width="22" height="19" rx="3" class="f-iron"/>
+    <rect x="15" y="18" width="18" height="15" class="f-brass"/>
+    <!-- Glowing Furnace Grate Core -->
+    <rect x="18" y="21" width="12" height="9" rx="1" class="f-magma"/>
+    <rect x="20" y="23" width="8" height="5" class="f-fire"/>
+    <line x1="22" y1="21" x2="22" y2="30" stroke="#451a03" stroke-width="1.2"/>
+    <line x1="26" y1="21" x2="26" y2="30" stroke="#451a03" stroke-width="1.2"/>
+    <!-- Head / Visor -->
+    <rect x="18" y="10" width="12" height="8" rx="2" class="f-iron"/>
+    <line x1="19" y1="14" x2="29" y2="14" stroke="#fde047" stroke-width="2"/>
+    <!-- Giant Smelter Arms / Anvil Fists -->
+    <rect x="7" y="18" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="5" y="28" width="9" height="9" rx="2" class="f-brass"/>
+    <circle cx="9" cy="32" r="2" class="f-magma"/>
+    <rect x="35" y="18" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="34" y="28" width="9" height="9" rx="2" class="f-brass"/>
+    <circle cx="38" cy="32" r="2" class="f-magma"/>
+    <!-- Heavy Clockwork Legs -->
+    <rect x="15" y="34" width="7" height="8" rx="1" class="f-iron"/>
+    <rect x="26" y="34" width="7" height="8" rx="1" class="f-iron"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 (Furnace Bellows Inhale & Glow Flare) -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="43" rx="17" ry="4.2" class="f-shadow"/>
+    <rect x="15" y="7" width="4" height="9" class="f-bronze"/>
+    <rect x="29" y="7" width="4" height="9" class="f-bronze"/>
+    <circle cx="17" cy="3" r="2" class="f-steam"/>
+    <circle cx="31" cy="3" r="2" class="f-steam"/>
+    <circle cx="18" cy="1" r="1.2" class="f-fire"/>
+    <rect x="12" y="15" width="24" height="20" rx="3" class="f-iron"/>
+    <rect x="14" y="17" width="20" height="16" class="f-brass"/>
+    <rect x="17" y="20" width="14" height="10" rx="1" class="f-fire"/>
+    <rect x="19" y="22" width="10" height="6" class="#ffffff" fill="#ffffff"/>
+    <line x1="21" y1="20" x2="21" y2="30" stroke="#451a03" stroke-width="1.2"/>
+    <line x1="27" y1="20" x2="27" y2="30" stroke="#451a03" stroke-width="1.2"/>
+    <rect x="18" y="9" width="12" height="8" rx="2" class="f-iron"/>
+    <line x1="19" y1="13" x2="29" y2="13" stroke="#ffffff" stroke-width="2.5"/>
+    <rect x="6" y="17" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="4" y="27" width="9" height="9" rx="2" class="f-brass"/>
+    <circle cx="8" cy="31" r="2.5" class="f-fire"/>
+    <rect x="36" y="17" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="35" y="27" width="9" height="9" rx="2" class="f-brass"/>
+    <circle cx="39" cy="31" r="2.5" class="f-fire"/>
+    <rect x="14" y="34" width="8" height="8" rx="1" class="f-iron"/>
+    <rect x="26" y="34" width="8" height="8" rx="1" class="f-iron"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 (Rise & Heat Vent) -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="43" rx="15" ry="3.8" class="f-shadow"/>
+    <rect x="15" y="6" width="4" height="9" class="f-bronze"/>
+    <rect x="29" y="6" width="4" height="9" class="f-bronze"/>
+    <circle cx="16" cy="2" r="1.5" class="f-steam"/>
+    <circle cx="32" cy="2" r="1.5" class="f-steam"/>
+    <rect x="13" y="15" width="22" height="19" rx="3" class="f-iron"/>
+    <rect x="15" y="17" width="18" height="15" class="f-brass"/>
+    <rect x="18" y="20" width="12" height="9" rx="1" class="f-magma"/>
+    <rect x="20" y="22" width="8" height="5" class="f-fire"/>
+    <rect x="18" y="9" width="12" height="8" rx="2" class="f-iron"/>
+    <line x1="19" y1="13" x2="29" y2="13" stroke="#fde047" stroke-width="2"/>
+    <rect x="7" y="17" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="5" y="27" width="9" height="9" rx="2" class="f-brass"/>
+    <rect x="35" y="17" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="34" y="27" width="9" height="9" rx="2" class="f-brass"/>
+    <rect x="15" y="33" width="7" height="9" rx="1" class="f-iron"/>
+    <rect x="26" y="33" width="7" height="9" rx="1" class="f-iron"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 (Steady Core Hum) -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43" rx="16" ry="4" class="f-shadow"/>
+    <rect x="15" y="8" width="4" height="8" class="f-bronze"/>
+    <rect x="29" y="8" width="4" height="8" class="f-bronze"/>
+    <circle cx="17" cy="4" r="1.5" class="f-steam"/>
+    <circle cx="31" cy="4" r="1.5" class="f-steam"/>
+    <rect x="13" y="16" width="22" height="19" rx="3" class="f-iron"/>
+    <rect x="15" y="18" width="18" height="15" class="f-brass"/>
+    <rect x="18" y="21" width="12" height="9" rx="1" class="f-magma"/>
+    <rect x="20" y="23" width="8" height="5" class="f-fire"/>
+    <rect x="18" y="10" width="12" height="8" rx="2" class="f-iron"/>
+    <line x1="19" y1="14" x2="29" y2="14" stroke="#fde047" stroke-width="2"/>
+    <rect x="7" y="18" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="5" y="28" width="9" height="9" rx="2" class="f-brass"/>
+    <rect x="35" y="18" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="34" y="28" width="9" height="9" rx="2" class="f-brass"/>
+    <rect x="15" y="34" width="7" height="8" rx="1" class="f-iron"/>
+    <rect x="26" y="34" width="7" height="8" rx="1" class="f-iron"/>
+  </g>
+
+  <!-- Frame 4: Attack 1 (Overhead Mallet Windup) -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="22" cy="43" rx="15" ry="3.8" class="f-shadow"/>
+    <rect x="13" y="16" width="22" height="19" rx="3" class="f-iron"/>
+    <rect x="18" y="21" width="12" height="9" rx="1" class="f-fire"/>
+    <rect x="18" y="10" width="12" height="8" rx="2" class="f-iron"/>
+    <!-- Raised giant molten anvil hammer overhead -->
+    <rect x="24" y="2" width="16" height="10" rx="2" class="f-brass"/>
+    <polygon points="24,2 40,2 38,6 26,6" class="f-fire"/>
+    <line x1="28" y1="10" x2="28" y2="22" stroke="#451a03" stroke-width="3"/>
+    <circle cx="32" cy="7" r="3" class="f-magma"/>
+  </g>
+
+  <!-- Frame 5: Attack 2 (Colossal Anvil Smash & Magma Eruption) -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="28" cy="43" rx="20" ry="4.5" class="f-shadow"/>
+    <rect x="10" y="18" width="22" height="19" rx="3" class="f-iron"/>
+    <rect x="15" y="22" width="12" height="9" rx="1" class="f-fire"/>
+    <!-- Slammed Mallet hitting ground -->
+    <rect x="34" y="30" width="14" height="12" rx="2" class="f-brass"/>
+    <line x1="24" y1="24" x2="36" y2="34" stroke="#451a03" stroke-width="3.5"/>
+    <!-- Impact molten shockwave / sparks -->
+    <polygon points="32,42 48,34 46,44 48,40" class="f-magma"/>
+    <circle cx="44" cy="32" r="2" class="f-fire"/>
+    <circle cx="47" cy="24" r="1.5" class="f-gold"/>
+    <circle cx="36" cy="26" r="2" class="f-steam"/>
+  </g>
+
+  <!-- Frame 6: Attack 3 (Steam Vent Recovery) -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="43" rx="16" ry="4" class="f-shadow"/>
+    <rect x="13" y="16" width="22" height="19" rx="3" class="f-iron"/>
+    <rect x="18" y="21" width="12" height="9" rx="1" class="f-magma"/>
+    <circle cx="16" cy="4" r="2.5" class="f-steam"/>
+    <circle cx="32" cy="4" r="2.5" class="f-steam"/>
+    <rect x="7" y="20" width="6" height="14" rx="2" class="f-bronze"/>
+    <rect x="35" y="20" width="6" height="14" rx="2" class="f-bronze"/>
+  </g>
+
+  <!-- Frame 7: Hurt (Flinch & Steam Rupture) -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="20" cy="43" rx="14" ry="3.5" class="f-shadow"/>
+    <rect x="10" y="18" width="22" height="18" rx="3" class="f-hurt"/>
+    <rect x="12" y="20" width="18" height="14" class="f-brass"/>
+    <rect x="15" y="12" width="12" height="8" rx="2" class="f-hurt"/>
+    <!-- Bursting steam & sparks -->
+    <circle cx="12" cy="10" r="3" class="f-steam"/>
+    <circle cx="30" cy="14" r="2" class="f-fire"/>
+    <circle cx="8" cy="22" r="1.5" class="f-gold"/>
+  </g>
+</svg>
