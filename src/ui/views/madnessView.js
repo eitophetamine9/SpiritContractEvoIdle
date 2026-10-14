@@ -170,7 +170,7 @@ export function renderMadnessView(container) {
             ${swarm.some(e => e.isBoss) ? '⚠️ OVERLORD SWARM' : `CORRUPTED SWARM (${livingEnemiesCount}/${swarm.length})`}
           </div>
 
-          <div class="enemy-swarm-wrapper" id="enemy-swarm-wrapper" style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+          <div class="enemy-swarm-wrapper ${swarm.length >= 4 ? 'large-swarm' : ''}" id="enemy-swarm-wrapper" style="${swarm.length >= 4 ? 'display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 12px; align-items: center;' : 'display: flex; flex-direction: column; gap: 8px; align-items: flex-end;'}">
             ${swarm.map((em, sIdx) => {
               const isDead = em.isDefeated || em.hp <= 0;
               const emHpPct = Math.max(0, Math.min(100, Math.round((em.hp / em.maxHp) * 100)));

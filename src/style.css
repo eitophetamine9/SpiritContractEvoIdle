@@ -6413,6 +6413,13 @@ button:disabled {
   align-items: flex-end;
 }
 
+.enemy-swarm-wrapper.large-swarm {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 6px 12px !important;
+  align-items: center !important;
+}
+
 .seamless-enemy-slot {
   background: transparent !important;
   border: none !important;

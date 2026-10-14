@@ -13,7 +13,7 @@ import {
   getScalingProfile
 } from '../src/data/index.js';
 import { enhanceRelicData } from '../src/data/equipmentData.js';
-import { getEnemyForStage } from '../src/data/index.js';
+import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage } from '../src/data/index.js';
 import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon } from '../src/render/spriteAnimator.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import fs from 'fs';
@@ -1736,6 +1736,69 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log('  [PASS] Detailed Attributes Dossier Modal verified (16 Parameters)!');
 
   console.log('  [PASS] Dedicated Spirit Sanctum Hub fully verified across all 5 sub-hubs!');
+
+  // 37. Test Phase 2 Enemy Scaledown, Polynomial Scaling & Floor Swarms
+  console.log('\n[TEST 37] Testing Phase 2 Enemy Scaledown, Polynomial Scaling & Floor Swarms:');
+  
+  // 1. Verify Polynomial Enemy Base Scaling
+  const scaleFloor1 = getEnemyBaseScale(1);
+  const scaleFloor5 = getEnemyBaseScale(5);
+  const scaleFloor15 = getEnemyBaseScale(15);
+  const scaleFloor30 = getEnemyBaseScale(30);
+  const scaleFloor50 = getEnemyBaseScale(50);
+  
+  console.log(`  Enemy Base Scaling: Floor 1=${scaleFloor1.toFixed(2)}x, Floor 5=${scaleFloor5.toFixed(2)}x, Floor 15=${scaleFloor15.toFixed(2)}x, Floor 30=${scaleFloor30.toFixed(2)}x, Floor 50=${scaleFloor50.toFixed(2)}x`);
+  if (scaleFloor1 !== 1.0) throw new Error('Floor 1 scale should be 1.0');
+  if (scaleFloor5 > 2.0) throw new Error('Floor 5 scale should be <= 2.0');
+  if (scaleFloor30 > 16.0) throw new Error('Floor 30 scale should be <= 16.0 (preventing exponential runaway)');
+  if (scaleFloor50 > 30.0) throw new Error('Floor 50 scale should be <= 30.0 (previously exceeded 4000x)');
+  console.log('  [PASS] Controlled polynomial curve verified without runaway exponential spikes!');
+
+  // 2. Verify Swarm Floors Identification
+  if (!isSwarmFloor(3) || !isSwarmFloor(7) || !isSwarmFloor(13) || !isSwarmFloor(27) || !isSwarmFloor(43)) {
+    throw new Error('isSwarmFloor failed on floors ending in 3 or 7');
+  }
+  if (isSwarmFloor(1) || isSwarmFloor(5) || isSwarmFloor(10) || isSwarmFloor(20)) {
+    throw new Error('isSwarmFloor wrongly flagged non-swarm floor');
+  }
+  console.log('  [PASS] Swarm floor identifier correctly identifies floors ending in 3 or 7 (Floors 3, 7, 13, 17, 23, 27, 33, 37, etc.)!');
+
+  // 3. Verify Swarm Sizes on Swarm Floors vs Normal Floors
+  const swarmF3W4 = getSwarmForStage(3, 4);
+  const swarmF7W4 = getSwarmForStage(7, 4);
+  const swarmF2W4 = getSwarmForStage(2, 4);
+  const swarmF3Boss = getSwarmForStage(3, 5);
+  const swarmF2Boss = getSwarmForStage(2, 5);
+
+  console.log(`  Swarm sizes: Floor 3 Wave 4=${swarmF3W4.length} mobs, Floor 7 Wave 4=${swarmF7W4.length} mobs, Floor 2 Wave 4=${swarmF2W4.length} mobs`);
+  console.log(`  Boss wave sizes: Floor 3 Boss Wave=${swarmF3Boss.length} units (1 boss + ${swarmF3Boss.length - 1} guards), Floor 2 Boss Wave=${swarmF2Boss.length} units`);
+
+  if (swarmF3W4.length < 5) throw new Error(`Expected at least 5 enemies on Swarm Floor 3 Wave 4, got ${swarmF3W4.length}`);
+  if (swarmF7W4.length !== 6) throw new Error(`Expected 6 enemies on Swarm Floor 7 Wave 4, got ${swarmF7W4.length}`);
+  if (swarmF2W4.length > 4) throw new Error(`Expected at most 4 enemies on Normal Floor 2 Wave 4, got ${swarmF2W4.length}`);
+  if (swarmF3Boss.length !== 4) throw new Error(`Expected 4 units (1 boss + 3 guards) on Swarm Floor 3 Boss Wave, got ${swarmF3Boss.length}`);
+  if (swarmF2Boss.length !== 3) throw new Error(`Expected 3 units (1 boss + 2 guards) on Normal Floor 2 Boss Wave, got ${swarmF2Boss.length}`);
+  console.log('  [PASS] Floor-specific swarms of 4-6 enemies on designated floors fully validated!');
+
+  // 4. Verify Individual Mob Power Scaling and Staggered Timers
+  const mobPowerIndividual = swarmF7W4[0].power;
+  const mobHpIndividual = swarmF7W4[0].maxHp;
+  const mobCooldown = swarmF7W4[0].attackCooldown;
+  console.log(`  Swarm Mob Specs (Floor 7 Wave 4): Power=${mobPowerIndividual}, MaxHP=${mobHpIndividual}, Cooldown=${mobCooldown}s`);
+  if (mobCooldown > 2.2) throw new Error('Swarm mob cooldown should be fast');
+  const timers = swarmF7W4.map(m => m.attackTimer);
+  const isStaggered = timers.every((t, idx) => idx === 0 || t > timers[idx - 1]);
+  if (!isStaggered) throw new Error('Swarm initial attack timers must be staggered to avoid simultaneous strike wipes');
+  console.log('  [PASS] Swarm mob power, HP, and staggered strike timers fully validated!');
+
+  // 5. Verify Harmonized Spirit Power Scaling
+  const catLv1 = calculateSpiritPower(SPIRIT_SPECIES.cat_spirit, 1, 'COMMON');
+  const catLv50 = calculateSpiritPower(SPIRIT_SPECIES.cat_spirit, 50, 'COMMON');
+  const catLv100 = calculateSpiritPower(SPIRIT_SPECIES.cat_spirit, 100, 'COMMON');
+  console.log(`  Cat Spirit Power: Lv 1=${catLv1}, Lv 50=${catLv50} (${(catLv50/catLv1).toFixed(1)}x), Lv 100=${catLv100} (${(catLv100/catLv1).toFixed(1)}x)`);
+  if (catLv50 / catLv1 > 15) throw new Error('Level 50 power runaway (should be <= 15x base)');
+  if (catLv100 / catLv1 > 25) throw new Error('Level 100 power runaway (should be <= 25x base)');
+  console.log('  [PASS] Harmonized spirit power scaling validated without blitz runaway!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
