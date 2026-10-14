@@ -1128,15 +1128,15 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   // 29. Test Phase 3: Relic Enhancement Revamp, Divine Scripture & 4 New Greek God Sets
   console.log('\n[TEST 29] Testing Phase 3: Relic Enhancement Revamp, Divine Scripture & Greek God Sets:');
 
-  // Verify Greek God Sets definitions
-  const greekSets = ['athena', 'hermes', 'artemis', 'hephaestus'];
+  // Verify Greek God Sets definitions (Athena, Hermes, Artemis, Hephaestus, Atlas)
+  const greekSets = ['athena', 'hermes', 'artemis', 'hephaestus', 'atlas'];
   for (const sId of greekSets) {
     const sDef = GREEK_GOD_SETS[sId];
     if (!sDef || !sDef.bonus2pc || !sDef.bonus4pc) {
       throw new Error(`Greek God Set "${sId}" definition missing or incomplete!`);
     }
   }
-  console.log('  [PASS] Greek God sets (Athena, Hermes, Artemis, Hephaestus) verified in GREEK_GOD_SETS!');
+  console.log('  [PASS] Greek God sets (Athena, Hermes, Artemis, Hephaestus, Atlas) verified in GREEK_GOD_SETS!');
 
   // Test Relic Substat Roll Tracking
   const trackRelic = {
@@ -1209,7 +1209,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log(`  [PASS] Divine Relic Scripture applied! Guaranteed: Crit Rate & Crit DMG present in inscribed relic!`);
 
-  // Test Hephaestus 2-pc Weapon ATK boost in getSpiritTotalPower
+  // Test Hephaestus 2-pc Molten Carapace (DEF +15% & 25% DEF converted to ATK) in getSpiritTotalPower
   const testWpnHeph = {
     uid: 'test_wpn_hephaestus',
     type: 'weapon',
@@ -1251,16 +1251,17 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   gameState.state.spirits.push(testSpiritHeph);
 
   gameState.invalidateCaches();
+  const cStats = gameState.getSpiritCombatStats(testSpiritHeph);
+  const defToAtk = Math.round(cStats.def * 0.25);
   const calculatedPower = gameState.getSpiritTotalPower(testSpiritHeph);
-  // Base power 100 + weapon power 100 * (1 + 0.25 Hephaestus weapon bonus) = 100 + 125 = 225 (* constellation multiplier if unlocked)
   const constBonus = (gameState.getConstellationBonuses?.().partyAtkPercent || 0) / 100;
-  const expectedPower = Math.round(225 * (1 + constBonus));
+  const expectedPower = Math.round((100 + 100 + defToAtk) * (1 + constBonus));
   if (calculatedPower !== expectedPower) {
     throw new Error(`Expected Hephaestus 2-pc power ${expectedPower}, got ${calculatedPower}`);
   }
-  console.log(`  [PASS] Hephaestus 2-pc set bonus (+25% Weapon ATK) correctly calculated: Power = ${calculatedPower}!`);
+  console.log(`  [PASS] Hephaestus 2-pc set bonus (Molten Carapace: +15% DEF, +${defToAtk} ATK from DEF) correctly calculated: Power = ${calculatedPower}!`);
 
-  // Test proc4PieceSetBonus for the 4 sets
+  // Test proc4PieceSetBonus for Athena, Hermes, Artemis, Hephaestus, Atlas
   gameState.state.madnessZone.currentSwarm = [
     { id: 'mob1', name: 'Void Goblin', hp: 1000, maxHp: 1000, power: 100, isDefeated: false }
   ];
@@ -1268,7 +1269,12 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.hermes);
   gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.artemis);
   gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.hephaestus);
-  console.log('  [PASS] proc4PieceSetBonus successfully fired for Athena, Hermes, Artemis, and Hephaestus!');
+  if (testSpiritHeph.tauntTimer !== 4.0) throw new Error('Expected Hephaestus 4-pc to grant 4s taunt');
+
+  gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.atlas);
+  if (testSpiritHeph.tauntTimer !== 8.0) throw new Error('Expected Atlas 4-pc to grant 8s taunt');
+  if (!testSpiritHeph.shieldHp || testSpiritHeph.shieldHp <= 0) throw new Error('Expected Atlas 4-pc to grant 30% HP shield');
+  console.log('  [PASS] proc4PieceSetBonus successfully fired for Athena, Hermes, Artemis, Hephaestus, and Atlas!');
 
   // Test 30: Phase 4 Zodiac Constellations, New Spirit Evolution Lines & Abyssal Rift Banner
   console.log('\n[TEST 30] Testing Phase 4 Zodiac Constellations, 3 Spirit Lines & Abyssal Rift Banner:');

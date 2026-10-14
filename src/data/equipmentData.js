@@ -38,9 +38,9 @@ export const GREEK_GOD_SETS = {
     },
     bonus4pc: {
       name: 'Underworld Flames',
-      description: 'Procs an AOE dark flame dealing 5% enemy Max HP as DoT for 7s (15s CD).',
+      description: 'Procs an AOE dark flame dealing 2.5% enemy Max HP as DoT for 7s (15s CD).',
       type: 'DOT_AOE',
-      percentEnemyMaxHpPerSec: 0.05,
+      percentEnemyMaxHpPerSec: 0.025,
       durationSec: 7,
       cooldownSec: 15
     }
@@ -61,9 +61,9 @@ export const GREEK_GOD_SETS = {
     },
     bonus4pc: {
       name: 'Divine Retribution',
-      description: 'Strikes all enemies with an instant lightning blast dealing 15% Max HP (45s CD).',
+      description: 'Strikes all enemies with an instant lightning blast dealing 8% Max HP (45s CD).',
       type: 'BURST_AOE',
-      percentEnemyMaxHp: 0.15,
+      percentEnemyMaxHp: 0.08,
       cooldownSec: 45
     }
   },
@@ -209,9 +209,9 @@ export const GREEK_GOD_SETS = {
     },
     bonus4pc: {
       name: 'Lunar Piercer',
-      description: 'Locks onto highest HP enemy, firing an astral arrow dealing 25% true Max HP damage (35s CD).',
+      description: 'Locks onto highest HP enemy, firing an astral arrow dealing 12% Max HP damage (35s CD).',
       type: 'SNIPER_BURST',
-      percentEnemyMaxHp: 0.25,
+      percentEnemyMaxHp: 0.12,
       cooldownSec: 35
     }
   },
@@ -220,23 +220,51 @@ export const GREEK_GOD_SETS = {
     id: 'hephaestus',
     name: 'Hephaestus Relic Set',
     god: 'Hephaestus',
-    title: 'Master of the Divine Forge',
+    title: 'Master of the Divine Forge (Offensive Tank)',
     color: '#e67e22',
     accentColor: '#d35400',
     icon: '🌋',
     bonus2pc: {
-      name: 'Forge Tempering',
-      description: '+25% Weapon ATK & +10% Armor Pierce',
-      weaponAtkBonus: 0.25,
-      armorPierceBonus: 0.10
+      name: 'Molten Carapace',
+      description: '+15% DEF & converts 25% of DEF into bonus ATK Power',
+      defBonus: 0.15,
+      defPercentBonus: 15,
+      defToAtkRatio: 0.25
     },
     bonus4pc: {
-      name: 'Volcanic Sunder',
-      description: 'Shreds 25% enemy DEF and erupts dealing 15% Max HP fire burst on attack (30s CD).',
-      type: 'DEF_SHRED_BURST',
-      defShredPercent: 0.25,
-      percentEnemyMaxHp: 0.15,
-      durationSec: 8,
+      name: 'Magma Eruption',
+      description: 'When struck or every 12s, erupts with a molten volcanic shockwave dealing (200% DEF + 10% Max HP) fire damage to all enemies and taunts for 4s (15s CD).',
+      type: 'OFFENSIVE_TANK_ERUPTION',
+      defRatio: 2.0,
+      hpRatio: 0.10,
+      tauntDurationSec: 4,
+      cooldownSec: 15
+    }
+  },
+
+  atlas: {
+    id: 'atlas',
+    name: 'Atlas Relic Set',
+    god: 'Atlas',
+    title: 'Titan of the Celestial Heavens (Defensive Tank)',
+    color: '#7f8c8d',
+    accentColor: '#bdc3c7',
+    icon: '🏛️',
+    bonus2pc: {
+      name: 'Celestial Pillar',
+      description: '+25% Max HP & +20% DEF',
+      hpBonus: 0.25,
+      hpPercentBonus: 25,
+      defBonus: 0.20,
+      defPercentBonus: 20
+    },
+    bonus4pc: {
+      name: 'Weight of the Heavens',
+      description: '-12% party damage taken. Intercepts all attacks directed at allies below 50% HP for 8s and gains a 30% Max HP shield (30s CD).',
+      type: 'GUARDIAN_INTERCEPTION',
+      teamDamageReduction: 0.12,
+      shieldPercentMaxHp: 0.30,
+      interceptionDurationSec: 8,
       cooldownSec: 30
     }
   }
@@ -306,20 +334,20 @@ export const RELIC_STAR_TIERS = {
 };
 
 /**
- * Relic Substat Catalog
+ * Relic Substat Catalog (Rebalanced)
  */
 export const RELIC_SUBSTAT_TYPES = [
-  { id: 'flat_atk', name: 'Bonus ATK', isPercent: false, min: 15, max: 45, icon: '⚔️' },
-  { id: 'flat_hp', name: 'Bonus Max HP', isPercent: false, min: 80, max: 220, icon: '❤️' },
-  { id: 'flat_shield', name: 'Shield Strength', isPercent: false, min: 40, max: 120, icon: '🛡️' },
-  { id: 'percent_atk', name: 'ATK %', isPercent: true, min: 3.0, max: 7.0, icon: '💥' },
-  { id: 'percent_hp', name: 'HP %', isPercent: true, min: 3.5, max: 8.0, icon: '💚' },
-  { id: 'crit_rate', name: 'Crit Rate %', isPercent: true, min: 2.0, max: 5.0, icon: '🎯' },
-  { id: 'crit_dmg', name: 'Crit DMG %', isPercent: true, min: 6.0, max: 14.0, icon: '⚡' },
-  { id: 'mana_regen', name: 'Mana Replenish %', isPercent: true, min: 3.0, max: 6.5, icon: '🔮' },
-  { id: 'ult_amp', name: 'Ult Amp %', isPercent: true, min: 4.0, max: 8.5, icon: '✨' },
-  { id: 'evasion', name: 'Evasion %', isPercent: true, min: 2.0, max: 4.5, icon: '💨' },
-  { id: 'pierce', name: 'Armor Pierce %', isPercent: true, min: 3.0, max: 6.0, icon: '🗡️' }
+  { id: 'flat_atk', name: 'Bonus ATK', isPercent: false, min: 6, max: 16, icon: '⚔️' },
+  { id: 'flat_hp', name: 'Bonus Max HP', isPercent: false, min: 25, max: 65, icon: '❤️' },
+  { id: 'flat_shield', name: 'Shield Strength', isPercent: false, min: 20, max: 50, icon: '🛡️' },
+  { id: 'percent_atk', name: 'ATK %', isPercent: true, min: 2.0, max: 4.5, icon: '💥' },
+  { id: 'percent_hp', name: 'HP %', isPercent: true, min: 2.0, max: 4.5, icon: '💚' },
+  { id: 'crit_rate', name: 'Crit Rate %', isPercent: true, min: 1.0, max: 2.5, icon: '🎯' },
+  { id: 'crit_dmg', name: 'Crit DMG %', isPercent: true, min: 4.0, max: 8.0, icon: '⚡' },
+  { id: 'mana_regen', name: 'Mana Replenish %', isPercent: true, min: 2.0, max: 5.0, icon: '🔮' },
+  { id: 'ult_amp', name: 'Ult Amp %', isPercent: true, min: 2.5, max: 6.0, icon: '✨' },
+  { id: 'evasion', name: 'Evasion %', isPercent: true, min: 1.5, max: 3.5, icon: '💨' },
+  { id: 'pierce', name: 'Armor Pierce %', isPercent: true, min: 2.0, max: 4.5, icon: '🗡️' }
 ];
 
 /**
@@ -477,20 +505,20 @@ export function enhanceRelicData(relic) {
 }
 
 /**
- * Calculates Relic main stat based on slot, stars, and level
+ * Calculates Relic main stat based on slot, stars, and level (Rebalanced Supportive Curve)
  */
 export function calculateRelicMainStat(slotTypeId, stars = 3, level = 1) {
   const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
-  const baseStatVal = Math.round(18 * tier.multiplier * (1 + (level - 1) * 0.12));
+  const baseStatVal = Math.round(10 * tier.multiplier * (1 + (level - 1) * 0.08));
 
   switch (slotTypeId) {
-    case 'headgear': return baseStatVal * 8; // Bonus Max HP
-    case 'totem': return baseStatVal * 5;    // Shield Strength
-    case 'ring': return baseStatVal * 4;     // Bonus ATK Power
-    case 'necklace': return Math.min(45, Math.round(baseStatVal * 0.5)); // Mana Replenish %
-    case 'orb': return Math.min(50, Math.round(baseStatVal * 0.6));      // Ult Amp %
-    case 'charm': return Math.min(35, Math.round(baseStatVal * 0.4));    // Evasion %
-    default: return baseStatVal * 4;
+    case 'headgear': return baseStatVal * 4; // Bonus Max HP (+60 to +280 HP)
+    case 'totem': return Math.round(baseStatVal * 2.5); // Shield Strength (+30 to +140 Shield)
+    case 'ring': return baseStatVal * 2; // Bonus ATK Power (+18 to +84 ATK)
+    case 'necklace': return Math.min(18, Math.max(5, Math.round(baseStatVal * 0.25))); // Mana Replenish % (+5% to +18%)
+    case 'orb': return Math.min(20, Math.max(6, Math.round(baseStatVal * 0.3))); // Ult Amp % (+6% to +20%)
+    case 'charm': return Math.min(10, Math.max(3, Math.round(baseStatVal * 0.15))); // Evasion % (+3% to +10%)
+    default: return baseStatVal * 2;
   }
 }
 
