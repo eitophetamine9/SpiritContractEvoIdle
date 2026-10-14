@@ -170,7 +170,7 @@ export function renderMadnessView(container) {
             ${swarm.some(e => e.isBoss) ? '⚠️ OVERLORD SWARM' : `CORRUPTED SWARM (${livingEnemiesCount}/${swarm.length})`}
           </div>
 
-          <div class="enemy-swarm-wrapper" id="enemy-swarm-wrapper" style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+          <div class="enemy-swarm-wrapper ${swarm.length >= 4 ? 'large-swarm' : ''}" id="enemy-swarm-wrapper" style="${swarm.length >= 4 ? 'display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 12px; align-items: center;' : 'display: flex; flex-direction: column; gap: 8px; align-items: flex-end;'}">
             ${swarm.map((em, sIdx) => {
               const isDead = em.isDefeated || em.hp <= 0;
               const emHpPct = Math.max(0, Math.min(100, Math.round((em.hp / em.maxHp) * 100)));
@@ -341,15 +341,20 @@ export function renderMadnessView(container) {
       const res = gameState.attackEnemyWithPartyPower();
       spawnCombatNumber(container, res.damage, 'crit');
 
-      // Visual attack animation for party members and enemy hit flash
-      const leadEnemySlot = container.querySelector('.enemy-swarm-slot:not(.enemy-defeated)');
-      if (leadEnemySlot) {
-        leadEnemySlot.classList.remove('enemy-hit-flash');
-        void leadEnemySlot.offsetWidth;
-        leadEnemySlot.classList.add('enemy-hit-flash');
+      // Trigger 2.5D arena dynamic combat clash particles
+      if (typeof arenaRenderer?.triggerClashImpact === 'function') {
+        arenaRenderer.triggerClashImpact(null, null, true);
       }
 
-      container.querySelectorAll('.spirit-formation-slot.slot-active').forEach(slot => {
+      // Visual attack animation for party members and enemy hit flash
+      const leadEnemySlot = container.querySelector('.seamless-enemy-slot:not(.enemy-defeated)') || container.querySelector('.enemy-swarm-slot:not(.enemy-defeated)');
+      if (leadEnemySlot) {
+        leadEnemySlot.classList.remove('enemy-hit-flash', 'crit-clash-flash');
+        void leadEnemySlot.offsetWidth;
+        leadEnemySlot.classList.add('enemy-hit-flash', 'crit-clash-flash');
+      }
+
+      container.querySelectorAll('.seamless-battle-spirit:not(.spirit-fallen), .spirit-formation-slot.slot-active').forEach(slot => {
         slot.classList.remove('lunge-attack');
         void slot.offsetWidth;
         slot.classList.add('lunge-attack');

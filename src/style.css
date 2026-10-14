@@ -6399,6 +6399,114 @@ button:disabled {
 }
 
 /* ==========================================================================
+   ANIMATED VICTORY TREASURE CHEST & RELIC CACHE
+   ========================================================================== */
+.animated-treasure-chest {
+  width: 56px;
+  height: 56px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 14px rgba(241, 196, 15, 0.65));
+  animation: chestHoverBob 2.5s ease-in-out infinite;
+}
+
+@keyframes chestHoverBob {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-4px) scale(1.04); }
+}
+
+.animated-treasure-chest .chest-frame-viewer {
+  width: 48px;
+  height: 48px;
+  background-image: var(--sprite-sheet);
+  background-size: 384px 48px;
+  background-position: -336px 0px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  animation: chestOpeningCycle 1.4s steps(7) forwards;
+}
+
+@keyframes chestOpeningCycle {
+  0% { background-position: 0px 0px; }
+  100% { background-position: -336px 0px; }
+}
+
+.animated-treasure-chest .chest-sparkles {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 14px;
+  animation: chestSparklePulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes chestSparklePulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(18deg); }
+}
+
+/* ==========================================================================
+   DYNAMIC COMBAT IMPACT & CLASH OVERLAYS
+   ========================================================================== */
+.combat-clash-divider {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clash-sparks-icon {
+  font-size: 20px;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+  animation: clashIconPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes clashIconPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+  50% { transform: scale(1.25) rotate(12deg); opacity: 1; }
+}
+
+.lunge-attack {
+  animation: allyLungeAnim 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes allyLungeAnim {
+  0% { transform: translateX(0px) scale(1); }
+  40% { transform: translateX(18px) scale(1.1); filter: brightness(1.3); }
+  100% { transform: translateX(0px) scale(1); }
+}
+
+.enemy-hit-flash {
+  animation: enemyFlinchAnim 0.35s ease-out;
+}
+
+@keyframes enemyFlinchAnim {
+  0% { transform: scale(1) translateX(0); filter: drop-shadow(0 0 12px #ff4757) brightness(2); }
+  30% { transform: scale(0.92) translateX(8px); filter: drop-shadow(0 0 20px #ff0055) brightness(2.5); }
+  100% { transform: scale(1) translateX(0); filter: drop-shadow(0 4px 8px rgba(255, 51, 102, 0.65)); }
+}
+
+.crit-clash-flash {
+  animation: critClashPunch 0.4s ease-out;
+}
+
+@keyframes critClashPunch {
+  0% { transform: scale(1); filter: brightness(3) drop-shadow(0 0 24px #ffd700); }
+  40% { transform: scale(1.15); filter: brightness(2) drop-shadow(0 0 32px #ff4757); }
+  100% { transform: scale(1); }
+}
+
+/* ==========================================================================
    SEAMLESS ENEMY COLUMN (Tower of Madness - No Boxes, No Borders)
    ========================================================================== */
 
@@ -6411,6 +6519,13 @@ button:disabled {
   flex-direction: column;
   gap: 8px;
   align-items: flex-end;
+}
+
+.enemy-swarm-wrapper.large-swarm {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 6px 12px !important;
+  align-items: center !important;
 }
 
 .seamless-enemy-slot {
@@ -6479,6 +6594,17 @@ button:disabled {
   height: 100%;
   background: linear-gradient(90deg, #ff4757, #ff6b81);
   border-radius: 2px;
+  transition: width 0.15s ease-out;
+}
+
+.seamless-enemy-shield-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.7);
   transition: width 0.15s ease-out;
 }
 
@@ -6592,16 +6718,16 @@ button:disabled {
   font-size: 11px;
 }
 
-/* 7-Tab Navigation Grid */
+/* 8-Tab Navigation Grid */
 .realm-tab-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 
-@media (min-width: 440px) {
+@media (min-width: 560px) {
   .realm-tab-grid {
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(8, 1fr);
   }
 }
 
@@ -6663,6 +6789,10 @@ button:disabled {
 .realm-tab-btn[data-realm-tab="blessings"].active {
   border-color: #c084fc;
   box-shadow: 0 0 14px rgba(192, 132, 252, 0.4);
+}
+.realm-tab-btn[data-realm-tab="dwarven"].active {
+  border-color: #f97316;
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
 }
 
 /* Essence Chambers Grid */
@@ -6747,6 +6877,166 @@ button:disabled {
   gap: 12px;
   padding: 4px 0 16px 0;
   color: #f1f5f9;
+}
+
+/* ==========================================================================
+   SINGLE-FOCUS CELESTIAL CONSTELLATION VIEWER & STAR-CHART
+   ========================================================================== */
+.constellation-chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.constellation-chips-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.constellation-chips-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+.constellation-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1.5px solid rgba(71, 85, 105, 0.35);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.constellation-chip-btn:hover {
+  border-color: var(--const-color, #fb7185);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.constellation-chip-btn.active {
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.95), rgba(15, 23, 42, 0.98));
+  border-color: var(--const-color, #fb7185);
+  color: #fff;
+  box-shadow: 0 0 16px var(--const-glow, rgba(251, 113, 133, 0.4)), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.constellation-star-progress-pill {
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 900;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Star-Chart Viewer Showcase Stage */
+.constellation-showcase-stage {
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 0%, rgba(30, 27, 75, 0.35) 0%, rgba(10, 15, 28, 0.98) 85%);
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* 5-Node Stellar Pathway Grid */
+.constellation-star-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .constellation-star-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.constellation-node-card {
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  transition: all 0.2s ease;
+  min-height: 110px;
+}
+
+.constellation-node-card.illuminated {
+  background: linear-gradient(145deg, rgba(6, 78, 59, 0.3), rgba(15, 23, 42, 0.9));
+  border: 1.5px solid rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.constellation-node-card.available {
+  background: linear-gradient(145deg, rgba(120, 53, 15, 0.35), rgba(15, 23, 42, 0.9));
+  border: 1.5px solid rgba(251, 191, 36, 0.7);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.25);
+  animation: starAvailablePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes starAvailablePulse {
+  0%, 100% { border-color: rgba(251, 191, 36, 0.7); box-shadow: 0 0 14px rgba(251, 191, 36, 0.2); }
+  50% { border-color: rgba(253, 224, 71, 1); box-shadow: 0 0 22px rgba(253, 224, 71, 0.4); }
+}
+
+.constellation-node-card.locked {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+  opacity: 0.65;
+}
+
+/* Collapsible Cosmic Boons Drawer */
+.cosmic-boons-drawer {
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(71, 85, 105, 0.35);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.cosmic-boons-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 800;
+  transition: background 0.15s ease;
+}
+
+.cosmic-boons-toggle-btn:hover {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.astral-hero-sprite {
+  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.7));
+}
+
+.dwarven-master-sprite {
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.7));
 }
 
 .vault-hero-banner {

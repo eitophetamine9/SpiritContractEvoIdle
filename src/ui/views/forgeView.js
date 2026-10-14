@@ -12,7 +12,7 @@ import { EQUIPMENT_RARITIES } from '../../data/equipmentData.js';
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
-import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedWeaponHtml, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
 
 let selectedForgeChamberId = 'bladesmith_sanctum';
 let selectedForgeTierNum = 1;
@@ -295,10 +295,15 @@ function renderForgeBattleArena(container, battle) {
                       ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
                       <span>${em.name}</span>
                     </div>
-                    <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+                      ${em.shieldHp > 0 ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">🛡️ BARRIER</span>' : ''}
+                      ${em.isEnraged ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse">🔥 ENRAGED</span>' : ''}
+                    </div>
 
                     <div class="seamless-enemy-hp-track">
                       <div id="forge-enemy-hp-fill-${sIdx}" class="seamless-enemy-hp-fill" style="width: ${emHpPct}%;"></div>
+                      ${em.shieldHp > 0 ? `<div class="seamless-enemy-shield-fill" style="width: ${Math.min(100, Math.round((em.shieldHp / (em.divineBarrierMax || (em.maxHp * 0.25) || 1)) * 100))}%;"></div>` : ''}
                     </div>
                   </div>
 
@@ -346,6 +351,9 @@ function renderForgeBattleArena(container, battle) {
   if (btnStrike) {
     btnStrike.addEventListener('click', () => {
       gameState.manualDungeonStrike();
+      if (typeof arenaRenderer?.triggerClashImpact === 'function') {
+        arenaRenderer.triggerClashImpact(null, null, true);
+      }
       arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
       renderForgeView(container);
     });
@@ -374,12 +382,17 @@ export function showForgeVictoryModal(loot, onClose) {
 
   modalEl.innerHTML = `
     <div class="pantheon-victory-modal max-w-lg w-full rounded-2xl bg-slate-900 border overflow-hidden shadow-2xl text-white" style="border: 2px solid #e67e22;">
-      <div class="victory-header p-4 flex items-center gap-3.5" style="background: linear-gradient(135deg, rgba(230, 126, 34, 0.4), #000);">
-        <div class="victory-sigil text-4xl">🔨</div>
-        <div class="victory-title-col">
-          <span class="victory-sub text-[10px] font-black uppercase tracking-widest text-orange-400">FORGE CONQUERED</span>
-          <h3 class="victory-name text-lg font-black text-white">${loot.chamber.name} Cleared!</h3>
-          <span class="victory-tier-tag text-xs text-slate-300">${loot.tier.name}</span>
+      <div class="victory-header p-4 flex items-center justify-between gap-3.5" style="background: linear-gradient(135deg, rgba(230, 126, 34, 0.4), #000);">
+        <div class="flex items-center gap-3.5">
+          <div class="victory-sigil text-4xl">🔨</div>
+          <div class="victory-title-col">
+            <span class="victory-sub text-[10px] font-black uppercase tracking-widest text-orange-400">FORGE CONQUERED</span>
+            <h3 class="victory-name text-lg font-black text-white">${loot.chamber.name} Cleared!</h3>
+            <span class="victory-tier-tag text-xs text-slate-300">${loot.tier.name}</span>
+          </div>
+        </div>
+        <div class="victory-animated-chest-wrap">
+          ${createAnimatedChestHtml()}
         </div>
       </div>
 

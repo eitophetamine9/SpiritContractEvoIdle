@@ -263,6 +263,72 @@ export const SPRITE_MANIFEST = {
         hurt: { frames: [7], fps: 6, loop: false }
       }
     },
+    enemy_kraken_overlord: {
+      path: '/assets/sprites/creatures/enemy_kraken_overlord.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    enemy_hellfire_wyrm: {
+      path: '/assets/sprites/creatures/enemy_hellfire_wyrm.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    enemy_blighted_chimera: {
+      path: '/assets/sprites/creatures/enemy_blighted_chimera.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    avatar_olympian_god: {
+      path: '/assets/sprites/creatures/avatar_olympian_god.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    forge_vulcan_automaton: {
+      path: '/assets/sprites/creatures/forge_vulcan_automaton.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 4, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 8, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
+    victory_treasure_chest: {
+      path: '/assets/sprites/relics/victory_treasure_chest.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 4, loop: true },
+        attack: { frames: [4, 5, 6, 7], fps: 8, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
     relic_crown_zeus: {
       path: '/assets/sprites/relics/relic_crown_zeus.svg',
       frameCount: 8,
@@ -459,10 +525,31 @@ export function getSheetKeyForSpecies(speciesOrId) {
 
 export function getSheetKeyForEnemy(enemy) {
   if (!enemy) return 'enemy_shadow_behemoth';
+  if (enemy.sheetKey && SPRITE_MANIFEST.sheets[enemy.sheetKey]) {
+    return enemy.sheetKey;
+  }
   const name = (enemy.name || '').toLowerCase();
   const id = (enemy.id || enemy.speciesId || '').toLowerCase();
   const fullText = `${name} ${id}`;
 
+  // Dedicated Overlord & Dungeon Boss Sprites
+  if (fullText.includes('kraken') || fullText.includes('octopus') || fullText.includes('squid') || fullText.includes('benthic') || fullText.includes('abyssal') || fullText.includes('sunken')) {
+    return 'enemy_kraken_overlord';
+  }
+  if (fullText.includes('hellfire') || fullText.includes('wyrm') || fullText.includes('caldera') || fullText.includes('magma wyrm') || fullText.includes('volcan')) {
+    return 'enemy_hellfire_wyrm';
+  }
+  if (fullText.includes('chimera') || fullText.includes('blight') || fullText.includes('toxic') || fullText.includes('spore') || fullText.includes('venom beast')) {
+    return 'enemy_blighted_chimera';
+  }
+  if (fullText.includes('vulcan') || fullText.includes('automaton') || fullText.includes('smelter') || fullText.includes('forge') || fullText.includes('clockwork')) {
+    return 'forge_vulcan_automaton';
+  }
+  if (fullText.includes('avatar') || fullText.includes('olympian') || fullText.includes('pantheon') || fullText.includes('zeus') || fullText.includes('ares') || fullText.includes('poseidon') || fullText.includes('athena') || fullText.includes('apollo') || fullText.includes('artemis') || fullText.includes('hermes') || fullText.includes('atlas')) {
+    return 'avatar_olympian_god';
+  }
+
+  // General Biome Enemies
   if (fullText.includes('void') || fullText.includes('wraith') || fullText.includes('madness') || fullText.includes('phantom')) {
     return 'enemy_void_wraith';
   }
@@ -475,10 +562,10 @@ export function getSheetKeyForEnemy(enemy) {
   if (fullText.includes('titan') || fullText.includes('colossus') || fullText.includes('golem') || fullText.includes('iron') || fullText.includes('earth') || fullText.includes('minotaur')) {
     return 'enemy_colossus_titan';
   }
-  if (fullText.includes('serpent') || fullText.includes('wyrm') || fullText.includes('snake') || fullText.includes('hydra') || fullText.includes('leviathan')) {
+  if (fullText.includes('serpent') || fullText.includes('snake') || fullText.includes('hydra') || fullText.includes('leviathan')) {
     return 'enemy_corrupted_serpent';
   }
-  if (enemy.isBoss || fullText.includes('overlord') || fullText.includes('behemoth') || fullText.includes('avatar') || fullText.includes('hades')) {
+  if (enemy.isBoss || fullText.includes('overlord') || fullText.includes('behemoth') || fullText.includes('hades')) {
     return 'enemy_shadow_behemoth';
   }
   if (fullText.includes('hound') || fullText.includes('wolf') || fullText.includes('cerberus')) {
@@ -492,6 +579,9 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
   const godId = typeof relicOrSetId === 'object' ? (relicOrSetId?.setId || relicOrSetId?.godId) : relicOrSetId;
   const slot = typeof relicOrSetId === 'object' ? (relicOrSetId?.slotTypeId || relicOrSetId?.type) : slotType;
 
+  if (godId === 'victory_treasure_chest' || godId === 'chest' || slot === 'chest') {
+    return 'victory_treasure_chest';
+  }
   if (godId === 'athena' || slot === 'totem' || slot === 'shield') {
     return 'relic_shield_athena';
   }
@@ -606,6 +696,20 @@ export function createAnimatedWeaponHtml(weaponOrType, { extraClasses = '' } = {
     </div>
   `;
 }
+
+/**
+ * Generates HTML string for an animated victory treasure chest / relic cache
+ */
+export function createAnimatedChestHtml({ extraClasses = '' } = {}) {
+  const path = '/assets/sprites/relics/victory_treasure_chest.svg';
+  return `
+    <div class="animated-treasure-chest ${extraClasses}" style="--sprite-sheet: url('${path}');">
+      <div class="chest-frame-viewer"></div>
+      <div class="chest-sparkles">✨</div>
+    </div>
+  `;
+}
+
 
 /**
  * Lightweight Sprite Animator instance

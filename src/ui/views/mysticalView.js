@@ -15,11 +15,29 @@ import { CONSTELLATIONS_CONFIG, EXPEDITIONS_CONFIG, TRANSMUTATION_CONFIG } from 
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
-import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedChestHtml, createAnimatedRelicHtml } from '../../render/spriteAnimator.js';
 
 let selectedEssenceChamberId = 'olympian_nexus';
 let selectedEssenceTierNum = 1;
-let activeRealmSection = 'dungeon'; // 'dungeon' | 'zodiac' | 'expeditions' | 'transmute' | 'energy' | 'potions' | 'blessings'
+let activeRealmSection = 'dungeon'; // 'dungeon' | 'zodiac' | 'expeditions' | 'dwarven' | 'transmute' | 'energy' | 'potions' | 'blessings'
+let selectedConstellationId = 'draco';
+let isCosmicBoonsOpen = false;
+
+export function setActiveRealmSection(tab) {
+  activeRealmSection = tab;
+}
+
+export function getActiveRealmSection() {
+  return activeRealmSection;
+}
+
+export function setSelectedConstellationId(cId) {
+  selectedConstellationId = cId;
+}
+
+export function getSelectedConstellationId() {
+  return selectedConstellationId;
+}
 
 export function renderMysticalView(container) {
   const battle = gameState.state.activeDungeonBattle;
@@ -54,43 +72,50 @@ function renderMysticalSanctumScreen(container) {
   container.innerHTML = `
     <div class="mystical-realm-container">
       
-      <!-- Top Realm Hero Banner: Clean Proportional Typography -->
+      <!-- Top Realm Hero Banner: Clean Proportional Typography with Animated Celestial Avatar -->
       <div class="mystical-hero-banner">
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-              ✨ SANCTUM OF THE DIVINE
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex flex-col gap-2 flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                ✨ SANCTUM OF THE DIVINE
+              </div>
+
+              <!-- Currency Badges -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <div class="mystical-stat-chip" title="Essences of the Gods">
+                  <span class="text-cyan-400 font-bold">💠 Gods:</span>
+                  <strong class="text-cyan-200 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
+                </div>
+                <div class="mystical-stat-chip" title="Astral Essence">
+                  <span class="text-purple-400 font-bold">🔮 Astral:</span>
+                  <strong class="text-purple-200 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
+                </div>
+                <div class="mystical-stat-chip" title="Energy Capacity">
+                  <span class="text-amber-400 font-bold">⚡</span>
+                  <strong class="text-amber-300 font-black">${res.energy}/${currentMaxEnergy}</strong>
+                </div>
+              </div>
             </div>
 
-            <!-- Currency Badges -->
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <div class="mystical-stat-chip" title="Essences of the Gods">
-                <span class="text-cyan-400 font-bold">💠 Gods:</span>
-                <strong class="text-cyan-200 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
-              </div>
-              <div class="mystical-stat-chip" title="Astral Essence">
-                <span class="text-purple-400 font-bold">🔮 Astral:</span>
-                <strong class="text-purple-200 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
-              </div>
-              <div class="mystical-stat-chip" title="Energy Capacity">
-                <span class="text-amber-400 font-bold">⚡</span>
-                <strong class="text-amber-300 font-black">${res.energy}/${currentMaxEnergy}</strong>
-              </div>
+            <div>
+              <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
+                <span>🌌</span> The Astral Realm
+              </h2>
+              <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
+                Harness Astral Essences & Essences of the Gods to brew elixirs, ascend spirits, forge divine scriptures, and awaken cosmic constellations.
+              </p>
             </div>
           </div>
 
-          <div>
-            <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-              <span>🌌</span> The Astral Realm
-            </h2>
-            <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
-              Harness Astral Essences & Essences of the Gods to brew elixirs, ascend spirits, and invoke cosmic blessings.
-            </p>
+          <!-- Animated Floating Celestial Avatar -->
+          <div class="hidden sm:flex items-center justify-center p-2 rounded-2xl bg-slate-950/70 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.25)] shrink-0">
+            ${createAnimatedSpriteHtml('celestial_angel', { extraClasses: 'astral-hero-sprite scale-110' })}
           </div>
         </div>
       </div>
 
-      <!-- Realm Navigation Section Tabs: 7-Tab Responsive Modern Dock -->
+      <!-- Realm Navigation Section Tabs: 8-Tab Responsive Modern Dock -->
       <div class="realm-tab-grid">
         <button class="realm-tab-btn ${activeRealmSection === 'dungeon' ? 'active' : ''}" data-realm-tab="dungeon">
           <span class="text-sm pointer-events-none">🏛️</span>
@@ -103,6 +128,10 @@ function renderMysticalSanctumScreen(container) {
         <button class="realm-tab-btn ${activeRealmSection === 'expeditions' ? 'active' : ''}" data-realm-tab="expeditions">
           <span class="text-sm pointer-events-none">🧭</span>
           <span class="truncate pointer-events-none">Expeditions</span>
+        </button>
+        <button class="realm-tab-btn ${activeRealmSection === 'dwarven' ? 'active' : ''}" data-realm-tab="dwarven">
+          <span class="text-sm pointer-events-none">⚒️</span>
+          <span class="truncate pointer-events-none">Dwarven's Forge</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'transmute' ? 'active' : ''}" data-realm-tab="transmute">
           <span class="text-sm pointer-events-none">⚗️</span>
@@ -127,6 +156,7 @@ function renderMysticalSanctumScreen(container) {
         ${activeRealmSection === 'dungeon' ? renderDungeonSectionHtml(chamber, tier, canAffordDungeon, partyPower) : ''}
         ${activeRealmSection === 'zodiac' ? renderConstellationsSectionHtml(res) : ''}
         ${activeRealmSection === 'expeditions' ? renderExpeditionsSectionHtml(state) : ''}
+        ${activeRealmSection === 'dwarven' ? renderDwarvenForgeSectionHtml(res, state) : ''}
         ${activeRealmSection === 'transmute' ? renderTransmutationSectionHtml(res, state) : ''}
         ${activeRealmSection === 'energy' ? renderEnergySectionHtml(currentMaxEnergy, energyIsCapped, nextEnergyCostEssence, nextEnergyCostSoul, canAffordEnergy) : ''}
         ${activeRealmSection === 'potions' ? renderPotionsSectionHtml(res, partySpirits) : ''}
@@ -155,6 +185,8 @@ function renderMysticalSanctumScreen(container) {
     bindConstellationEvents(container);
   } else if (activeRealmSection === 'expeditions') {
     bindExpeditionEvents(container);
+  } else if (activeRealmSection === 'dwarven') {
+    bindDwarvenForgeEvents(container);
   } else if (activeRealmSection === 'transmute') {
     bindTransmutationEvents(container);
   } else if (activeRealmSection === 'energy') {
@@ -295,21 +327,22 @@ function renderEnergySectionHtml(currentMax, isCapped, costEssence, costSoul, ca
 
 function renderPotionsSectionHtml(res, spirits) {
   const POTIONS = [
-    { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, astralCost: 1, essenceGodCost: 5, desc: 'Brewed elixir granting +10,000 Spirit XP.' },
-    { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, astralCost: 3, essenceGodCost: 15, desc: 'Concentrated starlight granting +50,000 Spirit XP.' },
-    { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, astralCost: 10, essenceGodCost: 40, desc: 'Nectar of the gods granting +250,000 Spirit XP.' }
+    { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 1200, essenceGodCost: 10, astralCost: 1, desc: 'Brewed elixir granting +10,000 Spirit XP.' },
+    { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 3000, essenceGodCost: 25, astralCost: 3, desc: 'Concentrated starlight granting +50,000 Spirit XP.' },
+    { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 7500, essenceGodCost: 60, astralCost: 10, desc: 'Nectar of the gods granting +250,000 Spirit XP.' }
   ];
 
   return `
     <div class="flex flex-col gap-2">
       <div class="text-[11px] text-slate-400">
-        Feed concentrated astral potions to rapidly elevate spirit levels:
+        Feed concentrated astral potions to rapidly elevate spirit levels (Consumes Shards, God Essences, and Astral Essences):
       </div>
 
       <div class="flex flex-col gap-2">
         ${POTIONS.map(pot => {
-          const canBuy = (res.soulEssence || 0) >= pot.astralCost && 
-            (res.essencesOfTheGods || 0) >= pot.essenceGodCost;
+          const canBuy = (res.spiritShards || 0) >= pot.shardCost &&
+            (res.essencesOfTheGods || 0) >= pot.essenceGodCost &&
+            (res.soulEssence || 0) >= pot.astralCost;
 
           return `
             <div class="rounded-xl border border-emerald-500/30 bg-slate-900/80 p-3 flex items-center justify-between gap-2.5 shadow-sm">
@@ -325,7 +358,7 @@ function renderPotionsSectionHtml(res, spirits) {
                     </span>
                   </div>
                   <div class="text-[10px] text-slate-400 mt-0.5">
-                    Cost: <span class="text-purple-300 font-bold">🔮 ${pot.astralCost} Astral</span> • <span class="text-cyan-300 font-bold">💠 ${pot.essenceGodCost} Gods</span>
+                    Cost: <span class="text-amber-300 font-bold">💎 ${pot.shardCost.toLocaleString()}</span> • <span class="text-cyan-300 font-bold">💠 ${pot.essenceGodCost} Gods</span> • <span class="text-purple-300 font-bold">🔮 ${pot.astralCost} Astral</span>
                   </div>
                 </div>
               </div>
@@ -437,118 +470,150 @@ function renderConstellationsSectionHtml(res) {
   if (bonuses.atkSpdBonusPercent) activeBonusLabels.push(`+${bonuses.atkSpdBonusPercent}% Atk Speed`);
   if (bonuses.doubleStrikeChance) activeBonusLabels.push(`+${bonuses.doubleStrikeChance}% Double Strike`);
 
+  const constList = Object.values(CONSTELLATIONS_CONFIG);
+  const activeConst = CONSTELLATIONS_CONFIG[selectedConstellationId] || constList[0];
+  const curLevel = constellations[activeConst.id] || 0;
+  const nextNode = curLevel + 1;
+  const completionPct = Math.round((curLevel / 5) * 100);
+
   return `
     <div class="flex flex-col gap-3">
-      <!-- Zodiac Header & Active Synergy Overview -->
-      <div class="rounded-xl border border-rose-500/30 p-3 bg-gradient-to-b from-rose-950/20 via-slate-900/90 to-slate-950 shadow-md flex flex-col gap-2">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">🌌</span>
-            <div>
-              <h3 class="text-xs sm:text-sm font-extrabold text-white">Celestial Constellations (Zodiac Trees)</h3>
-              <p class="text-[10px] sm:text-[11px] text-slate-400">Illuminate celestial star nodes using 🔮 Astral Essences to bestow permanent passive boons across all combat systems.</p>
-            </div>
-          </div>
-          <div class="text-right shrink-0">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 border border-purple-400/40 text-purple-300">
-              🔮 ${(res.soulEssence || 0).toLocaleString()} Astral
-            </span>
+      
+      <!-- Top Overview & Balance -->
+      <div class="rounded-xl border border-rose-500/30 p-3 bg-gradient-to-b from-rose-950/20 via-slate-900/90 to-slate-950 shadow-md flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🌌</span>
+          <div>
+            <h3 class="text-xs sm:text-sm font-extrabold text-white">Celestial Constellations (Zodiac Star-Chart)</h3>
+            <p class="text-[10px] sm:text-[11px] text-slate-400">Select a constellation below to view its celestial star-chart and awaken permanent party passives.</p>
           </div>
         </div>
-
-        <!-- Active Global Boons Strip -->
-        <div class="pt-2 border-t border-slate-800">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Illuminated Cosmic Boons:</div>
-          <div class="flex flex-wrap gap-1">
-            ${activeBonusLabels.length > 0 ? activeBonusLabels.map(b => `
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 shadow-sm">
-                ✨ ${b}
-              </span>
-            `).join('') : '<span class="text-[10px] text-slate-500 italic">No celestial stars illuminated yet. Spend 🔮 Astral Essences below to awaken your party!</span>'}
-          </div>
+        <div class="text-right shrink-0">
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/20 border border-purple-400/40 text-purple-300">
+            🔮 ${(res.soulEssence || 0).toLocaleString()} Astral
+          </span>
         </div>
       </div>
 
-      <!-- Constellations List -->
-      <div class="flex flex-col gap-3">
-        ${Object.values(CONSTELLATIONS_CONFIG).map(constConfig => {
-          const curLevel = constellations[constConfig.id] || 0;
-          const nextNode = curLevel + 1;
-          const pct = Math.round((curLevel / 5) * 100);
-
+      <!-- Single-Focus Constellation Selector: Horizontal Chip Bar -->
+      <div class="constellation-chips-scroll">
+        ${constList.map(c => {
+          const lvl = constellations[c.id] || 0;
+          const isSelected = c.id === activeConst.id;
+          const isMaxed = lvl >= 5;
           return `
-            <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3 shadow-md flex flex-col gap-2.5 transition-all hover:border-slate-700" style="border-left: 4px solid ${constConfig.themeColor};">
-              <!-- Constellation Header -->
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2 min-w-0">
-                  <div class="w-9 h-9 rounded-lg flex items-center justify-center text-xl shrink-0" style="background-color: ${constConfig.themeColor}22; border: 1px solid ${constConfig.themeColor}55;">
-                    ${constConfig.icon}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="text-xs sm:text-sm font-black text-white">${constConfig.name}</span>
-                      <span class="text-[10px] font-medium opacity-80" style="color: ${constConfig.accentColor};">${constConfig.title}</span>
-                    </div>
-                    <div class="text-[10px] text-slate-400 truncate">${constConfig.description}</div>
-                  </div>
-                </div>
-
-                <div class="flex flex-col items-end shrink-0">
-                  <span class="text-[11px] font-black" style="color: ${constConfig.accentColor};">
-                    ${curLevel}/5 ★
-                  </span>
-                  <div class="w-16 h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800 mt-0.5">
-                    <div class="h-full rounded-full transition-all" style="width: ${pct}%; background-color: ${constConfig.themeColor};"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Star Nodes (1 to 5) Horizontal Sequence -->
-              <div class="grid grid-cols-1 sm:grid-cols-5 gap-1.5">
-                ${constConfig.stars.map(star => {
-                  const isUnlocked = star.node <= curLevel;
-                  const isAvailable = star.node === nextNode;
-                  const canAfford = (res.soulEssence || 0) >= star.cost;
-
-                  let borderStyle = 'border-slate-800/80 bg-slate-950/60 opacity-60';
-                  let statusBadge = `<span class="text-[9px] text-slate-500">🔒 Node ${star.node - 1} req</span>`;
-
-                  if (isUnlocked) {
-                    borderStyle = `border-emerald-500/50 bg-emerald-950/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]`;
-                    statusBadge = `<span class="text-[9px] font-bold text-emerald-400">★ Illuminated</span>`;
-                  } else if (isAvailable) {
-                    borderStyle = `border-amber-400/60 bg-amber-950/30 shadow-[0_0_10px_rgba(251,191,36,0.2)] animate-pulse`;
-                    statusBadge = `
-                      <button class="btn-unlock-star w-full py-1 px-1.5 rounded-md font-bold text-[10px] transition-all cursor-pointer shadow ${canAfford ? 'bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:brightness-110' : 'bg-slate-800 text-slate-400 border border-slate-700'}" 
-                              data-constellation-id="${constConfig.id}" 
-                              data-node="${star.node}" 
-                              data-cost="${star.cost}" 
-                              ${canAfford ? '' : 'disabled'}>
-                        ${canAfford ? `Unlock (${star.cost} 🔮)` : `Need ${star.cost} 🔮`}
-                      </button>
-                    `;
-                  }
-
-                  return `
-                    <div class="rounded-lg border ${borderStyle} p-2 flex flex-col justify-between gap-1 text-left min-h-[72px]">
-                      <div>
-                        <div class="flex items-center justify-between text-[10px]">
-                          <strong class="text-white truncate">${star.node}. ${star.name}</strong>
-                          <span class="text-[9px] text-purple-300 font-bold shrink-0">${star.cost} 🔮</span>
-                        </div>
-                        <div class="text-[10px] text-cyan-300 font-medium leading-tight mt-0.5">${star.desc}</div>
-                      </div>
-                      <div class="mt-1">
-                        ${statusBadge}
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-
-            </div>
+            <button class="constellation-chip-btn ${isSelected ? 'active' : ''}" 
+                    data-constellation-id="${c.id}" 
+                    style="--const-color: ${c.themeColor}; --const-glow: ${c.themeColor}55;">
+              <span class="text-base pointer-events-none">${c.icon}</span>
+              <span class="pointer-events-none">${c.name}</span>
+              <span class="constellation-star-progress-pill pointer-events-none" style="${isMaxed ? 'background: #f1c40f33; color: #f1c40f; border-color: #f1c40f55;' : (lvl > 0 ? `background: ${c.themeColor}33; color: ${c.accentColor};` : 'color: #94a3b8;')}">
+                ${isMaxed ? '★ MAX' : `★${lvl}/5`}
+              </span>
+            </button>
           `;
         }).join('')}
+      </div>
+
+      <!-- Active Star-Chart Viewer (The Single-Focus Showcase Arena) -->
+      <div class="constellation-showcase-stage" style="border-left: 4px solid ${activeConst.themeColor};">
+        
+        <!-- Showcase Header -->
+        <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800 flex-wrap">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-3xl shadow-lg shrink-0" 
+                 style="background: ${activeConst.themeColor}22; border: 1.5px solid ${activeConst.themeColor}66;">
+              ${activeConst.icon}
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="text-sm sm:text-base font-black text-white">${activeConst.name}</h4>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background: ${activeConst.themeColor}25; color: ${activeConst.accentColor}; border: 1px solid ${activeConst.themeColor}40;">
+                  ${activeConst.title}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-snug mt-0.5">${activeConst.description}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-black" style="color: ${activeConst.accentColor};">
+                ${curLevel}/5 Stars Illuminated
+              </span>
+              ${curLevel >= 5 ? '<span class="text-xs">✨</span>' : ''}
+            </div>
+            <div class="w-24 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800 mt-1">
+              <div class="h-full rounded-full transition-all duration-300" style="width: ${completionPct}%; background-color: ${activeConst.themeColor};"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-Node Stellar Pathway Grid -->
+        <div class="constellation-star-grid">
+          ${activeConst.stars.map(star => {
+            const isUnlocked = star.node <= curLevel;
+            const isAvailable = star.node === nextNode;
+            const canAfford = (res.soulEssence || 0) >= star.cost;
+
+            let cardStateClass = 'locked';
+            let statusMarkup = `<span class="text-[9px] text-slate-500 font-bold">🔒 Requires Star ${star.node - 1}</span>`;
+
+            if (isUnlocked) {
+              cardStateClass = 'illuminated';
+              statusMarkup = `<span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-400">★ Illuminated</span>`;
+            } else if (isAvailable) {
+              cardStateClass = 'available';
+              statusMarkup = `
+                <button class="btn-unlock-star w-full py-1.5 px-2 rounded-lg font-black text-[10px] transition-all cursor-pointer shadow-md flex items-center justify-center gap-1 ${canAfford ? 'bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:brightness-110 shadow-amber-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}" 
+                        data-constellation-id="${activeConst.id}" 
+                        data-node="${star.node}" 
+                        ${canAfford ? '' : 'disabled'}>
+                  <span>${canAfford ? `Unlock (${star.cost} 🔮)` : `Need ${star.cost} 🔮`}</span>
+                </button>
+              `;
+            }
+
+            return `
+              <div class="constellation-node-card ${cardStateClass}">
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center justify-between text-[11px] gap-1">
+                    <span class="font-extrabold text-white truncate">${star.node}. ${star.name}</span>
+                    <span class="text-[10px] text-purple-300 font-bold px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/30 shrink-0">${star.cost} 🔮</span>
+                  </div>
+                  <div class="text-[10px] text-cyan-300 font-semibold leading-snug">${star.desc}</div>
+                </div>
+                <div class="pt-1 mt-auto">
+                  ${statusMarkup}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+      </div>
+
+      <!-- Collapsible Global Cosmic Boons Drawer -->
+      <div class="cosmic-boons-drawer">
+        <button id="btn-toggle-cosmic-boons" class="cosmic-boons-toggle-btn">
+          <div class="flex items-center gap-2">
+            <span class="text-amber-400">✨</span>
+            <span>Illuminated Cosmic Boons (${activeBonusLabels.length} Active Passives)</span>
+          </div>
+          <span class="text-xs text-slate-400 font-black">${isCosmicBoonsOpen ? '▲ Hide' : '▼ View All'}</span>
+        </button>
+
+        ${isCosmicBoonsOpen ? `
+          <div class="p-3 pt-0 border-t border-slate-800/60">
+            <div class="flex flex-wrap gap-1.5 pt-2">
+              ${activeBonusLabels.length > 0 ? activeBonusLabels.map(b => `
+                <span class="px-2 py-1 rounded-lg text-[10px] font-bold bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 shadow-sm flex items-center gap-1">
+                  <span>✦</span> ${b}
+                </span>
+              `).join('') : '<span class="text-[10px] text-slate-500 italic p-1">No celestial stars illuminated yet. Spend 🔮 Astral Essences above to awaken your party!</span>'}
+            </div>
+          </div>
+        ` : ''}
       </div>
 
     </div>
@@ -714,9 +779,11 @@ function renderExpeditionsSectionHtml(state) {
 
 function renderTransmutationSectionHtml(res, state) {
   const currentCount = state.transmutationsToday || 0;
+  const maxQuota = TRANSMUTATION_CONFIG.dailyQuota || 5;
+  const isCapped = currentCount >= maxQuota;
   const shardCost = TRANSMUTATION_CONFIG.shardCost + currentCount * 250;
   const godCost = TRANSMUTATION_CONFIG.godEssenceCost;
-  const canTransmute = (res.spiritShards || 0) >= shardCost && (res.essencesOfTheGods || 0) >= godCost;
+  const canTransmute = !isCapped && (res.spiritShards || 0) >= shardCost && (res.essencesOfTheGods || 0) >= godCost;
 
   return `
     <div class="flex flex-col gap-3">
@@ -733,14 +800,14 @@ function renderTransmutationSectionHtml(res, state) {
             </div>
           </div>
           <div class="text-right shrink-0">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-300">
-              Today: ${currentCount}x
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isCapped ? 'bg-red-500/20 border border-red-500/40 text-red-300' : 'bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-300'}">
+              Today: ${currentCount} / ${maxQuota} (Daily Cap)
             </span>
           </div>
         </div>
 
         <div class="text-[10px] text-fuchsia-300 bg-fuchsia-950/40 border border-fuchsia-500/30 rounded-lg px-2.5 py-1 mt-1">
-          🛡️ <strong>Anti-Oversaturation Economy Protocol:</strong> Base rate is 1,000 💎 + 10 💠. Each transmutation completed today increases shard stabilization cost by <strong>+250 💎</strong> (resets daily at midnight).
+          🛡️ <strong>Anti-Oversaturation Economy Protocol:</strong> Hard limit of <strong>${maxQuota} transmutations per day</strong>. Base rate is 1,000 💎 + 10 💠. Each transmutation completed today increases shard stabilization cost by <strong>+250 💎</strong> (resets daily at midnight).
         </div>
       </div>
 
@@ -779,13 +846,187 @@ function renderTransmutationSectionHtml(res, state) {
         </div>
 
         <!-- Action Button -->
-        <button id="btn-transmute-shards" class="min-h-[44px] w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-lg disabled:opacity-50 bg-gradient-to-r from-fuchsia-400 via-purple-300 to-indigo-400 hover:brightness-110 flex items-center justify-center gap-1.5" ${canTransmute ? '' : 'disabled'}>
+        <button id="btn-transmute-shards" class="min-h-[44px] w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-lg disabled:opacity-50 ${isCapped ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed' : 'bg-gradient-to-r from-fuchsia-400 via-purple-300 to-indigo-400 hover:brightness-110'} flex items-center justify-center gap-1.5" ${canTransmute ? '' : 'disabled'}>
           <span>⚗️</span>
-          <span>${canTransmute ? `Perform Transmutation (Cost: ${shardCost.toLocaleString()} 💎 + ${godCost} 💠)` : `Insufficient Reagents (Need ${shardCost.toLocaleString()} 💎 + ${godCost} 💠)`}</span>
+          <span>${isCapped ? `Daily Limit Reached (${maxQuota}/${maxQuota}) — Resets Tomorrow` : canTransmute ? `Perform Transmutation (Cost: ${shardCost.toLocaleString()} 💎 + ${godCost} 💠)` : `Insufficient Reagents (Need ${shardCost.toLocaleString()} 💎 + ${godCost} 💠)`}</span>
         </button>
 
       </div>
 
+    </div>
+  `;
+}
+
+function renderDwarvenForgeSectionHtml(res, state) {
+  // Ensure weekly reset logic is executed
+  gameState.checkDwarvenForgeWeekReset();
+  const forge = state.dwarvenForge || { scripturesPurchasedThisWeek: 0, reshapersPurchasedThisWeek: 0 };
+  const scripturePurchased = forge.scripturesPurchasedThisWeek || 0;
+  const reshaperPurchased = forge.reshapersPurchasedThisWeek || 0;
+
+  const scriptureLimit = 3;
+  const reshaperLimit = 12;
+
+  const scriptureCost = { shards: 5000, gods: 40, soul: 15 };
+  const reshaperCost = { shards: 1500, gods: 12, soul: 4 };
+
+  const canAffordScripture = (res.spiritShards || 0) >= scriptureCost.shards &&
+    (res.essencesOfTheGods || 0) >= scriptureCost.gods &&
+    (res.soulEssence || 0) >= scriptureCost.soul;
+  const isScriptureCapped = scripturePurchased >= scriptureLimit;
+
+  const canAffordReshaper = (res.spiritShards || 0) >= reshaperCost.shards &&
+    (res.essencesOfTheGods || 0) >= reshaperCost.gods &&
+    (res.soulEssence || 0) >= reshaperCost.soul;
+  const isReshaperCapped = reshaperPurchased >= reshaperLimit;
+
+  return `
+    <div class="flex flex-col gap-3">
+      <!-- Dwarven Forge Banner -->
+      <div class="rounded-xl border border-amber-500/30 p-3.5 bg-gradient-to-b from-amber-950/25 via-slate-900/90 to-slate-950 shadow-md flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+              ${createAnimatedSpriteHtml('forge_vulcan_automaton', { extraClasses: 'dwarven-master-sprite scale-90' })}
+            </div>
+            <div>
+              <h3 class="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
+                Dwarven's Forge
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/20 border border-amber-400/40 text-amber-300">
+                  Mythic Relic Workshop
+                </span>
+              </h3>
+              <p class="text-[10px] sm:text-[11px] text-slate-400">Sacred celestial smithy of the master craftsmen. Trade tri-currency reserves for Divine Scriptures and Relic Reshapers.</p>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800/80 border border-slate-700 text-slate-300">
+              📅 Resets Mondays 00:00 UTC
+            </span>
+          </div>
+        </div>
+
+        <div class="text-[10px] text-amber-300/90 bg-amber-950/40 border border-amber-500/30 rounded-lg px-2.5 py-1 mt-0.5">
+          ⚖️ <strong>Dwarven Trading Quota:</strong> Master dwarven smiths strictly ration their rare catalysts each week. Purchases consume Spirit Shards 💎, Essences of the Gods 💠, and Soul Essences 🔮.
+        </div>
+      </div>
+
+      <!-- Inventory Stock Overview -->
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">📜</span>
+            <span class="text-slate-300 text-[11px] font-bold">Divine Scriptures Owned</span>
+          </div>
+          <strong class="text-amber-400 font-extrabold">${(res.divineScriptures || 0).toLocaleString()}</strong>
+        </div>
+        <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🌀</span>
+            <span class="text-slate-300 text-[11px] font-bold">Relic Reshapers Owned</span>
+          </div>
+          <strong class="text-cyan-400 font-extrabold">${(res.relicReshapers || 0).toLocaleString()}</strong>
+        </div>
+      </div>
+
+      <!-- Dwarven Catalog Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+        <!-- Card 1: Divine Relic Scripture -->
+        <div class="rounded-xl border border-amber-500/30 bg-slate-900/85 p-3.5 flex flex-col justify-between gap-3 shadow-md hover:border-amber-500/50 transition-all">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="item-icon-frame flex items-center justify-center p-1 rounded-xl bg-amber-500/20 border border-amber-400/40 shrink-0">
+                  ${createAnimatedRelicHtml('divine_scripture', 'scripture', { extraClasses: 'loot-sprite-icon' })}
+                </div>
+                <div>
+                  <h4 class="text-xs font-black text-white">Divine Relic Scripture</h4>
+                  <p class="text-[10px] text-amber-400/90 font-semibold">Relic Crafting Catalyst</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isScriptureCapped ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'}">
+                ${scripturePurchased} / ${scriptureLimit} This Week
+              </span>
+            </div>
+
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              Consumable sacred blueprint used in the <strong>Relic Smithy</strong> to forge a pristine Divine Relic with <span class="text-amber-300 font-semibold">2 player-selected guaranteed substats</span>.
+            </p>
+
+            <!-- Price Breakdown -->
+            <div class="rounded-lg bg-slate-950/80 border border-slate-800 p-2 flex flex-col gap-1 text-[11px]">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Required Materials:</div>
+              <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.spiritShards || 0) >= scriptureCost.shards ? 'text-emerald-300' : 'text-red-300'}">
+                <span>💎 Spirit Shards:</span>
+                <strong>${scriptureCost.shards.toLocaleString()} (${(res.spiritShards || 0).toLocaleString()})</strong>
+              </div>
+              <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.essencesOfTheGods || 0) >= scriptureCost.gods ? 'text-emerald-300' : 'text-red-300'}">
+                <span>💠 Essences of Gods:</span>
+                <strong>${scriptureCost.gods} (${res.essencesOfTheGods || 0})</strong>
+              </div>
+              <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.soulEssence || 0) >= scriptureCost.soul ? 'text-emerald-300' : 'text-red-300'}">
+                <span>🔮 Soul Essence:</span>
+                <strong>${scriptureCost.soul} (${res.soulEssence || 0})</strong>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-buy-dwarven-scripture" 
+                  class="min-h-[42px] w-full py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer shadow-lg disabled:opacity-50 ${isScriptureCapped ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed' : canAffordScripture ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 hover:brightness-110 shadow-amber-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}"
+                  ${(!canAffordScripture || isScriptureCapped) ? 'disabled' : ''}>
+            ${isScriptureCapped ? 'Weekly Limit Reached (3/3)' : canAffordScripture ? 'Forge Divine Scripture (1x)' : 'Insufficient Reagents'}
+          </button>
+        </div>
+
+        <!-- Card 2: Relic Reshaper -->
+        <div class="rounded-xl border border-cyan-500/30 bg-slate-900/85 p-3.5 flex flex-col justify-between gap-3 shadow-md hover:border-cyan-500/50 transition-all">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="item-icon-frame flex items-center justify-center p-1 rounded-xl bg-cyan-500/20 border border-cyan-400/40 shrink-0">
+                  ${createAnimatedRelicHtml('hephaestus', 'anvil', { extraClasses: 'loot-sprite-icon' })}
+                </div>
+                <div>
+                  <h4 class="text-xs font-black text-white">Relic Reshaper</h4>
+                  <p class="text-[10px] text-cyan-400 font-semibold">Substat Reforging Stone</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isReshaperCapped ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30'}">
+                ${reshaperPurchased} / ${reshaperLimit} This Week
+              </span>
+            </div>
+
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              Celestial alchemical stone consumed in the <strong>Character Hub</strong> to reroll all non-locked substats on any relic to optimize power and stat rolls.
+            </p>
+
+            <!-- Price Breakdown -->
+            <div class="rounded-lg bg-slate-950/80 border border-slate-800 p-2 flex flex-col gap-1 text-[11px]">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Required Materials:</div>
+              <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.spiritShards || 0) >= reshaperCost.shards ? 'text-emerald-300' : 'text-red-300'}">
+                <span>💎 Spirit Shards:</span>
+                <strong>${reshaperCost.shards.toLocaleString()} (${(res.spiritShards || 0).toLocaleString()})</strong>
+              </div>
+              <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.essencesOfTheGods || 0) >= reshaperCost.gods ? 'text-emerald-300' : 'text-red-300'}">
+                <span>💠 Essences of Gods:</span>
+                <strong>${reshaperCost.gods} (${res.essencesOfTheGods || 0})</strong>
+              </div>
+              <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.soulEssence || 0) >= reshaperCost.soul ? 'text-emerald-300' : 'text-red-300'}">
+                <span>🔮 Soul Essence:</span>
+                <strong>${reshaperCost.soul} (${res.soulEssence || 0})</strong>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-buy-dwarven-reshaper" 
+                  class="min-h-[42px] w-full py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer shadow-lg disabled:opacity-50 ${isReshaperCapped ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed' : canAffordReshaper ? 'bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 text-slate-950 hover:brightness-110 shadow-cyan-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}"
+                  ${(!canAffordReshaper || isReshaperCapped) ? 'disabled' : ''}>
+            ${isReshaperCapped ? 'Weekly Limit Reached (12/12)' : canAffordReshaper ? 'Reforge Relic Reshaper (1x)' : 'Insufficient Reagents'}
+          </button>
+        </div>
+
+      </div>
     </div>
   `;
 }
@@ -860,6 +1101,27 @@ function bindBlessingEvents(container) {
 }
 
 function bindConstellationEvents(container) {
+  // 1. Constellation chip selection
+  container.querySelectorAll('.constellation-chip-btn').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      const cId = e.currentTarget.getAttribute('data-constellation-id');
+      if (cId && cId !== selectedConstellationId) {
+        selectedConstellationId = cId;
+        renderMysticalView(container);
+      }
+    });
+  });
+
+  // 2. Cosmic Boons drawer toggle
+  const btnToggleBoons = container.querySelector('#btn-toggle-cosmic-boons');
+  if (btnToggleBoons) {
+    btnToggleBoons.addEventListener('click', () => {
+      isCosmicBoonsOpen = !isCosmicBoonsOpen;
+      renderMysticalView(container);
+    });
+  }
+
+  // 3. Star Unlock button
   container.querySelectorAll('.btn-unlock-star').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const cId = e.currentTarget.getAttribute('data-constellation-id');
@@ -879,6 +1141,28 @@ function bindTransmutationEvents(container) {
     try {
       gameState.transmuteShardsToAstralEssence();
       try { audioManager.playSfx('evolution'); } catch {}
+      renderMysticalView(container);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+}
+
+function bindDwarvenForgeEvents(container) {
+  container.querySelector('#btn-buy-dwarven-scripture')?.addEventListener('click', () => {
+    try {
+      gameState.buyDivineScriptureFromDwarvenForge(1);
+      try { audioManager.playSfx('evolution'); } catch {}
+      renderMysticalView(container);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  container.querySelector('#btn-buy-dwarven-reshaper')?.addEventListener('click', () => {
+    try {
+      gameState.buyRelicReshaper(1);
+      try { audioManager.playSfx('reward'); } catch {}
       renderMysticalView(container);
     } catch (err) {
       alert(err.message);
@@ -1208,10 +1492,15 @@ function renderEssenceBattleArena(container, battle) {
                       ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
                       <span>${em.name}</span>
                     </div>
-                    <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+                      ${em.shieldHp > 0 ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">🛡️ BARRIER</span>' : ''}
+                      ${em.isEnraged ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse">🔥 ENRAGED</span>' : ''}
+                    </div>
 
                     <div class="seamless-enemy-hp-track">
                       <div id="essence-enemy-hp-fill-${sIdx}" class="seamless-enemy-hp-fill" style="width: ${emHpPct}%;"></div>
+                      ${em.shieldHp > 0 ? `<div class="seamless-enemy-shield-fill" style="width: ${Math.min(100, Math.round((em.shieldHp / (em.divineBarrierMax || (em.maxHp * 0.25) || 1)) * 100))}%;"></div>` : ''}
                     </div>
                   </div>
 
@@ -1230,15 +1519,20 @@ function renderEssenceBattleArena(container, battle) {
 
       <!-- Victory / Defeat Banners -->
       ${battle.status === 'victory' && battle.loot ? `
-        <div class="rounded-xl border border-amber-400/60 bg-slate-900 p-3 shadow-xl flex flex-col items-center text-center gap-1.5">
-          <div class="text-xs font-black text-amber-300">🏆 SANCTUM TRIAL CLEARED!</div>
-          <div class="text-[11px] text-slate-300">
-            Earned: <strong class="text-cyan-300">+${battle.loot.godEssencesGained} Essences</strong>, 
-            <strong class="text-emerald-300">+${battle.loot.shardsGained} Shards</strong>
+        <div class="rounded-xl border border-amber-400/60 bg-slate-900 p-3 shadow-xl flex items-center justify-between gap-3">
+          <div class="flex flex-col text-left gap-1">
+            <div class="text-xs font-black text-amber-300">🏆 SANCTUM TRIAL CLEARED!</div>
+            <div class="text-[11px] text-slate-300">
+              Earned: <strong class="text-cyan-300">+${battle.loot.godEssencesGained} Essences</strong>, 
+              <strong class="text-emerald-300">+${battle.loot.shardsGained} Shards</strong>
+            </div>
+            <button id="btn-collect-essence-loot" class="min-h-[34px] px-4 py-1.5 rounded-lg font-bold text-xs text-slate-950 cursor-pointer shadow bg-gradient-to-r from-cyan-400 to-emerald-300 mt-1">
+              Collect Spoils to Sanctum
+            </button>
           </div>
-          <button id="btn-collect-essence-loot" class="min-h-[38px] w-full py-1.5 rounded-lg font-bold text-xs text-slate-950 cursor-pointer shadow bg-gradient-to-r from-cyan-400 to-emerald-300">
-            Collect Spoils to Sanctum
-          </button>
+          <div class="victory-animated-chest-wrap">
+            ${createAnimatedChestHtml()}
+          </div>
         </div>
       ` : ''}
 
@@ -1273,6 +1567,9 @@ function renderEssenceBattleArena(container, battle) {
   // Event Listeners
   container.querySelector('#btn-essence-strike')?.addEventListener('click', () => {
     gameState.manualDungeonStrike();
+    if (typeof arenaRenderer?.triggerClashImpact === 'function') {
+      arenaRenderer.triggerClashImpact(null, null, true);
+    }
     arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
     renderMysticalView(container);
   });

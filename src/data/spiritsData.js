@@ -1706,11 +1706,14 @@ export function getScalingProfile(speciesOrId) {
 
 /**
  * Formula to calculate Spirit combat power (scales with level, rarity, and rebirth)
+ * Harmonized growth curve prevents runaway blitz while rewarding leveling.
  */
 export function calculateSpiritPower(species, level, rarityName, ascensionLevel = 0) {
   const effectiveRarity = rarityName ? rarityName.toUpperCase() : (species.baseRarity || 'COMMON');
   const rarityObj = RARITIES[effectiveRarity] || RARITIES.COMMON;
-  const lvlMult = 1 + (level - 1) * species.growthRate;
+  const baseGrowth = (species.growthRate || 0.18);
+  const effectiveGrowth = Math.min(0.24, Math.max(0.10, baseGrowth * 0.75));
+  const lvlMult = 1 + (level - 1) * effectiveGrowth;
   const ascMult = 1 + (ascensionLevel || 0) * 0.12;
   return Math.max(1, Math.round(species.basePower * lvlMult * rarityObj.multiplier * ascMult));
 }
@@ -1722,7 +1725,7 @@ export function calculateSpiritPower(species, level, rarityName, ascensionLevel 
 export function calculateSpiritMaxHp(species, level, rarityName, ascensionLevel = 0) {
   const effectiveRarity = rarityName ? rarityName.toUpperCase() : (species.baseRarity || 'COMMON');
   const rarityObj = RARITIES[effectiveRarity] || RARITIES.COMMON;
-  const lvlMult = 1 + (level - 1) * 0.22;
+  const lvlMult = 1 + (level - 1) * 0.18;
   const ascMult = 1 + (ascensionLevel || 0) * 0.12;
   return Math.max(80, Math.round(species.basePower * 12 * lvlMult * rarityObj.multiplier * ascMult));
 }
@@ -1752,12 +1755,14 @@ export function calculateSpiritStats(speciesOrSpirit, level = 1, rarityName = nu
   const weights = ROLE_STAT_WEIGHTS[roleKey] || ROLE_STAT_WEIGHTS.MAIN_DPS;
   const scalingProfile = getScalingProfile(species);
 
-  const lvlMult = 1 + (actualLevel - 1) * (species.growthRate || 0.18);
+  const baseGrowth = (species.growthRate || 0.18);
+  const effectiveGrowth = Math.min(0.24, Math.max(0.10, baseGrowth * 0.75));
+  const lvlMult = 1 + (actualLevel - 1) * effectiveGrowth;
   const ascMult = 1 + (actualAscension || 0) * 0.12;
 
   const baseAtk = Math.max(5, Math.round(species.basePower * weights.atkMult * lvlMult * rarityObj.multiplier * ascMult));
-  const baseDef = Math.max(3, Math.round((species.basePower * 0.75) * weights.defMult * (1 + (actualLevel - 1) * 0.16) * rarityObj.multiplier * ascMult));
-  const baseMaxHp = Math.max(80, Math.round(species.basePower * 12 * weights.hpMult * (1 + (actualLevel - 1) * 0.22) * rarityObj.multiplier * ascMult));
+  const baseDef = Math.max(3, Math.round((species.basePower * 0.75) * weights.defMult * (1 + (actualLevel - 1) * 0.14) * rarityObj.multiplier * ascMult));
+  const baseMaxHp = Math.max(80, Math.round(species.basePower * 12 * weights.hpMult * (1 + (actualLevel - 1) * 0.18) * rarityObj.multiplier * ascMult));
   const spd = parseFloat((weights.spdBase * (1 + (actualLevel - 1) * 0.005)).toFixed(2));
   const critRate = Math.min(60, weights.critRate + Math.floor(actualLevel / 10));
   const critDmg = weights.critDmg + Math.floor(actualLevel / 5);

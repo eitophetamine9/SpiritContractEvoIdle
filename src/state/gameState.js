@@ -300,7 +300,8 @@ class GameStateManager {
       resources: {
         spiritShards: 300, // Enough for 3 summons right away!
         soulEssence: 0,
-        divineScriptures: 2, // Divine Relic Scripture consumable (select 2 guaranteed substats)
+        divineScriptures: 0, // Divine Relic Scripture consumable (select 2 guaranteed substats)
+        relicReshapers: 0,   // Relic Reshaper consumable (rerolls relic substats)
         essencesOfTheGods: 0,
         energy: 60,        // Max 60 Energy base
         maxEnergy: 60,
@@ -314,6 +315,11 @@ class GameStateManager {
       activeBlessings: {}, // Temporary 1-hour spirit blessings
       constellations: { draco: 0, phoenix: 0, pegasus: 0, leo: 0, taurus: 0, scorpio: 0, aquarius: 0, sagittarius: 0 },
       expeditions: {},
+      dwarvenForge: {
+        weekKey: '',
+        scripturesPurchasedThisWeek: 0,
+        reshapersPurchasedThisWeek: 0
+      },
       transmutationsToday: 0,
       lastTransmutationDate: new Date().toDateString(),
       spirits: [starterSpirit],
@@ -378,11 +384,22 @@ class GameStateManager {
     if (typeof state.resources.divineScriptures !== 'number') {
       state.resources.divineScriptures = 2;
     }
+    if (typeof state.resources.relicReshapers !== 'number') {
+      state.resources.relicReshapers = 0;
+    }
     if (typeof state.resources.essencesOfTheGods !== 'number') {
       state.resources.essencesOfTheGods = 0;
     }
     if (typeof state.resources.energySecondsAccumulator !== 'number') {
       state.resources.energySecondsAccumulator = 0;
+    }
+
+    if (!state.dwarvenForge || typeof state.dwarvenForge !== 'object') {
+      state.dwarvenForge = {
+        weekKey: '',
+        scripturesPurchasedThisWeek: 0,
+        reshapersPurchasedThisWeek: 0
+      };
     }
 
     if (!state.constellations || typeof state.constellations !== 'object') {
@@ -1116,6 +1133,8 @@ class GameStateManager {
         if (wpn.critDmg) bonusCritDmg += wpn.critDmg;
         if (wpn.ultAmp) bonusUltAmp += wpn.ultAmp;
         if (wpn.manaReplenish) bonusManaReplenish += wpn.manaReplenish;
+        if (wpn.defBonus) bonusDef += wpn.defBonus;
+        if (wpn.hpBonus) bonusHp += wpn.hpBonus;
       }
     }
 
@@ -1125,6 +1144,11 @@ class GameStateManager {
         const relic = this.getEquipmentItemByUid(relicUid);
         if (relic) {
           if (relic.mainStatName === 'Bonus ATK Power') bonusAtk += (relic.mainStatValue || 0);
+          else if (relic.mainStatName === 'Bonus Max HP') bonusHp += (relic.mainStatValue || 0);
+          else if (relic.mainStatName === 'Shield Strength') bonusDef += Math.round((relic.mainStatValue || 0) * 0.4);
+          else if (relic.mainStatName === 'Mana Replenish') bonusManaReplenish += (relic.mainStatValue || 0);
+          else if (relic.mainStatName === 'Ult Amp') bonusUltAmp += (relic.mainStatValue || 0);
+
           if (Array.isArray(relic.substats)) {
             for (const sub of relic.substats) {
               if (sub.typeId === 'flat_atk') bonusAtk += (sub.value || 0);
@@ -1132,11 +1156,11 @@ class GameStateManager {
               else if (sub.typeId === 'crit_dmg') bonusCritDmg += (sub.value || 0);
               else if (sub.typeId === 'flat_hp') bonusHp += (sub.value || 0);
               else if (sub.typeId === 'flat_shield') bonusDef += Math.round((sub.value || 0) * 0.25);
-              else if (sub.typeId === 'atk_percent') atkPercentBonus += (sub.value || 0);
+              else if (sub.typeId === 'atk_percent' || sub.typeId === 'percent_atk') atkPercentBonus += (sub.value || 0);
               else if (sub.typeId === 'def_percent') defPercentBonus += (sub.value || 0);
-              else if (sub.typeId === 'hp_percent') hpPercentBonus += (sub.value || 0);
+              else if (sub.typeId === 'hp_percent' || sub.typeId === 'percent_hp') hpPercentBonus += (sub.value || 0);
               else if (sub.typeId === 'ult_amp') bonusUltAmp += (sub.value || 0);
-              else if (sub.typeId === 'mana_replenish') bonusManaReplenish += (sub.value || 0);
+              else if (sub.typeId === 'mana_replenish' || sub.typeId === 'mana_regen') bonusManaReplenish += (sub.value || 0);
             }
           }
         }
@@ -1148,10 +1172,16 @@ class GameStateManager {
     for (const b of activeBonuses) {
       if (b.bonus) {
         if (b.bonus.atkPercentBonus) atkPercentBonus += b.bonus.atkPercentBonus;
+        if (b.bonus.damageBonus) atkPercentBonus += Math.round(b.bonus.damageBonus * 100);
         if (b.bonus.defPercentBonus) defPercentBonus += b.bonus.defPercentBonus;
-        if (b.bonus.critRateBonus) bonusCritRate += b.bonus.critRateBonus;
-        if (b.bonus.critDmgBonus) bonusCritDmg += b.bonus.critDmgBonus;
-        if (b.bonus.ultAmpBonus) bonusUltAmp += b.bonus.ultAmpBonus;
+        if (b.bonus.defBonus) defPercentBonus += Math.round(b.bonus.defBonus * 100);
+        if (b.bonus.defenseBonus) defPercentBonus += Math.round(b.bonus.defenseBonus * 100);
+        if (b.bonus.hpBonus) hpPercentBonus += Math.round(b.bonus.hpBonus * 100);
+        if (b.bonus.maxHpBonus) hpPercentBonus += Math.round(b.bonus.maxHpBonus * 100);
+        if (b.bonus.hpPercentBonus) hpPercentBonus += b.bonus.hpPercentBonus;
+        if (b.bonus.critRateBonus) bonusCritRate += (b.bonus.critRateBonus <= 1 ? Math.round(b.bonus.critRateBonus * 100) : b.bonus.critRateBonus);
+        if (b.bonus.critDmgBonus) bonusCritDmg += (b.bonus.critDmgBonus <= 1 ? Math.round(b.bonus.critDmgBonus * 100) : b.bonus.critDmgBonus);
+        if (b.bonus.ultAmpBonus) bonusUltAmp += (b.bonus.ultAmpBonus <= 1 ? Math.round(b.bonus.ultAmpBonus * 100) : b.bonus.ultAmpBonus);
         if (b.bonus.manaReplenishBonus) bonusManaReplenish += Math.round(b.bonus.manaReplenishBonus * 100);
       }
     }
@@ -1183,11 +1213,19 @@ class GameStateManager {
     const threatMult = colDef ? colDef.threatMultiplier : 1.0;
     const effectiveThreat = Math.max(1, Math.round(baseStats.threat * threatMult));
 
-    const totalAtkBonus = Math.round(baseStats.atk * (atkPercentBonus / 100)) + bonusAtk;
-    const finalAtk = Math.max(1, Math.round((baseStats.atk + totalAtkBonus) * atkColumnMult));
-
     const totalDefBonus = Math.round(baseStats.def * (defPercentBonus / 100)) + bonusDef;
     const finalDef = Math.max(1, Math.round((baseStats.def + totalDefBonus) * defColumnMult));
+
+    // Hephaestus 2-Piece: Converts 25% of bearer's total DEF into bonus flat ATK Power
+    let defToAtkBonus = 0;
+    for (const b of activeBonuses) {
+      if (b.bonus && b.bonus.defToAtkRatio) {
+        defToAtkBonus += Math.round(finalDef * b.bonus.defToAtkRatio);
+      }
+    }
+
+    const totalAtkBonus = Math.round(baseStats.atk * (atkPercentBonus / 100)) + bonusAtk + defToAtkBonus;
+    const finalAtk = Math.max(1, Math.round((baseStats.atk + totalAtkBonus) * atkColumnMult));
 
     const totalHpBonus = Math.round(baseStats.maxHp * (hpPercentBonus / 100)) + bonusHp;
     const finalMaxHp = Math.max(80, baseStats.maxHp + totalHpBonus);
@@ -1413,6 +1451,9 @@ class GameStateManager {
       if (spirit.tauntTimer > 0) {
         spirit.tauntTimer = Math.max(0, spirit.tauntTimer - deltaSec);
       }
+      if (spirit._atlasShieldCooldown > 0) {
+        spirit._atlasShieldCooldown = Math.max(0, spirit._atlasShieldCooldown - deltaSec);
+      }
 
       // Effective power including weapons, relics, substats, and 2-pc set bonuses
       const effectivePower = this.getSpiritTotalPower(spirit);
@@ -1474,8 +1515,27 @@ class GameStateManager {
         enemy.attackTimer = enemy.attackCooldown || 2.4;
 
         // Select target spirit using Threat Aggro & Taunt Lock algorithm
-        const targetSpirit = this.selectCombatTarget(livingSpirits);
+        let targetSpirit = this.selectCombatTarget(livingSpirits);
         if (targetSpirit) {
+          // Atlas 4-pc Guardian Interception: Intercept low-HP ally attacks
+          const partyBonuses = this.getPartyActiveSetBonuses();
+          const atlasBearerBonus = partyBonuses.find(b => b.setId === 'atlas' && b.tier === '4pc' && b.spirit && !b.spirit.isFallen);
+
+          if (atlasBearerBonus && atlasBearerBonus.spirit.id !== targetSpirit.id) {
+            const allyStats = this.getSpiritCombatStats(targetSpirit);
+            const allyHpMax = allyStats ? allyStats.maxHp : (targetSpirit.maxHp || 100);
+            if ((targetSpirit.currentHp / allyHpMax) < 0.35) {
+              targetSpirit = atlasBearerBonus.spirit;
+              if (!targetSpirit._atlasShieldCooldown || targetSpirit._atlasShieldCooldown <= 0) {
+                const atlasStats = this.getSpiritCombatStats(targetSpirit);
+                const shieldAmt = Math.round((atlasStats ? atlasStats.maxHp : 300) * 0.30);
+                targetSpirit.shieldHp = (targetSpirit.shieldHp || 0) + shieldAmt;
+                targetSpirit._atlasShieldCooldown = 15.0;
+                this.emit('combatEffect', { type: 'atlas_interception', spirit: targetSpirit, text: 'Atlas Interception!' });
+              }
+            }
+          }
+
           // Check Evasion (Hermes 2pc +15% evasion, Feather relic)
           const targetBonuses = this.getSpiritActiveSetBonuses(targetSpirit);
           let evasionChance = 0.05;
@@ -1489,6 +1549,11 @@ class GameStateManager {
 
           const enemyElemMult = getElementalMultiplier(enemy.element || 'EARTH', targetSpirit.element || 'EARTH');
           let rawEnemyDamage = Math.max(1, Math.round(enemy.power * enemyElemMult * (0.8 + Math.random() * 0.35)));
+
+          // Atlas 4-pc Party-wide Damage Mitigation (-12% team damage taken)
+          if (atlasBearerBonus) {
+            rawEnemyDamage = Math.max(1, Math.round(rawEnemyDamage * 0.88));
+          }
 
           // Constellation damage mitigation (Phoenix: Eternal Avatar)
           const constBonuses = this.getConstellationBonuses ? this.getConstellationBonuses() : {};
@@ -2966,6 +3031,11 @@ class GameStateManager {
     }
 
     const currentCount = this.state.transmutationsToday || 0;
+    const maxQuota = TRANSMUTATION_CONFIG.dailyQuota || 5;
+    if (currentCount >= maxQuota) {
+      throw new Error(`Daily transmutation limit reached (${maxQuota}/${maxQuota})! Please return tomorrow.`);
+    }
+
     // Anti-oversaturation scaling: 1000 base + 250 per transmutation today
     const shardCost = TRANSMUTATION_CONFIG.shardCost + currentCount * 250;
     const godCost = TRANSMUTATION_CONFIG.godEssenceCost;
@@ -3233,6 +3303,19 @@ class GameStateManager {
     return activeBonuses;
   }
 
+  getPartyActiveSetBonuses() {
+    const party = this.getPartySpirits ? this.getPartySpirits() : [];
+    const partyBonuses = [];
+    for (const spirit of party) {
+      if (!spirit) continue;
+      const bonuses = this.getSpiritActiveSetBonuses(spirit);
+      for (const b of bonuses) {
+        partyBonuses.push({ ...b, spiritId: spirit.id, spirit });
+      }
+    }
+    return partyBonuses;
+  }
+
   getSpiritTotalPower(spiritOrId) {
     if (!spiritOrId) return 0;
     const spirit = typeof spiritOrId === 'string' ? this.state.spirits.find(s => s.id === spiritOrId) : spiritOrId;
@@ -3248,6 +3331,7 @@ class GameStateManager {
     const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
     let weaponAtkMultiplier = 1;
     let damageMultiplier = 1;
+    let defToAtkBonus = 0;
     for (const b of activeBonuses) {
       if (b.bonus.damageBonus) {
         damageMultiplier += b.bonus.damageBonus;
@@ -3255,7 +3339,14 @@ class GameStateManager {
       if (b.bonus.weaponAtkBonus) {
         weaponAtkMultiplier += b.bonus.weaponAtkBonus;
       }
+      if (b.bonus.defToAtkRatio) {
+        const combatStats = this.getSpiritCombatStats(spirit);
+        const sDef = combatStats ? combatStats.def : (spirit.defense || 20);
+        defToAtkBonus += Math.round(sDef * b.bonus.defToAtkRatio);
+      }
     }
+
+    power += defToAtkBonus;
 
     // Weapon bonus (O(1) lookup)
     if (spirit.weapon) {
@@ -3319,25 +3410,28 @@ class GameStateManager {
   }
 
   proc4PieceSetBonus(spirit, setBonusObj) {
+    if (!setBonusObj) return;
     const { madnessZone } = this.state;
     const livingEnemies = (madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
     const party = this.getPartySpirits();
     const livingSpirits = party.filter(s => !s.isFallen && s.currentHp > 0);
 
-    switch (setBonusObj.setId) {
+    const setId = setBonusObj.setId || setBonusObj.id;
+
+    switch (setId) {
       case 'hades': {
-        // Underworld Flames: 5% enemy max HP DoT
+        // Underworld Flames: 2.5% enemy max HP DoT
         for (const em of livingEnemies) {
-          const dotDamage = Math.max(1, Math.round(em.maxHp * 0.05));
+          const dotDamage = Math.max(1, Math.round(em.maxHp * 0.025));
           em.hp = Math.max(0, em.hp - dotDamage);
           if (em.hp <= 0) this.onIndividualEnemyKilled(em);
         }
         break;
       }
       case 'zeus': {
-        // Divine Retribution: 15% instant lightning blast
+        // Divine Retribution: 8% instant lightning blast
         for (const em of livingEnemies) {
-          const strikeDamage = Math.max(1, Math.round(em.maxHp * 0.15));
+          const strikeDamage = Math.max(1, Math.round(em.maxHp * 0.08));
           em.hp = Math.max(0, em.hp - strikeDamage);
           if (em.hp <= 0) this.onIndividualEnemyKilled(em);
         }
@@ -3383,24 +3477,36 @@ class GameStateManager {
         break;
       }
       case 'artemis': {
-        // Lunar Piercer: 25% true max HP damage to highest-HP enemy
+        // Lunar Piercer: 12% true max HP damage to highest-HP enemy
         if (livingEnemies.length > 0) {
           const sorted = [...livingEnemies].sort((a, b) => b.hp - a.hp);
           const highest = sorted[0];
-          const pierce = Math.max(1, Math.round(highest.maxHp * 0.25));
+          const pierce = Math.max(1, Math.round(highest.maxHp * 0.12));
           highest.hp = Math.max(0, highest.hp - pierce);
           if (highest.hp <= 0) this.onIndividualEnemyKilled(highest);
         }
         break;
       }
       case 'hephaestus': {
-        // Volcanic Sunder: Shreds 25% enemy DEF/power & deals 15% Max HP fire burst
+        // Magma Eruption: (200% DEF + 10% Max HP) fire blast across all enemies & 4s Taunt Lock
+        const stats = this.getSpiritCombatStats(spirit);
+        const sDef = stats ? stats.def : 40;
+        const sHp = stats ? stats.maxHp : 200;
+        const ultAmp = stats ? (stats.ultAmp || 0) : 0;
+        const eruptionDmg = Math.max(1, Math.round((sDef * 2.0 + sHp * 0.10) * (1 + ultAmp / 100)));
         for (const em of livingEnemies) {
-          em.power = Math.max(1, Math.round(em.power * 0.85));
-          const burstDamage = Math.max(1, Math.round(em.maxHp * 0.15));
-          em.hp = Math.max(0, em.hp - burstDamage);
+          em.hp = Math.max(0, em.hp - eruptionDmg);
           if (em.hp <= 0) this.onIndividualEnemyKilled(em);
         }
+        spirit.tauntTimer = 4.0;
+        break;
+      }
+      case 'atlas': {
+        // Weight of the Heavens: 30% Max HP barrier & 8s guardian interception
+        const stats = this.getSpiritCombatStats(spirit);
+        const sHp = stats ? stats.maxHp : 200;
+        spirit.shieldHp = (spirit.shieldHp || 0) + Math.round(sHp * 0.30);
+        spirit.tauntTimer = 8.0;
         break;
       }
     }
@@ -3555,12 +3661,17 @@ class GameStateManager {
     if (!item) throw new Error('Relic not found in inventory');
     if (item.type !== 'relic') throw new Error('Only Relics can have their substats rerolled!');
 
-    const REROLL_COST = 5;
-    if ((this.state.resources.soulEssence || 0) < REROLL_COST) {
-      throw new Error(`Insufficient Soul Essence! Need ${REROLL_COST} 🔮 (Have: ${this.state.resources.soulEssence || 0} 🔮).`);
+    const res = this.state.resources;
+    let usedReshaper = false;
+    if ((res.relicReshapers || 0) >= 1) {
+      res.relicReshapers -= 1;
+      usedReshaper = true;
+    } else if ((res.soulEssence || 0) >= 5) {
+      res.soulEssence -= 5;
+    } else {
+      throw new Error('Insufficient Soul Essence or Relic Reshapers! Purchase a Relic Reshaper from the Dwarven\'s Forge in the Astral Realm (Need 1 Relic Reshaper or 5 Soul Essence).');
     }
 
-    this.state.resources.soulEssence -= REROLL_COST;
     rerollRelicSubstatsData(item, options);
 
     this.invalidateCaches();
@@ -3572,8 +3683,137 @@ class GameStateManager {
     return {
       success: true,
       item,
-      cost: REROLL_COST,
-      remainingEssence: this.state.resources.soulEssence
+      usedReshaper,
+      remainingReshapers: res.relicReshapers || 0,
+      remainingEssence: res.soulEssence || 0
+    };
+  }
+
+  getDwarvenWeekKey(d = new Date()) {
+    const date = new Date(d.getTime());
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+    const week1 = new Date(date.getFullYear(), 0, 4);
+    const weekNum = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    return `${date.getFullYear()}-W${weekNum}`;
+  }
+
+  checkDwarvenForgeWeekReset() {
+    const currentWeek = this.getDwarvenWeekKey();
+    if (!this.state.dwarvenForge || typeof this.state.dwarvenForge !== 'object') {
+      this.state.dwarvenForge = {
+        weekKey: currentWeek,
+        scripturesPurchasedThisWeek: 0,
+        reshapersPurchasedThisWeek: 0
+      };
+    } else if (this.state.dwarvenForge.weekKey !== currentWeek) {
+      this.state.dwarvenForge.weekKey = currentWeek;
+      this.state.dwarvenForge.scripturesPurchasedThisWeek = 0;
+      this.state.dwarvenForge.reshapersPurchasedThisWeek = 0;
+    }
+  }
+
+  buyDivineScriptureFromDwarvenForge(quantity = 1) {
+    this.checkDwarvenForgeWeekReset();
+    const qty = Math.max(1, quantity);
+    const forge = this.state.dwarvenForge;
+    const currentWeekly = forge.scripturesPurchasedThisWeek || 0;
+    const weeklyLimit = 3;
+
+    if (currentWeekly + qty > weeklyLimit) {
+      throw new Error(`Weekly purchase limit reached for Divine Scripture (${currentWeekly}/${weeklyLimit} this week)! Resets every Monday.`);
+    }
+
+    const shardCost = 5000 * qty;
+    const godCost = 40 * qty;
+    const soulCost = 15 * qty;
+
+    const res = this.state.resources;
+    if ((res.spiritShards || 0) < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost.toLocaleString()} 💎 (Have: ${(res.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+    if ((res.essencesOfTheGods || 0) < godCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${godCost} 💠 (Have: ${res.essencesOfTheGods || 0} 💠).`);
+    }
+    if ((res.soulEssence || 0) < soulCost) {
+      throw new Error(`Insufficient Soul Essence! Need ${soulCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+
+    res.spiritShards -= shardCost;
+    res.essencesOfTheGods -= godCost;
+    res.soulEssence -= soulCost;
+    res.divineScriptures = (res.divineScriptures || 0) + qty;
+    forge.scripturesPurchasedThisWeek = currentWeekly + qty;
+
+    this.save();
+    this.emit('resourcesUpdated', res);
+    this.emit('dwarvenForgePurchased', {
+      item: 'divineScripture',
+      quantity: qty,
+      scripturesPurchasedThisWeek: forge.scripturesPurchasedThisWeek
+    });
+
+    return {
+      success: true,
+      purchased: qty,
+      shardCost,
+      godCost,
+      soulCost,
+      remainingScriptures: res.divineScriptures,
+      purchasedThisWeek: forge.scripturesPurchasedThisWeek,
+      weeklyLimit
+    };
+  }
+
+  buyRelicReshaper(quantity = 1) {
+    this.checkDwarvenForgeWeekReset();
+    const qty = Math.max(1, quantity);
+    const forge = this.state.dwarvenForge;
+    const currentWeekly = forge.reshapersPurchasedThisWeek || 0;
+    const weeklyLimit = 12;
+
+    if (currentWeekly + qty > weeklyLimit) {
+      throw new Error(`Weekly purchase limit reached for Relic Reshaper (${currentWeekly}/${weeklyLimit} this week)! Resets every Monday.`);
+    }
+
+    const shardCost = 1500 * qty;
+    const godCost = 12 * qty;
+    const soulCost = 4 * qty;
+
+    const res = this.state.resources;
+    if ((res.spiritShards || 0) < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost.toLocaleString()} 💎 (Have: ${(res.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+    if ((res.essencesOfTheGods || 0) < godCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${godCost} 💠 (Have: ${res.essencesOfTheGods || 0} 💠).`);
+    }
+    if ((res.soulEssence || 0) < soulCost) {
+      throw new Error(`Insufficient Soul Essence! Need ${soulCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+
+    res.spiritShards -= shardCost;
+    res.essencesOfTheGods -= godCost;
+    res.soulEssence -= soulCost;
+    res.relicReshapers = (res.relicReshapers || 0) + qty;
+    forge.reshapersPurchasedThisWeek = currentWeekly + qty;
+
+    this.save();
+    this.emit('resourcesUpdated', res);
+    this.emit('dwarvenForgePurchased', {
+      item: 'relicReshaper',
+      quantity: qty,
+      reshapersPurchasedThisWeek: forge.reshapersPurchasedThisWeek
+    });
+
+    return {
+      success: true,
+      purchased: qty,
+      shardCost,
+      godCost,
+      soulCost,
+      remainingReshapers: res.relicReshapers,
+      purchasedThisWeek: forge.reshapersPurchasedThisWeek,
+      weeklyLimit
     };
   }
 
@@ -4041,31 +4281,79 @@ class GameStateManager {
     } else {
       const bossName = dungeonType === 'pantheon' ? `Avatar of ${targetGod}` : dungeonType === 'essence' ? (chamber.bossName || `${chamber.name} Overlord`) : (chamber.bossName || 'Vulcan Titan');
       const bossIcon = dungeonType === 'pantheon' ? (chamber.sigil || chamber.icon || '🔱') : dungeonType === 'essence' ? (chamber.bossIcon || '👑') : (chamber.bossIcon || '🌋');
+      
+      const isTier4 = tierNum === 4;
+      const bossHpMult = isTier4 ? 4.0 : 1.5;
+      const bossPwrMult = isTier4 ? 0.75 : 0.5;
+      const bossMaxHp = Math.max(150, Math.round(baseHp * bossHpMult));
+      const bossPower = Math.max(25, Math.round(targetPower * bossPwrMult));
+      const bossBarrier = isTier4 ? Math.round(bossMaxHp * 0.25) : 0;
+
       enemies.push({
         id: `wave3_boss_${Date.now()}`,
-        name: bossName,
+        name: isTier4 ? `Supreme ${bossName}` : bossName,
         icon: bossIcon,
         element: chamber.element || 'LIGHT',
         isBoss: true,
-        maxHp: Math.max(150, Math.round(baseHp * 1.5)),
-        hp: Math.max(150, Math.round(baseHp * 1.5)),
-        power: Math.max(25, Math.round(targetPower * 0.5)),
+        maxHp: bossMaxHp,
+        hp: bossMaxHp,
+        shieldHp: bossBarrier,
+        divineBarrierMax: bossBarrier,
+        hasDivineBarrier: isTier4,
+        isEnraged: false,
+        power: bossPower,
         isDefeated: false,
-        attackCooldown: 1.6,
+        attackCooldown: isTier4 ? 1.5 : 1.6,
         currentCooldown: 0.5
       });
-      enemies.push({
-        id: `wave3_attendant_${Date.now()}`,
-        name: dungeonType === 'pantheon' ? 'Temple High Priest' : dungeonType === 'essence' ? 'Essence Core Primordial' : 'Forge Overseer',
-        icon: '🔮',
-        element: chamber.element || 'LIGHT',
-        maxHp: Math.max(50, Math.round(baseHp * 0.5)),
-        hp: Math.max(50, Math.round(baseHp * 0.5)),
-        power: Math.max(10, Math.round(targetPower * 0.28)),
-        isDefeated: false,
-        attackCooldown: 2.0,
-        currentCooldown: 1.8
-      });
+
+      if (isTier4) {
+        // Tier 4 Endgame: Dual Overlord Attendants!
+        // Attendant 1: Healer / Vitality Siphon (Periodically restores 2% Max HP to Boss)
+        enemies.push({
+          id: `wave3_mender_${Date.now()}`,
+          name: dungeonType === 'pantheon' ? 'Overlord Pantheon Mender' : dungeonType === 'essence' ? 'Overlord Aether Mender' : 'Overlord Forge Core Mender',
+          icon: '💚',
+          role: 'healer',
+          element: chamber.element || 'LIGHT',
+          maxHp: Math.max(100, Math.round(baseHp * 0.9)),
+          hp: Math.max(100, Math.round(baseHp * 0.9)),
+          power: Math.max(15, Math.round(targetPower * 0.25)),
+          isDefeated: false,
+          attackCooldown: 2.2,
+          currentCooldown: 1.5,
+          healTimer: 4.0
+        });
+
+        // Attendant 2: Vanguard Executioner (Heavy burst strikes)
+        enemies.push({
+          id: `wave3_striker_${Date.now()}`,
+          name: dungeonType === 'pantheon' ? 'Overlord War Vanguard' : dungeonType === 'essence' ? 'Overlord Prime Striker' : 'Overlord Juggernaut Automaton',
+          icon: '⚔️',
+          role: 'dps',
+          element: chamber.element || 'LIGHT',
+          maxHp: Math.max(120, Math.round(baseHp * 1.1)),
+          hp: Math.max(120, Math.round(baseHp * 1.1)),
+          power: Math.max(20, Math.round(targetPower * 0.42)),
+          isDefeated: false,
+          attackCooldown: 1.8,
+          currentCooldown: 0.9
+        });
+      } else {
+        // Tiers 1-3: Standard Single Attendant
+        enemies.push({
+          id: `wave3_attendant_${Date.now()}`,
+          name: dungeonType === 'pantheon' ? 'Temple High Priest' : dungeonType === 'essence' ? 'Essence Core Primordial' : 'Forge Overseer',
+          icon: '🔮',
+          element: chamber.element || 'LIGHT',
+          maxHp: Math.max(50, Math.round(baseHp * 0.5)),
+          hp: Math.max(50, Math.round(baseHp * 0.5)),
+          power: Math.max(10, Math.round(targetPower * 0.28)),
+          isDefeated: false,
+          attackCooldown: 2.0,
+          currentCooldown: 1.8
+        });
+      }
     }
 
     return enemies;
@@ -4107,6 +4395,7 @@ class GameStateManager {
       maxWaves: 3,
       status: 'active',
       currentSwarm: initialSwarm,
+      elapsedWaveTime: 0,
       loot: null
     };
 
@@ -4134,6 +4423,7 @@ class GameStateManager {
     if (livingEnemies.length === 0) {
       if (battle.currentWave < battle.maxWaves) {
         battle.currentWave += 1;
+        battle.elapsedWaveTime = 0;
         livingSpirits.forEach(s => {
           s.currentHp = Math.min(s.maxHp, s.currentHp + Math.round(s.maxHp * 0.25));
           s.tauntTimer = 0;
@@ -4148,13 +4438,43 @@ class GameStateManager {
       }
     }
 
+    battle.elapsedWaveTime = (battle.elapsedWaveTime || 0) + deltaSec;
+
+    // Cataclysm Enrage & Attendant mechanics for Tier 4 Wave 3 Boss
+    if (battle.tier === 4 && battle.currentWave === 3) {
+      const boss = livingEnemies.find(e => e.isBoss && !e.isDefeated && e.hp > 0);
+      if (boss && !boss.isEnraged && battle.elapsedWaveTime >= 45) {
+        boss.isEnraged = true;
+        boss.power = Math.round(boss.power * 1.5);
+        boss.attackCooldown = Math.max(0.8, (boss.attackCooldown || 1.5) * 0.65);
+        this.emit('combatEffect', { type: 'boss_enrage', enemy: boss, text: '⚠️ CATACLYSM ENRAGE!' });
+      }
+
+      // Overlord Mender periodic boss heal (2% Max HP every 4s)
+      const mender = livingEnemies.find(e => e.role === 'healer' && !e.isDefeated && e.hp > 0);
+      if (mender) {
+        mender.healTimer = (mender.healTimer || 4.0) - deltaSec;
+        if (mender.healTimer <= 0) {
+          mender.healTimer = 4.0;
+          if (boss && boss.hp < boss.maxHp) {
+            const healAmt = Math.round(boss.maxHp * 0.02);
+            boss.hp = Math.min(boss.maxHp, boss.hp + healAmt);
+            this.emit('combatEffect', { type: 'boss_healed', enemy: boss, text: `+${healAmt.toLocaleString()} HP` });
+          }
+        }
+      }
+    }
+
     const leadEnemy = livingEnemies[0];
 
     // Spirits attack & accumulate MP
     for (const spirit of livingSpirits) {
-      // Tick taunt decay
+      // Tick taunt decay and atlas shield cooldown
       if (spirit.tauntTimer > 0) {
         spirit.tauntTimer = Math.max(0, spirit.tauntTimer - deltaSec);
+      }
+      if (spirit._atlasShieldCooldown > 0) {
+        spirit._atlasShieldCooldown = Math.max(0, spirit._atlasShieldCooldown - deltaSec);
       }
 
       const effectivePower = this.getSpiritTotalPower(spirit);
@@ -4163,8 +4483,16 @@ class GameStateManager {
       const posAtkMult = (stats && stats.formationColumn === 'back') ? 1.15 : 1.0;
 
       const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * posAtkMult));
-      const damageThisTick = baseDps * deltaSec;
-      leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
+      let damageThisTick = baseDps * deltaSec;
+
+      if (leadEnemy.shieldHp > 0) {
+        const absorbed = Math.min(leadEnemy.shieldHp, damageThisTick);
+        leadEnemy.shieldHp -= absorbed;
+        damageThisTick -= absorbed;
+      }
+      if (damageThisTick > 0) {
+        leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
+      }
 
       const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
       let manaBonusMult = 1;
@@ -4181,7 +4509,7 @@ class GameStateManager {
       }
     }
 
-    if (leadEnemy.hp <= 0) {
+    if (leadEnemy.hp <= 0 && (!leadEnemy.shieldHp || leadEnemy.shieldHp <= 0)) {
       leadEnemy.isDefeated = true;
       leadEnemy.hp = 0;
     }
@@ -4193,9 +4521,33 @@ class GameStateManager {
       if (enemy.currentCooldown <= 0) {
         enemy.currentCooldown = enemy.attackCooldown || 2.0;
 
-        const targetSpirit = this.selectCombatTarget(livingSpirits);
+        let targetSpirit = this.selectCombatTarget(livingSpirits);
         if (targetSpirit) {
+          // Atlas 4-pc Guardian Interception: Intercept low-HP ally attacks
+          const partyBonuses = this.getPartyActiveSetBonuses();
+          const atlasBearerBonus = partyBonuses.find(b => b.setId === 'atlas' && b.tier === '4pc' && b.spirit && !b.spirit.isFallen);
+
+          if (atlasBearerBonus && atlasBearerBonus.spirit.id !== targetSpirit.id) {
+            const allyStats = this.getSpiritCombatStats(targetSpirit);
+            const allyHpMax = allyStats ? allyStats.maxHp : (targetSpirit.maxHp || 100);
+            if ((targetSpirit.currentHp / allyHpMax) < 0.35) {
+              targetSpirit = atlasBearerBonus.spirit;
+              if (!targetSpirit._atlasShieldCooldown || targetSpirit._atlasShieldCooldown <= 0) {
+                const atlasStats = this.getSpiritCombatStats(targetSpirit);
+                const shieldAmt = Math.round((atlasStats ? atlasStats.maxHp : 300) * 0.30);
+                targetSpirit.shieldHp = (targetSpirit.shieldHp || 0) + shieldAmt;
+                targetSpirit._atlasShieldCooldown = 15.0;
+                this.emit('combatEffect', { type: 'atlas_interception', spirit: targetSpirit, text: 'Atlas Interception!' });
+              }
+            }
+          }
+
           let rawEnemyDamage = Math.max(1, Math.round(enemy.power * (0.8 + Math.random() * 0.4)));
+
+          // Atlas 4-pc Party-wide Damage Mitigation (-12% team damage taken)
+          if (atlasBearerBonus) {
+            rawEnemyDamage = Math.max(1, Math.round(rawEnemyDamage * 0.88));
+          }
 
           // Apply DEF Mitigation Formula (350 / (350 + DEF))
           const targetStats = this.getSpiritCombatStats(targetSpirit);
@@ -4268,16 +4620,28 @@ class GameStateManager {
     let totalDamageDealt = 0;
     let totalHealingDone = 0;
 
+    const applyDamageToDungeonEnemy = (enemy, rawDmg) => {
+      let dmg = rawDmg;
+      if (enemy.shieldHp > 0) {
+        const absorbed = Math.min(enemy.shieldHp, dmg);
+        enemy.shieldHp -= absorbed;
+        dmg -= absorbed;
+      }
+      if (dmg > 0) {
+        enemy.hp = Math.max(0, enemy.hp - dmg);
+      }
+      if (enemy.hp <= 0 && (!enemy.shieldHp || enemy.shieldHp <= 0)) {
+        enemy.isDefeated = true;
+        enemy.hp = 0;
+      }
+    };
+
     switch (ult.type) {
       case 'AOE_DAMAGE': {
         const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier * critMult));
         for (const enemy of livingEnemies) {
-          enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
+          applyDamageToDungeonEnemy(enemy, damagePerEnemy);
           totalDamageDealt += damagePerEnemy;
-          if (enemy.hp <= 0) {
-            enemy.isDefeated = true;
-            enemy.hp = 0;
-          }
         }
         break;
       }
@@ -4285,12 +4649,8 @@ class GameStateManager {
         const primaryTarget = livingEnemies[0];
         if (primaryTarget) {
           const burstDamage = Math.max(1, Math.round(spirit.power * ult.multiplier * critMult));
-          primaryTarget.hp = Math.max(0, primaryTarget.hp - burstDamage);
+          applyDamageToDungeonEnemy(primaryTarget, burstDamage);
           totalDamageDealt += burstDamage;
-          if (primaryTarget.hp <= 0) {
-            primaryTarget.isDefeated = true;
-            primaryTarget.hp = 0;
-          }
         }
         break;
       }
@@ -4316,12 +4676,8 @@ class GameStateManager {
           const isExecuteThreshold = (lowestHpEnemy.hp / lowestHpEnemy.maxHp) <= ult.threshold;
           const mult = (isExecuteThreshold ? ult.multiplier * 2 : ult.multiplier) * critMult;
           const execDamage = Math.max(1, Math.round(spirit.power * mult));
-          lowestHpEnemy.hp = Math.max(0, lowestHpEnemy.hp - execDamage);
+          applyDamageToDungeonEnemy(lowestHpEnemy, execDamage);
           totalDamageDealt += execDamage;
-          if (lowestHpEnemy.hp <= 0) {
-            lowestHpEnemy.isDefeated = true;
-            lowestHpEnemy.hp = 0;
-          }
         }
         break;
       }
@@ -4361,10 +4717,17 @@ class GameStateManager {
     }
 
     const totalPartyPower = livingSpirits.reduce((sum, s) => sum + this.getSpiritTotalPower(s), 0);
-    const tapDamage = Math.max(1, Math.round(totalPartyPower * (0.35 + Math.random() * 0.2) * critMult));
+    let tapDamage = Math.max(1, Math.round(totalPartyPower * (0.35 + Math.random() * 0.2) * critMult));
 
-    leadEnemy.hp = Math.max(0, leadEnemy.hp - tapDamage);
-    if (leadEnemy.hp <= 0) {
+    if (leadEnemy.shieldHp > 0) {
+      const absorbed = Math.min(leadEnemy.shieldHp, tapDamage);
+      leadEnemy.shieldHp -= absorbed;
+      tapDamage -= absorbed;
+    }
+    if (tapDamage > 0) {
+      leadEnemy.hp = Math.max(0, leadEnemy.hp - tapDamage);
+    }
+    if (leadEnemy.hp <= 0 && (!leadEnemy.shieldHp || leadEnemy.shieldHp <= 0)) {
       leadEnemy.isDefeated = true;
       leadEnemy.hp = 0;
     }
@@ -4570,9 +4933,9 @@ class GameStateManager {
 
   buyExpPotion(arg1, arg2) {
     const POTIONS = {
-      lesser_elixir: { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 0, essenceGodCost: 5, soulEssenceCost: 1 },
-      grand_elixir: { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 0, essenceGodCost: 15, soulEssenceCost: 3 },
-      divine_ambrosia: { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 0, essenceGodCost: 40, soulEssenceCost: 10 }
+      lesser_elixir: { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 1200, essenceGodCost: 10, soulEssenceCost: 1 },
+      grand_elixir: { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 3000, essenceGodCost: 25, soulEssenceCost: 3 },
+      divine_ambrosia: { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 7500, essenceGodCost: 60, soulEssenceCost: 10 }
     };
 
     const potionId = POTIONS[arg1] ? arg1 : arg2;
@@ -4585,9 +4948,17 @@ class GameStateManager {
     if (!spirit) throw new Error('Target Spirit not found in collection!');
 
     const res = this.state.resources;
-    if ((res.soulEssence || 0) < pot.soulEssenceCost) throw new Error(`Insufficient Astral Essence! Need ${pot.soulEssenceCost} 🔮, have ${res.soulEssence || 0} 🔮.`);
-    if ((res.essencesOfTheGods || 0) < pot.essenceGodCost) throw new Error(`Insufficient Essences of the Gods! Need ${pot.essenceGodCost} 💠, have ${res.essencesOfTheGods || 0} 💠.`);
+    if (pot.shardCost && (res.spiritShards || 0) < pot.shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${pot.shardCost.toLocaleString()} 💎 (Have: ${(res.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+    if ((res.soulEssence || 0) < pot.soulEssenceCost) {
+      throw new Error(`Insufficient Astral Essence! Need ${pot.soulEssenceCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
+    }
+    if ((res.essencesOfTheGods || 0) < pot.essenceGodCost) {
+      throw new Error(`Insufficient Essences of the Gods! Need ${pot.essenceGodCost} 💠 (Have: ${res.essencesOfTheGods || 0} 💠).`);
+    }
 
+    if (pot.shardCost > 0) res.spiritShards -= pot.shardCost;
     if (pot.soulEssenceCost > 0) res.soulEssence -= pot.soulEssenceCost;
     if (pot.essenceGodCost > 0) res.essencesOfTheGods -= pot.essenceGodCost;
 

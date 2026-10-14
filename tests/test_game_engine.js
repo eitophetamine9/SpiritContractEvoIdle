@@ -10,11 +10,13 @@ import {
   getRoleInfo,
   getSpiritRole,
   REBIRTH_CONFIG,
-  getScalingProfile
+  getScalingProfile,
+  CONSTELLATIONS_CONFIG
 } from '../src/data/index.js';
-import { enhanceRelicData } from '../src/data/equipmentData.js';
-import { getEnemyForStage } from '../src/data/index.js';
-import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon } from '../src/render/spriteAnimator.js';
+import { enhanceRelicData, WEAPON_TYPES, createWeaponInstance } from '../src/data/equipmentData.js';
+import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot } from '../src/data/index.js';
+import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml } from '../src/render/spriteAnimator.js';
+import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import fs from 'fs';
 import path from 'path';
@@ -365,18 +367,20 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Cleared "Olympian Nexus" [Tier 1]! Gained ${essenceDungeonResult.essencesAwarded} Essences of the Gods & ${essenceDungeonResult.soulEssenceAwarded} Soul Essence.`);
   if (essenceDungeonResult.essencesAwarded <= 0) throw new Error('Should award Essences of the Gods');
 
-  // Test EXP Potions (0 Shards, consumes 1 Astral Essence + 5 God Essences)
+  // Test EXP Potions (Buffed: 1,200 Shards + 10 God Essences + 1 Astral Essence)
   const testSpirit = gameState.state.spirits[0];
   const preXp = testSpirit.xp;
-  gameState.state.resources.spiritShards = 1000;
+  gameState.state.resources.spiritShards = 5000;
   gameState.state.resources.essencesOfTheGods = 50;
   gameState.state.resources.soulEssence = 20;
   const initialShards = gameState.state.resources.spiritShards;
+  const initialGods = gameState.state.resources.essencesOfTheGods;
   const initialAstral = gameState.state.resources.soulEssence;
   gameState.buyExpPotion(testSpirit.id, 'lesser_elixir');
   console.log(`  Used Lesser Astral Elixir on ${testSpirit.customName}: XP ${preXp} -> ${testSpirit.xp} (+10,000 XP)`);
   if (testSpirit.xp < preXp + 10000 && testSpirit.level === 1) throw new Error('EXP potion failed to grant XP');
-  if (gameState.state.resources.spiritShards !== initialShards) throw new Error('EXP potion should NOT consume regular shards!');
+  if (gameState.state.resources.spiritShards !== initialShards - 1200) throw new Error('EXP potion should consume 1200 shards!');
+  if (gameState.state.resources.essencesOfTheGods !== initialGods - 10) throw new Error('EXP potion should consume 10 God Essences!');
   if (gameState.state.resources.soulEssence !== initialAstral - 1) throw new Error('EXP potion should consume 1 Astral Essence!');
 
   // Test Combat Blessings
@@ -1102,6 +1106,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   };
   gameState.state.inventory.equipment.push(rerollRelic);
 
+  gameState.state.resources.relicReshapers = 0;
   gameState.state.resources.soulEssence = 2;
   let blockedLowEssence = false;
   try {
@@ -1128,15 +1133,15 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   // 29. Test Phase 3: Relic Enhancement Revamp, Divine Scripture & 4 New Greek God Sets
   console.log('\n[TEST 29] Testing Phase 3: Relic Enhancement Revamp, Divine Scripture & Greek God Sets:');
 
-  // Verify Greek God Sets definitions
-  const greekSets = ['athena', 'hermes', 'artemis', 'hephaestus'];
+  // Verify Greek God Sets definitions (Athena, Hermes, Artemis, Hephaestus, Atlas)
+  const greekSets = ['athena', 'hermes', 'artemis', 'hephaestus', 'atlas'];
   for (const sId of greekSets) {
     const sDef = GREEK_GOD_SETS[sId];
     if (!sDef || !sDef.bonus2pc || !sDef.bonus4pc) {
       throw new Error(`Greek God Set "${sId}" definition missing or incomplete!`);
     }
   }
-  console.log('  [PASS] Greek God sets (Athena, Hermes, Artemis, Hephaestus) verified in GREEK_GOD_SETS!');
+  console.log('  [PASS] Greek God sets (Athena, Hermes, Artemis, Hephaestus, Atlas) verified in GREEK_GOD_SETS!');
 
   // Test Relic Substat Roll Tracking
   const trackRelic = {
@@ -1209,7 +1214,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log(`  [PASS] Divine Relic Scripture applied! Guaranteed: Crit Rate & Crit DMG present in inscribed relic!`);
 
-  // Test Hephaestus 2-pc Weapon ATK boost in getSpiritTotalPower
+  // Test Hephaestus 2-pc Molten Carapace (DEF +15% & 25% DEF converted to ATK) in getSpiritTotalPower
   const testWpnHeph = {
     uid: 'test_wpn_hephaestus',
     type: 'weapon',
@@ -1251,16 +1256,17 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   gameState.state.spirits.push(testSpiritHeph);
 
   gameState.invalidateCaches();
+  const cStats = gameState.getSpiritCombatStats(testSpiritHeph);
+  const defToAtk = Math.round(cStats.def * 0.25);
   const calculatedPower = gameState.getSpiritTotalPower(testSpiritHeph);
-  // Base power 100 + weapon power 100 * (1 + 0.25 Hephaestus weapon bonus) = 100 + 125 = 225 (* constellation multiplier if unlocked)
   const constBonus = (gameState.getConstellationBonuses?.().partyAtkPercent || 0) / 100;
-  const expectedPower = Math.round(225 * (1 + constBonus));
+  const expectedPower = Math.round((100 + 100 + defToAtk) * (1 + constBonus));
   if (calculatedPower !== expectedPower) {
     throw new Error(`Expected Hephaestus 2-pc power ${expectedPower}, got ${calculatedPower}`);
   }
-  console.log(`  [PASS] Hephaestus 2-pc set bonus (+25% Weapon ATK) correctly calculated: Power = ${calculatedPower}!`);
+  console.log(`  [PASS] Hephaestus 2-pc set bonus (Molten Carapace: +15% DEF, +${defToAtk} ATK from DEF) correctly calculated: Power = ${calculatedPower}!`);
 
-  // Test proc4PieceSetBonus for the 4 sets
+  // Test proc4PieceSetBonus for Athena, Hermes, Artemis, Hephaestus, Atlas
   gameState.state.madnessZone.currentSwarm = [
     { id: 'mob1', name: 'Void Goblin', hp: 1000, maxHp: 1000, power: 100, isDefeated: false }
   ];
@@ -1268,7 +1274,12 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.hermes);
   gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.artemis);
   gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.hephaestus);
-  console.log('  [PASS] proc4PieceSetBonus successfully fired for Athena, Hermes, Artemis, and Hephaestus!');
+  if (testSpiritHeph.tauntTimer !== 4.0) throw new Error('Expected Hephaestus 4-pc to grant 4s taunt');
+
+  gameState.proc4PieceSetBonus(testSpiritHeph, GREEK_GOD_SETS.atlas);
+  if (testSpiritHeph.tauntTimer !== 8.0) throw new Error('Expected Atlas 4-pc to grant 8s taunt');
+  if (!testSpiritHeph.shieldHp || testSpiritHeph.shieldHp <= 0) throw new Error('Expected Atlas 4-pc to grant 30% HP shield');
+  console.log('  [PASS] proc4PieceSetBonus successfully fired for Athena, Hermes, Artemis, Hephaestus, and Atlas!');
 
   // Test 30: Phase 4 Zodiac Constellations, New Spirit Evolution Lines & Abyssal Rift Banner
   console.log('\n[TEST 30] Testing Phase 4 Zodiac Constellations, 3 Spirit Lines & Abyssal Rift Banner:');
@@ -1730,6 +1741,497 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log('  [PASS] Detailed Attributes Dossier Modal verified (16 Parameters)!');
 
   console.log('  [PASS] Dedicated Spirit Sanctum Hub fully verified across all 5 sub-hubs!');
+
+  // 37. Test Phase 2 Enemy Scaledown, Polynomial Scaling & Floor Swarms
+  console.log('\n[TEST 37] Testing Phase 2 Enemy Scaledown, Polynomial Scaling & Floor Swarms:');
+  
+  // 1. Verify Polynomial Enemy Base Scaling
+  const scaleFloor1 = getEnemyBaseScale(1);
+  const scaleFloor5 = getEnemyBaseScale(5);
+  const scaleFloor15 = getEnemyBaseScale(15);
+  const scaleFloor30 = getEnemyBaseScale(30);
+  const scaleFloor50 = getEnemyBaseScale(50);
+  
+  console.log(`  Enemy Base Scaling: Floor 1=${scaleFloor1.toFixed(2)}x, Floor 5=${scaleFloor5.toFixed(2)}x, Floor 15=${scaleFloor15.toFixed(2)}x, Floor 30=${scaleFloor30.toFixed(2)}x, Floor 50=${scaleFloor50.toFixed(2)}x`);
+  if (scaleFloor1 !== 1.0) throw new Error('Floor 1 scale should be 1.0');
+  if (scaleFloor5 > 2.0) throw new Error('Floor 5 scale should be <= 2.0');
+  if (scaleFloor30 > 16.0) throw new Error('Floor 30 scale should be <= 16.0 (preventing exponential runaway)');
+  if (scaleFloor50 > 30.0) throw new Error('Floor 50 scale should be <= 30.0 (previously exceeded 4000x)');
+  console.log('  [PASS] Controlled polynomial curve verified without runaway exponential spikes!');
+
+  // 2. Verify Swarm Floors Identification
+  if (!isSwarmFloor(3) || !isSwarmFloor(7) || !isSwarmFloor(13) || !isSwarmFloor(27) || !isSwarmFloor(43)) {
+    throw new Error('isSwarmFloor failed on floors ending in 3 or 7');
+  }
+  if (isSwarmFloor(1) || isSwarmFloor(5) || isSwarmFloor(10) || isSwarmFloor(20)) {
+    throw new Error('isSwarmFloor wrongly flagged non-swarm floor');
+  }
+  console.log('  [PASS] Swarm floor identifier correctly identifies floors ending in 3 or 7 (Floors 3, 7, 13, 17, 23, 27, 33, 37, etc.)!');
+
+  // 3. Verify Swarm Sizes on Swarm Floors vs Normal Floors
+  const swarmF3W4 = getSwarmForStage(3, 4);
+  const swarmF7W4 = getSwarmForStage(7, 4);
+  const swarmF2W4 = getSwarmForStage(2, 4);
+  const swarmF3Boss = getSwarmForStage(3, 5);
+  const swarmF2Boss = getSwarmForStage(2, 5);
+
+  console.log(`  Swarm sizes: Floor 3 Wave 4=${swarmF3W4.length} mobs, Floor 7 Wave 4=${swarmF7W4.length} mobs, Floor 2 Wave 4=${swarmF2W4.length} mobs`);
+  console.log(`  Boss wave sizes: Floor 3 Boss Wave=${swarmF3Boss.length} units (1 boss + ${swarmF3Boss.length - 1} guards), Floor 2 Boss Wave=${swarmF2Boss.length} units`);
+
+  if (swarmF3W4.length < 5) throw new Error(`Expected at least 5 enemies on Swarm Floor 3 Wave 4, got ${swarmF3W4.length}`);
+  if (swarmF7W4.length !== 6) throw new Error(`Expected 6 enemies on Swarm Floor 7 Wave 4, got ${swarmF7W4.length}`);
+  if (swarmF2W4.length > 4) throw new Error(`Expected at most 4 enemies on Normal Floor 2 Wave 4, got ${swarmF2W4.length}`);
+  if (swarmF3Boss.length !== 4) throw new Error(`Expected 4 units (1 boss + 3 guards) on Swarm Floor 3 Boss Wave, got ${swarmF3Boss.length}`);
+  if (swarmF2Boss.length !== 3) throw new Error(`Expected 3 units (1 boss + 2 guards) on Normal Floor 2 Boss Wave, got ${swarmF2Boss.length}`);
+  console.log('  [PASS] Floor-specific swarms of 4-6 enemies on designated floors fully validated!');
+
+  // 4. Verify Individual Mob Power Scaling and Staggered Timers
+  const mobPowerIndividual = swarmF7W4[0].power;
+  const mobHpIndividual = swarmF7W4[0].maxHp;
+  const mobCooldown = swarmF7W4[0].attackCooldown;
+  console.log(`  Swarm Mob Specs (Floor 7 Wave 4): Power=${mobPowerIndividual}, MaxHP=${mobHpIndividual}, Cooldown=${mobCooldown}s`);
+  if (mobCooldown > 2.2) throw new Error('Swarm mob cooldown should be fast');
+  const timers = swarmF7W4.map(m => m.attackTimer);
+  const isStaggered = timers.every((t, idx) => idx === 0 || t > timers[idx - 1]);
+  if (!isStaggered) throw new Error('Swarm initial attack timers must be staggered to avoid simultaneous strike wipes');
+  console.log('  [PASS] Swarm mob power, HP, and staggered strike timers fully validated!');
+
+  // 5. Verify Harmonized Spirit Power Scaling
+  const catLv1 = calculateSpiritPower(SPIRIT_SPECIES.cat_spirit, 1, 'COMMON');
+  const catLv50 = calculateSpiritPower(SPIRIT_SPECIES.cat_spirit, 50, 'COMMON');
+  const catLv100 = calculateSpiritPower(SPIRIT_SPECIES.cat_spirit, 100, 'COMMON');
+  console.log(`  Cat Spirit Power: Lv 1=${catLv1}, Lv 50=${catLv50} (${(catLv50/catLv1).toFixed(1)}x), Lv 100=${catLv100} (${(catLv100/catLv1).toFixed(1)}x)`);
+  if (catLv50 / catLv1 > 15) throw new Error('Level 50 power runaway (should be <= 15x base)');
+  if (catLv100 / catLv1 > 25) throw new Error('Level 100 power runaway (should be <= 25x base)');
+  console.log('  [PASS] Harmonized spirit power scaling validated without blitz runaway!');
+
+  // 38. Test Phase 3 Weapon Archetype Expansion (12 Weapons & Divine Forge Chambers)
+  console.log('\n[TEST 38] Testing Phase 3 Weapon Archetype Expansion & Rebalancing (12 Archetypes):');
+  
+  // 1. Verify 12 Weapon Types
+  console.log(`  Total Weapon Archetypes: ${WEAPON_TYPES.length} (Expected 12)`);
+  if (WEAPON_TYPES.length !== 12) throw new Error(`Expected 12 weapon types, got ${WEAPON_TYPES.length}`);
+
+  const expectedWeaponIds = ['sword', 'bow', 'staff', 'claw', 'dagger', 'hammer', 'scythe', 'shield', 'grimoire', 'warhammer', 'halberd', 'tome'];
+  for (const wId of expectedWeaponIds) {
+    const w = WEAPON_TYPES.find(item => item.id === wId);
+    if (!w) throw new Error(`Missing weapon type: ${wId}`);
+    if (!w.name || !w.primaryStat || !w.abilityName || !w.abilityDesc) {
+      throw new Error(`Incomplete weapon type definition for ${wId}`);
+    }
+    console.log(`    ${w.icon} ${w.name} [${w.archetype}] (${w.role}) -> Primary: ${w.primaryStatName} | Ability: "${w.abilityName}"`);
+  }
+  console.log('  [PASS] All 12 weapon archetypes defined with distinct primary stats and abilities!');
+
+  // 2. Verify Weapon Instances for Distinct Roles
+  const scytheInst = createWeaponInstance({ weaponTypeId: 'scythe', rarity: 'EPIC', level: 3 });
+  if (scytheInst.weaponTypeId !== 'scythe' || scytheInst.critDmg <= 0 || scytheInst.abilityName !== "Reaper's Harvest") {
+    throw new Error('Scythe instance failed archetype verification');
+  }
+
+  const shieldInst = createWeaponInstance({ weaponTypeId: 'shield', rarity: 'LEGENDARY', level: 5 });
+  if (shieldInst.defBonus <= 0 || shieldInst.hpBonus <= 0 || shieldInst.abilityName !== 'Bulwark of Dawn') {
+    throw new Error('Aegis Shield instance failed DEF / HP archetype verification');
+  }
+
+  const tomeInst = createWeaponInstance({ weaponTypeId: 'tome', rarity: 'RARE', level: 2 });
+  if (tomeInst.hpBonus <= 0 || tomeInst.abilityName !== 'Living Bloom') {
+    throw new Error('Verdant Tome instance failed healer archetype verification');
+  }
+  console.log('  [PASS] createWeaponInstance generates distinct role attributes (scythe crit execution, shield DEF/HP, tome healing)!');
+
+  // 3. Verify 12 Forge Chambers
+  console.log(`  Divine Forge Chambers: ${FORGE_CHAMBERS.length} (Expected 12)`);
+  if (FORGE_CHAMBERS.length !== 12) throw new Error(`Expected 12 Divine Forge chambers, got ${FORGE_CHAMBERS.length}`);
+
+  for (const c of FORGE_CHAMBERS) {
+    const wType = WEAPON_TYPES.find(w => w.id === c.weaponTypeId);
+    if (!wType) throw new Error(`Chamber ${c.id} points to non-existent weaponTypeId ${c.weaponTypeId}`);
+  }
+
+  // 4. Test Chamber Drops
+  const lootScythe = generateForgeLoot('void_ossuary', 2);
+  if (lootScythe.weapons[0].weaponTypeId !== 'scythe') {
+    throw new Error('Void Ossuary chamber should drop scythes');
+  }
+  const lootShield = generateForgeLoot('bastion_citadel', 3);
+  if (lootShield.weapons[0].weaponTypeId !== 'shield') {
+    throw new Error('Bastion Citadel chamber should drop shields');
+  }
+  console.log('  [PASS] All 12 Divine Forge chambers validated with targeted weapon archetype drops!');
+
+  // =========================================================================
+  // 39. Test Phase 4: Dwarven's Forge, 5x Daily Transmutation, Buffed Potions & Relic Reshapers
+  // =========================================================================
+  console.log('\n[TEST 39] Testing Phase 4: Dwarven\'s Forge, Weekly Caps, 5x Transmutation & Buffed Potions:');
+
+  // A. 5x Daily Transmutation Limit
+  // Fund enough resources for transmutations
+  gameState.state.resources.spiritShards = 50000;
+  gameState.state.resources.essencesOfTheGods = 500;
+  // Bring count up to 5
+  while ((gameState.state.transmutationsToday || 0) < 5) {
+    gameState.transmuteShardsToAstralEssence();
+  }
+  console.log(`  Completed transmutations today: ${gameState.state.transmutationsToday}/5`);
+  if (gameState.state.transmutationsToday !== 5) {
+    throw new Error(`Expected 5 transmutations today, got ${gameState.state.transmutationsToday}`);
+  }
+
+  // 6th transmutation should fail with daily cap error
+  let transCapBlocked = false;
+  try {
+    gameState.transmuteShardsToAstralEssence();
+  } catch (err) {
+    transCapBlocked = true;
+    console.log(`  [PASS] Blocked 6th transmutation: "${err.message}"`);
+  }
+  if (!transCapBlocked) throw new Error('6th transmutation must be blocked by 5x daily cap!');
+
+  // B. Dwarven's Forge: Divine Relic Scripture (3/week limit, tri-currency cost)
+  gameState.state.resources.spiritShards = 100000;
+  gameState.state.resources.essencesOfTheGods = 500;
+  gameState.state.resources.soulEssence = 200;
+
+  const initScriptures = gameState.state.resources.divineScriptures || 0;
+  const initShards = gameState.state.resources.spiritShards;
+  const initGods = gameState.state.resources.essencesOfTheGods;
+  const initSoul = gameState.state.resources.soulEssence;
+
+  // Buy 1 scripture
+  const scripBuy1 = gameState.buyDivineScriptureFromDwarvenForge(1);
+  console.log(`  Bought Divine Scripture 1: ${scripBuy1.purchasedThisWeek}/${scripBuy1.weeklyLimit} this week`);
+  if (gameState.state.resources.divineScriptures !== initScriptures + 1) throw new Error('Scriptures count not incremented');
+  if (gameState.state.resources.spiritShards !== initShards - 5000) throw new Error('5000 shards not deducted');
+  if (gameState.state.resources.essencesOfTheGods !== initGods - 40) throw new Error('40 god essences not deducted');
+  if (gameState.state.resources.soulEssence !== initSoul - 15) throw new Error('15 soul essence not deducted');
+
+  // Buy 2 more scriptures to reach 3/week cap
+  gameState.buyDivineScriptureFromDwarvenForge(2);
+  console.log(`  Bought 2 more scriptures -> ${gameState.state.dwarvenForge.scripturesPurchasedThisWeek}/3`);
+  if (gameState.state.dwarvenForge.scripturesPurchasedThisWeek !== 3) throw new Error('Should have 3 scriptures purchased this week');
+
+  // 4th purchase attempt must throw weekly limit error
+  let scriptureCapBlocked = false;
+  try {
+    gameState.buyDivineScriptureFromDwarvenForge(1);
+  } catch (err) {
+    scriptureCapBlocked = true;
+    console.log(`  [PASS] Blocked 4th weekly scripture purchase: "${err.message}"`);
+  }
+  if (!scriptureCapBlocked) throw new Error('Divine Scripture weekly purchase limit of 3 must be enforced');
+
+  // C. Dwarven's Forge: Relic Reshaper (12/week limit, tri-currency cost)
+  const initReshapers = gameState.state.resources.relicReshapers || 0;
+  const preReshaperShards = gameState.state.resources.spiritShards;
+  const preReshaperGods = gameState.state.resources.essencesOfTheGods;
+  const preReshaperSoul = gameState.state.resources.soulEssence;
+
+  const resBuy1 = gameState.buyRelicReshaper(1);
+  console.log(`  Bought Relic Reshaper 1: ${resBuy1.purchasedThisWeek}/${resBuy1.weeklyLimit} this week`);
+  if (gameState.state.resources.relicReshapers !== initReshapers + 1) throw new Error('Relic Reshapers count not incremented');
+  if (gameState.state.resources.spiritShards !== preReshaperShards - 1500) throw new Error('1500 shards not deducted');
+  if (gameState.state.resources.essencesOfTheGods !== preReshaperGods - 12) throw new Error('12 god essences not deducted');
+  if (gameState.state.resources.soulEssence !== preReshaperSoul - 4) throw new Error('4 soul essence not deducted');
+
+  // Buy 11 more reshapers to hit 12/week cap
+  gameState.buyRelicReshaper(11);
+  console.log(`  Bought 11 more reshapers -> ${gameState.state.dwarvenForge.reshapersPurchasedThisWeek}/12`);
+  if (gameState.state.dwarvenForge.reshapersPurchasedThisWeek !== 12) throw new Error('Should have 12 reshapers purchased this week');
+
+  // 13th purchase attempt must throw weekly limit error
+  let reshaperCapBlocked = false;
+  try {
+    gameState.buyRelicReshaper(1);
+  } catch (err) {
+    reshaperCapBlocked = true;
+    console.log(`  [PASS] Blocked 13th weekly reshaper purchase: "${err.message}"`);
+  }
+  if (!reshaperCapBlocked) throw new Error('Relic Reshaper weekly purchase limit of 12 must be enforced');
+
+  // D. Relic Reshaper Consumable usage in rerollRelicSubstats
+  const testRelicForReroll = createRelicInstance({ setId: 'atlas', slotTypeId: 'headgear', rarity: 'EPIC', level: 1 });
+  gameState.state.inventory.equipment.push(testRelicForReroll);
+  const reshaperCountBefore = gameState.state.resources.relicReshapers;
+  const rerollResult = gameState.rerollRelicSubstats(testRelicForReroll.uid);
+  console.log(`  Reforged Relic with Relic Reshaper: usedReshaper = ${rerollResult.usedReshaper}, remaining = ${rerollResult.remainingReshapers}`);
+  if (!rerollResult.usedReshaper) throw new Error('Expected rerollRelicSubstats to consume Relic Reshaper item');
+  if (gameState.state.resources.relicReshapers !== reshaperCountBefore - 1) throw new Error('Reshapers count not decremented');
+
+  // E. Buffed EXP Potion Tri-Currency Pricing
+  const testPartySpirit = gameState.getPartySpirits()[0];
+  gameState.state.resources.spiritShards = 1200;
+  gameState.state.resources.essencesOfTheGods = 10;
+  gameState.state.resources.soulEssence = 1;
+
+  const xpBefore = testPartySpirit.xp;
+  gameState.buyExpPotion('lesser_elixir', testPartySpirit.id);
+  console.log(`  Bought Lesser Astral Elixir with buffed costs: Shards left = ${gameState.state.resources.spiritShards}, Gods = ${gameState.state.resources.essencesOfTheGods}, Soul = ${gameState.state.resources.soulEssence}`);
+  if (gameState.state.resources.spiritShards !== 0) throw new Error('Expected 1200 shards deducted');
+  if (gameState.state.resources.essencesOfTheGods !== 0) throw new Error('Expected 10 god essences deducted');
+  if (gameState.state.resources.soulEssence !== 0) throw new Error('Expected 1 soul essence deducted');
+  if (testPartySpirit.xp <= xpBefore) throw new Error('Expected spirit XP to increase');
+
+  // Insufficient shards should fail
+  let potShardBlocked = false;
+  try {
+    gameState.state.resources.spiritShards = 500; // Need 1200
+    gameState.state.resources.essencesOfTheGods = 10;
+    gameState.state.resources.soulEssence = 1;
+    gameState.buyExpPotion('lesser_elixir', testPartySpirit.id);
+  } catch (err) {
+    potShardBlocked = true;
+    console.log(`  [PASS] Blocked potion purchase with insufficient shards: "${err.message}"`);
+  }
+  if (!potShardBlocked) throw new Error('Potion purchase must fail with insufficient shards');
+
+  // =========================================================================
+  // 40. Test Phase 5: Dungeon Difficulty Rebalance, Tier 4 140k PWR, Divine Barrier & Cataclysm Enrage
+  // =========================================================================
+  console.log('\n[TEST 40] Testing Phase 5: Dungeon Difficulty Rebalance & Tier 4 Endgame Mechanics:');
+
+  // A. Standardized Power Across All 3 Dungeon Modes
+  const { FORGE_DIFFICULTY_TIERS: forgeTiers } = await import('../src/data/weaponDungeonData.js');
+  const { ESSENCE_DIFFICULTY_TIERS: essenceTiers } = await import('../src/data/essenceDungeonData.js');
+
+  const expectedPowers = [2000, 10000, 45000, 140000];
+  for (let t = 1; t <= 4; t++) {
+    const pTier = PANTHEON_DIFFICULTY_TIERS.find(x => x.tier === t);
+    const fTier = forgeTiers.find(x => x.tier === t);
+    const eTier = essenceTiers.find(x => x.tier === t);
+
+    if (pTier.recommendedPower !== expectedPowers[t - 1]) throw new Error(`Pantheon tier ${t} power mismatch`);
+    if (fTier.minPartyPower !== expectedPowers[t - 1]) throw new Error(`Forge tier ${t} power mismatch`);
+    if (eTier.recommendedPower !== expectedPowers[t - 1]) throw new Error(`Essence tier ${t} power mismatch`);
+  }
+  console.log('  [PASS] Standardized power requirements across Pantheon, Forge, and Essence Sanctum (Tier 1: 2k, Tier 2: 10k, Tier 3: 45k, Tier 4: 140k)!');
+
+  // B. Tier 4 Wave 3 Boss & Dual Overlord Attendants
+  const t4Wave3Swarm = gameState.generateDungeonWave('pantheon', 'underworld_crypt', 4, 3);
+  console.log(`  Tier 4 Wave 3 spawned: ${t4Wave3Swarm.length} enemies`);
+  if (t4Wave3Swarm.length !== 3) throw new Error('Tier 4 Wave 3 must spawn 3 enemies (1 Boss + 2 Overlords)');
+
+  const t4Boss = t4Wave3Swarm.find(e => e.isBoss);
+  if (!t4Boss) throw new Error('Tier 4 Wave 3 missing boss');
+  if (!t4Boss.hasDivineBarrier) throw new Error('Tier 4 boss must have Divine Boss Barrier');
+  if (t4Boss.shieldHp !== Math.round(t4Boss.maxHp * 0.25)) throw new Error('Divine barrier must equal 25% of Boss Max HP');
+  console.log(`  Tier 4 Boss: ${t4Boss.name} | Max HP: ${t4Boss.maxHp.toLocaleString()} | 🛡️ Divine Barrier: ${t4Boss.shieldHp.toLocaleString()}`);
+
+  const menderAttendant = t4Wave3Swarm.find(e => e.role === 'healer');
+  const strikerAttendant = t4Wave3Swarm.find(e => e.role === 'dps');
+  if (!menderAttendant || !strikerAttendant) throw new Error('Tier 4 must spawn both Mender and Striker Overlord attendants');
+  console.log(`  Dual Attendants: ${menderAttendant.name} (Healer) & ${strikerAttendant.name} (Striker)`);
+
+  // C. Shield Absorption in Combat
+  gameState.state.resources.energy = 50;
+  const t4Battle = gameState.startDungeonTrial('essence', 'olympian_nexus', 4);
+  t4Battle.currentWave = 3;
+  t4Battle.currentSwarm = t4Wave3Swarm;
+
+  const preShield = t4Boss.shieldHp;
+  const preHp = t4Boss.hp;
+  // Apply manual click damage
+  gameState.manualDungeonStrike();
+  console.log(`  After Manual Strike -> Boss Shield: ${preShield} -> ${t4Boss.shieldHp} | HP: ${preHp} -> ${t4Boss.hp}`);
+  if (t4Boss.shieldHp >= preShield) throw new Error('Divine barrier should absorb damage before HP');
+  if (t4Boss.hp !== preHp) throw new Error('Boss HP should remain full while shield is absorbing');
+
+  // D. Overlord Mender Periodic Boss Healing
+  t4Boss.hp = Math.round(t4Boss.maxHp * 0.8); // Drop boss to 80% HP
+  const hpBeforeHeal = t4Boss.hp;
+  menderAttendant.healTimer = 0.05; // Trigger heal immediately on next tick
+  gameState.tickDungeonBattle(0.1);
+  console.log(`  Overlord Mender periodic heal: Boss HP ${hpBeforeHeal} -> ${t4Boss.hp}`);
+  if (t4Boss.hp <= hpBeforeHeal) throw new Error('Overlord Mender should periodically heal boss');
+
+  // E. Cataclysm Enrage at 45s
+  t4Battle.elapsedWaveTime = 46.0;
+  const bossPwrBeforeEnrage = t4Boss.power;
+  gameState.tickDungeonBattle(0.1);
+  console.log(`  Cataclysm Enrage triggered at 45s: Enraged = ${t4Boss.isEnraged} | Power: ${bossPwrBeforeEnrage} -> ${t4Boss.power}`);
+  if (!t4Boss.isEnraged) throw new Error('Boss should become enraged at 45s');
+  if (t4Boss.power !== Math.round(bossPwrBeforeEnrage * 1.5)) throw new Error('Boss power should increase by 50% on enrage');
+
+  // Test 41: Phase 6 Animated Assets, Overlord Sprites, 2.5D Ambient Structures & Victory Chest
+  console.log('\n[TEST 41] Testing Phase 6 Animated Assets, Overlord Sprites, 2.5D Ambient Structures & Victory Chest:');
+
+  // A. Verify New SVG Sprite Files Exist
+  const spriteDir = path.resolve('public/assets/sprites/creatures');
+  const relicDir = path.resolve('public/assets/sprites/relics');
+
+  const expectedSvgFiles = [
+    { dir: spriteDir, file: 'enemy_kraken_overlord.svg', name: 'Abyssal Kraken Overlord' },
+    { dir: spriteDir, file: 'enemy_hellfire_wyrm.svg', name: 'Hellfire Wyrm Sovereign' },
+    { dir: spriteDir, file: 'enemy_blighted_chimera.svg', name: 'Blighted Chimera Primordial' },
+    { dir: spriteDir, file: 'avatar_olympian_god.svg', name: 'Olympian God Avatar' },
+    { dir: spriteDir, file: 'forge_vulcan_automaton.svg', name: 'Vulcan Smelter Automaton' },
+    { dir: relicDir, file: 'victory_treasure_chest.svg', name: 'Animated Victory Relic Cache' }
+  ];
+
+  for (const item of expectedSvgFiles) {
+    const fullPath = path.join(item.dir, item.file);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Required Phase 6 sprite file missing: ${item.file}`);
+    }
+    const stat = fs.statSync(fullPath);
+    if (stat.size < 500) {
+      throw new Error(`Sprite file ${item.file} is suspiciously small (${stat.size} bytes)`);
+    }
+    console.log(`  [PASS] Verified SVG sprite asset: ${item.file} (${stat.size} bytes) for ${item.name}!`);
+  }
+
+  // B. Verify Registration in SPRITE_MANIFEST
+  const expectedSheets = [
+    'enemy_kraken_overlord',
+    'enemy_hellfire_wyrm',
+    'enemy_blighted_chimera',
+    'avatar_olympian_god',
+    'forge_vulcan_automaton',
+    'victory_treasure_chest'
+  ];
+
+  for (const sheetKey of expectedSheets) {
+    if (!SPRITE_MANIFEST.sheets[sheetKey]) {
+      throw new Error(`Sheet ${sheetKey} not registered in SPRITE_MANIFEST.sheets`);
+    }
+  }
+  console.log(`  [PASS] Verified all 6 new sheets registered in SPRITE_MANIFEST.sheets!`);
+
+  // C. Verify Enemy Sheet Routing in getSheetKeyForEnemy
+  const testRoutingEnemies = [
+    { enemy: { name: 'Abyssal Kraken Sovereign', isBoss: true }, expected: 'enemy_kraken_overlord' },
+    { enemy: { name: 'Sunken Benthic Leviathan', isBoss: true }, expected: 'enemy_kraken_overlord' },
+    { enemy: { name: 'Hellfire Wyrm Patriarch', isBoss: true }, expected: 'enemy_hellfire_wyrm' },
+    { enemy: { name: 'Volcanic Magma Wyrm', isBoss: true }, expected: 'enemy_hellfire_wyrm' },
+    { enemy: { name: 'Blighted Chimera Sovereign', isBoss: true }, expected: 'enemy_blighted_chimera' },
+    { enemy: { name: 'Toxic Spore Beast', isBoss: true }, expected: 'enemy_blighted_chimera' },
+    { enemy: { name: 'Vulcan Smelter Automaton', isBoss: true }, expected: 'forge_vulcan_automaton' },
+    { enemy: { name: 'Forge Clockwork Golem', isBoss: true }, expected: 'forge_vulcan_automaton' },
+    { enemy: { name: 'Avatar of Zeus', isBoss: true }, expected: 'avatar_olympian_god' },
+    { enemy: { name: 'Ares War Primordial', isBoss: true }, expected: 'avatar_olympian_god' }
+  ];
+
+  for (const route of testRoutingEnemies) {
+    const key = getSheetKeyForEnemy(route.enemy);
+    if (key !== route.expected) {
+      throw new Error(`Routing mismatch for "${route.enemy.name}": expected ${route.expected}, got ${key}`);
+    }
+  }
+  console.log('  [PASS] Verified accurate keyword & archetype routing in getSheetKeyForEnemy!');
+
+  // D. Verify Animated Victory Treasure Chest HTML
+  const chestHtml = createAnimatedChestHtml({ extraClasses: 'custom-chest' });
+  if (!chestHtml.includes('animated-treasure-chest') || !chestHtml.includes('victory_treasure_chest.svg')) {
+    throw new Error(`createAnimatedChestHtml output invalid: ${chestHtml}`);
+  }
+  console.log('  [PASS] Verified createAnimatedChestHtml generates valid animated treasure chest element!');
+
+  // E. Verify 2.5D Arena Renderer Ambient Structures & Dynamic Clash
+  if (typeof arenaRenderer.triggerClashImpact !== 'function') {
+    throw new Error('arenaRenderer.triggerClashImpact method missing');
+  }
+  if (typeof arenaRenderer.drawOlympianPillar !== 'function') {
+    throw new Error('arenaRenderer.drawOlympianPillar method missing');
+  }
+  if (typeof arenaRenderer.drawVulcanForgeBasin !== 'function') {
+    throw new Error('arenaRenderer.drawVulcanForgeBasin method missing');
+  }
+  if (typeof arenaRenderer.drawAetherialCorePulsar !== 'function') {
+    throw new Error('arenaRenderer.drawAetherialCorePulsar method missing');
+  }
+  if (typeof arenaRenderer.drawBiomeMonolith !== 'function') {
+    throw new Error('arenaRenderer.drawBiomeMonolith method missing');
+  }
+  console.log('  [PASS] Verified 2.5D Arena Renderer ambient monoliths, pillars, forge basin, pulsar, and clash sparks!');
+
+  // Test 42: Phase 7 Astral Realm Visual Overhaul & Constellation Decluttering
+  console.log('\n[TEST 42] Testing Phase 7 Astral Realm Visual Overhaul & Constellation Decluttering:');
+
+  // A. Verify all 8 Constellations in CONSTELLATIONS_CONFIG with 5-star pathways
+  const expectedConstellations = ['draco', 'phoenix', 'pegasus', 'leo', 'taurus', 'scorpio', 'aquarius', 'sagittarius'];
+  const configKeys = Object.keys(CONSTELLATIONS_CONFIG);
+  if (configKeys.length !== 8) {
+    throw new Error(`Expected 8 constellations, found ${configKeys.length}`);
+  }
+  for (const cId of expectedConstellations) {
+    const cData = CONSTELLATIONS_CONFIG[cId];
+    if (!cData) throw new Error(`Missing constellation config for "${cId}"`);
+    if (!cData.name || !cData.title || !cData.icon) {
+      throw new Error(`Constellation ${cId} missing metadata (name, title, icon)`);
+    }
+    if (!Array.isArray(cData.stars) || cData.stars.length !== 5) {
+      throw new Error(`Constellation ${cId} must contain exactly 5 star nodes`);
+    }
+    for (let i = 0; i < 5; i++) {
+      const star = cData.stars[i];
+      if (star.node !== i + 1) throw new Error(`Star node sequence mismatch in ${cId}: expected ${i + 1}, got ${star.node}`);
+      if (typeof star.cost !== 'number' || star.cost <= 0) throw new Error(`Invalid cost for star ${star.node} in ${cId}`);
+      if (!star.desc || !star.bonus) throw new Error(`Star ${star.node} in ${cId} missing bonus or description`);
+    }
+  }
+  console.log(`  [PASS] Verified all 8 Constellations with sequential 5-star pathway configurations!`);
+
+  // B. Verify Sequential Unlocking and Bonus Aggregation
+  gameState.state.constellations = {}; // Reset constellations
+  gameState.state.resources.soulEssence = 100; // Provide ample Astral Essence
+
+  // Draco Node 1
+  const unlockRes1 = gameState.unlockConstellationStar('draco');
+  if (unlockRes1.newLevel !== 1) throw new Error(`Expected Draco level 1, got ${unlockRes1.newLevel}`);
+  if (gameState.state.constellations.draco !== 1) throw new Error('State constellations.draco should be 1');
+
+  // Verify bonus updated
+  let currentBonuses = gameState.getConstellationBonuses();
+  if (!currentBonuses.partyAtkPercent || currentBonuses.partyAtkPercent < 4) {
+    throw new Error(`Expected at least +4% partyAtkPercent, got ${currentBonuses.partyAtkPercent}`);
+  }
+
+  // Unlock remaining 4 nodes of Draco
+  for (let n = 2; n <= 5; n++) {
+    gameState.unlockConstellationStar('draco');
+  }
+  if (gameState.state.constellations.draco !== 5) throw new Error('Draco should be at level 5 (fully illuminated)');
+
+  // Attempting 6th unlock should fail
+  let dracoOverUnlockFailed = false;
+  try {
+    gameState.unlockConstellationStar('draco');
+  } catch (err) {
+    dracoOverUnlockFailed = true;
+  }
+  if (!dracoOverUnlockFailed) throw new Error('Should not allow unlocking beyond 5 stars');
+  console.log('  [PASS] Sequential star illumination and max-cap enforcement validated!');
+
+  // Unlock Phoenix Star 1 and verify cross-constellation bonus aggregation
+  gameState.unlockConstellationStar('phoenix');
+  currentBonuses = gameState.getConstellationBonuses();
+  if (!currentBonuses.partyHpPercent || currentBonuses.partyHpPercent < 5) {
+    throw new Error(`Expected partyHpPercent from Phoenix, got ${currentBonuses.partyHpPercent}`);
+  }
+  if (!currentBonuses.ultAmp || currentBonuses.ultAmp < 20) {
+    throw new Error(`Expected ultAmp from Draco Star 5, got ${currentBonuses.ultAmp}`);
+  }
+  console.log('  [PASS] Cross-constellation aggregate bonuses correctly combined across Draco and Phoenix!');
+
+  // C. Verify Animated Sprites & Relics for Astral Realm & Dwarven Forge
+  const celestialAngelHtml = createAnimatedSpriteHtml('celestial_angel', { extraClasses: 'astral-hero-sprite scale-110' });
+  if (!celestialAngelHtml.includes('celestial_angel') || !celestialAngelHtml.includes('astral-hero-sprite')) {
+    throw new Error('createAnimatedSpriteHtml failed for celestial_angel banner');
+  }
+  const vulcanAutomatonHtml = createAnimatedSpriteHtml('forge_vulcan_automaton', { extraClasses: 'dwarven-master-sprite scale-90' });
+  if (!vulcanAutomatonHtml.includes('forge_vulcan_automaton') || !vulcanAutomatonHtml.includes('dwarven-master-sprite')) {
+    throw new Error('createAnimatedSpriteHtml failed for forge_vulcan_automaton banner');
+  }
+
+  const scriptureRelicHtml = createAnimatedRelicHtml('divine_scripture', 'scripture');
+  if (!scriptureRelicHtml.includes('animated-relic-sprite') || !scriptureRelicHtml.includes('divine_relic_scripture')) {
+    throw new Error('createAnimatedRelicHtml failed for divine_scripture');
+  }
+  const reshaperRelicHtml = createAnimatedRelicHtml('hephaestus', 'anvil');
+  if (!reshaperRelicHtml.includes('animated-relic-sprite') || !reshaperRelicHtml.includes('relic_anvil_hephaestus')) {
+    throw new Error('createAnimatedRelicHtml failed for hephaestus anvil reshaper');
+  }
+  console.log('  [PASS] Verified animated sprites and relics for Astral Realm Hero Banner and Dwarven Forge!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
