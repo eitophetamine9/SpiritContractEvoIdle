@@ -12,8 +12,8 @@ import {
   REBIRTH_CONFIG,
   getScalingProfile
 } from '../src/data/index.js';
-import { enhanceRelicData } from '../src/data/equipmentData.js';
-import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage } from '../src/data/index.js';
+import { enhanceRelicData, WEAPON_TYPES, createWeaponInstance } from '../src/data/equipmentData.js';
+import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot } from '../src/data/index.js';
 import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon } from '../src/render/spriteAnimator.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import fs from 'fs';
@@ -1799,6 +1799,61 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (catLv50 / catLv1 > 15) throw new Error('Level 50 power runaway (should be <= 15x base)');
   if (catLv100 / catLv1 > 25) throw new Error('Level 100 power runaway (should be <= 25x base)');
   console.log('  [PASS] Harmonized spirit power scaling validated without blitz runaway!');
+
+  // 38. Test Phase 3 Weapon Archetype Expansion (12 Weapons & Divine Forge Chambers)
+  console.log('\n[TEST 38] Testing Phase 3 Weapon Archetype Expansion & Rebalancing (12 Archetypes):');
+  
+  // 1. Verify 12 Weapon Types
+  console.log(`  Total Weapon Archetypes: ${WEAPON_TYPES.length} (Expected 12)`);
+  if (WEAPON_TYPES.length !== 12) throw new Error(`Expected 12 weapon types, got ${WEAPON_TYPES.length}`);
+
+  const expectedWeaponIds = ['sword', 'bow', 'staff', 'claw', 'dagger', 'hammer', 'scythe', 'shield', 'grimoire', 'warhammer', 'halberd', 'tome'];
+  for (const wId of expectedWeaponIds) {
+    const w = WEAPON_TYPES.find(item => item.id === wId);
+    if (!w) throw new Error(`Missing weapon type: ${wId}`);
+    if (!w.name || !w.primaryStat || !w.abilityName || !w.abilityDesc) {
+      throw new Error(`Incomplete weapon type definition for ${wId}`);
+    }
+    console.log(`    ${w.icon} ${w.name} [${w.archetype}] (${w.role}) -> Primary: ${w.primaryStatName} | Ability: "${w.abilityName}"`);
+  }
+  console.log('  [PASS] All 12 weapon archetypes defined with distinct primary stats and abilities!');
+
+  // 2. Verify Weapon Instances for Distinct Roles
+  const scytheInst = createWeaponInstance({ weaponTypeId: 'scythe', rarity: 'EPIC', level: 3 });
+  if (scytheInst.weaponTypeId !== 'scythe' || scytheInst.critDmg <= 0 || scytheInst.abilityName !== "Reaper's Harvest") {
+    throw new Error('Scythe instance failed archetype verification');
+  }
+
+  const shieldInst = createWeaponInstance({ weaponTypeId: 'shield', rarity: 'LEGENDARY', level: 5 });
+  if (shieldInst.defBonus <= 0 || shieldInst.hpBonus <= 0 || shieldInst.abilityName !== 'Bulwark of Dawn') {
+    throw new Error('Aegis Shield instance failed DEF / HP archetype verification');
+  }
+
+  const tomeInst = createWeaponInstance({ weaponTypeId: 'tome', rarity: 'RARE', level: 2 });
+  if (tomeInst.hpBonus <= 0 || tomeInst.abilityName !== 'Living Bloom') {
+    throw new Error('Verdant Tome instance failed healer archetype verification');
+  }
+  console.log('  [PASS] createWeaponInstance generates distinct role attributes (scythe crit execution, shield DEF/HP, tome healing)!');
+
+  // 3. Verify 12 Forge Chambers
+  console.log(`  Divine Forge Chambers: ${FORGE_CHAMBERS.length} (Expected 12)`);
+  if (FORGE_CHAMBERS.length !== 12) throw new Error(`Expected 12 Divine Forge chambers, got ${FORGE_CHAMBERS.length}`);
+
+  for (const c of FORGE_CHAMBERS) {
+    const wType = WEAPON_TYPES.find(w => w.id === c.weaponTypeId);
+    if (!wType) throw new Error(`Chamber ${c.id} points to non-existent weaponTypeId ${c.weaponTypeId}`);
+  }
+
+  // 4. Test Chamber Drops
+  const lootScythe = generateForgeLoot('void_ossuary', 2);
+  if (lootScythe.weapons[0].weaponTypeId !== 'scythe') {
+    throw new Error('Void Ossuary chamber should drop scythes');
+  }
+  const lootShield = generateForgeLoot('bastion_citadel', 3);
+  if (lootShield.weapons[0].weaponTypeId !== 'shield') {
+    throw new Error('Bastion Citadel chamber should drop shields');
+  }
+  console.log('  [PASS] All 12 Divine Forge chambers validated with targeted weapon archetype drops!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

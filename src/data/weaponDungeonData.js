@@ -79,6 +79,78 @@ export const FORGE_CHAMBERS = [
     bossIcon: '🌋',
     color: '#d35400',
     accentColor: '#fab1a0'
+  },
+  {
+    id: 'void_ossuary',
+    weaponTypeId: 'scythe',
+    name: 'Void Ossuary',
+    title: 'Ossuary of the Void Scythe',
+    desc: 'Grim crypt veiled in soul-ice where dark curved scythes reap corrupted life essence.',
+    icon: '🌾',
+    bossName: 'Nether Harvester Prime',
+    bossIcon: '💀',
+    color: '#8e44ad',
+    accentColor: '#be2edd'
+  },
+  {
+    id: 'bastion_citadel',
+    weaponTypeId: 'shield',
+    name: 'Bastion Citadel',
+    title: 'Citadel of the Aegis Bulwark',
+    desc: 'Impenetrable fortress foundry where divine tower shields and heavy aegises are forged.',
+    icon: '🛡️',
+    bossName: 'Atlas Iron Sentinel',
+    bossIcon: '🏛️',
+    color: '#2980b9',
+    accentColor: '#3498db'
+  },
+  {
+    id: 'eldritch_library',
+    weaponTypeId: 'grimoire',
+    name: 'Eldritch Library',
+    title: 'Archive of Abyssal Grimoires',
+    desc: 'Subterranean scriptorium binding forbidden astrological grimoires and hexing tomes.',
+    icon: '📖',
+    bossName: 'Voidbinder Arch-Lich',
+    bossIcon: '👁️',
+    color: '#6c5ce7',
+    accentColor: '#a29bfe'
+  },
+  {
+    id: 'volcanic_crucible',
+    weaponTypeId: 'warhammer',
+    name: 'Volcanic Crucible',
+    title: 'Crucible of the Magma Warhammer',
+    desc: 'Bubbling caldera forge where magma-infused warhammers strike with earthquake force.',
+    icon: '🌋',
+    bossName: 'Magma Eruption Colossus',
+    bossIcon: '💥',
+    color: '#c0392b',
+    accentColor: '#e17055'
+  },
+  {
+    id: 'frostfang_peaks',
+    weaponTypeId: 'halberd',
+    name: 'Frostfang Peaks',
+    title: 'Peaks of the Glacial Halberd',
+    desc: 'Glacial mountain peak forge where icy polearms that chill foes upon strike are tempered.',
+    icon: '❄️',
+    bossName: 'Boreal Frost Drake',
+    bossIcon: '🐉',
+    color: '#00cec9',
+    accentColor: '#81ecec'
+  },
+  {
+    id: 'verdant_sanctuary',
+    weaponTypeId: 'tome',
+    name: 'Verdant Sanctuary',
+    title: 'Sanctuary of the Living Tome',
+    desc: 'Overgrown botanical arboretum where ancient restorative tomes bloom with life magic.',
+    icon: '🌿',
+    bossName: 'Elder Sylvan Keeper',
+    bossIcon: '🌱',
+    color: '#27ae60',
+    accentColor: '#00b894'
   }
 ];
 

@@ -13,12 +13,203 @@ export const RELIC_SLOT_TYPES = [
 ];
 
 export const WEAPON_TYPES = [
-  { id: 'sword', name: 'Spectral Blade', icon: '⚔️', primaryStat: 'atkPower' },
-  { id: 'bow', name: 'Celestial Bow', icon: '🏹', primaryStat: 'critRate' },
-  { id: 'staff', name: 'Astral Scepter', icon: '🪄', primaryStat: 'ultAmp' },
-  { id: 'claw', name: 'Primordial Claws', icon: '🐾', primaryStat: 'atkPower' },
-  { id: 'dagger', name: 'Shadow Dagger', icon: '🗡️', primaryStat: 'evasion' },
-  { id: 'hammer', name: 'Titan Mallet', icon: '🔨', primaryStat: 'armorPierce' }
+  {
+    id: 'sword',
+    name: 'Spectral Blade',
+    archetype: 'Greatsword',
+    role: 'MAIN_DPS',
+    icon: '⚔️',
+    primaryStat: 'atkPower',
+    primaryStatName: 'Bonus ATK Power',
+    abilityName: 'Starfall Cleave',
+    abilityDesc: 'Deals +18% Burst Damage on Skill and Ultimate activations.',
+    baseAtk: 30,
+    baseCritRate: 6,
+    baseCritDmg: 15,
+    baseUltAmp: 8,
+    burstAmp: 0.18
+  },
+  {
+    id: 'bow',
+    name: 'Celestial Bow',
+    archetype: 'Longbow',
+    role: 'SUB_DPS',
+    icon: '🏹',
+    primaryStat: 'critRate',
+    primaryStatName: 'Crit Rate %',
+    abilityName: 'Piercing Nova',
+    abilityDesc: 'Grants +15% Crit DMG and bypasses 10% enemy armor.',
+    baseAtk: 22,
+    baseCritRate: 12,
+    baseCritDmg: 25,
+    baseUltAmp: 5,
+    armorPierce: 0.10
+  },
+  {
+    id: 'staff',
+    name: 'Astral Scepter',
+    archetype: 'Staff',
+    role: 'SUPPORT',
+    icon: '🪄',
+    primaryStat: 'manaReplenish',
+    primaryStatName: 'Mana Replenish %',
+    abilityName: 'Aura of Dawn',
+    abilityDesc: 'Boosts bearer mana accumulation speed by +25% and party MP recharge by +10%.',
+    baseAtk: 18,
+    baseCritRate: 4,
+    baseCritDmg: 10,
+    baseUltAmp: 12,
+    baseManaReplenish: 25
+  },
+  {
+    id: 'claw',
+    name: 'Primordial Claws',
+    archetype: 'Claws',
+    role: 'MAIN_DPS',
+    icon: '🐾',
+    primaryStat: 'atkPower',
+    primaryStatName: 'Bonus ATK Power',
+    abilityName: 'Feral Frenzy',
+    abilityDesc: 'Rapid multi-strikes with +15% innate Attack Speed and +8% Crit Rate.',
+    baseAtk: 26,
+    baseCritRate: 8,
+    baseCritDmg: 18,
+    baseUltAmp: 6,
+    atkSpdBonus: 0.15
+  },
+  {
+    id: 'dagger',
+    name: 'Shadow Dagger',
+    archetype: 'Daggers',
+    role: 'SUB_DPS',
+    icon: '🗡️',
+    primaryStat: 'evasion',
+    primaryStatName: 'Evasion %',
+    abilityName: 'Temporal Riposte',
+    abilityDesc: 'Grants +12% Evasion and triggers an immediate critical counter-attack upon dodging.',
+    baseAtk: 20,
+    baseCritRate: 10,
+    baseCritDmg: 20,
+    baseUltAmp: 6,
+    baseEvasion: 12
+  },
+  {
+    id: 'hammer',
+    name: 'Titan Mallet',
+    archetype: 'Mallet',
+    role: 'TANK',
+    icon: '🔨',
+    primaryStat: 'armorPierce',
+    primaryStatName: 'Armor Shred %',
+    abilityName: 'Ground Slam',
+    abilityDesc: 'Heavy strikes shatter 20% enemy DEF for 5s and generate +25% Threat weight.',
+    baseAtk: 24,
+    baseCritRate: 4,
+    baseCritDmg: 10,
+    baseUltAmp: 5,
+    baseDef: 20,
+    armorPierce: 0.20
+  },
+  {
+    id: 'scythe',
+    name: 'Void Scythe',
+    archetype: 'Scythe',
+    role: 'MAIN_DPS',
+    icon: '🌾',
+    primaryStat: 'critDmg',
+    primaryStatName: 'Crit DMG %',
+    abilityName: "Reaper's Harvest",
+    abilityDesc: 'Deals +25% True Damage execute against enemies below 25% Max HP.',
+    baseAtk: 28,
+    baseCritRate: 7,
+    baseCritDmg: 30,
+    baseUltAmp: 10,
+    executeThreshold: 0.25
+  },
+  {
+    id: 'shield',
+    name: 'Aegis Tower Shield',
+    archetype: 'Shield',
+    role: 'TANK',
+    icon: '🛡️',
+    primaryStat: 'def',
+    primaryStatName: 'Shield & DEF',
+    abilityName: 'Bulwark of Dawn',
+    abilityDesc: 'Increases bearer DEF by +35, Max HP by +160, and boosts all party shields by +20%.',
+    baseAtk: 12,
+    baseCritRate: 3,
+    baseCritDmg: 5,
+    baseUltAmp: 4,
+    baseDef: 35,
+    baseHp: 160,
+    shieldStrengthBonus: 0.20
+  },
+  {
+    id: 'grimoire',
+    name: 'Abyssal Grimoire',
+    archetype: 'Spellbook',
+    role: 'SUPPORT',
+    icon: '📖',
+    primaryStat: 'ultAmp',
+    primaryStatName: 'Ult Amp %',
+    abilityName: 'Abyssal Chant',
+    abilityDesc: 'Empowers bearer with +25% Ult Amp and grants +15% Ult Amp to all allies for 6s on Ult cast.',
+    baseAtk: 18,
+    baseCritRate: 5,
+    baseCritDmg: 15,
+    baseUltAmp: 25,
+    baseManaReplenish: 15
+  },
+  {
+    id: 'warhammer',
+    name: 'Volcanic Warhammer',
+    archetype: 'Warhammer',
+    role: 'TANK',
+    icon: '🌋',
+    primaryStat: 'defToAtk',
+    primaryStatName: 'DEF & Splash ATK',
+    abilityName: 'Shatter Quake',
+    abilityDesc: 'Grants +25 DEF and converts 20% of total DEF into splash damage hitting all enemies.',
+    baseAtk: 22,
+    baseCritRate: 5,
+    baseCritDmg: 12,
+    baseUltAmp: 8,
+    baseDef: 25,
+    splashRatio: 0.20
+  },
+  {
+    id: 'halberd',
+    name: 'Frostfang Halberd',
+    archetype: 'Halberd',
+    role: 'SUB_DPS',
+    icon: '❄️',
+    primaryStat: 'critRate',
+    primaryStatName: 'Crit Rate & Chill',
+    abilityName: 'Glacial Frost',
+    abilityDesc: 'Chills enemies on strike, reducing their attack speed by 15% for 4s.',
+    baseAtk: 24,
+    baseCritRate: 9,
+    baseCritDmg: 20,
+    baseUltAmp: 8,
+    chillSlowPercent: 0.15
+  },
+  {
+    id: 'tome',
+    name: 'Verdant Tome',
+    archetype: 'Nature Tome',
+    role: 'HEALER',
+    icon: '🌿',
+    primaryStat: 'hp',
+    primaryStatName: 'Max HP & Healing',
+    abilityName: 'Living Bloom',
+    abilityDesc: 'Grants +220 Max HP and restores 4% Max HP every 3 seconds to the lowest-health ally.',
+    baseAtk: 14,
+    baseCritRate: 4,
+    baseCritDmg: 10,
+    baseUltAmp: 6,
+    baseHp: 220,
+    healAmpBonus: 0.20
+  }
 ];
 
 export const GREEK_GOD_SETS = {
@@ -611,24 +802,38 @@ export function createRelicInstance({ setId, slotTypeId, rarity = 'COMMON', star
 }
 
 /**
- * Generates a unique Weapon instance
+ * Generates a unique Weapon instance with distinct archetype stats and abilities
  */
 export function createWeaponInstance({ weaponTypeId, rarity = 'COMMON', level = 1 }) {
   const wType = WEAPON_TYPES.find(w => w.id === weaponTypeId) || WEAPON_TYPES[0];
   const rarityObj = EQUIPMENT_RARITIES[rarity] || EQUIPMENT_RARITIES.COMMON;
-  const basePower = Math.round(25 * rarityObj.multiplier * (1 + (level - 1) * 0.2));
+  const mult = rarityObj.multiplier || 1.0;
+  const levelMult = (1 + (level - 1) * 0.18);
+  const baseAtk = wType.baseAtk || 25;
+  const basePower = Math.round(baseAtk * mult * levelMult);
 
   return {
     uid: `wpn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     type: 'weapon',
     weaponTypeId: wType.id,
+    archetype: wType.archetype || 'Weapon',
+    role: wType.role || 'MAIN_DPS',
     name: `${rarityObj.name} ${wType.name}`,
     icon: wType.icon,
     rarity,
     level,
     atkPower: basePower,
-    critRate: Math.min(30, Math.round(5 * rarityObj.multiplier)),
-    ultAmp: Math.min(40, Math.round(8 * rarityObj.multiplier)),
+    primaryStat: wType.primaryStat,
+    primaryStatName: wType.primaryStatName,
+    abilityName: wType.abilityName,
+    abilityDesc: wType.abilityDesc,
+    critRate: Math.min(35, Math.round((wType.baseCritRate || 5) * mult)),
+    critDmg: Math.round((wType.baseCritDmg || 0) * mult),
+    ultAmp: Math.min(45, Math.round((wType.baseUltAmp || 0) * mult)),
+    manaReplenish: Math.round((wType.baseManaReplenish || 0) * mult),
+    defBonus: Math.round((wType.baseDef || 0) * mult * levelMult),
+    hpBonus: Math.round((wType.baseHp || 0) * mult * levelMult),
+    evasion: Math.round((wType.baseEvasion || 0) * mult),
     color: rarityObj.color,
     equippedToSpiritId: null
   };
@@ -667,13 +872,18 @@ export function enhanceWeaponData(weapon) {
   const mult = rarityObj.multiplier || 1.0;
 
   // Enhance primary ATK Power
-  const growth = Math.max(6, Math.round(25 * mult * 0.22));
+  const growth = Math.max(6, Math.round(22 * mult * 0.22));
   weapon.atkPower = (weapon.atkPower || Math.round(25 * mult)) + growth;
 
-  // Milestone triggers at +3, +6, +9, +12, +15 for Crit Rate and Ult Amp
+  if (weapon.defBonus) weapon.defBonus += Math.round(6 * mult);
+  if (weapon.hpBonus) weapon.hpBonus += Math.round(25 * mult);
+
+  // Milestone triggers at +3, +6, +9, +12, +15 for Crit Rate, Ult Amp, and specialized stats
   if (weapon.level % 3 === 0) {
     weapon.critRate = Math.min(35, (weapon.critRate || Math.round(5 * mult)) + 1);
     weapon.ultAmp = Math.min(45, (weapon.ultAmp || Math.round(8 * mult)) + 2);
+    if (weapon.manaReplenish) weapon.manaReplenish += 2;
+    if (weapon.critDmg) weapon.critDmg += 4;
   }
 
   return weapon;

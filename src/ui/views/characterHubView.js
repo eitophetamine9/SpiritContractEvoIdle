@@ -583,10 +583,22 @@ function renderWeaponsSubHub(spirit) {
               <span class="substat-val">+${weapon.ultAmp}%</span>
             </div>
           ` : ''}
-          ${weapon.manaReplenish ? `
+          ${weapon.defBonus ? `
             <div class="substat-item">
-              <span class="substat-name">Mana Replenish Cadence</span>
-              <span class="substat-val">+${weapon.manaReplenish}%</span>
+              <span class="substat-name">Bonus Defense</span>
+              <span class="substat-val">+${weapon.defBonus}</span>
+            </div>
+          ` : ''}
+          ${weapon.hpBonus ? `
+            <div class="substat-item">
+              <span class="substat-name">Bonus Max HP</span>
+              <span class="substat-val">+${weapon.hpBonus}</span>
+            </div>
+          ` : ''}
+          ${weapon.abilityName ? `
+            <div class="weapon-passive-box" style="margin-top: 8px; padding: 8px 10px; background: rgba(255,255,255,0.04); border-left: 2px solid #e1b12c; border-radius: 4px; text-align: left;">
+              <div style="font-size: 11px; font-weight: 700; color: #f1c40f; display: flex; align-items: center; gap: 4px;">✦ ${weapon.abilityName}</div>
+              <div style="font-size: 10px; color: #a4b0be; line-height: 1.35; margin-top: 2px;">${weapon.abilityDesc || ''}</div>
             </div>
           ` : ''}
         </div>

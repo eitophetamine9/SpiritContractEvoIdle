@@ -1116,6 +1116,8 @@ class GameStateManager {
         if (wpn.critDmg) bonusCritDmg += wpn.critDmg;
         if (wpn.ultAmp) bonusUltAmp += wpn.ultAmp;
         if (wpn.manaReplenish) bonusManaReplenish += wpn.manaReplenish;
+        if (wpn.defBonus) bonusDef += wpn.defBonus;
+        if (wpn.hpBonus) bonusHp += wpn.hpBonus;
       }
     }
 
