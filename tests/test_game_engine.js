@@ -10,11 +10,12 @@ import {
   getRoleInfo,
   getSpiritRole,
   REBIRTH_CONFIG,
-  getScalingProfile
+  getScalingProfile,
+  CONSTELLATIONS_CONFIG
 } from '../src/data/index.js';
 import { enhanceRelicData, WEAPON_TYPES, createWeaponInstance } from '../src/data/equipmentData.js';
 import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot } from '../src/data/index.js';
-import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml } from '../src/render/spriteAnimator.js';
+import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml } from '../src/render/spriteAnimator.js';
 import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import fs from 'fs';
@@ -2142,6 +2143,95 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     throw new Error('arenaRenderer.drawBiomeMonolith method missing');
   }
   console.log('  [PASS] Verified 2.5D Arena Renderer ambient monoliths, pillars, forge basin, pulsar, and clash sparks!');
+
+  // Test 42: Phase 7 Astral Realm Visual Overhaul & Constellation Decluttering
+  console.log('\n[TEST 42] Testing Phase 7 Astral Realm Visual Overhaul & Constellation Decluttering:');
+
+  // A. Verify all 8 Constellations in CONSTELLATIONS_CONFIG with 5-star pathways
+  const expectedConstellations = ['draco', 'phoenix', 'pegasus', 'leo', 'taurus', 'scorpio', 'aquarius', 'sagittarius'];
+  const configKeys = Object.keys(CONSTELLATIONS_CONFIG);
+  if (configKeys.length !== 8) {
+    throw new Error(`Expected 8 constellations, found ${configKeys.length}`);
+  }
+  for (const cId of expectedConstellations) {
+    const cData = CONSTELLATIONS_CONFIG[cId];
+    if (!cData) throw new Error(`Missing constellation config for "${cId}"`);
+    if (!cData.name || !cData.title || !cData.icon) {
+      throw new Error(`Constellation ${cId} missing metadata (name, title, icon)`);
+    }
+    if (!Array.isArray(cData.stars) || cData.stars.length !== 5) {
+      throw new Error(`Constellation ${cId} must contain exactly 5 star nodes`);
+    }
+    for (let i = 0; i < 5; i++) {
+      const star = cData.stars[i];
+      if (star.node !== i + 1) throw new Error(`Star node sequence mismatch in ${cId}: expected ${i + 1}, got ${star.node}`);
+      if (typeof star.cost !== 'number' || star.cost <= 0) throw new Error(`Invalid cost for star ${star.node} in ${cId}`);
+      if (!star.desc || !star.bonus) throw new Error(`Star ${star.node} in ${cId} missing bonus or description`);
+    }
+  }
+  console.log(`  [PASS] Verified all 8 Constellations with sequential 5-star pathway configurations!`);
+
+  // B. Verify Sequential Unlocking and Bonus Aggregation
+  gameState.state.constellations = {}; // Reset constellations
+  gameState.state.resources.soulEssence = 100; // Provide ample Astral Essence
+
+  // Draco Node 1
+  const unlockRes1 = gameState.unlockConstellationStar('draco');
+  if (unlockRes1.newLevel !== 1) throw new Error(`Expected Draco level 1, got ${unlockRes1.newLevel}`);
+  if (gameState.state.constellations.draco !== 1) throw new Error('State constellations.draco should be 1');
+
+  // Verify bonus updated
+  let currentBonuses = gameState.getConstellationBonuses();
+  if (!currentBonuses.partyAtkPercent || currentBonuses.partyAtkPercent < 4) {
+    throw new Error(`Expected at least +4% partyAtkPercent, got ${currentBonuses.partyAtkPercent}`);
+  }
+
+  // Unlock remaining 4 nodes of Draco
+  for (let n = 2; n <= 5; n++) {
+    gameState.unlockConstellationStar('draco');
+  }
+  if (gameState.state.constellations.draco !== 5) throw new Error('Draco should be at level 5 (fully illuminated)');
+
+  // Attempting 6th unlock should fail
+  let dracoOverUnlockFailed = false;
+  try {
+    gameState.unlockConstellationStar('draco');
+  } catch (err) {
+    dracoOverUnlockFailed = true;
+  }
+  if (!dracoOverUnlockFailed) throw new Error('Should not allow unlocking beyond 5 stars');
+  console.log('  [PASS] Sequential star illumination and max-cap enforcement validated!');
+
+  // Unlock Phoenix Star 1 and verify cross-constellation bonus aggregation
+  gameState.unlockConstellationStar('phoenix');
+  currentBonuses = gameState.getConstellationBonuses();
+  if (!currentBonuses.partyHpPercent || currentBonuses.partyHpPercent < 5) {
+    throw new Error(`Expected partyHpPercent from Phoenix, got ${currentBonuses.partyHpPercent}`);
+  }
+  if (!currentBonuses.ultAmp || currentBonuses.ultAmp < 20) {
+    throw new Error(`Expected ultAmp from Draco Star 5, got ${currentBonuses.ultAmp}`);
+  }
+  console.log('  [PASS] Cross-constellation aggregate bonuses correctly combined across Draco and Phoenix!');
+
+  // C. Verify Animated Sprites & Relics for Astral Realm & Dwarven Forge
+  const celestialAngelHtml = createAnimatedSpriteHtml('celestial_angel', { extraClasses: 'astral-hero-sprite scale-110' });
+  if (!celestialAngelHtml.includes('celestial_angel') || !celestialAngelHtml.includes('astral-hero-sprite')) {
+    throw new Error('createAnimatedSpriteHtml failed for celestial_angel banner');
+  }
+  const vulcanAutomatonHtml = createAnimatedSpriteHtml('forge_vulcan_automaton', { extraClasses: 'dwarven-master-sprite scale-90' });
+  if (!vulcanAutomatonHtml.includes('forge_vulcan_automaton') || !vulcanAutomatonHtml.includes('dwarven-master-sprite')) {
+    throw new Error('createAnimatedSpriteHtml failed for forge_vulcan_automaton banner');
+  }
+
+  const scriptureRelicHtml = createAnimatedRelicHtml('divine_scripture', 'scripture');
+  if (!scriptureRelicHtml.includes('animated-relic-sprite') || !scriptureRelicHtml.includes('divine_relic_scripture')) {
+    throw new Error('createAnimatedRelicHtml failed for divine_scripture');
+  }
+  const reshaperRelicHtml = createAnimatedRelicHtml('hephaestus', 'anvil');
+  if (!reshaperRelicHtml.includes('animated-relic-sprite') || !reshaperRelicHtml.includes('relic_anvil_hephaestus')) {
+    throw new Error('createAnimatedRelicHtml failed for hephaestus anvil reshaper');
+  }
+  console.log('  [PASS] Verified animated sprites and relics for Astral Realm Hero Banner and Dwarven Forge!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

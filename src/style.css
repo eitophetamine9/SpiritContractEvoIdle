@@ -6879,6 +6879,166 @@ button:disabled {
   color: #f1f5f9;
 }
 
+/* ==========================================================================
+   SINGLE-FOCUS CELESTIAL CONSTELLATION VIEWER & STAR-CHART
+   ========================================================================== */
+.constellation-chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.constellation-chips-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.constellation-chips-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+.constellation-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1.5px solid rgba(71, 85, 105, 0.35);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.constellation-chip-btn:hover {
+  border-color: var(--const-color, #fb7185);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.constellation-chip-btn.active {
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.95), rgba(15, 23, 42, 0.98));
+  border-color: var(--const-color, #fb7185);
+  color: #fff;
+  box-shadow: 0 0 16px var(--const-glow, rgba(251, 113, 133, 0.4)), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.constellation-star-progress-pill {
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 900;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Star-Chart Viewer Showcase Stage */
+.constellation-showcase-stage {
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 0%, rgba(30, 27, 75, 0.35) 0%, rgba(10, 15, 28, 0.98) 85%);
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* 5-Node Stellar Pathway Grid */
+.constellation-star-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .constellation-star-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.constellation-node-card {
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  transition: all 0.2s ease;
+  min-height: 110px;
+}
+
+.constellation-node-card.illuminated {
+  background: linear-gradient(145deg, rgba(6, 78, 59, 0.3), rgba(15, 23, 42, 0.9));
+  border: 1.5px solid rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.constellation-node-card.available {
+  background: linear-gradient(145deg, rgba(120, 53, 15, 0.35), rgba(15, 23, 42, 0.9));
+  border: 1.5px solid rgba(251, 191, 36, 0.7);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.25);
+  animation: starAvailablePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes starAvailablePulse {
+  0%, 100% { border-color: rgba(251, 191, 36, 0.7); box-shadow: 0 0 14px rgba(251, 191, 36, 0.2); }
+  50% { border-color: rgba(253, 224, 71, 1); box-shadow: 0 0 22px rgba(253, 224, 71, 0.4); }
+}
+
+.constellation-node-card.locked {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+  opacity: 0.65;
+}
+
+/* Collapsible Cosmic Boons Drawer */
+.cosmic-boons-drawer {
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(71, 85, 105, 0.35);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.cosmic-boons-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 800;
+  transition: background 0.15s ease;
+}
+
+.cosmic-boons-toggle-btn:hover {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.astral-hero-sprite {
+  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.7));
+}
+
+.dwarven-master-sprite {
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.7));
+}
+
 .vault-hero-banner {
   position: relative;
   overflow: hidden;

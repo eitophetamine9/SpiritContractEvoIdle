@@ -15,11 +15,13 @@ import { CONSTELLATIONS_CONFIG, EXPEDITIONS_CONFIG, TRANSMUTATION_CONFIG } from 
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../components/pixelBox.js';
 import { SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
-import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
+import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedChestHtml, createAnimatedRelicHtml } from '../../render/spriteAnimator.js';
 
 let selectedEssenceChamberId = 'olympian_nexus';
 let selectedEssenceTierNum = 1;
 let activeRealmSection = 'dungeon'; // 'dungeon' | 'zodiac' | 'expeditions' | 'dwarven' | 'transmute' | 'energy' | 'potions' | 'blessings'
+let selectedConstellationId = 'draco';
+let isCosmicBoonsOpen = false;
 
 export function renderMysticalView(container) {
   const battle = gameState.state.activeDungeonBattle;
@@ -54,38 +56,45 @@ function renderMysticalSanctumScreen(container) {
   container.innerHTML = `
     <div class="mystical-realm-container">
       
-      <!-- Top Realm Hero Banner: Clean Proportional Typography -->
+      <!-- Top Realm Hero Banner: Clean Proportional Typography with Animated Celestial Avatar -->
       <div class="mystical-hero-banner">
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-2">
-            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-              ✨ SANCTUM OF THE DIVINE
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex flex-col gap-2 flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                ✨ SANCTUM OF THE DIVINE
+              </div>
+
+              <!-- Currency Badges -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <div class="mystical-stat-chip" title="Essences of the Gods">
+                  <span class="text-cyan-400 font-bold">💠 Gods:</span>
+                  <strong class="text-cyan-200 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
+                </div>
+                <div class="mystical-stat-chip" title="Astral Essence">
+                  <span class="text-purple-400 font-bold">🔮 Astral:</span>
+                  <strong class="text-purple-200 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
+                </div>
+                <div class="mystical-stat-chip" title="Energy Capacity">
+                  <span class="text-amber-400 font-bold">⚡</span>
+                  <strong class="text-amber-300 font-black">${res.energy}/${currentMaxEnergy}</strong>
+                </div>
+              </div>
             </div>
 
-            <!-- Currency Badges -->
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <div class="mystical-stat-chip" title="Essences of the Gods">
-                <span class="text-cyan-400 font-bold">💠 Gods:</span>
-                <strong class="text-cyan-200 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
-              </div>
-              <div class="mystical-stat-chip" title="Astral Essence">
-                <span class="text-purple-400 font-bold">🔮 Astral:</span>
-                <strong class="text-purple-200 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
-              </div>
-              <div class="mystical-stat-chip" title="Energy Capacity">
-                <span class="text-amber-400 font-bold">⚡</span>
-                <strong class="text-amber-300 font-black">${res.energy}/${currentMaxEnergy}</strong>
-              </div>
+            <div>
+              <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
+                <span>🌌</span> The Astral Realm
+              </h2>
+              <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
+                Harness Astral Essences & Essences of the Gods to brew elixirs, ascend spirits, forge divine scriptures, and awaken cosmic constellations.
+              </p>
             </div>
           </div>
 
-          <div>
-            <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-              <span>🌌</span> The Astral Realm
-            </h2>
-            <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
-              Harness Astral Essences & Essences of the Gods to brew elixirs, ascend spirits, and invoke cosmic blessings.
-            </p>
+          <!-- Animated Floating Celestial Avatar -->
+          <div class="hidden sm:flex items-center justify-center p-2 rounded-2xl bg-slate-950/70 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.25)] shrink-0">
+            ${createAnimatedSpriteHtml('celestial_angel', { extraClasses: 'astral-hero-sprite scale-110' })}
           </div>
         </div>
       </div>
@@ -445,118 +454,150 @@ function renderConstellationsSectionHtml(res) {
   if (bonuses.atkSpdBonusPercent) activeBonusLabels.push(`+${bonuses.atkSpdBonusPercent}% Atk Speed`);
   if (bonuses.doubleStrikeChance) activeBonusLabels.push(`+${bonuses.doubleStrikeChance}% Double Strike`);
 
+  const constList = Object.values(CONSTELLATIONS_CONFIG);
+  const activeConst = CONSTELLATIONS_CONFIG[selectedConstellationId] || constList[0];
+  const curLevel = constellations[activeConst.id] || 0;
+  const nextNode = curLevel + 1;
+  const completionPct = Math.round((curLevel / 5) * 100);
+
   return `
     <div class="flex flex-col gap-3">
-      <!-- Zodiac Header & Active Synergy Overview -->
-      <div class="rounded-xl border border-rose-500/30 p-3 bg-gradient-to-b from-rose-950/20 via-slate-900/90 to-slate-950 shadow-md flex flex-col gap-2">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">🌌</span>
-            <div>
-              <h3 class="text-xs sm:text-sm font-extrabold text-white">Celestial Constellations (Zodiac Trees)</h3>
-              <p class="text-[10px] sm:text-[11px] text-slate-400">Illuminate celestial star nodes using 🔮 Astral Essences to bestow permanent passive boons across all combat systems.</p>
-            </div>
-          </div>
-          <div class="text-right shrink-0">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 border border-purple-400/40 text-purple-300">
-              🔮 ${(res.soulEssence || 0).toLocaleString()} Astral
-            </span>
+      
+      <!-- Top Overview & Balance -->
+      <div class="rounded-xl border border-rose-500/30 p-3 bg-gradient-to-b from-rose-950/20 via-slate-900/90 to-slate-950 shadow-md flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🌌</span>
+          <div>
+            <h3 class="text-xs sm:text-sm font-extrabold text-white">Celestial Constellations (Zodiac Star-Chart)</h3>
+            <p class="text-[10px] sm:text-[11px] text-slate-400">Select a constellation below to view its celestial star-chart and awaken permanent party passives.</p>
           </div>
         </div>
-
-        <!-- Active Global Boons Strip -->
-        <div class="pt-2 border-t border-slate-800">
-          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Illuminated Cosmic Boons:</div>
-          <div class="flex flex-wrap gap-1">
-            ${activeBonusLabels.length > 0 ? activeBonusLabels.map(b => `
-              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 shadow-sm">
-                ✨ ${b}
-              </span>
-            `).join('') : '<span class="text-[10px] text-slate-500 italic">No celestial stars illuminated yet. Spend 🔮 Astral Essences below to awaken your party!</span>'}
-          </div>
+        <div class="text-right shrink-0">
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/20 border border-purple-400/40 text-purple-300">
+            🔮 ${(res.soulEssence || 0).toLocaleString()} Astral
+          </span>
         </div>
       </div>
 
-      <!-- Constellations List -->
-      <div class="flex flex-col gap-3">
-        ${Object.values(CONSTELLATIONS_CONFIG).map(constConfig => {
-          const curLevel = constellations[constConfig.id] || 0;
-          const nextNode = curLevel + 1;
-          const pct = Math.round((curLevel / 5) * 100);
-
+      <!-- Single-Focus Constellation Selector: Horizontal Chip Bar -->
+      <div class="constellation-chips-scroll">
+        ${constList.map(c => {
+          const lvl = constellations[c.id] || 0;
+          const isSelected = c.id === activeConst.id;
+          const isMaxed = lvl >= 5;
           return `
-            <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3 shadow-md flex flex-col gap-2.5 transition-all hover:border-slate-700" style="border-left: 4px solid ${constConfig.themeColor};">
-              <!-- Constellation Header -->
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2 min-w-0">
-                  <div class="w-9 h-9 rounded-lg flex items-center justify-center text-xl shrink-0" style="background-color: ${constConfig.themeColor}22; border: 1px solid ${constConfig.themeColor}55;">
-                    ${constConfig.icon}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="text-xs sm:text-sm font-black text-white">${constConfig.name}</span>
-                      <span class="text-[10px] font-medium opacity-80" style="color: ${constConfig.accentColor};">${constConfig.title}</span>
-                    </div>
-                    <div class="text-[10px] text-slate-400 truncate">${constConfig.description}</div>
-                  </div>
-                </div>
-
-                <div class="flex flex-col items-end shrink-0">
-                  <span class="text-[11px] font-black" style="color: ${constConfig.accentColor};">
-                    ${curLevel}/5 ★
-                  </span>
-                  <div class="w-16 h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800 mt-0.5">
-                    <div class="h-full rounded-full transition-all" style="width: ${pct}%; background-color: ${constConfig.themeColor};"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Star Nodes (1 to 5) Horizontal Sequence -->
-              <div class="grid grid-cols-1 sm:grid-cols-5 gap-1.5">
-                ${constConfig.stars.map(star => {
-                  const isUnlocked = star.node <= curLevel;
-                  const isAvailable = star.node === nextNode;
-                  const canAfford = (res.soulEssence || 0) >= star.cost;
-
-                  let borderStyle = 'border-slate-800/80 bg-slate-950/60 opacity-60';
-                  let statusBadge = `<span class="text-[9px] text-slate-500">🔒 Node ${star.node - 1} req</span>`;
-
-                  if (isUnlocked) {
-                    borderStyle = `border-emerald-500/50 bg-emerald-950/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]`;
-                    statusBadge = `<span class="text-[9px] font-bold text-emerald-400">★ Illuminated</span>`;
-                  } else if (isAvailable) {
-                    borderStyle = `border-amber-400/60 bg-amber-950/30 shadow-[0_0_10px_rgba(251,191,36,0.2)] animate-pulse`;
-                    statusBadge = `
-                      <button class="btn-unlock-star w-full py-1 px-1.5 rounded-md font-bold text-[10px] transition-all cursor-pointer shadow ${canAfford ? 'bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:brightness-110' : 'bg-slate-800 text-slate-400 border border-slate-700'}" 
-                              data-constellation-id="${constConfig.id}" 
-                              data-node="${star.node}" 
-                              data-cost="${star.cost}" 
-                              ${canAfford ? '' : 'disabled'}>
-                        ${canAfford ? `Unlock (${star.cost} 🔮)` : `Need ${star.cost} 🔮`}
-                      </button>
-                    `;
-                  }
-
-                  return `
-                    <div class="rounded-lg border ${borderStyle} p-2 flex flex-col justify-between gap-1 text-left min-h-[72px]">
-                      <div>
-                        <div class="flex items-center justify-between text-[10px]">
-                          <strong class="text-white truncate">${star.node}. ${star.name}</strong>
-                          <span class="text-[9px] text-purple-300 font-bold shrink-0">${star.cost} 🔮</span>
-                        </div>
-                        <div class="text-[10px] text-cyan-300 font-medium leading-tight mt-0.5">${star.desc}</div>
-                      </div>
-                      <div class="mt-1">
-                        ${statusBadge}
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-
-            </div>
+            <button class="constellation-chip-btn ${isSelected ? 'active' : ''}" 
+                    data-constellation-id="${c.id}" 
+                    style="--const-color: ${c.themeColor}; --const-glow: ${c.themeColor}55;">
+              <span class="text-base pointer-events-none">${c.icon}</span>
+              <span class="pointer-events-none">${c.name}</span>
+              <span class="constellation-star-progress-pill pointer-events-none" style="${isMaxed ? 'background: #f1c40f33; color: #f1c40f; border-color: #f1c40f55;' : (lvl > 0 ? `background: ${c.themeColor}33; color: ${c.accentColor};` : 'color: #94a3b8;')}">
+                ${isMaxed ? '★ MAX' : `★${lvl}/5`}
+              </span>
+            </button>
           `;
         }).join('')}
+      </div>
+
+      <!-- Active Star-Chart Viewer (The Single-Focus Showcase Arena) -->
+      <div class="constellation-showcase-stage" style="border-left: 4px solid ${activeConst.themeColor};">
+        
+        <!-- Showcase Header -->
+        <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800 flex-wrap">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-3xl shadow-lg shrink-0" 
+                 style="background: ${activeConst.themeColor}22; border: 1.5px solid ${activeConst.themeColor}66;">
+              ${activeConst.icon}
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="text-sm sm:text-base font-black text-white">${activeConst.name}</h4>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background: ${activeConst.themeColor}25; color: ${activeConst.accentColor}; border: 1px solid ${activeConst.themeColor}40;">
+                  ${activeConst.title}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-snug mt-0.5">${activeConst.description}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-black" style="color: ${activeConst.accentColor};">
+                ${curLevel}/5 Stars Illuminated
+              </span>
+              ${curLevel >= 5 ? '<span class="text-xs">✨</span>' : ''}
+            </div>
+            <div class="w-24 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800 mt-1">
+              <div class="h-full rounded-full transition-all duration-300" style="width: ${completionPct}%; background-color: ${activeConst.themeColor};"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-Node Stellar Pathway Grid -->
+        <div class="constellation-star-grid">
+          ${activeConst.stars.map(star => {
+            const isUnlocked = star.node <= curLevel;
+            const isAvailable = star.node === nextNode;
+            const canAfford = (res.soulEssence || 0) >= star.cost;
+
+            let cardStateClass = 'locked';
+            let statusMarkup = `<span class="text-[9px] text-slate-500 font-bold">🔒 Requires Star ${star.node - 1}</span>`;
+
+            if (isUnlocked) {
+              cardStateClass = 'illuminated';
+              statusMarkup = `<span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-400">★ Illuminated</span>`;
+            } else if (isAvailable) {
+              cardStateClass = 'available';
+              statusMarkup = `
+                <button class="btn-unlock-star w-full py-1.5 px-2 rounded-lg font-black text-[10px] transition-all cursor-pointer shadow-md flex items-center justify-center gap-1 ${canAfford ? 'bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 hover:brightness-110 shadow-amber-500/20' : 'bg-slate-800 text-slate-400 border border-slate-700'}" 
+                        data-constellation-id="${activeConst.id}" 
+                        data-node="${star.node}" 
+                        ${canAfford ? '' : 'disabled'}>
+                  <span>${canAfford ? `Unlock (${star.cost} 🔮)` : `Need ${star.cost} 🔮`}</span>
+                </button>
+              `;
+            }
+
+            return `
+              <div class="constellation-node-card ${cardStateClass}">
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center justify-between text-[11px] gap-1">
+                    <span class="font-extrabold text-white truncate">${star.node}. ${star.name}</span>
+                    <span class="text-[10px] text-purple-300 font-bold px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/30 shrink-0">${star.cost} 🔮</span>
+                  </div>
+                  <div class="text-[10px] text-cyan-300 font-semibold leading-snug">${star.desc}</div>
+                </div>
+                <div class="pt-1 mt-auto">
+                  ${statusMarkup}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+      </div>
+
+      <!-- Collapsible Global Cosmic Boons Drawer -->
+      <div class="cosmic-boons-drawer">
+        <button id="btn-toggle-cosmic-boons" class="cosmic-boons-toggle-btn">
+          <div class="flex items-center gap-2">
+            <span class="text-amber-400">✨</span>
+            <span>Illuminated Cosmic Boons (${activeBonusLabels.length} Active Passives)</span>
+          </div>
+          <span class="text-xs text-slate-400 font-black">${isCosmicBoonsOpen ? '▲ Hide' : '▼ View All'}</span>
+        </button>
+
+        ${isCosmicBoonsOpen ? `
+          <div class="p-3 pt-0 border-t border-slate-800/60">
+            <div class="flex flex-wrap gap-1.5 pt-2">
+              ${activeBonusLabels.length > 0 ? activeBonusLabels.map(b => `
+                <span class="px-2 py-1 rounded-lg text-[10px] font-bold bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 shadow-sm flex items-center gap-1">
+                  <span>✦</span> ${b}
+                </span>
+              `).join('') : '<span class="text-[10px] text-slate-500 italic p-1">No celestial stars illuminated yet. Spend 🔮 Astral Essences above to awaken your party!</span>'}
+            </div>
+          </div>
+        ` : ''}
       </div>
 
     </div>
@@ -828,9 +869,9 @@ function renderDwarvenForgeSectionHtml(res, state) {
       <!-- Dwarven Forge Banner -->
       <div class="rounded-xl border border-amber-500/30 p-3.5 bg-gradient-to-b from-amber-950/25 via-slate-900/90 to-slate-950 shadow-md flex flex-col gap-2">
         <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div class="flex items-center gap-2.5">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl shrink-0">
-              ⚒️
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+              ${createAnimatedSpriteHtml('forge_vulcan_automaton', { extraClasses: 'dwarven-master-sprite scale-90' })}
             </div>
             <div>
               <h3 class="text-xs sm:text-sm font-extrabold text-white flex items-center gap-2">
@@ -879,9 +920,9 @@ function renderDwarvenForgeSectionHtml(res, state) {
         <div class="rounded-xl border border-amber-500/30 bg-slate-900/85 p-3.5 flex flex-col justify-between gap-3 shadow-md hover:border-amber-500/50 transition-all">
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-xl shrink-0">
-                  📜
+              <div class="flex items-center gap-2.5">
+                <div class="item-icon-frame flex items-center justify-center p-1 rounded-xl bg-amber-500/20 border border-amber-400/40 shrink-0">
+                  ${createAnimatedRelicHtml('divine_scripture', 'scripture', { extraClasses: 'loot-sprite-icon' })}
                 </div>
                 <div>
                   <h4 class="text-xs font-black text-white">Divine Relic Scripture</h4>
@@ -926,9 +967,9 @@ function renderDwarvenForgeSectionHtml(res, state) {
         <div class="rounded-xl border border-cyan-500/30 bg-slate-900/85 p-3.5 flex flex-col justify-between gap-3 shadow-md hover:border-cyan-500/50 transition-all">
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-xl shrink-0">
-                  🌀
+              <div class="flex items-center gap-2.5">
+                <div class="item-icon-frame flex items-center justify-center p-1 rounded-xl bg-cyan-500/20 border border-cyan-400/40 shrink-0">
+                  ${createAnimatedRelicHtml('hephaestus', 'anvil', { extraClasses: 'loot-sprite-icon' })}
                 </div>
                 <div>
                   <h4 class="text-xs font-black text-white">Relic Reshaper</h4>
@@ -1044,6 +1085,27 @@ function bindBlessingEvents(container) {
 }
 
 function bindConstellationEvents(container) {
+  // 1. Constellation chip selection
+  container.querySelectorAll('.constellation-chip-btn').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      const cId = e.currentTarget.getAttribute('data-constellation-id');
+      if (cId && cId !== selectedConstellationId) {
+        selectedConstellationId = cId;
+        renderMysticalView(container);
+      }
+    });
+  });
+
+  // 2. Cosmic Boons drawer toggle
+  const btnToggleBoons = container.querySelector('#btn-toggle-cosmic-boons');
+  if (btnToggleBoons) {
+    btnToggleBoons.addEventListener('click', () => {
+      isCosmicBoonsOpen = !isCosmicBoonsOpen;
+      renderMysticalView(container);
+    });
+  }
+
+  // 3. Star Unlock button
   container.querySelectorAll('.btn-unlock-star').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const cId = e.currentTarget.getAttribute('data-constellation-id');
