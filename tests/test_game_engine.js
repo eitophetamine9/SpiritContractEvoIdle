@@ -1983,6 +1983,73 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   if (!potShardBlocked) throw new Error('Potion purchase must fail with insufficient shards');
 
+  // =========================================================================
+  // 40. Test Phase 5: Dungeon Difficulty Rebalance, Tier 4 140k PWR, Divine Barrier & Cataclysm Enrage
+  // =========================================================================
+  console.log('\n[TEST 40] Testing Phase 5: Dungeon Difficulty Rebalance & Tier 4 Endgame Mechanics:');
+
+  // A. Standardized Power Across All 3 Dungeon Modes
+  const { FORGE_DIFFICULTY_TIERS: forgeTiers } = await import('../src/data/weaponDungeonData.js');
+  const { ESSENCE_DIFFICULTY_TIERS: essenceTiers } = await import('../src/data/essenceDungeonData.js');
+
+  const expectedPowers = [2000, 10000, 45000, 140000];
+  for (let t = 1; t <= 4; t++) {
+    const pTier = PANTHEON_DIFFICULTY_TIERS.find(x => x.tier === t);
+    const fTier = forgeTiers.find(x => x.tier === t);
+    const eTier = essenceTiers.find(x => x.tier === t);
+
+    if (pTier.recommendedPower !== expectedPowers[t - 1]) throw new Error(`Pantheon tier ${t} power mismatch`);
+    if (fTier.minPartyPower !== expectedPowers[t - 1]) throw new Error(`Forge tier ${t} power mismatch`);
+    if (eTier.recommendedPower !== expectedPowers[t - 1]) throw new Error(`Essence tier ${t} power mismatch`);
+  }
+  console.log('  [PASS] Standardized power requirements across Pantheon, Forge, and Essence Sanctum (Tier 1: 2k, Tier 2: 10k, Tier 3: 45k, Tier 4: 140k)!');
+
+  // B. Tier 4 Wave 3 Boss & Dual Overlord Attendants
+  const t4Wave3Swarm = gameState.generateDungeonWave('pantheon', 'underworld_crypt', 4, 3);
+  console.log(`  Tier 4 Wave 3 spawned: ${t4Wave3Swarm.length} enemies`);
+  if (t4Wave3Swarm.length !== 3) throw new Error('Tier 4 Wave 3 must spawn 3 enemies (1 Boss + 2 Overlords)');
+
+  const t4Boss = t4Wave3Swarm.find(e => e.isBoss);
+  if (!t4Boss) throw new Error('Tier 4 Wave 3 missing boss');
+  if (!t4Boss.hasDivineBarrier) throw new Error('Tier 4 boss must have Divine Boss Barrier');
+  if (t4Boss.shieldHp !== Math.round(t4Boss.maxHp * 0.25)) throw new Error('Divine barrier must equal 25% of Boss Max HP');
+  console.log(`  Tier 4 Boss: ${t4Boss.name} | Max HP: ${t4Boss.maxHp.toLocaleString()} | 🛡️ Divine Barrier: ${t4Boss.shieldHp.toLocaleString()}`);
+
+  const menderAttendant = t4Wave3Swarm.find(e => e.role === 'healer');
+  const strikerAttendant = t4Wave3Swarm.find(e => e.role === 'dps');
+  if (!menderAttendant || !strikerAttendant) throw new Error('Tier 4 must spawn both Mender and Striker Overlord attendants');
+  console.log(`  Dual Attendants: ${menderAttendant.name} (Healer) & ${strikerAttendant.name} (Striker)`);
+
+  // C. Shield Absorption in Combat
+  gameState.state.resources.energy = 50;
+  const t4Battle = gameState.startDungeonTrial('essence', 'olympian_nexus', 4);
+  t4Battle.currentWave = 3;
+  t4Battle.currentSwarm = t4Wave3Swarm;
+
+  const preShield = t4Boss.shieldHp;
+  const preHp = t4Boss.hp;
+  // Apply manual click damage
+  gameState.manualDungeonStrike();
+  console.log(`  After Manual Strike -> Boss Shield: ${preShield} -> ${t4Boss.shieldHp} | HP: ${preHp} -> ${t4Boss.hp}`);
+  if (t4Boss.shieldHp >= preShield) throw new Error('Divine barrier should absorb damage before HP');
+  if (t4Boss.hp !== preHp) throw new Error('Boss HP should remain full while shield is absorbing');
+
+  // D. Overlord Mender Periodic Boss Healing
+  t4Boss.hp = Math.round(t4Boss.maxHp * 0.8); // Drop boss to 80% HP
+  const hpBeforeHeal = t4Boss.hp;
+  menderAttendant.healTimer = 0.05; // Trigger heal immediately on next tick
+  gameState.tickDungeonBattle(0.1);
+  console.log(`  Overlord Mender periodic heal: Boss HP ${hpBeforeHeal} -> ${t4Boss.hp}`);
+  if (t4Boss.hp <= hpBeforeHeal) throw new Error('Overlord Mender should periodically heal boss');
+
+  // E. Cataclysm Enrage at 45s
+  t4Battle.elapsedWaveTime = 46.0;
+  const bossPwrBeforeEnrage = t4Boss.power;
+  gameState.tickDungeonBattle(0.1);
+  console.log(`  Cataclysm Enrage triggered at 45s: Enraged = ${t4Boss.isEnraged} | Power: ${bossPwrBeforeEnrage} -> ${t4Boss.power}`);
+  if (!t4Boss.isEnraged) throw new Error('Boss should become enraged at 45s');
+  if (t4Boss.power !== Math.round(bossPwrBeforeEnrage * 1.5)) throw new Error('Boss power should increase by 50% on enrage');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

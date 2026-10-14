@@ -4281,31 +4281,79 @@ class GameStateManager {
     } else {
       const bossName = dungeonType === 'pantheon' ? `Avatar of ${targetGod}` : dungeonType === 'essence' ? (chamber.bossName || `${chamber.name} Overlord`) : (chamber.bossName || 'Vulcan Titan');
       const bossIcon = dungeonType === 'pantheon' ? (chamber.sigil || chamber.icon || '🔱') : dungeonType === 'essence' ? (chamber.bossIcon || '👑') : (chamber.bossIcon || '🌋');
+      
+      const isTier4 = tierNum === 4;
+      const bossHpMult = isTier4 ? 4.0 : 1.5;
+      const bossPwrMult = isTier4 ? 0.75 : 0.5;
+      const bossMaxHp = Math.max(150, Math.round(baseHp * bossHpMult));
+      const bossPower = Math.max(25, Math.round(targetPower * bossPwrMult));
+      const bossBarrier = isTier4 ? Math.round(bossMaxHp * 0.25) : 0;
+
       enemies.push({
         id: `wave3_boss_${Date.now()}`,
-        name: bossName,
+        name: isTier4 ? `Supreme ${bossName}` : bossName,
         icon: bossIcon,
         element: chamber.element || 'LIGHT',
         isBoss: true,
-        maxHp: Math.max(150, Math.round(baseHp * 1.5)),
-        hp: Math.max(150, Math.round(baseHp * 1.5)),
-        power: Math.max(25, Math.round(targetPower * 0.5)),
+        maxHp: bossMaxHp,
+        hp: bossMaxHp,
+        shieldHp: bossBarrier,
+        divineBarrierMax: bossBarrier,
+        hasDivineBarrier: isTier4,
+        isEnraged: false,
+        power: bossPower,
         isDefeated: false,
-        attackCooldown: 1.6,
+        attackCooldown: isTier4 ? 1.5 : 1.6,
         currentCooldown: 0.5
       });
-      enemies.push({
-        id: `wave3_attendant_${Date.now()}`,
-        name: dungeonType === 'pantheon' ? 'Temple High Priest' : dungeonType === 'essence' ? 'Essence Core Primordial' : 'Forge Overseer',
-        icon: '🔮',
-        element: chamber.element || 'LIGHT',
-        maxHp: Math.max(50, Math.round(baseHp * 0.5)),
-        hp: Math.max(50, Math.round(baseHp * 0.5)),
-        power: Math.max(10, Math.round(targetPower * 0.28)),
-        isDefeated: false,
-        attackCooldown: 2.0,
-        currentCooldown: 1.8
-      });
+
+      if (isTier4) {
+        // Tier 4 Endgame: Dual Overlord Attendants!
+        // Attendant 1: Healer / Vitality Siphon (Periodically restores 2% Max HP to Boss)
+        enemies.push({
+          id: `wave3_mender_${Date.now()}`,
+          name: dungeonType === 'pantheon' ? 'Overlord Pantheon Mender' : dungeonType === 'essence' ? 'Overlord Aether Mender' : 'Overlord Forge Core Mender',
+          icon: '💚',
+          role: 'healer',
+          element: chamber.element || 'LIGHT',
+          maxHp: Math.max(100, Math.round(baseHp * 0.9)),
+          hp: Math.max(100, Math.round(baseHp * 0.9)),
+          power: Math.max(15, Math.round(targetPower * 0.25)),
+          isDefeated: false,
+          attackCooldown: 2.2,
+          currentCooldown: 1.5,
+          healTimer: 4.0
+        });
+
+        // Attendant 2: Vanguard Executioner (Heavy burst strikes)
+        enemies.push({
+          id: `wave3_striker_${Date.now()}`,
+          name: dungeonType === 'pantheon' ? 'Overlord War Vanguard' : dungeonType === 'essence' ? 'Overlord Prime Striker' : 'Overlord Juggernaut Automaton',
+          icon: '⚔️',
+          role: 'dps',
+          element: chamber.element || 'LIGHT',
+          maxHp: Math.max(120, Math.round(baseHp * 1.1)),
+          hp: Math.max(120, Math.round(baseHp * 1.1)),
+          power: Math.max(20, Math.round(targetPower * 0.42)),
+          isDefeated: false,
+          attackCooldown: 1.8,
+          currentCooldown: 0.9
+        });
+      } else {
+        // Tiers 1-3: Standard Single Attendant
+        enemies.push({
+          id: `wave3_attendant_${Date.now()}`,
+          name: dungeonType === 'pantheon' ? 'Temple High Priest' : dungeonType === 'essence' ? 'Essence Core Primordial' : 'Forge Overseer',
+          icon: '🔮',
+          element: chamber.element || 'LIGHT',
+          maxHp: Math.max(50, Math.round(baseHp * 0.5)),
+          hp: Math.max(50, Math.round(baseHp * 0.5)),
+          power: Math.max(10, Math.round(targetPower * 0.28)),
+          isDefeated: false,
+          attackCooldown: 2.0,
+          currentCooldown: 1.8
+        });
+      }
     }
 
     return enemies;
@@ -4347,6 +4395,7 @@ class GameStateManager {
       maxWaves: 3,
       status: 'active',
       currentSwarm: initialSwarm,
+      elapsedWaveTime: 0,
       loot: null
     };
 
@@ -4374,6 +4423,7 @@ class GameStateManager {
     if (livingEnemies.length === 0) {
       if (battle.currentWave < battle.maxWaves) {
         battle.currentWave += 1;
+        battle.elapsedWaveTime = 0;
         livingSpirits.forEach(s => {
           s.currentHp = Math.min(s.maxHp, s.currentHp + Math.round(s.maxHp * 0.25));
           s.tauntTimer = 0;
@@ -4385,6 +4435,33 @@ class GameStateManager {
       } else {
         this.completeDungeonBattleVictory();
         return;
+      }
+    }
+
+    battle.elapsedWaveTime = (battle.elapsedWaveTime || 0) + deltaSec;
+
+    // Cataclysm Enrage & Attendant mechanics for Tier 4 Wave 3 Boss
+    if (battle.tier === 4 && battle.currentWave === 3) {
+      const boss = livingEnemies.find(e => e.isBoss && !e.isDefeated && e.hp > 0);
+      if (boss && !boss.isEnraged && battle.elapsedWaveTime >= 45) {
+        boss.isEnraged = true;
+        boss.power = Math.round(boss.power * 1.5);
+        boss.attackCooldown = Math.max(0.8, (boss.attackCooldown || 1.5) * 0.65);
+        this.emit('combatEffect', { type: 'boss_enrage', enemy: boss, text: '⚠️ CATACLYSM ENRAGE!' });
+      }
+
+      // Overlord Mender periodic boss heal (2% Max HP every 4s)
+      const mender = livingEnemies.find(e => e.role === 'healer' && !e.isDefeated && e.hp > 0);
+      if (mender) {
+        mender.healTimer = (mender.healTimer || 4.0) - deltaSec;
+        if (mender.healTimer <= 0) {
+          mender.healTimer = 4.0;
+          if (boss && boss.hp < boss.maxHp) {
+            const healAmt = Math.round(boss.maxHp * 0.02);
+            boss.hp = Math.min(boss.maxHp, boss.hp + healAmt);
+            this.emit('combatEffect', { type: 'boss_healed', enemy: boss, text: `+${healAmt.toLocaleString()} HP` });
+          }
+        }
       }
     }
 
@@ -4406,8 +4483,16 @@ class GameStateManager {
       const posAtkMult = (stats && stats.formationColumn === 'back') ? 1.15 : 1.0;
 
       const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * posAtkMult));
-      const damageThisTick = baseDps * deltaSec;
-      leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
+      let damageThisTick = baseDps * deltaSec;
+
+      if (leadEnemy.shieldHp > 0) {
+        const absorbed = Math.min(leadEnemy.shieldHp, damageThisTick);
+        leadEnemy.shieldHp -= absorbed;
+        damageThisTick -= absorbed;
+      }
+      if (damageThisTick > 0) {
+        leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
+      }
 
       const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
       let manaBonusMult = 1;
@@ -4424,7 +4509,7 @@ class GameStateManager {
       }
     }
 
-    if (leadEnemy.hp <= 0) {
+    if (leadEnemy.hp <= 0 && (!leadEnemy.shieldHp || leadEnemy.shieldHp <= 0)) {
       leadEnemy.isDefeated = true;
       leadEnemy.hp = 0;
     }
@@ -4535,16 +4620,28 @@ class GameStateManager {
     let totalDamageDealt = 0;
     let totalHealingDone = 0;
 
+    const applyDamageToDungeonEnemy = (enemy, rawDmg) => {
+      let dmg = rawDmg;
+      if (enemy.shieldHp > 0) {
+        const absorbed = Math.min(enemy.shieldHp, dmg);
+        enemy.shieldHp -= absorbed;
+        dmg -= absorbed;
+      }
+      if (dmg > 0) {
+        enemy.hp = Math.max(0, enemy.hp - dmg);
+      }
+      if (enemy.hp <= 0 && (!enemy.shieldHp || enemy.shieldHp <= 0)) {
+        enemy.isDefeated = true;
+        enemy.hp = 0;
+      }
+    };
+
     switch (ult.type) {
       case 'AOE_DAMAGE': {
         const damagePerEnemy = Math.max(1, Math.round(spirit.power * ult.multiplier * critMult));
         for (const enemy of livingEnemies) {
-          enemy.hp = Math.max(0, enemy.hp - damagePerEnemy);
+          applyDamageToDungeonEnemy(enemy, damagePerEnemy);
           totalDamageDealt += damagePerEnemy;
-          if (enemy.hp <= 0) {
-            enemy.isDefeated = true;
-            enemy.hp = 0;
-          }
         }
         break;
       }
@@ -4552,12 +4649,8 @@ class GameStateManager {
         const primaryTarget = livingEnemies[0];
         if (primaryTarget) {
           const burstDamage = Math.max(1, Math.round(spirit.power * ult.multiplier * critMult));
-          primaryTarget.hp = Math.max(0, primaryTarget.hp - burstDamage);
+          applyDamageToDungeonEnemy(primaryTarget, burstDamage);
           totalDamageDealt += burstDamage;
-          if (primaryTarget.hp <= 0) {
-            primaryTarget.isDefeated = true;
-            primaryTarget.hp = 0;
-          }
         }
         break;
       }
@@ -4583,12 +4676,8 @@ class GameStateManager {
           const isExecuteThreshold = (lowestHpEnemy.hp / lowestHpEnemy.maxHp) <= ult.threshold;
           const mult = (isExecuteThreshold ? ult.multiplier * 2 : ult.multiplier) * critMult;
           const execDamage = Math.max(1, Math.round(spirit.power * mult));
-          lowestHpEnemy.hp = Math.max(0, lowestHpEnemy.hp - execDamage);
+          applyDamageToDungeonEnemy(lowestHpEnemy, execDamage);
           totalDamageDealt += execDamage;
-          if (lowestHpEnemy.hp <= 0) {
-            lowestHpEnemy.isDefeated = true;
-            lowestHpEnemy.hp = 0;
-          }
         }
         break;
       }
@@ -4628,10 +4717,17 @@ class GameStateManager {
     }
 
     const totalPartyPower = livingSpirits.reduce((sum, s) => sum + this.getSpiritTotalPower(s), 0);
-    const tapDamage = Math.max(1, Math.round(totalPartyPower * (0.35 + Math.random() * 0.2) * critMult));
+    let tapDamage = Math.max(1, Math.round(totalPartyPower * (0.35 + Math.random() * 0.2) * critMult));
 
-    leadEnemy.hp = Math.max(0, leadEnemy.hp - tapDamage);
-    if (leadEnemy.hp <= 0) {
+    if (leadEnemy.shieldHp > 0) {
+      const absorbed = Math.min(leadEnemy.shieldHp, tapDamage);
+      leadEnemy.shieldHp -= absorbed;
+      tapDamage -= absorbed;
+    }
+    if (tapDamage > 0) {
+      leadEnemy.hp = Math.max(0, leadEnemy.hp - tapDamage);
+    }
+    if (leadEnemy.hp <= 0 && (!leadEnemy.shieldHp || leadEnemy.shieldHp <= 0)) {
       leadEnemy.isDefeated = true;
       leadEnemy.hp = 0;
     }

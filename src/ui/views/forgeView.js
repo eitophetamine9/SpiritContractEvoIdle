@@ -295,10 +295,15 @@ function renderForgeBattleArena(container, battle) {
                       ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
                       <span>${em.name}</span>
                     </div>
-                    <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+                      ${em.shieldHp > 0 ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">🛡️ BARRIER</span>' : ''}
+                      ${em.isEnraged ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse">🔥 ENRAGED</span>' : ''}
+                    </div>
 
                     <div class="seamless-enemy-hp-track">
                       <div id="forge-enemy-hp-fill-${sIdx}" class="seamless-enemy-hp-fill" style="width: ${emHpPct}%;"></div>
+                      ${em.shieldHp > 0 ? `<div class="seamless-enemy-shield-fill" style="width: ${Math.min(100, Math.round((em.shieldHp / (em.divineBarrierMax || (em.maxHp * 0.25) || 1)) * 100))}%;"></div>` : ''}
                     </div>
                   </div>
 
