@@ -45,7 +45,7 @@ export function showTitleScreen() {
   if (!root) return;
 
   isScreenActive = true;
-  root.style.display = 'block';
+  root.style.display = 'flex';
   if (app) {
     app.style.display = 'none';
   }
@@ -74,7 +74,7 @@ export function hideTitleScreen() {
     if (onEnterGameCallback) {
       onEnterGameCallback();
     }
-  }, 350);
+  }, 250);
 }
 
 function renderTitleScreen() {
@@ -86,224 +86,175 @@ function renderTitleScreen() {
   const configured = isSupabaseConfigured();
 
   root.innerHTML = `
-    <div class="title-screen-wrapper fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950 text-white select-none">
+    <!-- Ambient Backdrop Effects -->
+    <div class="title-arcane-backdrop">
+      <div class="title-stars-layer"></div>
+      <div class="title-rune-circle"></div>
+      <div class="title-rune-circle-inner"></div>
+    </div>
+
+    <!-- Inner Screen Content Column matching #app 480px width -->
+    <div class="title-screen-inner">
       
-      <!-- Ambient Animated Celestial Background -->
-      <div class="title-ambient-bg absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="celestial-circle circle-1"></div>
-        <div class="celestial-circle circle-2"></div>
-        <div class="title-stars-layer"></div>
+      <!-- Top Status Bar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; z-index:10; padding:4px 0;">
+        <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; color:#d4e478;">
+          <span>⛩️</span>
+          <span>Celestial Realm</span>
+        </div>
+        <div class="title-status-badges">
+          <span class="title-badge title-badge-version">v0.4.0</span>
+          <span class="title-badge title-badge-cloud">${configured ? '☁️ Cloud Active' : '💾 Local Only'}</span>
+        </div>
       </div>
 
-      <!-- Main Container Card -->
-      <div class="relative w-full max-w-lg bg-slate-900/90 border border-cyan-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl flex flex-col items-center gap-6 z-10 animate-fadeIn"
-           style="box-shadow: 0 0 50px rgba(6, 182, 212, 0.25), inset 0 0 20px rgba(15, 23, 42, 0.8);">
+      <!-- Grand Title / Crest Area -->
+      <div class="title-header-group">
+        <div class="title-crest-emblem">⛩️</div>
+        <span class="title-crest-tag">CELESTIAL IDLE RPG</span>
+        <h1 class="title-crest-main">SPIRIT CONTRACT</h1>
+        <h2 class="title-crest-sub">EVOLUTION IDLE</h2>
+        <p class="title-crest-lore">
+          Summon divine spirits, conquer infinite madness realms, and ascend beyond mortality.
+        </p>
+      </div>
 
-        <!-- Header / Logo Area -->
-        <div class="flex flex-col items-center text-center gap-2">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-cyan-600 via-indigo-600 to-purple-600 flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-cyan-500/20 animate-pulse border border-cyan-400/30">
-            ⛩️
-          </div>
-          <div class="flex flex-col items-center">
-            <span class="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-cyan-400 drop-shadow">
-              Celestial Realm • Idle RPG
-            </span>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-md">
-              Spirit Contract Evo
-            </h1>
-            <p class="text-xs sm:text-sm text-slate-300 max-w-xs mt-1 font-medium leading-relaxed">
-              Summon divine spirits, conquer infinite madness, and ascend beyond mortality.
-            </p>
-          </div>
-
-          <!-- Version & Cloud Badge -->
-          <div class="flex items-center gap-2 mt-1">
-            <span class="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[10px] font-bold text-slate-400">
-              v0.4 Celestial Awakening
-            </span>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${configured ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-400' : 'bg-amber-950/80 border border-amber-500/40 text-amber-300'}">
-              ${configured ? '☁️ Supabase Cloud Active' : '💾 Local Storage Only'}
-            </span>
-          </div>
+      <!-- Alerts -->
+      ${homeErrorMessage ? `
+        <div style="background:rgba(127,29,29,0.8); border:1px solid rgba(239,68,68,0.6); padding:10px 14px; border-radius:12px; color:#fecaca; font-size:11.5px; font-weight:700; display:flex; align-items:center; gap:8px; z-index:10;" class="animate-shake">
+          <span>⚠️</span>
+          <span>${homeErrorMessage}</span>
         </div>
+      ` : ''}
 
-        <!-- Alerts -->
-        ${homeErrorMessage ? `
-          <div class="w-full p-3 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-xs font-semibold flex items-center gap-2.5 animate-shake">
-            <span class="text-base shrink-0">⚠️</span>
-            <span>${homeErrorMessage}</span>
-          </div>
-        ` : ''}
+      ${homeSuccessMessage ? `
+        <div style="background:rgba(6,78,59,0.8); border:1px solid rgba(16,185,129,0.6); padding:10px 14px; border-radius:12px; color:#a7f3d0; font-size:11.5px; font-weight:700; display:flex; align-items:center; gap:8px; z-index:10;">
+          <span>✅</span>
+          <span>${homeSuccessMessage}</span>
+        </div>
+      ` : ''}
 
-        ${homeSuccessMessage ? `
-          <div class="w-full p-3 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-200 text-xs font-semibold flex items-center gap-2.5">
-            <span class="text-base shrink-0">✅</span>
-            <span>${homeSuccessMessage}</span>
-          </div>
-        ` : ''}
-
-        <!-- Interactive Gateway Content -->
-        <div class="w-full flex flex-col gap-4">
-          ${!isGuest ? `
-            <!-- ALREADY LOGGED IN: Quick Play / Continue Card -->
-            <div class="flex flex-col gap-4 p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-2xl shadow">
-                    ${profile.avatarEmoji || '🧙‍♂️'}
-                  </div>
-                  <div class="text-left">
-                    <span class="text-[11px] text-cyan-400 font-bold uppercase tracking-wider">Welcome Back</span>
-                    <h3 class="text-base font-extrabold text-white">${profile.username}</h3>
-                    <div class="text-[11px] text-slate-400 font-mono">${profile.email || 'Cloud Account'}</div>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <span class="px-2 py-1 rounded-lg bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 text-xs font-bold">
-                    Lv. ${profile.contractorLevel || 1}
-                  </span>
+      <!-- Center Interaction Area -->
+      <div style="display:flex; flex-direction:column; gap:8px; z-index:10;">
+        ${!isGuest ? `
+          <!-- ALREADY LOGGED IN: Continue Card -->
+          <div class="title-panel-card">
+            <div class="title-identity-plate">
+              <div class="title-avatar-badge">
+                <div class="title-avatar-icon">${profile.avatarEmoji || '🧙‍♂️'}</div>
+                <div class="title-avatar-info">
+                  <span class="title-avatar-label">Welcome Back</span>
+                  <span class="title-avatar-name">${profile.username}</span>
+                  <span style="font-size:10px; color:#94a3b8; font-family:monospace;">${profile.email || 'Cloud Account'}</span>
                 </div>
               </div>
+              <span class="title-badge title-badge-version">Lv. ${profile.contractorLevel || 1}</span>
+            </div>
 
-              <!-- Main Enter Game CTA -->
-              <button id="btn-home-continue" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-500 to-indigo-600 hover:brightness-110 text-white font-black text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2">
-                <span>⚔️ Enter Celestial Realm</span>
+            <button id="btn-home-continue" class="btn-celestial-start">
+              <span>⚔️ CONTINUE JOURNEY</span>
+            </button>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px; margin-top:2px;">
+              <button id="btn-home-switch-account" style="background:none; border:none; color:#94a3b8; font-size:11px; cursor:pointer; padding:0;">
+                🔄 Switch Account
+              </button>
+              <button id="btn-home-play-guest-mode" style="background:none; border:none; color:#00d0ff; font-size:11px; cursor:pointer; padding:0;">
+                Play as Local Guest
+              </button>
+            </div>
+          </div>
+        ` : `
+          <!-- GUEST / UNREGISTERED: AAA Segmented Tabs -->
+          <div class="title-tabs-container">
+            <button id="tab-home-guest" class="title-tab-btn ${activeHomeTab === 'guest' ? 'active' : ''}">
+              <span class="title-tab-icon">🎮</span>
+              <span>Play as Guest</span>
+            </button>
+            <button id="tab-home-signin" class="title-tab-btn ${activeHomeTab === 'signin' ? 'active' : ''}">
+              <span class="title-tab-icon">🔑</span>
+              <span>Sign In</span>
+            </button>
+            <button id="tab-home-signup" class="title-tab-btn ${activeHomeTab === 'signup' ? 'active' : ''}">
+              <span class="title-tab-icon">✨</span>
+              <span>Register</span>
+            </button>
+          </div>
+
+          <!-- Tab Content Cards -->
+          ${activeHomeTab === 'guest' ? `
+            <div class="title-panel-card">
+              <div class="title-identity-plate">
+                <div class="title-avatar-badge">
+                  <div class="title-avatar-icon">🧙‍♂️</div>
+                  <div class="title-avatar-info">
+                    <span class="title-avatar-label">Contractor Name</span>
+                    <span class="title-avatar-name" id="display-guest-name">${profile.username}</span>
+                  </div>
+                </div>
+                <button id="btn-edit-home-guest-name" class="header-profile-btn" style="min-height:30px; padding:2px 10px; font-size:11px;" title="Rename Contractor">
+                  ✏️ Edit
+                </button>
+              </div>
+
+              <button id="btn-home-play-guest" class="btn-celestial-start">
+                <span>⚔️ ENTER CELESTIAL REALM</span>
               </button>
 
-              <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                <button id="btn-home-switch-account" class="text-xs text-slate-400 hover:text-white transition cursor-pointer">
-                  🔄 Switch Account / Sign Out
-                </button>
-                <button id="btn-home-play-guest-mode" class="text-xs text-cyan-400 hover:underline cursor-pointer">
-                  Play as Local Guest
-                </button>
+              <div style="font-size:11px; text-align:center; color:#8fa596; margin-top:2px;">
+                💾 Instant local play • Link to cloud anytime without losing data
               </div>
             </div>
-          ` : `
-            <!-- NOT LOGGED IN: Tab Selection (Guest, Sign In, Register) -->
-            <div class="flex flex-col gap-4">
-              <!-- Navigation Pills -->
-              <div class="grid grid-cols-3 p-1 rounded-2xl bg-slate-950 border border-slate-800 gap-1">
-                <button id="tab-home-guest" class="py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex flex-col items-center gap-0.5 ${activeHomeTab === 'guest' ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 shadow' : 'text-slate-400 hover:text-white'}">
-                  <span class="text-base">🎮</span>
-                  <span>Play as Guest</span>
-                </button>
+          ` : ''}
 
-                <button id="tab-home-signin" class="py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex flex-col items-center gap-0.5 ${activeHomeTab === 'signin' ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border border-cyan-500/40 shadow' : 'text-slate-400 hover:text-white'}">
-                  <span class="text-base">🔑</span>
-                  <span>Sign In</span>
-                </button>
-
-                <button id="tab-home-signup" class="py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex flex-col items-center gap-0.5 ${activeHomeTab === 'signup' ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-500/40 shadow' : 'text-slate-400 hover:text-white'}">
-                  <span class="text-base">✨</span>
-                  <span>Register</span>
-                </button>
+          ${activeHomeTab === 'signin' ? `
+            <form id="form-home-signin" class="title-panel-card">
+              <div class="title-input-field">
+                <label class="title-input-label">Email Address</label>
+                <input type="email" id="home-input-email" required placeholder="contractor@celestial.realm" />
               </div>
 
-              <!-- Content Cards depending on Active Tab -->
-              ${activeHomeTab === 'guest' ? `
-                <div class="flex flex-col gap-4 p-5 rounded-2xl bg-slate-950/60 border border-slate-800 text-left">
-                  <div class="flex items-start gap-3">
-                    <span class="text-2xl p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">⚡</span>
-                    <div>
-                      <h4 class="text-sm font-extrabold text-white">Instant Play (Guest Mode)</h4>
-                      <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                        Start playing immediately without entering any credentials. Your progress, spirits, and weapons will be securely saved locally on this device.
-                      </p>
-                    </div>
-                  </div>
+              <div class="title-input-field">
+                <label class="title-input-label">Password</label>
+                <input type="password" id="home-input-password" required placeholder="••••••••" />
+              </div>
 
-                  <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-                    <span class="text-slate-400">Contractor Name:</span>
-                    <div class="flex items-center gap-2">
-                      <strong id="display-guest-name" class="text-white font-bold">${profile.username}</strong>
-                      <button id="btn-edit-home-guest-name" class="text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer" title="Edit name">
-                        ✏️
-                      </button>
-                    </div>
-                  </div>
+              <button type="submit" id="btn-home-submit-signin" class="btn-celestial-cyan" ${isSubmitting ? 'disabled' : ''}>
+                <span>${isSubmitting ? 'Signing In...' : '🔑 Sign In & Enter Realm'}</span>
+              </button>
+            </form>
+          ` : ''}
 
-                  <button id="btn-home-play-guest" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:brightness-110 text-slate-950 font-black text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2">
-                    <span>🎮 Enter Game as Guest</span>
-                  </button>
+          ${activeHomeTab === 'signup' ? `
+            <form id="form-home-signup" class="title-panel-card">
+              <div class="title-input-field">
+                <label class="title-input-label">Contractor Username</label>
+                <input type="text" id="home-input-username" required placeholder="Archon of Stars" value="${profile.username !== 'Apprentice Contractor' ? profile.username : ''}" />
+              </div>
 
-                  <div class="text-[11px] text-center text-slate-500">
-                    You can link your guest progress to a cloud account at any time!
-                  </div>
-                </div>
-              ` : ''}
+              <div class="title-input-field">
+                <label class="title-input-label">Email Address</label>
+                <input type="email" id="home-input-email-signup" required placeholder="contractor@celestial.realm" />
+              </div>
 
-              ${activeHomeTab === 'signin' ? `
-                <form id="form-home-signin" class="flex flex-col gap-3 p-5 rounded-2xl bg-slate-950/60 border border-slate-800 text-left">
-                  <div>
-                    <h4 class="text-sm font-extrabold text-white">Sign In to Cloud Account</h4>
-                    <p class="text-xs text-slate-400 mt-0.5">
-                      Log in to sync your spirits and progress across all your devices.
-                    </p>
-                  </div>
+              <div class="title-input-field">
+                <label class="title-input-label">Password (min 6 characters)</label>
+                <input type="password" id="home-input-password-signup" required minlength="6" placeholder="••••••••" />
+              </div>
 
-                  <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-bold text-slate-300">Email Address</label>
-                    <input type="email" id="home-input-email" required placeholder="contractor@celestial.realm"
-                           class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 transition-all" />
-                  </div>
-
-                  <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-bold text-slate-300">Password</label>
-                    <input type="password" id="home-input-password" required placeholder="••••••••"
-                           class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 transition-all" />
-                  </div>
-
-                  <button type="submit" id="btn-home-submit-signin" ${isSubmitting ? 'disabled' : ''}
-                          class="w-full mt-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600 hover:brightness-110 text-white font-black text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-cyan-500/25 disabled:opacity-50 flex items-center justify-center gap-2">
-                    <span>${isSubmitting ? 'Signing In...' : '🔑 Sign In & Enter Realm'}</span>
-                  </button>
-                </form>
-              ` : ''}
-
-              ${activeHomeTab === 'signup' ? `
-                <form id="form-home-signup" class="flex flex-col gap-3 p-5 rounded-2xl bg-slate-950/60 border border-slate-800 text-left">
-                  <div>
-                    <h4 class="text-sm font-extrabold text-white">Create Celestial Account</h4>
-                    <p class="text-xs text-slate-400 mt-0.5">
-                      Register to protect your spirits, unlock cloud saves, and prepare for multiplayer guild wars.
-                    </p>
-                  </div>
-
-                  <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-bold text-slate-300">Contractor Username</label>
-                    <input type="text" id="home-input-username" required placeholder="Archon of Stars" value="${profile.username !== 'Apprentice Contractor' ? profile.username : ''}"
-                           class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 transition-all" />
-                  </div>
-
-                  <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-bold text-slate-300">Email Address</label>
-                    <input type="email" id="home-input-email-signup" required placeholder="contractor@celestial.realm"
-                           class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 transition-all" />
-                  </div>
-
-                  <div class="flex flex-col gap-1">
-                    <label class="text-[11px] font-bold text-slate-300">Password (min 6 characters)</label>
-                    <input type="password" id="home-input-password-signup" required minlength="6" placeholder="••••••••"
-                           class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-cyan-400 transition-all" />
-                  </div>
-
-                  <button type="submit" id="btn-home-submit-signup" ${isSubmitting ? 'disabled' : ''}
-                          class="w-full mt-2 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 hover:brightness-110 text-slate-950 font-black text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-emerald-500/25 disabled:opacity-50 flex items-center justify-center gap-2">
-                    <span>${isSubmitting ? 'Creating Account...' : '✨ Register & Enter Realm'}</span>
-                  </button>
-                </form>
-              ` : ''}
-
-            </div>
-          `}
-        </div>
-
-        <!-- Footer Credits -->
-        <div class="text-[10px] text-slate-500 text-center tracking-wide">
-          Spirit Contract Evo • Cloud Engine Powered by Supabase & PostgreSQL
-        </div>
+              <button type="submit" id="btn-home-submit-signup" class="btn-celestial-emerald" ${isSubmitting ? 'disabled' : ''}>
+                <span>${isSubmitting ? 'Awakening Account...' : '✨ Register & Enter Realm'}</span>
+              </button>
+            </form>
+          ` : ''}
+        `}
       </div>
+
+      <!-- Footer -->
+      <div class="title-footer">
+        ⛩️ Spirit Contract Evo • Celestial Realm Engine
+      </div>
+
     </div>
   `;
 
@@ -381,7 +332,7 @@ function bindTitleScreenEvents(root) {
       homeSuccessMessage = 'Welcome back! Entering realm...';
       isSubmitting = false;
       renderTitleScreen();
-      setTimeout(hideTitleScreen, 800);
+      setTimeout(hideTitleScreen, 600);
     } catch (err) {
       isSubmitting = false;
       homeErrorMessage = err.message || 'Failed to sign in. Please check your credentials.';
@@ -410,7 +361,7 @@ function bindTitleScreenEvents(root) {
       homeSuccessMessage = 'Account created & linked! Entering realm...';
       isSubmitting = false;
       renderTitleScreen();
-      setTimeout(hideTitleScreen, 900);
+      setTimeout(hideTitleScreen, 700);
     } catch (err) {
       isSubmitting = false;
       homeErrorMessage = err.message || 'Failed to create account.';
