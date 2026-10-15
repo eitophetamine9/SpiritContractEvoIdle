@@ -754,6 +754,30 @@ class GameStateManager {
     }
   }
 
+  /**
+   * Applies an external state (e.g. from Supabase cloud sync) and reconciles caches
+   * @param {Object} savedState - Raw state object to load
+   * @returns {boolean} Success status
+   */
+  loadCustomState(savedState) {
+    if (!savedState || typeof savedState !== 'object') return false;
+    try {
+      this.state = this.sanitizeLoadedState(savedState);
+      this.invalidateCaches();
+      const mz = this.state.madnessZone;
+      if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
+        this.spawnMadnessEnemy();
+      }
+      this.save(true);
+      this.emit('stateLoaded', this.state);
+      this.emit('partyUpdated', this.state.party);
+      return true;
+    } catch (err) {
+      console.error('[GameStateManager] Failed to load custom state:', err);
+      return false;
+    }
+  }
+
   markDirty() {
     this.isDirty = true;
   }

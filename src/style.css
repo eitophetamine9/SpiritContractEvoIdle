@@ -247,6 +247,12 @@ button:disabled {
   box-shadow: 0 0 8px rgba(46, 213, 115, 0.5);
 }
 
+.save-indicator.syncing {
+  color: #00d0ff;
+  border-color: #00d0ff;
+  box-shadow: 0 0 10px rgba(0, 208, 255, 0.4);
+}
+
 .header-auth-btn {
   min-height: 28px;
   padding: 3px 8px;

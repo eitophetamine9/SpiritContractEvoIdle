@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from '../../services/supabaseClient.js';
 import { gameState } from '../../state/gameState.js';
 import { closeActiveModal } from './modals.js';
 import { showTitleScreen } from './titleScreen.js';
+import { cloudSaveService } from '../../services/cloudSaveService.js';
 
 let activeAuthTab = 'signin'; // 'signin' | 'signup'
 let authErrorMessage = '';
@@ -99,6 +100,10 @@ function renderAuthModalContent(modalRoot, onClose) {
                 <span class="text-[11px] text-emerald-400 font-bold">☁️ Auto-Sync Protected</span>
               </div>
             </div>
+
+            <button id="btn-auth-manual-sync" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:brightness-110 text-white font-extrabold text-xs transition-all cursor-pointer shadow flex items-center justify-center gap-1.5">
+              <span>☁️ Backup & Sync to Cloud Now</span>
+            </button>
 
             <button id="btn-auth-goto-title" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-extrabold text-xs transition-all cursor-pointer shadow flex items-center justify-center gap-1.5">
               <span>🏠 Return to Title / Home Screen</span>
@@ -270,6 +275,19 @@ function bindAuthModalEvents(modalRoot, onClose) {
       authErrorMessage = err.message || 'Failed to create account.';
       renderAuthModalContent(modalRoot, onClose);
     }
+  });
+
+  // Manual Cloud Sync
+  modalRoot.querySelector('#btn-auth-manual-sync')?.addEventListener('click', async () => {
+    const syncBtn = modalRoot.querySelector('#btn-auth-manual-sync');
+    if (syncBtn) syncBtn.textContent = '⏳ Uploading Save...';
+    const success = await cloudSaveService.uploadSave(true);
+    if (success) {
+      authSuccessMessage = 'Cloud save synchronized with Supabase!';
+    } else {
+      authErrorMessage = 'Failed to sync to cloud. Local save preserved.';
+    }
+    renderAuthModalContent(modalRoot, onClose);
   });
 
   // Return to Title Screen

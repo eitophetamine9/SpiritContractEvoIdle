@@ -585,6 +585,63 @@ if (!titleScreenRoot.innerHTML.includes('Spirit Contract Evo') ||
 }
 console.log('[PASS] Title / Home Screen Gateway renders correctly with Guest, Sign In, and Register choices!');
 
+// 23. Test Step 2 Cloud Save & Sync Engine with Conflict Resolution
+import { cloudSaveService } from '../src/services/cloudSaveService.js';
+import { showConflictModal } from '../src/ui/components/conflictModal.js';
+
+if (!cloudSaveService || typeof cloudSaveService.uploadSave !== 'function') {
+  throw new Error('cloudSaveService missing uploadSave method!');
+}
+
+if (cloudSaveService.syncStatus !== 'local') {
+  throw new Error('cloudSaveService initial syncStatus should be local in guest mode!');
+}
+
+// Test gameState.loadCustomState
+const initialShards = gameState.state.resources.spiritShards;
+const mockCustomState = JSON.parse(JSON.stringify(gameState.state));
+mockCustomState.resources.spiritShards = 999999;
+mockCustomState.madnessZone.highestUnlockedStage = 100;
+
+const loadResult = gameState.loadCustomState(mockCustomState);
+if (!loadResult || gameState.state.resources.spiritShards !== 999999 || gameState.state.madnessZone.highestUnlockedStage !== 100) {
+  throw new Error('gameState.loadCustomState failed to apply custom state!');
+}
+console.log('[PASS] gameState.loadCustomState properly reconciles and applies external cloud state!');
+
+// Test Conflict Resolution Modal rendering
+let pickedLocal = false;
+let pickedCloud = false;
+
+showConflictModal({
+  localSummary: {
+    timestamp: Date.now() - 5000,
+    stage: 15,
+    partyPower: 50000,
+    shards: 12000,
+    spiritsCount: 12
+  },
+  cloudSummary: {
+    timestamp: Date.now() - 1000,
+    stage: 20,
+    partyPower: 80000,
+    shards: 25000,
+    spiritsCount: 18
+  },
+  onChooseLocal: () => { pickedLocal = true; },
+  onChooseCloud: () => { pickedCloud = true; }
+});
+
+const activeConflictRoot = document.getElementById('modal-root');
+if (!activeConflictRoot.innerHTML.includes('Cloud Save Conflict Detected') ||
+    !activeConflictRoot.innerHTML.includes('Local Device Save') ||
+    !activeConflictRoot.innerHTML.includes('Supabase Cloud Save') ||
+    !activeConflictRoot.innerHTML.includes('btn-conflict-pick-local') ||
+    !activeConflictRoot.innerHTML.includes('btn-conflict-pick-cloud')) {
+  throw new Error('Conflict modal failed to render conflict details and choice buttons!');
+}
+console.log('[PASS] Cloud Save Conflict Resolution Modal renders comparison metrics & action buttons!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 

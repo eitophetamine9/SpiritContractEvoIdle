@@ -21,6 +21,7 @@ import { arenaRenderer } from './render/arenaRenderer.js';
 import { authService } from './services/authService.js';
 import { showAuthModal } from './ui/components/authModal.js';
 import { initTitleScreen, showTitleScreen } from './ui/components/titleScreen.js';
+import { cloudSaveService } from './services/cloudSaveService.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -340,6 +341,7 @@ gameState.subscribe((eventType, payload, state) => {
 // App Initialization
 window.addEventListener('DOMContentLoaded', () => {
   const offlineReport = gameState.init();
+  cloudSaveService.init();
 
   // Audio setup
   audioManager.bindGameStateEvents(gameState);
@@ -369,6 +371,7 @@ window.addEventListener('DOMContentLoaded', () => {
     audioManager.handleTabChange(activeTab);
     updateResourcesDisplay(true);
     updateAuthDisplay();
+    cloudSaveService.updateSaveStatusUI();
     renderActiveTab();
 
     if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
