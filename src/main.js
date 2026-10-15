@@ -309,22 +309,7 @@ if (btnTopProfile) {
   });
 }
 
-// Setup Header Index button
-const btnTopIndex = document.getElementById('btn-top-index');
-if (btnTopIndex) {
-  btnTopIndex.addEventListener('click', () => {
-    switchTab('index');
-  });
-}
-
-// Setup Header Home / Title Screen button
-const btnTopHome = document.getElementById('btn-top-home');
-if (btnTopHome) {
-  btnTopHome.addEventListener('click', () => {
-    showTitleScreen();
-  });
-}
-
+// Setup Header Home / Title Screen button (Title text click)
 const btnHeaderTitle = document.getElementById('btn-header-title');
 if (btnHeaderTitle) {
   btnHeaderTitle.addEventListener('click', () => {
@@ -332,7 +317,32 @@ if (btnHeaderTitle) {
   });
 }
 
-// Setup Header Auth / Cloud Account button
+// Setup Save Status click to open Cloud Account Modal
+if (saveStatusEl) {
+  saveStatusEl.addEventListener('click', () => {
+    showAuthModal(updateAuthDisplay);
+  });
+}
+
+// Setup Drawer Home button
+const btnDrawerHome = document.getElementById('btn-drawer-home');
+if (btnDrawerHome) {
+  btnDrawerHome.addEventListener('click', () => {
+    closeNavDrawer();
+    showTitleScreen();
+  });
+}
+
+// Setup Drawer Auth button
+const btnDrawerAuth = document.getElementById('btn-drawer-auth');
+if (btnDrawerAuth) {
+  btnDrawerAuth.addEventListener('click', () => {
+    closeNavDrawer();
+    showAuthModal(updateAuthDisplay);
+  });
+}
+
+// Setup Header Auth / Cloud Account button (if present)
 function updateAuthDisplay() {
   const isGuest = authService.isGuest();
   const profile = authService.getProfile();
