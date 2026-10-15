@@ -2,6 +2,7 @@ import { authService } from '../../services/authService.js';
 import { isSupabaseConfigured } from '../../services/supabaseClient.js';
 import { gameState } from '../../state/gameState.js';
 import { closeActiveModal } from './modals.js';
+import { showTitleScreen } from './titleScreen.js';
 
 let activeAuthTab = 'signin'; // 'signin' | 'signup'
 let authErrorMessage = '';
@@ -99,6 +100,10 @@ function renderAuthModalContent(modalRoot, onClose) {
               </div>
             </div>
 
+            <button id="btn-auth-goto-title" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-extrabold text-xs transition-all cursor-pointer shadow flex items-center justify-center gap-1.5">
+              <span>🏠 Return to Title / Home Screen</span>
+            </button>
+
             <button id="btn-auth-signout" class="w-full py-2.5 px-4 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 font-extrabold text-xs transition-all cursor-pointer shadow">
               Sign Out (Return to Guest Mode)
             </button>
@@ -176,6 +181,10 @@ function renderAuthModalContent(modalRoot, onClose) {
                 Rename Guest Contractor
               </button>
             </div>
+
+            <button id="btn-auth-goto-title" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-extrabold text-xs transition-all cursor-pointer shadow flex items-center justify-center gap-1.5">
+              <span>🏠 Return to Title / Home Screen</span>
+            </button>
 
           </div>
         `}
@@ -263,11 +272,19 @@ function bindAuthModalEvents(modalRoot, onClose) {
     }
   });
 
-  // Sign Out
+  // Return to Title Screen
+  modalRoot.querySelectorAll('#btn-auth-goto-title').forEach(btn => {
+    btn.addEventListener('click', () => {
+      handleClose();
+      showTitleScreen();
+    });
+  });
+
+  // Sign Out (returns to Title Screen in Guest Mode)
   modalRoot.querySelector('#btn-auth-signout')?.addEventListener('click', async () => {
     await authService.signOut();
-    authSuccessMessage = 'Signed out. Returned to local guest mode.';
-    renderAuthModalContent(modalRoot, onClose);
+    handleClose();
+    showTitleScreen();
   });
 
   // Edit guest name

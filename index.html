@@ -14,17 +14,24 @@
     <title>Spirit Contract Evo | Idle</title>
   </head>
   <body>
+    <!-- Title / Home Screen Gateway Layer -->
+    <div id="title-screen-root"></div>
+
     <div id="app">
       <!-- Sticky Header -->
       <header class="app-header">
         <div class="header-top">
-          <div class="game-title">
+          <div class="game-title" id="btn-header-title" style="cursor: pointer;" title="Return to Title Screen">
             <span class="game-title-text">⛩️ Spirit Contract Evo</span>
           </div>
           <div class="header-right-actions">
             <div id="save-status" class="save-indicator">
               <span class="save-dot">●</span> 💾 Saved
             </div>
+            <button id="btn-top-home" class="header-profile-btn" title="Return to Title / Home Screen">
+              <span class="profile-avatar-icon">🏠</span>
+              <span class="profile-btn-text">Home</span>
+            </button>
             <button id="btn-top-auth" class="header-auth-btn" title="Contractor Cloud Account & Saves">
               <span id="auth-status-icon">☁️</span>
               <span id="auth-status-text">Guest</span>

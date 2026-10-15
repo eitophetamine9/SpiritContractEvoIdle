@@ -1,6 +1,7 @@
 -- =========================================================================
 -- Spirit Contract Evo | Idle - Supabase Database Schema & RLS Setup
 -- Run this script in the Supabase SQL Editor (https://supabase.com/dashboard)
+-- Safe to re-run multiple times (Idempotent)
 -- =========================================================================
 
 -- 1. Profiles Table (Linked to Supabase Auth Users)
@@ -46,40 +47,49 @@ CREATE INDEX IF NOT EXISTS idx_leaderboards_highest_stage ON public.leaderboards
 CREATE INDEX IF NOT EXISTS idx_leaderboards_party_power ON public.leaderboards(total_party_power DESC);
 
 -- =========================================================================
--- 4. Enable Row Level Security (RLS)
+-- 4. Enable Row Level Security (RLS) & Clean Drop/Recreate Policies
 -- =========================================================================
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.game_saves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leaderboards ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Users can view all profiles, but only edit their own
+-- Profiles Policies
+DROP POLICY IF EXISTS "Public profiles are readable by everyone" ON public.profiles;
 CREATE POLICY "Public profiles are readable by everyone" 
   ON public.profiles FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 CREATE POLICY "Users can insert their own profile" 
   ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" 
   ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Game Saves: Only the authenticated owner can read/write their cloud save
+-- Game Saves Policies
+DROP POLICY IF EXISTS "Users can read own save" ON public.game_saves;
 CREATE POLICY "Users can read own save" 
   ON public.game_saves FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own save" ON public.game_saves;
 CREATE POLICY "Users can insert own save" 
   ON public.game_saves FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own save" ON public.game_saves;
 CREATE POLICY "Users can update own save" 
   ON public.game_saves FOR UPDATE USING (auth.uid() = user_id);
 
--- Leaderboards: Anyone can read, but only owner can upsert their score
+-- Leaderboards Policies
+DROP POLICY IF EXISTS "Public leaderboard is viewable by all" ON public.leaderboards;
 CREATE POLICY "Public leaderboard is viewable by all" 
   ON public.leaderboards FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can insert own leaderboard entry" ON public.leaderboards;
 CREATE POLICY "Users can insert own leaderboard entry" 
   ON public.leaderboards FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own leaderboard entry" ON public.leaderboards;
 CREATE POLICY "Users can update own leaderboard entry" 
   ON public.leaderboards FOR UPDATE USING (auth.uid() = user_id);
 

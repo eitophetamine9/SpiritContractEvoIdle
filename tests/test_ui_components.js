@@ -15,12 +15,24 @@ globalThis.localStorage = {
   removeItem(key) { delete this.store[key]; }
 };
 
+const titleScreenRoot = {
+  innerHTML: '',
+  style: {},
+  classList: { add: () => {}, remove: () => {} },
+  querySelectorAll: (selector) => [],
+  querySelector: (selector) => null
+};
+
+const appRoot = {
+  style: {}
+};
+
 globalThis.document = {
   addEventListener: () => {},
   getElementById: (id) => {
-    if (id === 'modal-root') {
-      return modalRoot;
-    }
+    if (id === 'modal-root') return modalRoot;
+    if (id === 'title-screen-root') return titleScreenRoot;
+    if (id === 'app') return appRoot;
     return null;
   },
   querySelector: () => null,
@@ -300,7 +312,12 @@ if (partySpirits.length > 0) {
     querySelector: () => ({ addEventListener: () => {} }),
     querySelectorAll: () => []
   };
-  global.document.getElementById = (id) => id === 'modal-root' ? modalRoot : null;
+  global.document.getElementById = (id) => {
+    if (id === 'modal-root') return modalRoot;
+    if (id === 'title-screen-root') return titleScreenRoot;
+    if (id === 'app') return appRoot;
+    return null;
+  };
   
   showEquipmentSlotModal({ spiritId: heroSpirit.id, slotType: 'headgear' });
   if (!modalRoot.innerHTML.includes('btn-modal-enhance')) {
@@ -549,6 +566,24 @@ if (!activeModalRoot.innerHTML.includes('Contractor Account') ||
   throw new Error('Auth modal failed to render contractor account, guest mode, or auth tabs!');
 }
 console.log(`[PASS] Supabase Auth Service & Account Modal verified (Supabase Configured: ${isSupabaseConfigured()})!`);
+
+// 22. Test Title / Home Screen Gateway
+import { initTitleScreen, showTitleScreen, isTitleScreenActive } from '../src/ui/components/titleScreen.js';
+
+let enteredGameCalled = false;
+initTitleScreen({ onEnterGame: () => { enteredGameCalled = true; } });
+
+if (!isTitleScreenActive()) {
+  throw new Error('Title screen should be active initially!');
+}
+
+if (!titleScreenRoot.innerHTML.includes('Spirit Contract Evo') ||
+    !titleScreenRoot.innerHTML.includes('Play as Guest') ||
+    !titleScreenRoot.innerHTML.includes('tab-home-signin') ||
+    !titleScreenRoot.innerHTML.includes('tab-home-signup')) {
+  throw new Error('Title screen failed to render title, play as guest, signin, or signup tabs!');
+}
+console.log('[PASS] Title / Home Screen Gateway renders correctly with Guest, Sign In, and Register choices!');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

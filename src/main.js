@@ -20,6 +20,7 @@ import {
 import { arenaRenderer } from './render/arenaRenderer.js';
 import { authService } from './services/authService.js';
 import { showAuthModal } from './ui/components/authModal.js';
+import { initTitleScreen, showTitleScreen } from './ui/components/titleScreen.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -251,6 +252,21 @@ if (btnTopIndex) {
   });
 }
 
+// Setup Header Home / Title Screen button
+const btnTopHome = document.getElementById('btn-top-home');
+if (btnTopHome) {
+  btnTopHome.addEventListener('click', () => {
+    showTitleScreen();
+  });
+}
+
+const btnHeaderTitle = document.getElementById('btn-header-title');
+if (btnHeaderTitle) {
+  btnHeaderTitle.addEventListener('click', () => {
+    showTitleScreen();
+  });
+}
+
 // Setup Header Auth / Cloud Account button
 function updateAuthDisplay() {
   const isGuest = authService.isGuest();
@@ -348,23 +364,21 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Resume / Start audio upon first interaction
-  const resumeAudioOnce = () => {
+  const enterGame = () => {
     audioManager.init();
     audioManager.handleTabChange(activeTab);
-    document.removeEventListener('click', resumeAudioOnce);
-    document.removeEventListener('touchstart', resumeAudioOnce);
+    updateResourcesDisplay(true);
+    updateAuthDisplay();
+    renderActiveTab();
+
+    if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
+      showOfflineModal(offlineReport, () => {
+        renderActiveTab();
+      });
+    }
   };
-  document.addEventListener('click', resumeAudioOnce, { once: true });
-  document.addEventListener('touchstart', resumeAudioOnce, { once: true });
 
-  updateResourcesDisplay();
-  renderActiveTab();
-
-  if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
-    showOfflineModal(offlineReport, () => {
-      renderActiveTab();
-    });
-  }
+  // Launch into Title / Home Screen gateway
+  initTitleScreen({ onEnterGame: enterGame });
 });
 
