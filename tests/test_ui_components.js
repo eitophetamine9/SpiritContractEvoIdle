@@ -522,6 +522,34 @@ for (const wId of expectedWeaponIds) {
 }
 console.log('[PASS] All 12 Weapon Archetypes with unique primary stats and combat abilities verified.');
 
+// 21. Test Supabase Auth Service & Contractor Account Modal
+import { authService } from '../src/services/authService.js';
+import { showAuthModal } from '../src/ui/components/authModal.js';
+import { isSupabaseConfigured } from '../src/services/supabaseClient.js';
+
+if (!authService.isGuest()) {
+  throw new Error('Default session must be guest mode!');
+}
+const initialProfile = authService.getProfile();
+if (!initialProfile || !initialProfile.username) {
+  throw new Error('Guest profile missing default username!');
+}
+
+authService.setGuestUsername('Astral Vanguard');
+if (authService.getProfile().username !== 'Astral Vanguard') {
+  throw new Error('Failed to update guest username in authService!');
+}
+
+showAuthModal();
+const activeModalRoot = document.getElementById('modal-root');
+if (!activeModalRoot.innerHTML.includes('Contractor Account') ||
+    !activeModalRoot.innerHTML.includes('Guest Mode') ||
+    !activeModalRoot.innerHTML.includes('tab-btn-signin') ||
+    !activeModalRoot.innerHTML.includes('tab-btn-signup')) {
+  throw new Error('Auth modal failed to render contractor account, guest mode, or auth tabs!');
+}
+console.log(`[PASS] Supabase Auth Service & Account Modal verified (Supabase Configured: ${isSupabaseConfigured()})!`);
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 

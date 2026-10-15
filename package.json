@@ -11,6 +11,7 @@
     "test:prob": "node tests/run_probability_tests.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "gsap": "^3.15.0"
   },
   "devDependencies": {

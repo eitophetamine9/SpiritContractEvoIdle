@@ -18,6 +18,8 @@ import {
 } from './ui/index.js';
 
 import { arenaRenderer } from './render/arenaRenderer.js';
+import { authService } from './services/authService.js';
+import { showAuthModal } from './ui/components/authModal.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -27,6 +29,9 @@ const resGodEssencesEl = document.getElementById('res-god-essences');
 const resEnergyEl = document.getElementById('res-energy');
 const saveStatusEl = document.getElementById('save-status');
 const partyEvolveBadgeEl = document.getElementById('party-evolve-badge');
+const btnTopAuth = document.getElementById('btn-top-auth');
+const authStatusIcon = document.getElementById('auth-status-icon');
+const authStatusText = document.getElementById('auth-status-text');
 
 let _lastEnergyStr = '';
 let _lastShards = -1;
@@ -245,6 +250,39 @@ if (btnTopIndex) {
     switchTab('index');
   });
 }
+
+// Setup Header Auth / Cloud Account button
+function updateAuthDisplay() {
+  const isGuest = authService.isGuest();
+  const profile = authService.getProfile();
+  if (btnTopAuth) {
+    if (isGuest) {
+      btnTopAuth.classList.remove('cloud-active');
+      if (authStatusIcon) authStatusIcon.textContent = '💾';
+      if (authStatusText) {
+        authStatusText.textContent = profile.username === 'Apprentice Contractor' ? 'Guest' : profile.username;
+      }
+    } else {
+      btnTopAuth.classList.add('cloud-active');
+      if (authStatusIcon) authStatusIcon.textContent = '☁️';
+      if (authStatusText) {
+        authStatusText.textContent = profile.username || 'Online';
+      }
+    }
+  }
+}
+
+if (btnTopAuth) {
+  btnTopAuth.addEventListener('click', () => {
+    showAuthModal(updateAuthDisplay);
+  });
+}
+
+authService.subscribe((event, payload) => {
+  updateAuthDisplay();
+});
+
+updateAuthDisplay();
 
 // Subscribe to Game State updates
 gameState.subscribe((eventType, payload, state) => {
