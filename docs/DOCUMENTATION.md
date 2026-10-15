@@ -338,15 +338,15 @@ To ensure a smooth onboarding curve for new contractors, features unlock systema
 
 ---
 
-## 16. Modular Architecture & Refactoring Roadmap
+## 16. Modular Architecture & Refactoring Roadmap (Completed in `ref/overhaulv0.1`)
 
-To maintain engineering velocity and declutter large monolithic files as the game expands, the project is scheduled for modular decomposition:
+All 5 phases of modular decomposition have been completed with 100% test coverage and zero breaking changes:
 
-| Phase | Target Monolith | Scope | Planned Target Modules |
-| :---: | :--- | :--- | :--- |
-| **Phase 1** | `gameState.js` (~5,300 lines) | Core State Engine | Extract to `src/state/modules/`: `combatEngine.js`, `spiritEngine.js`, `equipmentEngine.js`, `formationEngine.js`, `dungeonEngine.js`, `astralEngine.js`, `persistenceEngine.js`. `gameState.js` remains as a clean ~250-line Facade. |
-| **Phase 2** | `style.css` (~9,550 lines) | Global Stylesheet | Decompose into `src/styles/`: `base/` (tokens, typography), `components/` (modals, sprites, buttons), `views/` (madness, astral, forge, trials), `animations/` (lunge, recoil, particle pulses). |
-| **Phase 3** | `modals.js` (~2,300 lines) | Dialog Components | Decompose into `src/ui/modals/`: `bestiaryModal.js`, `inspectModal.js`, `hallOfFameModal.js`, `victoryModal.js`, `ascensionModal.js`. |
-| **Phase 4** | `mysticalView.js` (~1,600 lines) | Astral Realm View | Decompose into `src/ui/views/astral/`: `constellations.js`, `dwarvenForge.js`, `expeditions.js`, `transmutation.js`, `sanctuaryBattle.js`. |
-| **Phase 5** | `spiritsData.js` (~2,000 lines) | Static Spirit Data | Decouple static catalog registry (`spiritsCatalog.js`) from dynamic scaling formulas (`spiritsScaling.js`) and ultimate scripts (`spiritsUltimates.js`). |
+| Phase | Target Monolith | Completed Status | Final Modular Structure |
+| :---: | :--- | :---: | :--- |
+| **Phase 1** | `gameState.js` (5,342 &rarr; 187 lines) | ✅ Completed | Decomposed into 9 modules in `src/state/modules/`: `contractorModule.js`, `formationModule.js`, `summonModule.js`, `equipmentModule.js`, `spiritModule.js`, `combatModule.js`, `dungeonModule.js`, `astralModule.js`, `persistenceModule.js`. |
+| **Phase 2** | `style.css` (9,553 &rarr; 22 lines) | ✅ Completed | Decomposed into `src/styles/`: `tokens.css`, `base.css`, `combat.css`, `modals.css`, and `views/` (`madness.css`, `vault.css`, `astral.css`, `sanctum.css`, `profile.css`). |
+| **Phase 3** | `modals.js` (1,956 &rarr; 6 lines) | ✅ Completed | Decomposed into `src/ui/modals/`: `modalBase.js`, `offlineModal.js`, `ceremonyModal.js`, `bestiaryModal.js`, `equipmentModal.js`, `spiritModal.js`, and `index.js`. |
+| **Phase 4** | `mysticalView.js` (1,627 &rarr; 223 lines) | ✅ Completed | Decomposed into `src/ui/views/astral/`: `zodiacTab.js`, `expeditionsTab.js`, `dwarvenForgeTab.js`, `transmuteTab.js`, `blessingsTab.js`, `energyTab.js`, `sanctuaryTab.js`. |
+| **Phase 5** | `spiritsData.js` (2,241 &rarr; 5 lines) | ✅ Completed | Decomposed into `src/data/spirits/`: `elementsAndRoles.js`, `formationMatrix.js`, `speciesCatalog.js`, `progressionConfig.js`, `scalingProfiles.js`, `ultimatesCatalog.js`. |
 

@@ -1,0 +1,1303 @@
+/* =========================================================================
+   SPIRIT SANCTUM HUB - DEDICATED CHARACTER & REBIRTH NEXUS
+   ========================================================================= */
+
+.sanctum-link-pill {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.25), rgba(155, 89, 182, 0.35)) !important;
+  border-color: #ffd32a !important;
+  color: #ffd32a !important;
+}
+
+.sanctum-hub-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 8px 4px 60px 4px;
+}
+
+.sanctum-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.sanctum-empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/* Header Bar */
+.sanctum-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.sanctum-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sanctum-main-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px rgba(241, 196, 15, 0.6));
+}
+
+.sanctum-title {
+  margin: 0;
+  font-family: var(--font-fantasy);
+  font-size: 18px;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #ffd32a, #ff9f1a, #e056fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sanctum-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sanctum-currencies-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sanctum-currency-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Portrait Optimized Layout */
+.sanctum-hub-root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 4px 60px 4px;
+}
+
+/* Portrait Hero Carousel Strip */
+.sanctum-hero-strip-wrapper {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.strip-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.strip-count-label {
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.btn-toggle-filters {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffd32a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-toggle-filters.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+}
+
+.strip-filters-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sanctum-hero-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.strip-hero-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  cursor: pointer;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.strip-hero-chip.selected {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+}
+
+.chip-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.chip-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.chip-name {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.chip-sub {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+/* Portrait Hero Stage */
+.sanctum-hero-stage.portrait-stage {
+  padding: 14px;
+  min-height: unset;
+}
+
+/* Concise Primary 4-Stat Grid */
+.concise-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.concise-stat-card {
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.cstat-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cstat-icon {
+  font-size: 14px;
+}
+
+.cstat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.cstat-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd32a;
+  margin-top: 2px;
+}
+
+.cstat-sub {
+  font-size: 9.5px;
+  color: #2ed573;
+}
+
+/* More Info Expand Control */
+.more-info-control-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.btn-toggle-more-info {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #f3e8ff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.btn-toggle-more-info:hover, .btn-toggle-more-info.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+}
+
+.btn-open-dossier-pill {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(241, 196, 15, 0.15);
+  border: 1px solid rgba(241, 196, 15, 0.35);
+  color: #ffd32a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.collapsible-details-container.collapsed {
+  display: none;
+}
+
+.collapsible-details-container.expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Rebirth Sub-Hub Portrait Enhancements */
+.rebirth-current-card {
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.rcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rcard-star-badge {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.rcard-bonus {
+  font-size: 11px;
+  font-weight: 800;
+  color: #2ed573;
+}
+
+.rcard-desc {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.rebirth-expand-toggle-bar {
+  display: flex;
+  margin-top: 4px;
+}
+
+.btn-toggle-rebirth-list {
+  width: 100%;
+  padding: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.rebirth-nodes-track.collapsed {
+  display: none;
+}
+
+.rebirth-nodes-track.expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* Left Rail & Search Box */
+.sanctum-search-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.sanctum-search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-main);
+  font-size: 11px;
+  width: 100%;
+}
+
+.sanctum-role-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.role-chip {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.role-chip.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+  color: #f3e8ff;
+}
+
+.sanctum-roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 4px;
+  max-height: 520px;
+}
+
+.sanctum-hero-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(20, 28, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sanctum-hero-card:hover {
+  background: rgba(30, 41, 59, 0.85);
+  transform: translateX(2px);
+}
+
+.sanctum-hero-card.selected {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.25) 0%, rgba(30, 41, 59, 0.9) 100%);
+  border-color: #a855f7;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.25);
+}
+
+.hero-card-left {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.hero-mini-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.hero-card-mid {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-card-name {
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-card-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.hero-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  margin-left: 6px;
+}
+
+.rebirth-star-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #ffd32a;
+  background: rgba(241, 196, 15, 0.18);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.in-party-tag {
+  font-size: 9px;
+  font-weight: 700;
+  color: #2ed573;
+  background: rgba(46, 213, 115, 0.18);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Center Stage: Hero Viewport & Action Pedestal */
+.sanctum-hero-stage {
+  position: relative;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(9, 12, 20, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 480px;
+  overflow: hidden;
+}
+
+.stage-backdrop-glow {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(40px);
+  z-index: 0;
+}
+
+.stage-hero-identity {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stage-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.rarity-badge, .element-badge, .role-badge, .archetype-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+
+.element-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-main);
+}
+
+.archetype-badge {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.2), rgba(230, 126, 34, 0.3));
+  border: 1px solid #f39c12;
+  color: #f1c40f;
+}
+
+.stage-hero-name {
+  margin: 6px 0 0 0;
+  font-family: var(--font-fantasy);
+  font-size: 22px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.stage-hero-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.stage-viewport-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.creature-canvas-mount {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.creature-canvas-mount canvas {
+  width: 96px !important;
+  height: 96px !important;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.8));
+}
+
+.stage-pedestal-plinth {
+  width: 140px;
+  height: 24px;
+  margin-top: -12px;
+  position: relative;
+  z-index: 1;
+}
+
+.pedestal-rune-circle {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.45) 0%, rgba(0, 0, 0, 0) 70%);
+  border-bottom: 2px solid rgba(168, 85, 247, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}
+
+.stage-animation-controls {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.anim-btn {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.anim-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.stage-stats-strip {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stage-stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.stage-stat-pill .stat-lbl {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+.stage-stat-pill .stat-val {
+  font-size: 11.5px;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.stage-stat-pill .cp-val { color: #f1c40f; }
+.stage-stat-pill .rebirth-val { color: #ffd32a; }
+.stage-stat-pill .threat-val { color: #e74c3c; }
+
+/* Right Panel: 5 Sub-Hubs Navigation & Details */
+.sanctum-panel {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 480px;
+}
+
+.sanctum-subhub-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.subhub-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.subhub-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+}
+
+.subhub-tab-btn.active {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(99, 102, 241, 0.2) 100%);
+  border-color: #a855f7;
+  color: #ffd32a;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+.sanctum-subhub-content {
+  flex: 1;
+}
+
+.subhub-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pane-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pane-section-header .sec-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.pane-section-header .sec-tag {
+  font-size: 10px;
+  color: #ffd32a;
+}
+
+/* Attributes Sub-Hub Grid */
+.dual-attributes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.attribute-row-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.attr-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.attr-details {
+  flex: 1;
+}
+
+.attr-label-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attr-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.attr-total {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.attr-formula-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.attr-bonus-tag {
+  color: #2ed573;
+  font-weight: 700;
+}
+
+/* Scaling Profile Card */
+.scaling-profile-card {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.08) 0%, rgba(230, 126, 34, 0.12) 100%);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-card-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.profile-icon {
+  font-size: 20px;
+}
+
+.profile-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.profile-formula {
+  font-size: 10.5px;
+  color: var(--text-main);
+}
+
+.profile-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scale-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.scale-badge.primary { background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; color: #ff6b6b; }
+.scale-badge.secondary { background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; color: #74b9ff; }
+.scale-badge.perk { background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ed573; }
+
+/* Level Progression Card */
+.level-progression-card {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progression-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sanctum-progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sanctum-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  transition: width 0.3s ease;
+}
+
+.level-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sanctum-action {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.3), rgba(41, 128, 185, 0.4));
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-sanctum-action:hover:not(:disabled) {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+}
+
+.btn-sanctum-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-sanctum-action.accent {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.4), rgba(230, 126, 34, 0.5));
+  border-color: #ffd32a;
+  color: #ffd32a;
+}
+
+/* Weapons Sub-Hub */
+.weapon-master-card {
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weapon-card-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.weapon-sprite-stage {
+  width: 56px;
+  height: 56px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weapon-headline {
+  flex: 1;
+}
+
+.weapon-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.weapon-type-pill {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.weapon-atk-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ff4757;
+  margin-top: 4px;
+}
+
+.weapon-substats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.substat-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.weapon-enhance-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.enhance-cost-line {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  gap: 8px;
+}
+
+.enhance-buttons-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Relics Sub-Hub */
+.god-sets-tracker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.god-set-pill {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 10.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.god-set-pill.active-2 {
+  border-color: #3498db;
+  background: rgba(52, 152, 219, 0.15);
+}
+
+.god-set-pill.active-4 {
+  border-color: #ffd32a;
+  background: rgba(241, 196, 15, 0.2);
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.3);
+}
+
+.relic-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.relic-slot-card {
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relic-card-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.relic-mini-sprite {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.relic-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.relic-stars {
+  font-size: 9.5px;
+  color: #ffd32a;
+}
+
+.relic-main-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.stat-highlight {
+  color: #2ed573;
+}
+
+.relic-substats-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+}
+
+.relic-substat-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+}
+
+.roll-tag {
+  color: #ffd32a;
+  font-weight: 800;
+}
+
+.btn-slot-equip, .btn-slot-swap {
+  width: 100%;
+  padding: 6px;
+  font-size: 10.5px;
+  font-weight: 800;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-slot-equip:hover, .btn-slot-swap:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Rebirths Sub-Hub */
+.rebirth-nodes-track {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.rebirth-node-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(20, 28, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.rebirth-node-item.unlocked {
+  background: linear-gradient(90deg, rgba(241, 196, 15, 0.2) 0%, rgba(20, 28, 40, 0.8) 100%);
+  border-color: #ffd32a;
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.2);
+}
+
+.rebirth-node-item.next {
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.node-star-pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+}
+
+.node-star-badge {
+  font-size: 18px;
+}
+
+.node-num {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.node-content {
+  flex: 1;
+}
+
+.node-header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.node-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.node-stat-mult {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.node-passive-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.rebirth-forge-chamber {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.forge-info-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+/* Talents Sub-Hub */
+.talent-card {
+  background: rgba(20, 28, 40, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.talent-card.ultimate {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.5) 0%, rgba(20, 28, 40, 0.8) 100%);
+}
+
+.talent-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.talent-icon {
+  font-size: 22px;
+}
+
+.talent-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.talent-type {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+.talent-desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+.talent-formula-box {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
