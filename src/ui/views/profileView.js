@@ -2,6 +2,9 @@ import { gameState } from '../../state/gameState.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showHallOfFamePickerModal } from '../components/modals.js';
+import { getNextFeatureUnlock, getAllFeatureMilestones } from '../../data/contractorData.js';
+import { authService } from '../../services/authService.js';
+import { cloudSaveService } from '../../services/cloudSaveService.js';
 
 export function renderProfileView(container) {
   const state = gameState.state;
@@ -12,6 +15,13 @@ export function renderProfileView(container) {
   const allSpecies = Object.values(SPIRIT_SPECIES);
   const discoveredCount = allSpecies.filter(sp => gameState.isSpeciesDiscovered(sp.id)).length;
   const compendiumPercent = Math.round((discoveredCount / allSpecies.length) * 100);
+
+  const contractorLvl = gameState.getContractorLevel();
+  const contractorXp = gameState.getContractorXp();
+  const contractorXpReq = gameState.getContractorXpRequired();
+  const xpPercent = Math.min(100, Math.round((contractorXp / contractorXpReq) * 100));
+  const nextUnlock = getNextFeatureUnlock(contractorLvl);
+  const allMilestones = getAllFeatureMilestones();
 
   // Derive Contractor Title from Highest Stage
   let contractorTitle = 'Novice Contractor';
@@ -49,6 +59,70 @@ export function renderProfileView(container) {
           <span>📖 Spirit Compendium: <strong>${discoveredCount}/${allSpecies.length}</strong> (${compendiumPercent}%)</span>
         </div>
       </div>
+
+      <!-- Contractor Level & EXP Progression Card -->
+      <div class="profile-contractor-level-card">
+        <div class="contractor-level-header">
+          <div class="contractor-lvl-badge">
+            <span class="lvl-crown">👑</span>
+            <span class="lvl-number">Lv. ${contractorLvl}</span>
+          </div>
+          <div class="contractor-xp-stats">
+            <div class="xp-label-row">
+              <span class="xp-title">Contractor Ascension</span>
+              <span class="xp-nums">${contractorXp.toLocaleString()} / ${contractorXpReq.toLocaleString()} EXP (${xpPercent}%)</span>
+            </div>
+            <div class="contractor-xp-bar-track">
+              <div class="contractor-xp-bar-fill" style="width: ${xpPercent}%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Upcoming Milestone Pill -->
+        <div class="upcoming-milestone-pill">
+          ${nextUnlock ? `
+            <span class="milestone-icon">${nextUnlock.icon || '🔒'}</span>
+            <div class="milestone-info">
+              <span class="milestone-name">Next Unlock: <strong>${nextUnlock.name}</strong></span>
+              <span class="milestone-req">Unlocks at Contractor Level ${nextUnlock.level}</span>
+            </div>
+          ` : `
+            <span class="milestone-icon">🌟</span>
+            <div class="milestone-info">
+              <span class="milestone-name"><strong>All System Milestones Mastered!</strong></span>
+              <span class="milestone-req">You have attained peak contractor authority.</span>
+            </div>
+          `}
+        </div>
+
+        <!-- Collapsible System Milestones Overview -->
+        <details class="milestones-accordion">
+          <summary class="milestones-accordion-summary">
+            <span>📜 View Feature Unlock Roadmap (7)</span>
+            <span class="summary-arrow">▼</span>
+          </summary>
+          <div class="milestones-timeline-list">
+            ${allMilestones.map(m => {
+              const isUnlocked = contractorLvl >= m.level;
+              return `
+                <div class="milestone-timeline-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                  <div class="milestone-status-badge">
+                    ${isUnlocked ? '✓' : `Lv.${m.level}`}
+                  </div>
+                  <div class="milestone-timeline-details">
+                    <div class="milestone-item-title">
+                      <span>${m.icon} ${m.name}</span>
+                      <span class="milestone-lock-tag">${isUnlocked ? 'Unlocked' : `Requires Lv. ${m.level}`}</span>
+                    </div>
+                    <div class="milestone-item-desc">${m.desc}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </details>
+      </div>
+
 
       <!-- 5-Slot Hall of Fame Showcase -->
       <div class="hall-of-fame-section">
@@ -143,6 +217,11 @@ export function renderProfileView(container) {
             </button>
           </div>
 
+          <button id="btn-replay-tutorial" class="zone-toggle-btn" style="min-height: 42px; border-color: rgba(255, 209, 82, 0.4); color: #ffd152; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>🐱</span>
+            <span>Replay Guided Tutorial</span>
+          </button>
+
           <button id="btn-reset-game" class="btn-reset-danger" style="margin-top: 6px;">
             ⚠️ Reset All Progress
           </button>
@@ -151,6 +230,14 @@ export function renderProfileView(container) {
 
     </div>
   `;
+
+  // Replay Tutorial
+  const btnReplay = container.querySelector('#btn-replay-tutorial');
+  if (btnReplay) {
+    btnReplay.addEventListener('click', () => {
+      gameState.restartTutorial();
+    });
+  }
 
   // Attach Hall of Fame empty slot picker
   container.querySelectorAll('[data-action="pick-hall-spirit"]').forEach(btn => {
@@ -225,16 +312,24 @@ export function renderProfileView(container) {
   // Reset Progress
   const btnReset = container.querySelector('#btn-reset-game');
   if (btnReset) {
-    btnReset.addEventListener('click', () => {
+    btnReset.addEventListener('click', async () => {
       if (confirm('CRITICAL WARNING: This will permanently wipe all spirits, stage progress, and shards! Are you completely sure?')) {
-        if (confirm('Final confirmation: Reset everything back to Level 1 Cat Spirit?')) {
+        if (confirm('Final confirmation: Reset everything back to Level 1 Cat Spirit starter state?')) {
           gameState.resetAllProgress();
+          if (!authService.isGuest()) {
+            try {
+              await cloudSaveService.uploadSave(true);
+            } catch (err) {
+              console.warn('[ProfileView] Could not immediately upload reset cloud save:', err);
+            }
+          }
           window.location.reload();
         }
       }
     });
   }
 }
+
 
 function formatOfflineTime(seconds) {
   if (!seconds || seconds <= 0) return '0m';

@@ -18,6 +18,14 @@ import {
 } from './ui/index.js';
 
 import { arenaRenderer } from './render/arenaRenderer.js';
+import { authService } from './services/authService.js';
+import { showAuthModal } from './ui/components/authModal.js';
+import { initTitleScreen, showTitleScreen } from './ui/components/titleScreen.js';
+import { cloudSaveService } from './services/cloudSaveService.js';
+import { showGameToast } from './ui/components/toast.js';
+import { showLevelUpModal } from './ui/components/levelUpModal.js';
+import { FEATURE_UNLOCKS } from './data/contractorData.js';
+import { guidedTutorial } from './ui/components/guidedTutorial.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -27,6 +35,9 @@ const resGodEssencesEl = document.getElementById('res-god-essences');
 const resEnergyEl = document.getElementById('res-energy');
 const saveStatusEl = document.getElementById('save-status');
 const partyEvolveBadgeEl = document.getElementById('party-evolve-badge');
+const btnTopAuth = document.getElementById('btn-top-auth');
+const authStatusIcon = document.getElementById('auth-status-icon');
+const authStatusText = document.getElementById('auth-status-text');
 
 let _lastEnergyStr = '';
 let _lastShards = -1;
@@ -75,7 +86,66 @@ function updateResourcesDisplay(force = false) {
   }
 }
 
+function updateFeatureGatingUI() {
+  // Top Index button
+  const btnTopIndex = document.getElementById('btn-top-index');
+  if (btnTopIndex) {
+    const isIndexUnlocked = gameState.isFeatureUnlocked('BESTIARY_INDEX');
+    btnTopIndex.classList.toggle('locked', !isIndexUnlocked);
+    btnTopIndex.title = isIndexUnlocked 
+      ? 'Spirit Bestiary & Lineages' 
+      : `🔒 Spirit Bestiary (Unlocks at Lv. ${FEATURE_UNLOCKS.BESTIARY_INDEX.level})`;
+  }
+
+  // Nav drawer items
+  const drawerLocks = {
+    trials: { feat: 'PANTHEON_TRIALS', lvl: FEATURE_UNLOCKS.PANTHEON_TRIALS.level },
+    forge: { feat: 'DIVINE_FORGE', lvl: FEATURE_UNLOCKS.DIVINE_FORGE.level },
+    mystical: { feat: 'SANCTUARY_ESSENCE', lvl: FEATURE_UNLOCKS.SANCTUARY_ESSENCE.level },
+    index: { feat: 'BESTIARY_INDEX', lvl: FEATURE_UNLOCKS.BESTIARY_INDEX.level }
+  };
+
+  document.querySelectorAll('.nav-drawer-item').forEach(item => {
+    const tab = item.getAttribute('data-tab');
+    const lockConfig = drawerLocks[tab];
+    let badge = item.querySelector('.drawer-lock-badge');
+
+    if (lockConfig) {
+      const isUnlocked = gameState.isFeatureUnlocked(lockConfig.feat);
+      item.classList.toggle('locked', !isUnlocked);
+      if (!isUnlocked) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'drawer-lock-badge';
+          item.appendChild(badge);
+        }
+        badge.textContent = `🔒 Lv.${lockConfig.lvl}`;
+      } else if (badge) {
+        badge.remove();
+      }
+    }
+  });
+}
+
 function switchTab(tabName) {
+  // Feature Gating Checks
+  if (tabName === 'index' && !gameState.isFeatureUnlocked('BESTIARY_INDEX')) {
+    showGameToast(`🔒 Spirit Bestiary unlocks at Contractor Level ${FEATURE_UNLOCKS.BESTIARY_INDEX.level}! Defeat enemies and summon spirits to gain EXP.`, 'lock');
+    return;
+  }
+  if (tabName === 'trials' && !gameState.isFeatureUnlocked('PANTHEON_TRIALS')) {
+    showGameToast(`🔒 Pantheon Trials unlock at Contractor Level ${FEATURE_UNLOCKS.PANTHEON_TRIALS.level}! Clear floors in the Madness Zone to ascend.`, 'lock');
+    return;
+  }
+  if (tabName === 'forge' && !gameState.isFeatureUnlocked('DIVINE_FORGE')) {
+    showGameToast(`🔒 Divine Forge unlocks at Contractor Level ${FEATURE_UNLOCKS.DIVINE_FORGE.level}! Evolve spirits and defeat overlords to gain EXP.`, 'lock');
+    return;
+  }
+  if (tabName === 'mystical' && !gameState.isFeatureUnlocked('SANCTUARY_ESSENCE')) {
+    showGameToast(`🔒 Sanctuary of the Gods unlocks at Contractor Level ${FEATURE_UNLOCKS.SANCTUARY_ESSENCE.level}! Refine gear and conquer trials to level up.`, 'lock');
+    return;
+  }
+
   if (activeTab !== tabName) {
     // Cleanly unmount any active canvas renderer before switching views
     arenaRenderer.destroy();
@@ -129,6 +199,7 @@ function switchTab(tabName) {
   });
 
   renderActiveTab();
+  setTimeout(() => guidedTutorial.updateSpotlightPosition(), 150);
 }
 
 function renderActiveTab() {
@@ -238,13 +309,71 @@ if (btnTopProfile) {
   });
 }
 
-// Setup Header Index button
-const btnTopIndex = document.getElementById('btn-top-index');
-if (btnTopIndex) {
-  btnTopIndex.addEventListener('click', () => {
-    switchTab('index');
+// Setup Header Home / Title Screen button (Title text click)
+const btnHeaderTitle = document.getElementById('btn-header-title');
+if (btnHeaderTitle) {
+  btnHeaderTitle.addEventListener('click', () => {
+    showTitleScreen();
   });
 }
+
+// Setup Save Status click to open Cloud Account Modal
+if (saveStatusEl) {
+  saveStatusEl.addEventListener('click', () => {
+    showAuthModal(updateAuthDisplay);
+  });
+}
+
+// Setup Drawer Home button
+const btnDrawerHome = document.getElementById('btn-drawer-home');
+if (btnDrawerHome) {
+  btnDrawerHome.addEventListener('click', () => {
+    closeNavDrawer();
+    showTitleScreen();
+  });
+}
+
+// Setup Drawer Auth button
+const btnDrawerAuth = document.getElementById('btn-drawer-auth');
+if (btnDrawerAuth) {
+  btnDrawerAuth.addEventListener('click', () => {
+    closeNavDrawer();
+    showAuthModal(updateAuthDisplay);
+  });
+}
+
+// Setup Header Auth / Cloud Account button (if present)
+function updateAuthDisplay() {
+  const isGuest = authService.isGuest();
+  const profile = authService.getProfile();
+  if (btnTopAuth) {
+    if (isGuest) {
+      btnTopAuth.classList.remove('cloud-active');
+      if (authStatusIcon) authStatusIcon.textContent = '💾';
+      if (authStatusText) {
+        authStatusText.textContent = profile.username === 'Apprentice Contractor' ? 'Guest' : profile.username;
+      }
+    } else {
+      btnTopAuth.classList.add('cloud-active');
+      if (authStatusIcon) authStatusIcon.textContent = '☁️';
+      if (authStatusText) {
+        authStatusText.textContent = profile.username || 'Online';
+      }
+    }
+  }
+}
+
+if (btnTopAuth) {
+  btnTopAuth.addEventListener('click', () => {
+    showAuthModal(updateAuthDisplay);
+  });
+}
+
+authService.subscribe((event, payload) => {
+  updateAuthDisplay();
+});
+
+updateAuthDisplay();
 
 // Subscribe to Game State updates
 gameState.subscribe((eventType, payload, state) => {
@@ -276,6 +405,20 @@ gameState.subscribe((eventType, payload, state) => {
     if (activeTab === 'party') {
       renderPartyView(viewContainer);
     }
+  } else if (eventType === 'contractorLevelUp') {
+    showLevelUpModal({
+      level: payload.level,
+      newFeatures: payload.newFeatures,
+      rewards: payload.rewards,
+      onClaim: () => {
+        updateFeatureGatingUI();
+        renderActiveTab();
+      }
+    });
+    updateFeatureGatingUI();
+  } else if (eventType === 'stateLoaded') {
+    updateFeatureGatingUI();
+    renderActiveTab();
   } else if (eventType === 'offlineGains') {
     showOfflineModal(payload, () => {
       renderActiveTab();
@@ -286,6 +429,7 @@ gameState.subscribe((eventType, payload, state) => {
 // App Initialization
 window.addEventListener('DOMContentLoaded', () => {
   const offlineReport = gameState.init();
+  cloudSaveService.init();
 
   // Audio setup
   audioManager.bindGameStateEvents(gameState);
@@ -310,23 +454,24 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Resume / Start audio upon first interaction
-  const resumeAudioOnce = () => {
+  const enterGame = () => {
     audioManager.init();
     audioManager.handleTabChange(activeTab);
-    document.removeEventListener('click', resumeAudioOnce);
-    document.removeEventListener('touchstart', resumeAudioOnce);
+    updateResourcesDisplay(true);
+    updateAuthDisplay();
+    cloudSaveService.updateSaveStatusUI();
+    updateFeatureGatingUI();
+    renderActiveTab();
+    guidedTutorial.init();
+
+    if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
+      showOfflineModal(offlineReport, () => {
+        renderActiveTab();
+      });
+    }
   };
-  document.addEventListener('click', resumeAudioOnce, { once: true });
-  document.addEventListener('touchstart', resumeAudioOnce, { once: true });
 
-  updateResourcesDisplay();
-  renderActiveTab();
-
-  if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
-    showOfflineModal(offlineReport, () => {
-      renderActiveTab();
-    });
-  }
+  // Launch into Title / Home Screen gateway
+  initTitleScreen({ onEnterGame: enterGame });
 });
 

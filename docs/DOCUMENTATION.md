@@ -280,5 +280,73 @@ The Contract Altar features multi-banner rate-ups with permanent availability:
 
 The codebase is protected by extensive automated test suites validating engine mechanics, balance curves, and UI components:
 - `tests/test_game_engine.js`: 42 comprehensive tests covering contract rosters, Monte Carlo RNG, 7-Core dual attributes, 54-spirit scaling matrix, Rebirth progression, 3x3 tactical grid rules, threat aggro, defense mitigation, 1-hour idle spoils threshold, Spirit Sanctum Hub, polynomial enemy scaling, 4–6 enemy swarms on floors ending in 3 or 7, 12 weapon archetypes, Dwarven's Forge weekly quotas, 5x daily transmutation limits, Tier 4 dungeon mechanics (Overlord attendants, 25% Divine Boss Barrier, 45s Cataclysm Enrage), animated Overlord boss spritesheets, 2.5D ambient structures, and Single-Focus Constellation star-chart progression.
-- `tests/test_ui_components.js`: 20 comprehensive tests validating Bestiary grid & inspection, Hall of Fame picker, Madness 3x3 tactical grid, floor navigation, trial battle arenas, bottom dock labels, Astral Realm 8-tab dock, Single-Focus Constellation selector & active star-chart stage, Dwarven's Forge animated Vulcan master & items, large-swarm 2-column grid layout, Tier 4 combat HUD with Overlords and Divine Barrier, Hephaestus and Atlas tank set declarations, and 12 weapon archetypes.
+- `tests/test_ui_components.js`: 28 comprehensive tests validating Bestiary grid & inspection, Hall of Fame picker, Madness 3x3 tactical grid, floor navigation, trial battle arenas, bottom dock labels, Astral Realm 8-tab dock, Single-Focus Constellation selector & active star-chart stage, Dwarven's Forge animated Vulcan master & items, large-swarm 2-column grid layout, Tier 4 combat HUD with Overlords and Divine Barrier, Hephaestus and Atlas tank set declarations, 12 weapon archetypes, Supabase authentication & account management, Title screen gateway, Cloud conflict resolution modal, Contractor leveling & feature gating progression, Guided tutorial engine, Fresh account reset, and Combat Animation Engine (lunge, recoil, flinch, strike cadences).
 - `tests/run_probability_tests.js`: Monte Carlo verification across 100-pull and 100-evolution iterations.
+
+---
+
+## 13. Combat Animation Engine & Dynamic Visual Cadence
+
+### 13.1 Architecture & Animation Pipeline (`combatAnimator.js`)
+Tactile visual feedback is coordinated via `src/render/combatAnimator.js`, bridging state events with CSS keyframe transitions:
+- **`triggerSpiritAttack(slotEl)`**: Appends `.lunge-attack` to the spirit formation slot and `.attacking` to `.animated-pixel-sprite`. Cycles sprite frames 4, 5, 6, 4 with forward translation (`translateX(20px)` and `scale(1.14)`).
+- **`triggerEnemyFlinch(enemySlotEl)`**: Appends `.enemy-hit-flash` to the enemy slot and `.hurt.flinching` to `.animated-pixel-sprite`. Holds Frame 7 with a bright crimson/white drop shadow (`drop-shadow(0 0 24px #ff0055)`) and backward recoil (`translateX(12px) scale(0.88)`).
+- **`triggerEnemyAttack(enemySlotEl)`**: Appends `.enemy-lunge-attack` (lunges -20px left toward contractor party) and cycles attack frames.
+- **`triggerSpiritFlinch(spiritSlotEl)`**: Appends `.spirit-hit-flinch` (recoils -12px left) and displays spirit hurt frame.
+- **`triggerPartyStrikeExchange(container)`**: Triggers synchronized squad strike and frontline enemy flinch.
+
+### 13.2 Discrete Combat Cadence
+Auto-combat in the Madness Zone and Dungeon battles ticks on a staggered cadence (~1.1s to 1.5s per spirit) rather than silent continuous DPS, emitting:
+- `combatStrike`: `{ attackerType: 'spirit' | 'enemy', spirit, enemy, targetEnemy, targetSpirit, isUltimate, zone: 'madness' | 'dungeon' }`
+- `manualPartyStrike`: Emitted instantly on manual tap/click commands across all 4 combat arenas.
+
+---
+
+## 14. Cloud Synchronization & Supabase Authentication
+
+### 14.1 Authentication Engine (`authService.js`)
+- **Dual Mode Operation**: Supports seamless anonymous Guest mode with immediate local storage persistence and optional Supabase account registration.
+- **Credential Storage**: Secure session tokens stored via Supabase client with automatic token refreshing and session restoration on page reload.
+- **Safe State Reset**: User sign-out triggers a clean local wipe, ensuring zero state bleeding between accounts.
+
+### 14.2 Cloud Save & Conflict Resolution Engine (`cloudSaveService.js`)
+- **Automatic Sync**: Saves are automatically synchronized to `game_saves` table on floor clearances, summon ceremonies, and contractor level-ups.
+- **Conflict Resolution Modal**: When a cloud timestamp differs from local storage upon signing in on a new device, a comparison modal is rendered displaying:
+  - Save Timestamps
+  - Highest Floor / Stage
+  - Total Combat Power
+  - Spirit Shards & Spirit Roster Count
+  - Interactive "Keep Local Device Save" vs "Load Cloud Save" choices.
+
+---
+
+## 15. Contractor Account Progression & Feature Gating
+
+### 15.1 Progression Schema
+- **Contractor Level**: 1 to 50, requiring scaling Account EXP awarded through floor clearances, spirit evolutions, and gacha contracts:
+  $$\text{Required EXP}(L) = \lfloor 100 \times L^{1.45} \rfloor$$
+- **Milestone Rewards**: Shard bundles, Soul Essence, Divine Relic Reshapers, and summon tickets awarded on level thresholds.
+
+### 15.2 Feature Gating Architecture
+To ensure a smooth onboarding curve for new contractors, features unlock systematically:
+- **Contractor Lv. 1**: Tutorial & Madness Floors 1–5
+- **Contractor Lv. 3**: 3x3 Tactical Formation Grid
+- **Contractor Lv. 5**: Artifact Dungeons (Pantheon Trials)
+- **Contractor Lv. 8**: The Divine Forge (Weapon Trials)
+- **Contractor Lv. 10**: Astral Realm & Zodiac Constellations
+- **Contractor Lv. 15**: Dwarven's Forge & Relic Transmutation
+
+---
+
+## 16. Modular Architecture & Refactoring Roadmap
+
+To maintain engineering velocity and declutter large monolithic files as the game expands, the project is scheduled for modular decomposition:
+
+| Phase | Target Monolith | Scope | Planned Target Modules |
+| :---: | :--- | :--- | :--- |
+| **Phase 1** | `gameState.js` (~5,300 lines) | Core State Engine | Extract to `src/state/modules/`: `combatEngine.js`, `spiritEngine.js`, `equipmentEngine.js`, `formationEngine.js`, `dungeonEngine.js`, `astralEngine.js`, `persistenceEngine.js`. `gameState.js` remains as a clean ~250-line Facade. |
+| **Phase 2** | `style.css` (~9,550 lines) | Global Stylesheet | Decompose into `src/styles/`: `base/` (tokens, typography), `components/` (modals, sprites, buttons), `views/` (madness, astral, forge, trials), `animations/` (lunge, recoil, particle pulses). |
+| **Phase 3** | `modals.js` (~2,300 lines) | Dialog Components | Decompose into `src/ui/modals/`: `bestiaryModal.js`, `inspectModal.js`, `hallOfFameModal.js`, `victoryModal.js`, `ascensionModal.js`. |
+| **Phase 4** | `mysticalView.js` (~1,600 lines) | Astral Realm View | Decompose into `src/ui/views/astral/`: `constellations.js`, `dwarvenForge.js`, `expeditions.js`, `transmutation.js`, `sanctuaryBattle.js`. |
+| **Phase 5** | `spiritsData.js` (~2,000 lines) | Static Spirit Data | Decouple static catalog registry (`spiritsCatalog.js`) from dynamic scaling formulas (`spiritsScaling.js`) and ultimate scripts (`spiritsUltimates.js`). |
+

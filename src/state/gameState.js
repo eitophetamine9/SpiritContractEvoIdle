@@ -60,6 +60,11 @@ import {
   EXPEDITIONS_CONFIG, 
   TRANSMUTATION_CONFIG 
 } from '../data/astralRealmData.js';
+import {
+  getContractorXpRequired,
+  getFeaturesUnlockedAtLevel,
+  isFeatureUnlocked
+} from '../data/contractorData.js';
 
 const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
@@ -351,6 +356,16 @@ class GameStateManager {
         totalEnemiesDefeated: 0,
         shardsEarnedTotal: 0,
         totalDungeonRuns: 0
+      },
+      contractor: {
+        level: 1,
+        xp: 0,
+        xpRequired: getContractorXpRequired(1)
+      },
+      tutorial: {
+        step: 0,
+        completed: false,
+        active: true
       }
     };
   }
@@ -420,6 +435,29 @@ class GameStateManager {
     }
     if (typeof state.lastTransmutationDate !== 'string') {
       state.lastTransmutationDate = new Date().toDateString();
+    }
+
+    // Ensure contractor level & XP exist
+    if (!state.contractor || typeof state.contractor !== 'object') {
+      state.contractor = { level: 1, xp: 0, xpRequired: getContractorXpRequired(1) };
+    } else {
+      state.contractor.level = Math.max(1, Math.floor(state.contractor.level || 1));
+      state.contractor.xp = Math.max(0, Math.floor(state.contractor.xp || 0));
+      state.contractor.xpRequired = getContractorXpRequired(state.contractor.level);
+    }
+
+    // Ensure tutorial state exists
+    if (!state.tutorial || typeof state.tutorial !== 'object') {
+      const isVeteran = (state.madnessZone?.highestStageCleared || 0) > 1 || (state.spirits?.length || 0) > 2;
+      state.tutorial = {
+        step: isVeteran ? 99 : 0,
+        completed: isVeteran,
+        active: !isVeteran
+      };
+    } else {
+      state.tutorial.step = typeof state.tutorial.step === 'number' ? state.tutorial.step : 0;
+      state.tutorial.completed = Boolean(state.tutorial.completed);
+      state.tutorial.active = Boolean(state.tutorial.active);
     }
 
     // Ensure unlocked stages exist and sanitize floor progression
@@ -752,6 +790,175 @@ class GameStateManager {
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
     }
+  }
+
+  /**
+   * Applies an external state (e.g. from Supabase cloud sync) and reconciles caches
+   * @param {Object} savedState - Raw state object to load
+   * @returns {boolean} Success status
+   */
+  loadCustomState(savedState) {
+    if (!savedState || typeof savedState !== 'object') return false;
+    try {
+      this.state = this.sanitizeLoadedState(savedState);
+      this.invalidateCaches();
+      const mz = this.state.madnessZone;
+      if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
+        this.spawnMadnessEnemy();
+      }
+      this.save(true);
+      this.emit('stateLoaded', this.state);
+      this.emit('partyUpdated', this.state.party);
+      return true;
+    } catch (err) {
+      console.error('[GameStateManager] Failed to load custom state:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Completely resets player progress to clean Day-1 starter state.
+   * Clears saved state from localStorage, resets caches, and notifies listeners.
+   * @returns {Object} Fresh starter state
+   */
+  resetAllProgress() {
+    this.state = this.getInitialState();
+    this.invalidateCaches();
+    this.setBonusCooldowns = {};
+    this.isDirty = false;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(SAVE_KEY);
+        localStorage.removeItem('spirit_contract_evo_idle_save_v1');
+      }
+    } catch (e) {
+      console.warn('[GameStateManager] Could not clear localStorage keys:', e);
+    }
+    this.save(true);
+    const mz = this.state.madnessZone;
+    if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
+      this.spawnMadnessEnemy();
+    }
+    this.emit('stateLoaded', this.state);
+    this.emit('partyUpdated', this.state.party);
+    this.emit('stageUnlocked', 1);
+    this.emit('gameReset', this.state);
+    return this.state;
+  }
+
+  getContractorLevel() {
+    return this.state?.contractor?.level || 1;
+  }
+
+  getContractorXp() {
+    return this.state?.contractor?.xp || 0;
+  }
+
+  getContractorXpRequired() {
+    return this.state?.contractor?.xpRequired || getContractorXpRequired(this.getContractorLevel());
+  }
+
+  isFeatureUnlocked(featureId) {
+    return isFeatureUnlocked(featureId, this.getContractorLevel());
+  }
+
+  addContractorXp(amount, reason = '') {
+    if (!amount || amount <= 0) return;
+    if (!this.state.contractor) {
+      this.state.contractor = { level: 1, xp: 0, xpRequired: getContractorXpRequired(1) };
+    }
+
+    let { level, xp } = this.state.contractor;
+    xp += Math.floor(amount);
+    let req = getContractorXpRequired(level);
+    let leveledUp = false;
+    const levelsGained = [];
+
+    while (xp >= req && level < 100) {
+      xp -= req;
+      level += 1;
+      req = getContractorXpRequired(level);
+      leveledUp = true;
+      levelsGained.push(level);
+    }
+
+    this.state.contractor.level = level;
+    this.state.contractor.xp = xp;
+    this.state.contractor.xpRequired = req;
+    this.isDirty = true;
+    this.emit('contractorXpGained', { amount, reason, currentXp: xp, xpRequired: req, level });
+
+    if (leveledUp) {
+      for (const newLvl of levelsGained) {
+        const newFeatures = getFeaturesUnlockedAtLevel(newLvl);
+        // Ascension spoils: +100 Shards, +20 Energy
+        this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + 100;
+        this.state.resources.energy = Math.min(
+          this.state.resources.maxEnergy || 60,
+          (this.state.resources.energy || 0) + 20
+        );
+        this.emit('resourcesUpdated', this.state.resources);
+        this.emit('contractorLevelUp', {
+          level: newLvl,
+          newFeatures,
+          rewards: { shards: 100, energy: 20 }
+        });
+      }
+      this.save(true);
+    }
+  }
+
+  getTutorialState() {
+    return this.state?.tutorial || { step: 0, completed: false, active: true };
+  }
+
+  isTutorialActive() {
+    const tut = this.getTutorialState();
+    return Boolean(tut.active && !tut.completed);
+  }
+
+  setTutorialStep(step) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 0, completed: false, active: true };
+    }
+    this.state.tutorial.step = step;
+    this.state.tutorial.active = true;
+    this.state.tutorial.completed = false;
+    this.isDirty = true;
+    this.save();
+    this.emit('tutorialStepChanged', { step });
+  }
+
+  advanceTutorialStep(nextStep = null) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 0, completed: false, active: true };
+    }
+    const current = this.state.tutorial.step || 0;
+    const target = nextStep !== null ? nextStep : current + 1;
+    this.setTutorialStep(target);
+  }
+
+  completeTutorial(awardReward = true) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 99, completed: true, active: false };
+    }
+    this.state.tutorial.completed = true;
+    this.state.tutorial.active = false;
+    this.state.tutorial.step = 99;
+
+    if (awardReward) {
+      this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + 150;
+      this.emit('resourcesUpdated', this.state.resources);
+    }
+
+    this.isDirty = true;
+    this.save(true);
+    this.emit('tutorialCompleted', { rewarded: awardReward });
+  }
+
+  restartTutorial() {
+    this.setTutorialStep(0);
+    this.emit('tutorialRestarted');
   }
 
   markDirty() {
@@ -1467,6 +1674,18 @@ class GameStateManager {
       const damageThisTick = baseDps * deltaSec;
       leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
 
+      // Attack animation cadence (staggered ~1.1s - 1.5s so party members swing rhythmically)
+      spirit._attackAnimTimer = (spirit._attackAnimTimer || (0.4 + Math.random() * 0.8)) - deltaSec;
+      if (spirit._attackAnimTimer <= 0) {
+        spirit._attackAnimTimer = 1.2 + Math.random() * 0.4;
+        this.emit('combatStrike', {
+          attackerType: 'spirit',
+          spirit,
+          targetEnemy: leadEnemy,
+          zone: 'madness'
+        });
+      }
+
       // Mana Accumulation with Mana Replenish modifiers (Zeus 2pc, Hades 2pc, Apollo 2pc, Pendant relic)
       const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
       let manaBonusMult = 1;
@@ -1590,6 +1809,14 @@ class GameStateManager {
             defMitigated,
             shieldAbsorbed,
             isTauntedTarget: (targetSpirit.tauntTimer || 0) > 0
+          });
+
+          this.emit('combatStrike', {
+            attackerType: 'enemy',
+            enemy,
+            targetSpirit,
+            damage: finalDamage,
+            zone: 'madness'
           });
         }
       }
@@ -1811,6 +2038,14 @@ class GameStateManager {
       isCrit,
       role
     });
+
+    this.emit('combatStrike', {
+      attackerType: 'spirit',
+      spirit,
+      targetEnemy: livingEnemies[0] || null,
+      isUltimate: true,
+      zone: 'madness'
+    });
   }
 
   /**
@@ -1872,6 +2107,14 @@ class GameStateManager {
       enemyMaxHp: enemy.maxHp,
       killed,
       isCrit
+    });
+
+    this.emit('manualPartyStrike', {
+      livingSpirits,
+      leadEnemy: enemy,
+      damage,
+      isCrit,
+      zone: 'madness'
     });
 
     return { damage, killed, remainingHp: enemy.hp, isCrit };
@@ -1959,7 +2202,14 @@ class GameStateManager {
 
     if (isBossFloor) {
       // Zone Boss Defeated!
+      const prevHighest = mz.highestStageCleared || 0;
       mz.highestStageCleared = Math.max(mz.highestStageCleared || 0, mz.stage);
+
+      // First Clear Contractor EXP reward
+      if (mz.stage > prevHighest) {
+        const firstClearXp = 100 + mz.stage * 25;
+        this.addContractorXp(firstClearXp, `Madness Floor ${mz.stage} First Clear`);
+      }
 
       // Floor Victory: Revive ALL party spirits to 100% HP!
       const party = this.getPartySpirits();
@@ -2125,6 +2375,7 @@ class GameStateManager {
     spirit.evolutionHistory.push(nextSpecies.name);
 
     this.state.stats.totalEvolutions += 1;
+    this.addContractorXp(150, 'Spirit Evolution');
     this.markSpeciesDiscovered(nextSpecies.id);
     this.invalidateCaches();
     this.save();
@@ -2229,6 +2480,7 @@ class GameStateManager {
 
     this.state.stats.totalSpiritsContracted = (this.state.stats.totalSpiritsContracted || 0) + count;
     this.state.stats.totalBannerSummons = (this.state.stats.totalBannerSummons || 0) + count;
+    this.addContractorXp(count * 25, 'Spirit Contract');
     this.save();
 
     this.emit('spiritsContracted', { spirits: newSpirits, cost: totalCost, bannerId });
@@ -3218,15 +3470,6 @@ class GameStateManager {
     return this.state.discoveredSpeciesIds.includes(speciesId);
   }
 
-  resetAllProgress() {
-    localStorage.removeItem(SAVE_KEY);
-    localStorage.removeItem('spirit_contract_evo_idle_save_v1');
-    this.state = this.getInitialState();
-    this.spawnMadnessEnemy();
-    this.save();
-    this.emit('gameReset');
-  }
-
   generateId() {
     return 'sp_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
   }
@@ -4001,6 +4244,7 @@ class GameStateManager {
     }
 
     enhanceRelicData(item);
+    this.addContractorXp(20, 'Relic Refinement');
 
     this.invalidateCaches();
     this.save();
@@ -4041,6 +4285,7 @@ class GameStateManager {
     }
 
     enhanceWeaponData(item);
+    this.addContractorXp(20, 'Weapon Refinement');
 
     this.invalidateCaches();
     this.save();
@@ -4485,6 +4730,18 @@ class GameStateManager {
       const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * posAtkMult));
       let damageThisTick = baseDps * deltaSec;
 
+      // Staggered attack cadence for spirits in dungeon battles
+      spirit._dungeonAttackAnimTimer = (spirit._dungeonAttackAnimTimer || (0.4 + Math.random() * 0.8)) - deltaSec;
+      if (spirit._dungeonAttackAnimTimer <= 0) {
+        spirit._dungeonAttackAnimTimer = 1.2 + Math.random() * 0.4;
+        this.emit('combatStrike', {
+          attackerType: 'spirit',
+          spirit,
+          targetEnemy: leadEnemy,
+          zone: 'dungeon'
+        });
+      }
+
       if (leadEnemy.shieldHp > 0) {
         const absorbed = Math.min(leadEnemy.shieldHp, damageThisTick);
         leadEnemy.shieldHp -= absorbed;
@@ -4575,6 +4832,14 @@ class GameStateManager {
             defMitigated,
             shieldAbsorbed,
             isTauntedTarget: (targetSpirit.tauntTimer || 0) > 0
+          });
+
+          this.emit('combatStrike', {
+            attackerType: 'enemy',
+            enemy,
+            targetSpirit,
+            damage: finalEnemyDamage,
+            zone: 'dungeon'
           });
         }
       }
@@ -4691,6 +4956,14 @@ class GameStateManager {
       isCrit,
       role
     });
+
+    this.emit('combatStrike', {
+      attackerType: 'spirit',
+      spirit,
+      targetEnemy: livingEnemies[0] || null,
+      isUltimate: true,
+      zone: 'dungeon'
+    });
   }
 
   manualDungeonStrike() {
@@ -4740,6 +5013,13 @@ class GameStateManager {
       }
     });
 
+    this.emit('manualPartyStrike', {
+      livingSpirits,
+      leadEnemy,
+      isCrit,
+      zone: 'dungeon'
+    });
+
     this.emit('dungeonBattleUpdated', battle);
   }
 
@@ -4781,6 +5061,7 @@ class GameStateManager {
     this.state.resources.spiritShards += loot.shardsGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+    this.addContractorXp(75 + (battle.tier || 1) * 25, 'Dungeon Victory');
 
     this.getPartySpirits().forEach(s => {
       s.currentHp = s.maxHp;
@@ -5006,6 +5287,7 @@ class GameStateManager {
     this.state.resources.soulEssence += loot.essenceGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+    this.addContractorXp(75 + tierNum * 25, 'Forge Dungeon Victory');
 
     this.save();
     this.emit('dungeonCompleted', loot);
@@ -5039,6 +5321,7 @@ class GameStateManager {
 
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+    this.addContractorXp(75 + tierNum * 25, 'Essence Sanctuary Victory');
 
     this.save();
     this.emit('dungeonCompleted', loot);

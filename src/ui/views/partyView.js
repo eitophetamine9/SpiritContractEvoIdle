@@ -14,6 +14,7 @@ import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showEvolutionCeremonyModal, showEquipmentSlotModal, showItemInspectModal } from '../components/modals.js';
 import { audioManager } from '../../audio/audioManager.js';
 import { createAnimatedRelicHtml, createAnimatedWeaponHtml, createAnimatedSpriteHtml } from '../../render/spriteAnimator.js';
+import { showGameToast } from '../components/toast.js';
 
 let activeViewMode = 'showcase'; // 'showcase', 'formation', or 'roster'
 let selectedPartyIndex = 0;
@@ -30,6 +31,11 @@ export function renderPartyView(container) {
   // Clamp selected index
   if (selectedPartyIndex >= partySpirits.length && partySpirits.length > 0) {
     selectedPartyIndex = partySpirits.length - 1;
+  }
+
+  const isFormationUnlocked = gameState.isFeatureUnlocked('FORMATION_3X3');
+  if (!isFormationUnlocked && activeViewMode === 'formation') {
+    activeViewMode = 'showcase';
   }
 
   const selectedSpirit = partySpirits[selectedPartyIndex] || partySpirits[0] || null;
@@ -56,8 +62,8 @@ export function renderPartyView(container) {
       <!-- Mode Switcher & Party Summary Strip -->
       <div class="party-top-controls-bar">
         <div class="party-mode-pills">
-          <button id="btn-mode-formation" class="party-mode-pill ${activeViewMode === 'formation' ? 'active' : ''}">
-            ⚔️ 3×3 Formation
+          <button id="btn-mode-formation" class="party-mode-pill ${activeViewMode === 'formation' ? 'active' : ''} ${!isFormationUnlocked ? 'feature-locked' : ''}">
+            ${isFormationUnlocked ? '⚔️ 3×3 Formation' : '🔒 3×3 Grid (Lv. 3)'}
           </button>
           <button id="btn-mode-showcase" class="party-mode-pill ${activeViewMode === 'showcase' ? 'active' : ''}">
             👑 Hero Pedestal
@@ -781,6 +787,10 @@ function renderSegmentedGauge(activeSegments = 5, totalSegments = 10) {
 function attachEventListeners(container) {
   // Mode switcher
   document.getElementById('btn-mode-formation')?.addEventListener('click', () => {
+    if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
+      showGameToast('🔒 3×3 Tactical Grid unlocks at Contractor Level 3! Advance in the Madness Zone to level up.', 'lock');
+      return;
+    }
     activeViewMode = 'formation';
     renderPartyView(container);
   });

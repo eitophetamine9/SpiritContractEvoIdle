@@ -14,23 +14,22 @@
     <title>Spirit Contract Evo | Idle</title>
   </head>
   <body>
+    <!-- Title / Home Screen Gateway Layer -->
+    <div id="title-screen-root"></div>
+
     <div id="app">
       <!-- Sticky Header -->
       <header class="app-header">
         <div class="header-top">
-          <div class="game-title">
+          <div class="game-title" id="btn-header-title" style="cursor: pointer;" title="Return to Title Screen">
             <span class="game-title-text">⛩️ Spirit Contract Evo</span>
           </div>
           <div class="header-right-actions">
-            <div id="save-status" class="save-indicator">
-              <span class="save-dot">●</span> 💾 Saved
+            <div id="save-status" class="save-indicator" title="Save & Cloud Status (Click to manage)" style="cursor: pointer;">
+              <span class="save-dot">●</span> 💾 Local
             </div>
             <button id="btn-top-audio" class="header-audio-btn" title="Toggle Sound & Music">
               <span id="audio-icon-symbol">🔊</span>
-            </button>
-            <button id="btn-top-index" class="header-profile-btn" data-tab="index" title="Spirit Bestiary & Lineages">
-              <span class="profile-avatar-icon">📖</span>
-              <span class="profile-btn-text">Index</span>
             </button>
             <button id="btn-top-profile" class="header-profile-btn" data-tab="profile" title="Contractor Profile">
               <span class="profile-avatar-icon">🧙‍♂️</span>
@@ -151,6 +150,22 @@
               <div class="drawer-item-info">
                 <span class="drawer-item-name">Profile</span>
                 <span class="drawer-item-desc">Stats & Records</span>
+              </div>
+            </button>
+
+            <button class="nav-drawer-item" id="btn-drawer-auth" title="Cloud Account & Saves">
+              <span class="drawer-item-icon">☁️</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Account</span>
+                <span class="drawer-item-desc">Cloud Save Sync</span>
+              </div>
+            </button>
+
+            <button class="nav-drawer-item" id="btn-drawer-home" title="Return to Title Screen">
+              <span class="drawer-item-icon">🏠</span>
+              <div class="drawer-item-info">
+                <span class="drawer-item-name">Title Screen</span>
+                <span class="drawer-item-desc">Gateway & Mode</span>
               </div>
             </button>
           </div>

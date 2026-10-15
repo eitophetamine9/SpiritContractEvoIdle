@@ -233,8 +233,8 @@ export function renderCharacterHubView(container, options = {}) {
             <span class="subhub-text">Relics</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'rebirths' ? 'active' : ''}" data-subhub="rebirths">
-            <span class="subhub-icon">🌟</span>
-            <span class="subhub-text">Rebirths</span>
+            <span class="subhub-icon">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? '🌟' : '🔒'}</span>
+            <span class="subhub-text">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? 'Rebirths' : 'Rebirths (Lv.25)'}</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'talents' ? 'active' : ''}" data-subhub="talents">
             <span class="subhub-icon">📜</span>
@@ -702,21 +702,33 @@ function renderRelicsSubHub(spirit) {
  * 4. REBIRTHS SUB-HUB (Uncluttered with Collapsible 7-Tier Node Tree)
  */
 function renderRebirthsSubHub(spirit) {
+  const isRebirthUnlocked = gameState.isFeatureUnlocked('SPIRIT_REBIRTH');
   const currentTier = spirit.rebirthLevel || 0;
   const duplicateSpirits = (gameState.state.spirits || []).filter(
     s => s.speciesId === spirit.speciesId && s.id !== spirit.id
   );
   const nextTier = currentTier + 1;
-  const canAscendRebirth = nextTier <= 7 && duplicateSpirits.length >= 1 && (gameState.state.resources.soulEssence || 0) >= (nextTier * 5);
+  const canAscendRebirth = isRebirthUnlocked && nextTier <= 7 && duplicateSpirits.length >= 1 && (gameState.state.resources.soulEssence || 0) >= (nextTier * 5);
 
   return `
     <div class="subhub-pane rebirths-pane">
       <div class="pane-section-header">
         <span class="sec-title">CELESTIAL REBIRTH NEXUS (REBIRTH I TO VII)</span>
-        <span class="sec-tag">Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%</span>
+        <span class="sec-tag">${isRebirthUnlocked ? `Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%` : '🔒 Requires Contractor Lv. 25'}</span>
       </div>
 
+      ${!isRebirthUnlocked ? `
+        <div class="empty-subhub-box" style="padding: 16px 14px; border: 1px dashed rgba(245, 158, 11, 0.4); background: rgba(15, 23, 42, 0.85); border-radius: 16px; text-align: center; margin-bottom: 12px;">
+          <div style="font-size: 26px; margin-bottom: 4px;">🔒</div>
+          <h4 style="color: #ffd152; font-weight: 900; font-size: 13px; margin-bottom: 2px;">Spirit Rebirth Chamber Locked</h4>
+          <p style="color: #cbd5e1; font-size: 11px; line-height: 1.35; max-width: 320px; margin: 0 auto;">
+            Requires <strong>Contractor Level 25</strong> to transcend maximum level limits and ignite 7-star constellation affinities.
+          </p>
+        </div>
+      ` : ''}
+
       <!-- Current Rebirth Active Card -->
+
       <div class="rebirth-current-card">
         <div class="rcard-header">
           <span class="rcard-star-badge">${currentTier > 0 ? `⭐ Tier ${currentTier}` : '⭐0 Dormant'}</span>
@@ -893,11 +905,29 @@ function attachSanctumListeners(container, selectedSpirit) {
   const btnAttack = container.querySelector('#btn-anim-attack');
   const btnHurt = container.querySelector('#btn-anim-hurt');
 
-  if (btnAttack && activeStageAnimator) {
-    btnAttack.addEventListener('click', () => activeStageAnimator.triggerAttack());
+  if (btnAttack) {
+    btnAttack.addEventListener('click', () => {
+      if (activeStageAnimator) activeStageAnimator.triggerAttack();
+      const mountEl = container.querySelector('#sanctum-creature-mount');
+      if (mountEl) {
+        mountEl.classList.remove('lunge-attack');
+        void mountEl.offsetWidth;
+        mountEl.classList.add('lunge-attack');
+        setTimeout(() => mountEl.classList.remove('lunge-attack'), 360);
+      }
+    });
   }
-  if (btnHurt && activeStageAnimator) {
-    btnHurt.addEventListener('click', () => activeStageAnimator.triggerHurt());
+  if (btnHurt) {
+    btnHurt.addEventListener('click', () => {
+      if (activeStageAnimator) activeStageAnimator.triggerHurt();
+      const mountEl = container.querySelector('#sanctum-creature-mount');
+      if (mountEl) {
+        mountEl.classList.remove('spirit-hit-flinch');
+        void mountEl.offsetWidth;
+        mountEl.classList.add('spirit-hit-flinch');
+        setTimeout(() => mountEl.classList.remove('spirit-hit-flinch'), 360);
+      }
+    });
   }
 
   attachSubHubListeners(container, selectedSpirit);
