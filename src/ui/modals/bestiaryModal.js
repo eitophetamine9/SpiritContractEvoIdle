@@ -1,5 +1,5 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from '../components/pixelBox.js';
-import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getRarityInfo, getRoleInfo } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
 import { closeActiveModal } from './modalBase.js';
