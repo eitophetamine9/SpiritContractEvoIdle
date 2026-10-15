@@ -740,7 +740,40 @@ if (!testProfileContainer.innerHTML.includes('Contractor Ascension') ||
 }
 console.log('[PASS] Profile View renders Contractor Level card, EXP bar, and Milestones Roadmap!');
 
+// 26. Test Guided Onboarding Tutorial System
+import { guidedTutorial, TUTORIAL_STEPS } from '../src/ui/components/guidedTutorial.js';
+
+if (!Array.isArray(TUTORIAL_STEPS) || TUTORIAL_STEPS.length !== 8) {
+  throw new Error(`Expected 8 tutorial steps, found ${TUTORIAL_STEPS?.length}`);
+}
+
+// Test initial tutorial state
+gameState.restartTutorial();
+const tutState = gameState.getTutorialState();
+if (tutState.step !== 0 || !tutState.active || tutState.completed) {
+  throw new Error('Initial tutorial state should be step 0, active true, completed false');
+}
+
+// Advance step
+gameState.advanceTutorialStep(1);
+if (gameState.getTutorialState().step !== 1) {
+  throw new Error('advanceTutorialStep failed to advance to step 1');
+}
+
+// Complete tutorial with reward
+const shardsBefore = gameState.state.resources.spiritShards;
+gameState.completeTutorial(true);
+if (!gameState.getTutorialState().completed || gameState.getTutorialState().active) {
+  throw new Error('completeTutorial failed to mark tutorial as completed');
+}
+if (gameState.state.resources.spiritShards !== shardsBefore + 150) {
+  throw new Error('completeTutorial failed to award 150 bonus shards');
+}
+
+console.log('[PASS] Guided Tutorial state engine, step progression, and completion reward validated!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
+
 
 

@@ -215,6 +215,11 @@ export function renderProfileView(container) {
             </button>
           </div>
 
+          <button id="btn-replay-tutorial" class="zone-toggle-btn" style="min-height: 42px; border-color: rgba(255, 209, 82, 0.4); color: #ffd152; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>🐱</span>
+            <span>Replay Guided Tutorial</span>
+          </button>
+
           <button id="btn-reset-game" class="btn-reset-danger" style="margin-top: 6px;">
             ⚠️ Reset All Progress
           </button>
@@ -223,6 +228,14 @@ export function renderProfileView(container) {
 
     </div>
   `;
+
+  // Replay Tutorial
+  const btnReplay = container.querySelector('#btn-replay-tutorial');
+  if (btnReplay) {
+    btnReplay.addEventListener('click', () => {
+      gameState.restartTutorial();
+    });
+  }
 
   // Attach Hall of Fame empty slot picker
   container.querySelectorAll('[data-action="pick-hall-spirit"]').forEach(btn => {
@@ -307,6 +320,7 @@ export function renderProfileView(container) {
     });
   }
 }
+
 
 function formatOfflineTime(seconds) {
   if (!seconds || seconds <= 0) return '0m';

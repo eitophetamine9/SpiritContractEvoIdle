@@ -361,6 +361,11 @@ class GameStateManager {
         level: 1,
         xp: 0,
         xpRequired: getContractorXpRequired(1)
+      },
+      tutorial: {
+        step: 0,
+        completed: false,
+        active: true
       }
     };
   }
@@ -439,6 +444,20 @@ class GameStateManager {
       state.contractor.level = Math.max(1, Math.floor(state.contractor.level || 1));
       state.contractor.xp = Math.max(0, Math.floor(state.contractor.xp || 0));
       state.contractor.xpRequired = getContractorXpRequired(state.contractor.level);
+    }
+
+    // Ensure tutorial state exists
+    if (!state.tutorial || typeof state.tutorial !== 'object') {
+      const isVeteran = (state.madnessZone?.highestStageCleared || 0) > 1 || (state.spirits?.length || 0) > 2;
+      state.tutorial = {
+        step: isVeteran ? 99 : 0,
+        completed: isVeteran,
+        active: !isVeteran
+      };
+    } else {
+      state.tutorial.step = typeof state.tutorial.step === 'number' ? state.tutorial.step : 0;
+      state.tutorial.completed = Boolean(state.tutorial.completed);
+      state.tutorial.active = Boolean(state.tutorial.active);
     }
 
     // Ensure unlocked stages exist and sanitize floor progression
@@ -857,6 +876,59 @@ class GameStateManager {
       }
       this.save(true);
     }
+  }
+
+  getTutorialState() {
+    return this.state?.tutorial || { step: 0, completed: false, active: true };
+  }
+
+  isTutorialActive() {
+    const tut = this.getTutorialState();
+    return Boolean(tut.active && !tut.completed);
+  }
+
+  setTutorialStep(step) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 0, completed: false, active: true };
+    }
+    this.state.tutorial.step = step;
+    this.state.tutorial.active = true;
+    this.state.tutorial.completed = false;
+    this.isDirty = true;
+    this.save();
+    this.emit('tutorialStepChanged', { step });
+  }
+
+  advanceTutorialStep(nextStep = null) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 0, completed: false, active: true };
+    }
+    const current = this.state.tutorial.step || 0;
+    const target = nextStep !== null ? nextStep : current + 1;
+    this.setTutorialStep(target);
+  }
+
+  completeTutorial(awardReward = true) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 99, completed: true, active: false };
+    }
+    this.state.tutorial.completed = true;
+    this.state.tutorial.active = false;
+    this.state.tutorial.step = 99;
+
+    if (awardReward) {
+      this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + 150;
+      this.emit('resourcesUpdated', this.state.resources);
+    }
+
+    this.isDirty = true;
+    this.save(true);
+    this.emit('tutorialCompleted', { rewarded: awardReward });
+  }
+
+  restartTutorial() {
+    this.setTutorialStep(0);
+    this.emit('tutorialRestarted');
   }
 
   markDirty() {

@@ -25,6 +25,7 @@ import { cloudSaveService } from './services/cloudSaveService.js';
 import { showGameToast } from './ui/components/toast.js';
 import { showLevelUpModal } from './ui/components/levelUpModal.js';
 import { FEATURE_UNLOCKS } from './data/contractorData.js';
+import { guidedTutorial } from './ui/components/guidedTutorial.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -198,6 +199,7 @@ function switchTab(tabName) {
   });
 
   renderActiveTab();
+  setTimeout(() => guidedTutorial.updateSpotlightPosition(), 150);
 }
 
 function renderActiveTab() {
@@ -450,6 +452,7 @@ window.addEventListener('DOMContentLoaded', () => {
     cloudSaveService.updateSaveStatusUI();
     updateFeatureGatingUI();
     renderActiveTab();
+    guidedTutorial.init();
 
     if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {
       showOfflineModal(offlineReport, () => {
