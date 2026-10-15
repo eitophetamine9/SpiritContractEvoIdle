@@ -22,6 +22,9 @@ import { authService } from './services/authService.js';
 import { showAuthModal } from './ui/components/authModal.js';
 import { initTitleScreen, showTitleScreen } from './ui/components/titleScreen.js';
 import { cloudSaveService } from './services/cloudSaveService.js';
+import { showGameToast } from './ui/components/toast.js';
+import { showLevelUpModal } from './ui/components/levelUpModal.js';
+import { FEATURE_UNLOCKS } from './data/contractorData.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -82,7 +85,66 @@ function updateResourcesDisplay(force = false) {
   }
 }
 
+function updateFeatureGatingUI() {
+  // Top Index button
+  const btnTopIndex = document.getElementById('btn-top-index');
+  if (btnTopIndex) {
+    const isIndexUnlocked = gameState.isFeatureUnlocked('BESTIARY_INDEX');
+    btnTopIndex.classList.toggle('locked', !isIndexUnlocked);
+    btnTopIndex.title = isIndexUnlocked 
+      ? 'Spirit Bestiary & Lineages' 
+      : `🔒 Spirit Bestiary (Unlocks at Lv. ${FEATURE_UNLOCKS.BESTIARY_INDEX.level})`;
+  }
+
+  // Nav drawer items
+  const drawerLocks = {
+    trials: { feat: 'PANTHEON_TRIALS', lvl: FEATURE_UNLOCKS.PANTHEON_TRIALS.level },
+    forge: { feat: 'DIVINE_FORGE', lvl: FEATURE_UNLOCKS.DIVINE_FORGE.level },
+    mystical: { feat: 'SANCTUARY_ESSENCE', lvl: FEATURE_UNLOCKS.SANCTUARY_ESSENCE.level },
+    index: { feat: 'BESTIARY_INDEX', lvl: FEATURE_UNLOCKS.BESTIARY_INDEX.level }
+  };
+
+  document.querySelectorAll('.nav-drawer-item').forEach(item => {
+    const tab = item.getAttribute('data-tab');
+    const lockConfig = drawerLocks[tab];
+    let badge = item.querySelector('.drawer-lock-badge');
+
+    if (lockConfig) {
+      const isUnlocked = gameState.isFeatureUnlocked(lockConfig.feat);
+      item.classList.toggle('locked', !isUnlocked);
+      if (!isUnlocked) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'drawer-lock-badge';
+          item.appendChild(badge);
+        }
+        badge.textContent = `🔒 Lv.${lockConfig.lvl}`;
+      } else if (badge) {
+        badge.remove();
+      }
+    }
+  });
+}
+
 function switchTab(tabName) {
+  // Feature Gating Checks
+  if (tabName === 'index' && !gameState.isFeatureUnlocked('BESTIARY_INDEX')) {
+    showGameToast(`🔒 Spirit Bestiary unlocks at Contractor Level ${FEATURE_UNLOCKS.BESTIARY_INDEX.level}! Defeat enemies and summon spirits to gain EXP.`, 'lock');
+    return;
+  }
+  if (tabName === 'trials' && !gameState.isFeatureUnlocked('PANTHEON_TRIALS')) {
+    showGameToast(`🔒 Pantheon Trials unlock at Contractor Level ${FEATURE_UNLOCKS.PANTHEON_TRIALS.level}! Clear floors in the Madness Zone to ascend.`, 'lock');
+    return;
+  }
+  if (tabName === 'forge' && !gameState.isFeatureUnlocked('DIVINE_FORGE')) {
+    showGameToast(`🔒 Divine Forge unlocks at Contractor Level ${FEATURE_UNLOCKS.DIVINE_FORGE.level}! Evolve spirits and defeat overlords to gain EXP.`, 'lock');
+    return;
+  }
+  if (tabName === 'mystical' && !gameState.isFeatureUnlocked('SANCTUARY_ESSENCE')) {
+    showGameToast(`🔒 Sanctuary of the Gods unlocks at Contractor Level ${FEATURE_UNLOCKS.SANCTUARY_ESSENCE.level}! Refine gear and conquer trials to level up.`, 'lock');
+    return;
+  }
+
   if (activeTab !== tabName) {
     // Cleanly unmount any active canvas renderer before switching views
     arenaRenderer.destroy();
@@ -331,6 +393,20 @@ gameState.subscribe((eventType, payload, state) => {
     if (activeTab === 'party') {
       renderPartyView(viewContainer);
     }
+  } else if (eventType === 'contractorLevelUp') {
+    showLevelUpModal({
+      level: payload.level,
+      newFeatures: payload.newFeatures,
+      rewards: payload.rewards,
+      onClaim: () => {
+        updateFeatureGatingUI();
+        renderActiveTab();
+      }
+    });
+    updateFeatureGatingUI();
+  } else if (eventType === 'stateLoaded') {
+    updateFeatureGatingUI();
+    renderActiveTab();
   } else if (eventType === 'offlineGains') {
     showOfflineModal(payload, () => {
       renderActiveTab();
@@ -372,6 +448,7 @@ window.addEventListener('DOMContentLoaded', () => {
     updateResourcesDisplay(true);
     updateAuthDisplay();
     cloudSaveService.updateSaveStatusUI();
+    updateFeatureGatingUI();
     renderActiveTab();
 
     if (offlineReport && (offlineReport.elapsedSeconds >= 3600 || offlineReport.canClaim)) {

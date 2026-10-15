@@ -42,7 +42,7 @@ globalThis.document = {
 const modalRoot = {
   innerHTML: '',
   querySelectorAll: (selector) => [],
-  querySelector: (selector) => null
+  querySelector: (selector) => ({ addEventListener: () => {} })
 };
 
 console.log('--- TESTING UI COMPONENTS & LOGIC ---');
@@ -641,6 +641,104 @@ if (!activeConflictRoot.innerHTML.includes('Cloud Save Conflict Detected') ||
   throw new Error('Conflict modal failed to render conflict details and choice buttons!');
 }
 console.log('[PASS] Cloud Save Conflict Resolution Modal renders comparison metrics & action buttons!');
+
+// 25. Test Contractor Leveling & Feature Gating
+import { showLevelUpModal } from '../src/ui/components/levelUpModal.js';
+import { renderProfileView } from '../src/ui/views/profileView.js';
+import { FEATURE_UNLOCKS, getContractorXpRequired, getFeaturesUnlockedAtLevel, isFeatureUnlocked } from '../src/data/contractorData.js';
+
+// 1. Initial level & feature status
+if (gameState.getContractorLevel() !== 1) {
+  throw new Error(`Expected initial contractor level 1, got ${gameState.getContractorLevel()}`);
+}
+
+if (gameState.isFeatureUnlocked('FORMATION_3X3')) {
+  throw new Error('FORMATION_3X3 should be locked at Lv 1');
+}
+if (gameState.isFeatureUnlocked('BESTIARY_INDEX')) {
+  throw new Error('BESTIARY_INDEX should be locked at Lv 1');
+}
+if (gameState.isFeatureUnlocked('PANTHEON_TRIALS')) {
+  throw new Error('PANTHEON_TRIALS should be locked at Lv 1');
+}
+if (gameState.isFeatureUnlocked('DIVINE_FORGE')) {
+  throw new Error('DIVINE_FORGE should be locked at Lv 1');
+}
+if (gameState.isFeatureUnlocked('SANCTUARY_ESSENCE')) {
+  throw new Error('SANCTUARY_ESSENCE should be locked at Lv 1');
+}
+if (gameState.isFeatureUnlocked('ASTRAL_REALM')) {
+  throw new Error('ASTRAL_REALM should be locked at Lv 1');
+}
+if (gameState.isFeatureUnlocked('SPIRIT_REBIRTH')) {
+  throw new Error('SPIRIT_REBIRTH should be locked at Lv 1');
+}
+
+// 2. XP progression & Leveling up to Lv 3
+let leveledUpEvents = [];
+const unsub = gameState.on('contractorLevelUp', (payload) => {
+  leveledUpEvents.push(payload);
+});
+
+// Level 1 requires 100 XP
+const prevShards = gameState.state.resources.spiritShards;
+gameState.addContractorXp(100, 'Test Combat Floor 1');
+
+if (gameState.getContractorLevel() !== 2) {
+  throw new Error(`Expected contractor level 2, got ${gameState.getContractorLevel()}`);
+}
+if (gameState.state.resources.spiritShards !== prevShards + 100) {
+  throw new Error('Ascension spoils +100 shards not awarded!');
+}
+
+// Level up to Lv 3 (Lv 2 requires 237 XP)
+gameState.addContractorXp(250, 'Test Summons & Evo');
+if (gameState.getContractorLevel() < 3) {
+  throw new Error(`Expected contractor level >= 3, got ${gameState.getContractorLevel()}`);
+}
+if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
+  throw new Error('FORMATION_3X3 should be unlocked at Lv 3!');
+}
+
+console.log('[PASS] Contractor Leveling & Feature Gating progression validated (Lv 1 -> Lv 3 unlocks FORMATION_3X3)!');
+
+// 3. Test Level Up Celebration Modal rendering
+let claimedLevelUp = false;
+showLevelUpModal({
+  level: 3,
+  newFeatures: getFeaturesUnlockedAtLevel(3),
+  rewards: { shards: 100, energy: 20 },
+  onClaim: () => { claimedLevelUp = true; }
+});
+
+const lvlModalRoot = document.getElementById('modal-root');
+if (!lvlModalRoot.innerHTML.includes('Contractor Ascension') ||
+    !lvlModalRoot.innerHTML.includes('Level 3 Reached!') ||
+    !lvlModalRoot.innerHTML.includes('New System Unlocked!') ||
+    !lvlModalRoot.innerHTML.includes('3x3 Tactical Grid & Formation Alignment') ||
+    !lvlModalRoot.innerHTML.includes('+100 Shards') ||
+    !lvlModalRoot.innerHTML.includes('+20 Energy') ||
+    !lvlModalRoot.innerHTML.includes('btn-claim-levelup')) {
+  throw new Error('Level up modal failed to render ascension details and rewards!');
+}
+console.log('[PASS] Contractor Ascension celebration modal properly renders spoils & unlocked systems!');
+
+// 4. Test Profile View Contractor Level & Milestone Section
+const testProfileContainer = {
+  innerHTML: '',
+  querySelectorAll: (selector) => [],
+  querySelector: (selector) => null
+};
+renderProfileView(testProfileContainer);
+
+if (!testProfileContainer.innerHTML.includes('Contractor Ascension') ||
+    !testProfileContainer.innerHTML.includes('profile-contractor-level-card') ||
+    !testProfileContainer.innerHTML.includes('contractor-xp-bar-fill') ||
+    !testProfileContainer.innerHTML.includes('Next Unlock') ||
+    !testProfileContainer.innerHTML.includes('Feature Unlock Roadmap')) {
+  throw new Error('Profile view failed to render Contractor Level card and Milestone Roadmap!');
+}
+console.log('[PASS] Profile View renders Contractor Level card, EXP bar, and Milestones Roadmap!');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

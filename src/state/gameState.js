@@ -60,6 +60,11 @@ import {
   EXPEDITIONS_CONFIG, 
   TRANSMUTATION_CONFIG 
 } from '../data/astralRealmData.js';
+import {
+  getContractorXpRequired,
+  getFeaturesUnlockedAtLevel,
+  isFeatureUnlocked
+} from '../data/contractorData.js';
 
 const SAVE_KEY = 'spirit_contract_evo_idle_save_v2';
 const AUTO_SAVE_INTERVAL_MS = 5000;
@@ -351,6 +356,11 @@ class GameStateManager {
         totalEnemiesDefeated: 0,
         shardsEarnedTotal: 0,
         totalDungeonRuns: 0
+      },
+      contractor: {
+        level: 1,
+        xp: 0,
+        xpRequired: getContractorXpRequired(1)
       }
     };
   }
@@ -420,6 +430,15 @@ class GameStateManager {
     }
     if (typeof state.lastTransmutationDate !== 'string') {
       state.lastTransmutationDate = new Date().toDateString();
+    }
+
+    // Ensure contractor level & XP exist
+    if (!state.contractor || typeof state.contractor !== 'object') {
+      state.contractor = { level: 1, xp: 0, xpRequired: getContractorXpRequired(1) };
+    } else {
+      state.contractor.level = Math.max(1, Math.floor(state.contractor.level || 1));
+      state.contractor.xp = Math.max(0, Math.floor(state.contractor.xp || 0));
+      state.contractor.xpRequired = getContractorXpRequired(state.contractor.level);
     }
 
     // Ensure unlocked stages exist and sanitize floor progression
@@ -775,6 +794,68 @@ class GameStateManager {
     } catch (err) {
       console.error('[GameStateManager] Failed to load custom state:', err);
       return false;
+    }
+  }
+
+  getContractorLevel() {
+    return this.state?.contractor?.level || 1;
+  }
+
+  getContractorXp() {
+    return this.state?.contractor?.xp || 0;
+  }
+
+  getContractorXpRequired() {
+    return this.state?.contractor?.xpRequired || getContractorXpRequired(this.getContractorLevel());
+  }
+
+  isFeatureUnlocked(featureId) {
+    return isFeatureUnlocked(featureId, this.getContractorLevel());
+  }
+
+  addContractorXp(amount, reason = '') {
+    if (!amount || amount <= 0) return;
+    if (!this.state.contractor) {
+      this.state.contractor = { level: 1, xp: 0, xpRequired: getContractorXpRequired(1) };
+    }
+
+    let { level, xp } = this.state.contractor;
+    xp += Math.floor(amount);
+    let req = getContractorXpRequired(level);
+    let leveledUp = false;
+    const levelsGained = [];
+
+    while (xp >= req && level < 100) {
+      xp -= req;
+      level += 1;
+      req = getContractorXpRequired(level);
+      leveledUp = true;
+      levelsGained.push(level);
+    }
+
+    this.state.contractor.level = level;
+    this.state.contractor.xp = xp;
+    this.state.contractor.xpRequired = req;
+    this.isDirty = true;
+    this.emit('contractorXpGained', { amount, reason, currentXp: xp, xpRequired: req, level });
+
+    if (leveledUp) {
+      for (const newLvl of levelsGained) {
+        const newFeatures = getFeaturesUnlockedAtLevel(newLvl);
+        // Ascension spoils: +100 Shards, +20 Energy
+        this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + 100;
+        this.state.resources.energy = Math.min(
+          this.state.resources.maxEnergy || 60,
+          (this.state.resources.energy || 0) + 20
+        );
+        this.emit('resourcesUpdated', this.state.resources);
+        this.emit('contractorLevelUp', {
+          level: newLvl,
+          newFeatures,
+          rewards: { shards: 100, energy: 20 }
+        });
+      }
+      this.save(true);
     }
   }
 
@@ -1983,7 +2064,14 @@ class GameStateManager {
 
     if (isBossFloor) {
       // Zone Boss Defeated!
+      const prevHighest = mz.highestStageCleared || 0;
       mz.highestStageCleared = Math.max(mz.highestStageCleared || 0, mz.stage);
+
+      // First Clear Contractor EXP reward
+      if (mz.stage > prevHighest) {
+        const firstClearXp = 100 + mz.stage * 25;
+        this.addContractorXp(firstClearXp, `Madness Floor ${mz.stage} First Clear`);
+      }
 
       // Floor Victory: Revive ALL party spirits to 100% HP!
       const party = this.getPartySpirits();
@@ -2149,6 +2237,7 @@ class GameStateManager {
     spirit.evolutionHistory.push(nextSpecies.name);
 
     this.state.stats.totalEvolutions += 1;
+    this.addContractorXp(150, 'Spirit Evolution');
     this.markSpeciesDiscovered(nextSpecies.id);
     this.invalidateCaches();
     this.save();
@@ -2253,6 +2342,7 @@ class GameStateManager {
 
     this.state.stats.totalSpiritsContracted = (this.state.stats.totalSpiritsContracted || 0) + count;
     this.state.stats.totalBannerSummons = (this.state.stats.totalBannerSummons || 0) + count;
+    this.addContractorXp(count * 25, 'Spirit Contract');
     this.save();
 
     this.emit('spiritsContracted', { spirits: newSpirits, cost: totalCost, bannerId });
@@ -4025,6 +4115,7 @@ class GameStateManager {
     }
 
     enhanceRelicData(item);
+    this.addContractorXp(20, 'Relic Refinement');
 
     this.invalidateCaches();
     this.save();
@@ -4065,6 +4156,7 @@ class GameStateManager {
     }
 
     enhanceWeaponData(item);
+    this.addContractorXp(20, 'Weapon Refinement');
 
     this.invalidateCaches();
     this.save();
@@ -4805,6 +4897,7 @@ class GameStateManager {
     this.state.resources.spiritShards += loot.shardsGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+    this.addContractorXp(75 + (battle.tier || 1) * 25, 'Dungeon Victory');
 
     this.getPartySpirits().forEach(s => {
       s.currentHp = s.maxHp;
@@ -5030,6 +5123,7 @@ class GameStateManager {
     this.state.resources.soulEssence += loot.essenceGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+    this.addContractorXp(75 + tierNum * 25, 'Forge Dungeon Victory');
 
     this.save();
     this.emit('dungeonCompleted', loot);
@@ -5063,6 +5157,7 @@ class GameStateManager {
 
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
+    this.addContractorXp(75 + tierNum * 25, 'Essence Sanctuary Victory');
 
     this.save();
     this.emit('dungeonCompleted', loot);
