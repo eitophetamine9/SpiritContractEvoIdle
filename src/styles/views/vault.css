@@ -1,0 +1,587 @@
+/* ==========================================================================
+   VAULT QoL ENHANCEMENTS (Search, Bulk Annul, Favorites, Rename)
+   ========================================================================== */
+
+.vault-search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0 10px;
+  gap: 8px;
+}
+
+.vault-search-input {
+  flex: 1;
+  min-height: 44px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.btn-clear-search {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.btn-bulk-toggle {
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #17241c;
+  color: var(--text-moon);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.btn-bulk-toggle.active {
+  background: #273e2e;
+  border-color: var(--forest-emerald);
+  color: #ffffff;
+}
+
+.bulk-action-bar {
+  background: rgba(14, 23, 18, 0.95);
+  border: 1px solid var(--forest-emerald);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.bulk-select-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-preset-sm {
+  min-height: 44px;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: #15231b;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.bulk-confirm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  gap: 8px;
+}
+
+.btn-bulk-confirm {
+  min-height: 44px;
+  background: linear-gradient(135deg, #a71d2a, #d63031);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 8px 14px;
+  border: 1px solid #ff7675;
+  border-radius: 8px;
+}
+
+.bulk-checkbox-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 4px;
+}
+
+.bulk-check {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  accent-color: #2ecc71;
+}
+
+.vault-item-card.is-fav {
+  border-color: #ffd152;
+  box-shadow: 0 0 10px rgba(255, 209, 82, 0.25);
+}
+
+.vault-item-card.selected-bulk {
+  background: rgba(46, 204, 113, 0.12);
+  border-color: var(--forest-emerald);
+}
+
+.spirit-card-title {
+  font-size: 14px;
+  font-weight: 900;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-rename-spirit,
+.btn-fav-spirit {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+}
+
+.hall-of-fame-crown {
+  position: absolute;
+  top: -8px;
+  left: -6px;
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px #ffd152);
+}
+
+/* ==========================================================================
+   SPIRIT INDEX (COMPENDIUM) STYLING
+   ========================================================================== */
+
+.index-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.index-header-banner {
+  background: linear-gradient(135deg, #0e1a14 0%, #172b20 100%);
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.index-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.index-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.index-main-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-moon);
+}
+
+.index-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.index-score-badge {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--forest-emerald);
+  border-radius: 10px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score-num {
+  font-size: 14px;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  color: #2ecc71;
+}
+
+.score-lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.index-progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.index-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1b7a48, #2ecc71);
+  transition: width 0.3s ease;
+}
+
+.index-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.index-filter-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+}
+
+.index-filter-btn {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.index-filter-btn:hover {
+  border-color: rgba(39, 174, 96, 0.6);
+  color: #ffffff;
+}
+
+.index-filter-btn.active {
+  background: #1f3927;
+  color: #ffffff;
+  border-color: var(--forest-emerald);
+}
+
+/* ==========================================================================
+   TERRARIA-STYLE COMPACT BESTIARY GRID & TILES
+   ========================================================================== */
+
+.bestiary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-height: calc(100vh - 235px);
+  overflow-y: auto;
+  padding: 4px 2px 12px 2px;
+}
+
+.bestiary-tile {
+  background: rgba(14, 23, 18, 0.9);
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 84px;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.bestiary-tile:active {
+  transform: scale(0.93) translateY(2px);
+  filter: brightness(1.2);
+}
+
+.bestiary-tile.locked {
+  background: rgba(8, 12, 10, 0.7);
+  border-style: dashed;
+  border-color: #273b2e;
+  opacity: 0.7;
+}
+
+.bestiary-tile-num {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  font-size: 8px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--text-moon);
+  opacity: 0.85;
+}
+
+.bestiary-tile-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+
+.bestiary-mini-box {
+  width: 44px;
+  height: 44px;
+}
+
+.bestiary-silhouette-box {
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1.5px dashed #3d4a41;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text-muted);
+}
+
+.bestiary-tile-name {
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.1;
+}
+
+.bestiary-tile.locked .bestiary-tile-name {
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   ANIMATED RELIC SPRITE PIPELINE & BANNER OVERHAUL STYLES
+   ========================================================================== */
+
+.animated-relic-sprite {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 4px 10px rgba(241, 196, 15, 0.5));
+  animation: relicPulsingAura 2.2s ease-in-out infinite;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+@keyframes relicPulsingAura {
+  0% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 3px 8px rgba(241, 196, 15, 0.45));
+  }
+  50% {
+    transform: translateY(-3px) scale(1.08);
+    filter: drop-shadow(0 6px 18px rgba(241, 196, 15, 0.9)) drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 3px 8px rgba(241, 196, 15, 0.45));
+  }
+}
+
+.animated-relic-sprite:hover {
+  transform: translateY(-4px) scale(1.15) !important;
+  filter: drop-shadow(0 8px 22px rgba(241, 196, 15, 1)) !important;
+}
+
+.animated-relic-sprite .sprite-frame-viewer {
+  width: 48px;
+  height: 48px;
+  background-image: var(--sprite-sheet);
+  background-size: 384px 48px;
+  background-position: 0px 0px !important;
+  background-repeat: no-repeat;
+  animation: none !important;
+  image-rendering: pixelated;
+}
+
+.relic-large-pedestal {
+  width: 72px;
+  height: 72px;
+}
+
+.relic-large-pedestal .sprite-frame-viewer {
+  width: 72px;
+  height: 72px;
+  background-size: 576px 72px;
+  background-position: 0px 0px !important;
+  animation: none !important;
+}
+
+.animated-weapon-sprite {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 4px 10px rgba(230, 126, 34, 0.5));
+  animation: weaponPulsingAura 2.2s ease-in-out infinite;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+@keyframes weaponPulsingAura {
+  0% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 3px 8px rgba(230, 126, 34, 0.45));
+  }
+  50% {
+    transform: translateY(-3px) scale(1.08);
+    filter: drop-shadow(0 6px 18px rgba(230, 126, 34, 0.9)) drop-shadow(0 0 12px rgba(255, 165, 2, 0.5));
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 3px 8px rgba(230, 126, 34, 0.45));
+  }
+}
+
+.animated-weapon-sprite:hover {
+  transform: translateY(-4px) scale(1.15) !important;
+  filter: drop-shadow(0 8px 22px rgba(230, 126, 34, 1)) !important;
+}
+
+.animated-weapon-sprite .sprite-frame-viewer {
+  width: 48px;
+  height: 48px;
+  background-image: var(--sprite-sheet);
+  background-size: 384px 48px;
+  background-position: 0px 0px !important;
+  background-repeat: no-repeat;
+  animation: none !important;
+  image-rendering: pixelated;
+}
+
+/* Equipment Socket Scaled Sprites (Pedestal & Roster slots) */
+.socket-animated-sprite {
+  width: 32px !important;
+  height: 32px !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) !important;
+}
+
+.chamber-sprite-icon {
+  width: 34px !important;
+  height: 34px !important;
+  pointer-events: none;
+}
+
+.chamber-sprite-icon .sprite-frame-viewer {
+  width: 34px !important;
+  height: 34px !important;
+  background-size: 272px 34px !important;
+  background-position: 0px 0px !important;
+}
+
+.stage-sigil-sprite-large {
+  width: 50px !important;
+  height: 50px !important;
+  pointer-events: none;
+}
+
+.stage-sigil-sprite-large .sprite-frame-viewer {
+  width: 50px !important;
+  height: 50px !important;
+  background-size: 400px 50px !important;
+  background-position: 0px 0px !important;
+}
+
+.loot-sprite-icon {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.loot-sprite-icon .sprite-frame-viewer {
+  width: 36px !important;
+  height: 36px !important;
+  background-size: 288px 36px !important;
+  background-position: 0px 0px !important;
+}
+
+.socket-animated-sprite .sprite-frame-viewer {
+  width: 32px !important;
+  height: 32px !important;
+  background-size: 256px 32px !important;
+}
+
+/* Modal Inspect Large Scaled Sprites */
+.inspect-animated-sprite {
+  width: 72px !important;
+  height: 72px !important;
+  filter: drop-shadow(0 6px 20px rgba(241, 196, 15, 0.7)) !important;
+}
+
+.inspect-animated-sprite .sprite-frame-viewer {
+  width: 72px !important;
+  height: 72px !important;
+  background-size: 576px 72px !important;
+}
+
+/* Vault Card Artwork Sprites */
+.vault-card-sprite {
+  width: 56px !important;
+  height: 56px !important;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7)) !important;
+}
+
+.vault-card-sprite .sprite-frame-viewer {
+  width: 56px !important;
+  height: 56px !important;
+  background-size: 448px 56px !important;
+}
+
+/* Mirrored sprite for combat facing */
+.flipped-sprite {
+  transform: scaleX(-1);
+}
+
+/* Enemy Sprites with Corruption Glow */
+.sprite-enemy {
+  filter: drop-shadow(0 4px 8px rgba(255, 51, 102, 0.65));
+}
+
+.boss-animated-sprite {
+  transform: scale(1.35);
+  filter: drop-shadow(0 0 14px rgba(255, 71, 87, 0.85)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9));
+}
+
+.boss-animated-sprite:hover {
+  transform: scale(1.42);
+}
+
+/* =========================================================================
+   THE DIVINE VAULT - ARCANE CARD COLLECTION (TCG / GACHA AESTHETIC)
+   ========================================================================= */
+
+.vault-collection-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 16px 0;
+  color: #f1f5f9;
+}
+

@@ -1,0 +1,215 @@
+@import "tailwindcss";
+@source "./**/*.js";
+@source "../index.html";
+
+/* ==========================================================================
+   SPIRIT CONTRACT EVO | IDLE - Dark Fantasy Woodland & Gothic Ruins Theme
+   Inspired by: Sacred Elder Spirit Tree, Moonlit Swamp Ruins, Gothic Crag Castle
+   Strict constraints: Mobile-first (max 480px), No :hover states, Touch targets >= 44px
+   Brightly colored, distinct CSS placeholder boxes for Spirits & Enemies
+   ========================================================================== */
+
+:root {
+  /* Dark Fantasy Woodland & Obsidian Stone Palette */
+  --bg-deep: #060b08;
+  --bg-surface: #0e1712;
+  --bg-surface-elevated: #15231b;
+  --bg-surface-glass: rgba(14, 23, 18, 0.88);
+  
+  --border-color: #273b2e;
+  --border-bright: #3f5c49;
+  --border-rune: #5a7d65;
+  
+  --text-main: #edf5ee;
+  --text-muted: #8fa596;
+  --text-gold: #ffd152;
+  --text-moon: #d4e478;
+  
+  /* Celestial Moon & Sacred Tree Accents */
+  --moon-pale: #d4e478;
+  --moon-glow: rgba(212, 228, 120, 0.35);
+  --tree-gold: #ffd152;
+  --tree-gold-glow: rgba(255, 209, 82, 0.45);
+  --forest-emerald: #2ecc71;
+  --forest-glow: rgba(46, 204, 113, 0.4);
+
+  /* Elemental Bright Themes */
+  --elem-fire: #ff523d;
+  --elem-fire-glow: rgba(255, 82, 61, 0.4);
+  --elem-water: #00d0ff;
+  --elem-water-glow: rgba(0, 208, 255, 0.4);
+  --elem-earth: #2ed573;
+  --elem-earth-glow: rgba(46, 213, 115, 0.4);
+  --elem-wind: #eccc68;
+  --elem-wind-glow: rgba(236, 204, 104, 0.4);
+  --elem-dark: #b537f2;
+  --elem-dark-glow: rgba(181, 55, 242, 0.45);
+  --elem-light: #ffa502;
+  --elem-light-glow: rgba(255, 165, 2, 0.4);
+  
+  --madness-red: #ff3366;
+  --madness-purple: #7928ca;
+  --madness-glow: rgba(255, 51, 102, 0.5);
+
+  --font-fantasy: 'Cinzel', serif;
+  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* High-Fantasy UI-Kit Metallic Tokens */
+  --gold-metallic: linear-gradient(135deg, #fff2ad 0%, #d4af37 50%, #99741e 100%);
+  --gold-glow: 0 0 14px rgba(212, 175, 55, 0.45);
+  --ribbon-regal-purple: linear-gradient(180deg, #321c59 0%, #190d30 100%);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background-color: #07090e;
+  background-image: 
+    radial-gradient(circle at 50% 5%, rgba(68, 44, 110, 0.35) 0%, transparent 60%),
+    radial-gradient(circle at 20% 85%, rgba(26, 54, 93, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(184, 134, 11, 0.12) 0%, transparent 45%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+  color: var(--text-main);
+  font-family: var(--font-main);
+  line-height: 1.4;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+/* Base button minimum touch target: 40px (strictly mobile friendly) */
+button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-elevated, #15231b);
+  color: var(--text-main, #edf5ee);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  transition: transform 0.08s ease, filter 0.08s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text-main, #edf5ee);
+  background: rgba(12, 17, 28, 0.9);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #ffd152;
+  box-shadow: 0 0 10px rgba(255, 209, 82, 0.25);
+}
+
+/* STRICT RULE: DO NOT USE HOVER STATES. USE ACTIVE FOR TACTILE MOBILE TOUCH */
+button:active {
+  transform: scale(0.95) translateY(2px);
+  filter: brightness(1.2);
+}
+
+button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: none !important;
+}
+
+/* ==========================================================================
+   7-TIER RARITY SYSTEM (Common to Transcendent)
+   ========================================================================== */
+
+.rarity-common {
+  border-color: #5a6268 !important;
+  box-shadow: 0 0 8px rgba(189, 195, 199, 0.25);
+}
+.rarity-uncommon {
+  border-color: #27ae60 !important;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.35);
+}
+.rarity-rare {
+  border-color: #2980b9 !important;
+  box-shadow: 0 0 12px rgba(52, 152, 219, 0.4);
+}
+.rarity-epic {
+  border-color: #8e44ad !important;
+  box-shadow: 0 0 14px rgba(155, 89, 182, 0.45);
+}
+.rarity-legendary {
+  border-color: #e67e22 !important;
+  box-shadow: 0 0 16px rgba(243, 156, 18, 0.55);
+}
+.rarity-mythical {
+  border-color: #c0392b !important;
+  box-shadow: 0 0 20px rgba(231, 76, 60, 0.7);
+  animation: mythicalRubyPulse 2s infinite alternate;
+}
+.rarity-transcendent {
+  border-color: #00d2d3 !important;
+  box-shadow: 0 0 24px rgba(0, 255, 255, 0.75), inset 0 0 14px rgba(0, 255, 255, 0.3);
+  animation: transcendentCyanStarlight 2.5s infinite alternate;
+}
+
+.rarity-unknown {
+  border-color: #3d4a41 !important;
+  background: #090e0b !important;
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes mythicalRubyPulse {
+  0% { box-shadow: 0 0 12px rgba(231, 76, 60, 0.5); }
+  100% { box-shadow: 0 0 22px rgba(231, 76, 60, 0.85); }
+}
+
+@keyframes transcendentCyanStarlight {
+  0% { box-shadow: 0 0 16px rgba(0, 255, 255, 0.6); }
+  100% { box-shadow: 0 0 28px rgba(0, 255, 255, 0.95), inset 0 0 18px rgba(0, 255, 255, 0.4); }
+}
+
+.rarity-badge-mini {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 9px;
+  font-weight: 900;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 4px;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.element-badge-mini {
+  position: absolute;
+  top: 4px;
+  right: 22px;
+  font-size: 10px;
+  line-height: 1;
+  padding: 1px 2px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
