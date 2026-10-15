@@ -816,6 +816,36 @@ class GameStateManager {
     }
   }
 
+  /**
+   * Completely resets player progress to clean Day-1 starter state.
+   * Clears saved state from localStorage, resets caches, and notifies listeners.
+   * @returns {Object} Fresh starter state
+   */
+  resetAllProgress() {
+    this.state = this.getInitialState();
+    this.invalidateCaches();
+    this.setBonusCooldowns = {};
+    this.isDirty = false;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(SAVE_KEY);
+        localStorage.removeItem('spirit_contract_evo_idle_save_v1');
+      }
+    } catch (e) {
+      console.warn('[GameStateManager] Could not clear localStorage keys:', e);
+    }
+    this.save(true);
+    const mz = this.state.madnessZone;
+    if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
+      this.spawnMadnessEnemy();
+    }
+    this.emit('stateLoaded', this.state);
+    this.emit('partyUpdated', this.state.party);
+    this.emit('stageUnlocked', 1);
+    this.emit('gameReset', this.state);
+    return this.state;
+  }
+
   getContractorLevel() {
     return this.state?.contractor?.level || 1;
   }
@@ -3402,15 +3432,6 @@ class GameStateManager {
   isSpeciesDiscovered(speciesId) {
     if (!Array.isArray(this.state.discoveredSpeciesIds)) return false;
     return this.state.discoveredSpeciesIds.includes(speciesId);
-  }
-
-  resetAllProgress() {
-    localStorage.removeItem(SAVE_KEY);
-    localStorage.removeItem('spirit_contract_evo_idle_save_v1');
-    this.state = this.getInitialState();
-    this.spawnMadnessEnemy();
-    this.save();
-    this.emit('gameReset');
   }
 
   generateId() {

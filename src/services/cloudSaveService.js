@@ -207,8 +207,24 @@ class CloudSaveService {
     const cloudRecord = await this.fetchCloudSave(user.id);
     const localState = gameState.state;
 
-    // Case 1: No remote save exists yet -> Upload current local save to cloud!
+    // Case 1: No remote save exists yet
     if (!cloudRecord || !cloudRecord.save_data) {
+      const isExplicitLink = typeof window !== 'undefined' && window.__linkDeviceSaveRequested;
+      if (typeof window !== 'undefined') {
+        window.__linkDeviceSaveRequested = false;
+      }
+
+      // If NOT an explicit link and local state has advanced/veteran dev testing progress,
+      // reset to Day-1 starter state so this brand-new cloud account starts completely fresh!
+      const isDirtyVeteranState = (localState?.madnessZone?.highestStageCleared || 0) > 0 ||
+                                  (localState?.spirits || []).length > 1 ||
+                                  (localState?.contractor?.level || 1) > 1;
+
+      if (!isExplicitLink && isDirtyVeteranState) {
+        console.log('[CloudSaveService] New account with no remote save detected; resetting to fresh starter state.');
+        gameState.resetAllProgress();
+      }
+
       await this.uploadSave(true);
       return;
     }

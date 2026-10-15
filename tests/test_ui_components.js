@@ -772,6 +772,30 @@ if (gameState.state.resources.spiritShards !== shardsBefore + 150) {
 
 console.log('[PASS] Guided Tutorial state engine, step progression, and completion reward validated!');
 
+// 27. Test Fresh Account Reset & State Bleed Prevention
+gameState.state.madnessZone.stage = 25;
+gameState.state.madnessZone.highestStageCleared = 24;
+gameState.state.contractor.level = 15;
+gameState.completeTutorial(false);
+
+if (gameState.state.madnessZone.stage !== 25 || gameState.getTutorialState().completed !== true) {
+  throw new Error('Failed to setup dirty simulated dev state for test');
+}
+
+// Perform resetAllProgress
+const freshState = gameState.resetAllProgress();
+if (freshState.madnessZone.stage !== 1 ||
+    freshState.madnessZone.highestStageCleared !== 0 ||
+    freshState.spirits.length !== 1 ||
+    freshState.contractor.level !== 1 ||
+    freshState.resources.spiritShards !== 300 ||
+    freshState.tutorial.active !== true ||
+    freshState.tutorial.completed !== false) {
+  throw new Error('resetAllProgress failed to return a clean Day-1 starter state with active tutorial!');
+}
+
+console.log('[PASS] Fresh Account Reset & State Bleed Prevention validated!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 

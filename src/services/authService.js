@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient.js';
+import { gameState } from '../state/gameState.js';
 
 const GUEST_KEY = 'spirit_contract_guest_profile_v1';
 
@@ -250,6 +251,12 @@ class AuthService {
 
     this.currentUser = null;
     this.currentProfile = null;
+    try {
+      localStorage.removeItem(GUEST_KEY);
+    } catch {}
+    if (gameState && typeof gameState.resetAllProgress === 'function') {
+      gameState.resetAllProgress();
+    }
     this.emit('AUTH_STATE_CHANGED', { user: null, profile: this.getGuestProfile(), isGuest: true });
     return { success: true };
   }
@@ -258,6 +265,9 @@ class AuthService {
    * Links local guest state to a newly registered Supabase cloud account
    */
   async linkGuestAccount({ email, password, username, localSaveData }) {
+    if (typeof window !== 'undefined') {
+      window.__linkDeviceSaveRequested = true;
+    }
     const signupRes = await this.signUp({ email, password, username });
     const user = signupRes.user;
 

@@ -1,6 +1,7 @@
 import { authService } from '../../services/authService.js';
 import { isSupabaseConfigured } from '../../services/supabaseClient.js';
 import { gameState } from '../../state/gameState.js';
+import { cloudSaveService } from '../../services/cloudSaveService.js';
 
 let activeHomeTab = 'guest'; // 'guest' | 'signin' | 'signup'
 let homeErrorMessage = '';
@@ -85,6 +86,12 @@ function renderTitleScreen() {
   const profile = authService.getProfile();
   const configured = isSupabaseConfigured();
 
+  const hasExistingProgress = (gameState.state?.madnessZone?.highestStageCleared || 0) > 0 ||
+                              (gameState.state?.spirits?.length || 0) > 1 ||
+                              (gameState.state?.contractor?.level || 1) > 1 ||
+                              (gameState.state?.madnessZone?.stage || 1) > 1;
+  const currentFloor = gameState.state?.madnessZone?.stage || 1;
+
   root.innerHTML = `
     <!-- Ambient Backdrop Effects -->
     <div class="title-arcane-backdrop">
@@ -157,7 +164,10 @@ function renderTitleScreen() {
 
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px; margin-top:2px;">
               <button id="btn-home-switch-account" style="background:none; border:none; color:#94a3b8; font-size:11px; cursor:pointer; padding:0;">
-                🔄 Switch Account
+                🔄 Switch / Sign Out
+              </button>
+              <button id="btn-home-reset-cloud-account" style="background:none; border:none; color:#f87171; font-size:11px; cursor:pointer; padding:0;" title="Reset this cloud account to Day-1">
+                🌱 Reset to Day-1
               </button>
               <button id="btn-home-play-guest-mode" style="background:none; border:none; color:#00d0ff; font-size:11px; cursor:pointer; padding:0;">
                 Play as Local Guest
@@ -197,9 +207,18 @@ function renderTitleScreen() {
                 </button>
               </div>
 
-              <button id="btn-home-play-guest" class="btn-celestial-start">
-                <span>⚔️ ENTER CELESTIAL REALM</span>
-              </button>
+              ${hasExistingProgress ? `
+                <button id="btn-home-play-guest" class="btn-celestial-start">
+                  <span>⚔️ RESUME GAME (Floor ${currentFloor})</span>
+                </button>
+                <button id="btn-home-fresh-guest" class="btn-celestial-cyan" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.4); color:#fca5a5; min-height:40px;">
+                  <span>🌱 START FRESH GUEST GAME (Reset Save)</span>
+                </button>
+              ` : `
+                <button id="btn-home-play-guest" class="btn-celestial-start">
+                  <span>⚔️ ENTER CELESTIAL REALM</span>
+                </button>
+              `}
 
               <div style="font-size:11px; text-align:center; color:#8fa596; margin-top:2px;">
                 💾 Instant local play • Link to cloud anytime without losing data
@@ -227,6 +246,11 @@ function renderTitleScreen() {
 
           ${activeHomeTab === 'signup' ? `
             <form id="form-home-signup" class="title-panel-card">
+              <div style="font-size:11px; color:#86efac; background:rgba(22,101,52,0.3); border:1px solid rgba(34,197,94,0.3); padding:8px 10px; border-radius:8px; display:flex; align-items:center; gap:6px;">
+                <span>✨</span>
+                <span>Creates a 100% fresh cloud account with Starter Spirit & Guided Onboarding.</span>
+              </div>
+
               <div class="title-input-field">
                 <label class="title-input-label">Contractor Username</label>
                 <input type="text" id="home-input-username" required placeholder="Archon of Stars" value="${profile.username !== 'Apprentice Contractor' ? profile.username : ''}" />
@@ -241,6 +265,13 @@ function renderTitleScreen() {
                 <label class="title-input-label">Password (min 6 characters)</label>
                 <input type="password" id="home-input-password-signup" required minlength="6" placeholder="••••••••" />
               </div>
+
+              ${hasExistingProgress ? `
+                <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#cbd5e1; cursor:pointer; margin-top:2px;">
+                  <input type="checkbox" id="home-check-link-save" style="accent-color:#00e5ff; width:15px; height:15px;" />
+                  <span>Transfer existing device progress (Floor ${currentFloor}) to new account</span>
+                </label>
+              ` : ''}
 
               <button type="submit" id="btn-home-submit-signup" class="btn-celestial-emerald" ${isSubmitting ? 'disabled' : ''}>
                 <span>${isSubmitting ? 'Awakening Account...' : '✨ Register & Enter Realm'}</span>
@@ -267,12 +298,24 @@ function bindTitleScreenEvents(root) {
     hideTitleScreen();
   });
 
-  // Switch account
+  // Switch account / Log out
   root.querySelector('#btn-home-switch-account')?.addEventListener('click', async () => {
     await authService.signOut();
     activeHomeTab = 'signin';
-    homeSuccessMessage = 'Signed out. Select an option to continue.';
+    homeSuccessMessage = 'Signed out. Device reset to fresh state.';
     renderTitleScreen();
+  });
+
+  // Reset Cloud Account to Day-1
+  root.querySelector('#btn-home-reset-cloud-account')?.addEventListener('click', async () => {
+    if (confirm('CRITICAL: Reset this cloud account to Day-1 starter state? All spirits, progress, and shards will be wiped and the guided tutorial will restart.')) {
+      if (confirm('Final confirmation: Proceed with account wipe?')) {
+        gameState.resetAllProgress();
+        await cloudSaveService.uploadSave(true);
+        homeSuccessMessage = 'Cloud account reset to Day-1 starter state! Enter realm to begin tutorial.';
+        renderTitleScreen();
+      }
+    }
   });
 
   // Play as local guest while logged in
@@ -302,9 +345,17 @@ function bindTitleScreenEvents(root) {
     renderTitleScreen();
   });
 
-  // Play as Guest CTA
+  // Play as Guest CTA (Resume existing)
   root.querySelector('#btn-home-play-guest')?.addEventListener('click', () => {
     hideTitleScreen();
+  });
+
+  // Start Fresh Guest Game (Reset local save)
+  root.querySelector('#btn-home-fresh-guest')?.addEventListener('click', () => {
+    if (confirm('Start a brand new game? All current local progress will be wiped back to Level 1 Cat Spirit with guided tutorial active.')) {
+      gameState.resetAllProgress();
+      hideTitleScreen();
+    }
   });
 
   // Edit guest name
@@ -340,25 +391,36 @@ function bindTitleScreenEvents(root) {
     }
   });
 
-  // Sign Up Form
+  // Sign Up Form (defaults to 100% fresh account!)
   root.querySelector('#form-home-signup')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = root.querySelector('#home-input-username')?.value;
     const email = root.querySelector('#home-input-email-signup')?.value;
     const password = root.querySelector('#home-input-password-signup')?.value;
+    const shouldLink = root.querySelector('#home-check-link-save')?.checked;
 
     isSubmitting = true;
     homeErrorMessage = '';
     renderTitleScreen();
 
     try {
-      await authService.linkGuestAccount({
-        email,
-        password,
-        username,
-        currentGameState: gameState.state
-      });
-      homeSuccessMessage = 'Account created & linked! Entering realm...';
+      if (shouldLink) {
+        await authService.linkGuestAccount({
+          email,
+          password,
+          username,
+          localSaveData: gameState.state
+        });
+        homeSuccessMessage = 'Account created & linked! Entering realm...';
+      } else {
+        // Reset local game state to clean Day-1 starter state FIRST
+        gameState.resetAllProgress();
+        // Register new Supabase account
+        await authService.signUp({ email, password, username });
+        // Upload the clean Day-1 starter state to Supabase
+        await cloudSaveService.uploadSave(true);
+        homeSuccessMessage = 'Fresh account created! Entering realm...';
+      }
       isSubmitting = false;
       renderTitleScreen();
       setTimeout(hideTitleScreen, 700);

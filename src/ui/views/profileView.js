@@ -3,6 +3,8 @@ import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showHallOfFamePickerModal } from '../components/modals.js';
 import { getNextFeatureUnlock, getAllFeatureMilestones } from '../../data/contractorData.js';
+import { authService } from '../../services/authService.js';
+import { cloudSaveService } from '../../services/cloudSaveService.js';
 
 export function renderProfileView(container) {
   const state = gameState.state;
@@ -310,10 +312,17 @@ export function renderProfileView(container) {
   // Reset Progress
   const btnReset = container.querySelector('#btn-reset-game');
   if (btnReset) {
-    btnReset.addEventListener('click', () => {
+    btnReset.addEventListener('click', async () => {
       if (confirm('CRITICAL WARNING: This will permanently wipe all spirits, stage progress, and shards! Are you completely sure?')) {
-        if (confirm('Final confirmation: Reset everything back to Level 1 Cat Spirit?')) {
+        if (confirm('Final confirmation: Reset everything back to Level 1 Cat Spirit starter state?')) {
           gameState.resetAllProgress();
+          if (!authService.isGuest()) {
+            try {
+              await cloudSaveService.uploadSave(true);
+            } catch (err) {
+              console.warn('[ProfileView] Could not immediately upload reset cloud save:', err);
+            }
+          }
           window.location.reload();
         }
       }
