@@ -16,6 +16,9 @@ import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../compon
 import { SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedChestHtml, createAnimatedRelicHtml } from '../../render/spriteAnimator.js';
+import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../render/combatAnimator.js';
+
+let isEssenceEventsBound = false;
 
 let selectedEssenceChamberId = 'olympian_nexus';
 let selectedEssenceTierNum = 1;
@@ -1572,7 +1575,44 @@ function renderEssenceBattleArena(container, battle) {
     }
     arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
     renderMysticalView(container);
+    triggerPartyStrikeExchange(container);
   });
+
+  // Hook essence sanctuary combat strike and flinch animations
+  if (!isEssenceEventsBound) {
+    isEssenceEventsBound = true;
+    gameState.subscribe((eventType, payload) => {
+      if (typeof document === 'undefined') return;
+      const currentContainer = document.querySelector('#view-container');
+      if (!currentContainer) return;
+      const hasEssence = !!currentContainer.querySelector('#essence-enemy-swarm-wrapper');
+      if (!hasEssence) return;
+
+      if (eventType === 'combatStrike' && payload.zone === 'dungeon') {
+        if (payload.attackerType === 'spirit') {
+          const party = gameState.getPartySpirits();
+          const spiritIdx = party.findIndex(s => s && s.id === payload.spirit?.id);
+          const slot = (spiritIdx >= 0) ? currentContainer.querySelector(`#essence-allied-slot-${spiritIdx}`) : currentContainer.querySelector('.seamless-battle-spirit:not(.spirit-fallen)');
+          if (slot) triggerSpiritAttack(slot);
+
+          const leadEnemy = currentContainer.querySelector('.seamless-enemy-slot:not(.enemy-defeated)');
+          if (leadEnemy) triggerEnemyFlinch(leadEnemy);
+        } else if (payload.attackerType === 'enemy') {
+          const enemySlot = currentContainer.querySelector('.seamless-enemy-slot:not(.enemy-defeated)');
+          if (enemySlot) triggerEnemyAttack(enemySlot);
+
+          if (payload.targetSpirit) {
+            const party = gameState.getPartySpirits();
+            const spiritIdx = party.findIndex(s => s && s.id === payload.targetSpirit.id);
+            const spiritSlot = (spiritIdx >= 0) ? currentContainer.querySelector(`#essence-allied-slot-${spiritIdx}`) : currentContainer.querySelector('.seamless-battle-spirit:not(.spirit-fallen)');
+            if (spiritSlot) triggerSpiritFlinch(spiritSlot);
+          }
+        }
+      } else if (eventType === 'manualPartyStrike' && payload.zone === 'dungeon') {
+        triggerPartyStrikeExchange(currentContainer);
+      }
+    });
+  }
 
   container.querySelector('#btn-leave-essence-battle')?.addEventListener('click', () => {
     gameState.exitDungeonBattle();

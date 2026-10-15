@@ -6,6 +6,7 @@ import { audioManager, safePlaySfx } from '../../audio/audioManager.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { showSpiritModal } from '../components/modals.js';
 import { getSheetKeyForSpecies, createAnimatedEnemyHtml, getSheetKeyForEnemy } from '../../render/spriteAnimator.js';
+import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../render/combatAnimator.js';
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
@@ -346,19 +347,8 @@ export function renderMadnessView(container) {
         arenaRenderer.triggerClashImpact(null, null, true);
       }
 
-      // Visual attack animation for party members and enemy hit flash
-      const leadEnemySlot = container.querySelector('.seamless-enemy-slot:not(.enemy-defeated)') || container.querySelector('.enemy-swarm-slot:not(.enemy-defeated)');
-      if (leadEnemySlot) {
-        leadEnemySlot.classList.remove('enemy-hit-flash', 'crit-clash-flash');
-        void leadEnemySlot.offsetWidth;
-        leadEnemySlot.classList.add('enemy-hit-flash', 'crit-clash-flash');
-      }
-
-      container.querySelectorAll('.seamless-battle-spirit:not(.spirit-fallen), .spirit-formation-slot.slot-active').forEach(slot => {
-        slot.classList.remove('lunge-attack');
-        void slot.offsetWidth;
-        slot.classList.add('lunge-attack');
-      });
+      // Visual attack animation for party members and enemy hit flinch
+      triggerPartyStrikeExchange(container);
 
       updateMadnessCombatTick(container);
 
@@ -439,7 +429,36 @@ export function renderMadnessView(container) {
       const hasMadnessContainer = !!currentContainer.querySelector('.madness-container');
       if (!hasMadnessContainer) return;
 
-      if (eventType === 'ultimateCast') {
+      if (eventType === 'combatStrike' && payload.zone === 'madness') {
+        if (payload.attackerType === 'spirit') {
+          const spiritId = payload.spirit?.id;
+          const slot = currentContainer.querySelector(`[data-spirit-id="${spiritId}"]`) ||
+                       currentContainer.querySelector('.seamless-battle-spirit:not(.spirit-fallen)');
+          if (slot) triggerSpiritAttack(slot);
+
+          const leadEnemySlot = currentContainer.querySelector('.seamless-enemy-slot:not(.enemy-defeated)');
+          if (leadEnemySlot) triggerEnemyFlinch(leadEnemySlot);
+        } else if (payload.attackerType === 'enemy') {
+          const enemySlot = currentContainer.querySelector('.seamless-enemy-slot:not(.enemy-defeated)');
+          if (enemySlot) triggerEnemyAttack(enemySlot);
+
+          if (payload.targetSpirit) {
+            const spiritSlot = currentContainer.querySelector(`[data-spirit-id="${payload.targetSpirit.id}"]`) ||
+                               currentContainer.querySelector('.seamless-battle-spirit:not(.spirit-fallen)');
+            if (spiritSlot) triggerSpiritFlinch(spiritSlot);
+          }
+        }
+      } else if (eventType === 'manualPartyStrike' && payload.zone === 'madness') {
+        triggerPartyStrikeExchange(currentContainer);
+      } else if (eventType === 'ultimateCast') {
+        if (payload.spirit) {
+          const spiritSlot = currentContainer.querySelector(`[data-spirit-id="${payload.spirit.id}"]`);
+          if (spiritSlot) triggerSpiritAttack(spiritSlot);
+        }
+        currentContainer.querySelectorAll('.seamless-enemy-slot:not(.enemy-defeated)').forEach(enemySlot => {
+          triggerEnemyFlinch(enemySlot);
+        });
+
         const role = payload.spirit?.role;
         const bannerType = role === 'TANK' ? 'wipe' : 'ult';
         const roleIcon = role === 'TANK' ? '🛡️' : (role === 'HEALER' ? '💚' : '✨');
@@ -457,6 +476,14 @@ export function renderMadnessView(container) {
           spawnCombatNumber(currentContainer, `TAUNT LOCK (6s)!`, 'heal');
         }
       } else if (eventType === 'enemyCounterAttack') {
+        const enemySlot = currentContainer.querySelector('.seamless-enemy-slot:not(.enemy-defeated)');
+        if (enemySlot) triggerEnemyAttack(enemySlot);
+        if (payload.targetSpirit) {
+          const spiritSlot = currentContainer.querySelector(`[data-spirit-id="${payload.targetSpirit.id}"]`) ||
+                             currentContainer.querySelector('.seamless-battle-spirit:not(.spirit-fallen)');
+          if (spiritSlot) triggerSpiritFlinch(spiritSlot);
+        }
+
         if (payload.isTauntedTarget) {
           spawnCombatNumber(currentContainer, `TAUNTED! -${payload.damage}`, 'enemy-hit');
         } else if (payload.defMitigated > 0) {

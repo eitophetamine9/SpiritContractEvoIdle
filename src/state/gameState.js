@@ -1674,6 +1674,18 @@ class GameStateManager {
       const damageThisTick = baseDps * deltaSec;
       leadEnemy.hp = Math.max(0, leadEnemy.hp - damageThisTick);
 
+      // Attack animation cadence (staggered ~1.1s - 1.5s so party members swing rhythmically)
+      spirit._attackAnimTimer = (spirit._attackAnimTimer || (0.4 + Math.random() * 0.8)) - deltaSec;
+      if (spirit._attackAnimTimer <= 0) {
+        spirit._attackAnimTimer = 1.2 + Math.random() * 0.4;
+        this.emit('combatStrike', {
+          attackerType: 'spirit',
+          spirit,
+          targetEnemy: leadEnemy,
+          zone: 'madness'
+        });
+      }
+
       // Mana Accumulation with Mana Replenish modifiers (Zeus 2pc, Hades 2pc, Apollo 2pc, Pendant relic)
       const activeBonuses = this.getSpiritActiveSetBonuses(spirit);
       let manaBonusMult = 1;
@@ -1797,6 +1809,14 @@ class GameStateManager {
             defMitigated,
             shieldAbsorbed,
             isTauntedTarget: (targetSpirit.tauntTimer || 0) > 0
+          });
+
+          this.emit('combatStrike', {
+            attackerType: 'enemy',
+            enemy,
+            targetSpirit,
+            damage: finalDamage,
+            zone: 'madness'
           });
         }
       }
@@ -2018,6 +2038,14 @@ class GameStateManager {
       isCrit,
       role
     });
+
+    this.emit('combatStrike', {
+      attackerType: 'spirit',
+      spirit,
+      targetEnemy: livingEnemies[0] || null,
+      isUltimate: true,
+      zone: 'madness'
+    });
   }
 
   /**
@@ -2079,6 +2107,14 @@ class GameStateManager {
       enemyMaxHp: enemy.maxHp,
       killed,
       isCrit
+    });
+
+    this.emit('manualPartyStrike', {
+      livingSpirits,
+      leadEnemy: enemy,
+      damage,
+      isCrit,
+      zone: 'madness'
     });
 
     return { damage, killed, remainingHp: enemy.hp, isCrit };
@@ -4694,6 +4730,18 @@ class GameStateManager {
       const baseDps = Math.max(1, Math.round(effectivePower * 0.45 * posAtkMult));
       let damageThisTick = baseDps * deltaSec;
 
+      // Staggered attack cadence for spirits in dungeon battles
+      spirit._dungeonAttackAnimTimer = (spirit._dungeonAttackAnimTimer || (0.4 + Math.random() * 0.8)) - deltaSec;
+      if (spirit._dungeonAttackAnimTimer <= 0) {
+        spirit._dungeonAttackAnimTimer = 1.2 + Math.random() * 0.4;
+        this.emit('combatStrike', {
+          attackerType: 'spirit',
+          spirit,
+          targetEnemy: leadEnemy,
+          zone: 'dungeon'
+        });
+      }
+
       if (leadEnemy.shieldHp > 0) {
         const absorbed = Math.min(leadEnemy.shieldHp, damageThisTick);
         leadEnemy.shieldHp -= absorbed;
@@ -4784,6 +4832,14 @@ class GameStateManager {
             defMitigated,
             shieldAbsorbed,
             isTauntedTarget: (targetSpirit.tauntTimer || 0) > 0
+          });
+
+          this.emit('combatStrike', {
+            attackerType: 'enemy',
+            enemy,
+            targetSpirit,
+            damage: finalEnemyDamage,
+            zone: 'dungeon'
           });
         }
       }
@@ -4900,6 +4956,14 @@ class GameStateManager {
       isCrit,
       role
     });
+
+    this.emit('combatStrike', {
+      attackerType: 'spirit',
+      spirit,
+      targetEnemy: livingEnemies[0] || null,
+      isUltimate: true,
+      zone: 'dungeon'
+    });
   }
 
   manualDungeonStrike() {
@@ -4947,6 +5011,13 @@ class GameStateManager {
         s.currentMp = 0;
         this.procSpiritUltimateForDungeon(s, battle);
       }
+    });
+
+    this.emit('manualPartyStrike', {
+      livingSpirits,
+      leadEnemy,
+      isCrit,
+      zone: 'dungeon'
     });
 
     this.emit('dungeonBattleUpdated', battle);

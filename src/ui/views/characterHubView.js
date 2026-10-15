@@ -905,11 +905,29 @@ function attachSanctumListeners(container, selectedSpirit) {
   const btnAttack = container.querySelector('#btn-anim-attack');
   const btnHurt = container.querySelector('#btn-anim-hurt');
 
-  if (btnAttack && activeStageAnimator) {
-    btnAttack.addEventListener('click', () => activeStageAnimator.triggerAttack());
+  if (btnAttack) {
+    btnAttack.addEventListener('click', () => {
+      if (activeStageAnimator) activeStageAnimator.triggerAttack();
+      const mountEl = container.querySelector('#sanctum-creature-mount');
+      if (mountEl) {
+        mountEl.classList.remove('lunge-attack');
+        void mountEl.offsetWidth;
+        mountEl.classList.add('lunge-attack');
+        setTimeout(() => mountEl.classList.remove('lunge-attack'), 360);
+      }
+    });
   }
-  if (btnHurt && activeStageAnimator) {
-    btnHurt.addEventListener('click', () => activeStageAnimator.triggerHurt());
+  if (btnHurt) {
+    btnHurt.addEventListener('click', () => {
+      if (activeStageAnimator) activeStageAnimator.triggerHurt();
+      const mountEl = container.querySelector('#sanctum-creature-mount');
+      if (mountEl) {
+        mountEl.classList.remove('spirit-hit-flinch');
+        void mountEl.offsetWidth;
+        mountEl.classList.add('spirit-hit-flinch');
+        setTimeout(() => mountEl.classList.remove('spirit-hit-flinch'), 360);
+      }
+    });
   }
 
   attachSubHubListeners(container, selectedSpirit);

@@ -6104,7 +6104,7 @@ button:disabled {
 }
 
 .animated-pixel-sprite.attacking .sprite-frame-viewer {
-  animation: spriteAttackCycle 0.35s steps(4) forwards;
+  animation: spriteAttackCycle 0.35s steps(4) forwards !important;
 }
 
 @keyframes spriteAttackCycle {
@@ -6112,10 +6112,28 @@ button:disabled {
   to { background-position: -336px 0px; }
 }
 
-.animated-pixel-sprite.hurt .sprite-frame-viewer {
-  background-position: -336px 0px;
-  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
-  animation: none;
+.animated-pixel-sprite.hurt .sprite-frame-viewer,
+.animated-pixel-sprite.flinching .sprite-frame-viewer {
+  background-position: -336px 0px !important;
+  animation: spriteFlinchFlash 0.35s ease-out forwards !important;
+}
+
+@keyframes spriteFlinchFlash {
+  0% { 
+    background-position: -336px 0px;
+    filter: brightness(2.8) drop-shadow(0 0 16px rgba(255, 60, 60, 0.95)); 
+    transform: scale(0.88); 
+  }
+  35% { 
+    background-position: -336px 0px;
+    filter: brightness(2.0) drop-shadow(0 0 12px rgba(255, 0, 80, 0.8)); 
+    transform: scale(0.94); 
+  }
+  100% { 
+    background-position: -336px 0px;
+    filter: none; 
+    transform: scale(1); 
+  }
 }
 
 .core-glyph-fallback {
@@ -6589,8 +6607,18 @@ button:disabled {
 
 @keyframes allyLungeAnim {
   0% { transform: translateX(0px) scale(1); }
-  40% { transform: translateX(18px) scale(1.1); filter: brightness(1.3); }
-  100% { transform: translateX(0px) scale(1); }
+  35% { transform: translateX(20px) scale(1.14); filter: brightness(1.35) drop-shadow(0 0 10px rgba(255, 215, 0, 0.6)); }
+  100% { transform: translateX(0px) scale(1); filter: none; }
+}
+
+.enemy-lunge-attack {
+  animation: enemyLungeAnim 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes enemyLungeAnim {
+  0% { transform: translateX(0px) scale(1); }
+  35% { transform: translateX(-20px) scale(1.14); filter: brightness(1.35) drop-shadow(0 0 10px rgba(255, 71, 87, 0.6)); }
+  100% { transform: translateX(0px) scale(1); filter: none; }
 }
 
 .enemy-hit-flash {
@@ -6598,9 +6626,21 @@ button:disabled {
 }
 
 @keyframes enemyFlinchAnim {
-  0% { transform: scale(1) translateX(0); filter: drop-shadow(0 0 12px #ff4757) brightness(2); }
-  30% { transform: scale(0.92) translateX(8px); filter: drop-shadow(0 0 20px #ff0055) brightness(2.5); }
-  100% { transform: scale(1) translateX(0); filter: drop-shadow(0 4px 8px rgba(255, 51, 102, 0.65)); }
+  0% { transform: scale(1) translateX(0); filter: drop-shadow(0 0 16px #ff4757) brightness(2.4); }
+  25% { transform: scale(0.88) translateX(12px) rotate(4deg); filter: drop-shadow(0 0 24px #ff0055) brightness(2.8); }
+  55% { transform: scale(0.95) translateX(5px) rotate(-1deg); }
+  100% { transform: scale(1) translateX(0) rotate(0deg); filter: drop-shadow(0 4px 8px rgba(255, 51, 102, 0.65)); }
+}
+
+.spirit-hit-flinch {
+  animation: spiritFlinchAnim 0.35s ease-out;
+}
+
+@keyframes spiritFlinchAnim {
+  0% { transform: scale(1) translateX(0); filter: drop-shadow(0 0 16px #ff4757) brightness(2.4); }
+  25% { transform: scale(0.88) translateX(-12px) rotate(-4deg); filter: drop-shadow(0 0 24px #ff0055) brightness(2.8); }
+  55% { transform: scale(0.95) translateX(-5px) rotate(1deg); }
+  100% { transform: scale(1) translateX(0) rotate(0deg); filter: none; }
 }
 
 .crit-clash-flash {

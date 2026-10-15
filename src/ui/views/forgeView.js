@@ -13,6 +13,9 @@ import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../compon
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedWeaponHtml, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
+import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../render/combatAnimator.js';
+
+let isForgeEventsBound = false;
 
 let selectedForgeChamberId = 'bladesmith_sanctum';
 let selectedForgeTierNum = 1;
@@ -356,6 +359,43 @@ function renderForgeBattleArena(container, battle) {
       }
       arenaRenderer.spawnDamagePopup(null, null, Math.round(partyPower * 0.45));
       renderForgeView(container);
+      triggerPartyStrikeExchange(container);
+    });
+  }
+
+  // Hook forge combat strike and flinch animations
+  if (!isForgeEventsBound) {
+    isForgeEventsBound = true;
+    gameState.subscribe((eventType, payload) => {
+      if (typeof document === 'undefined') return;
+      const currentContainer = document.querySelector('#view-container');
+      if (!currentContainer) return;
+      const hasForge = !!currentContainer.querySelector('#forge-enemy-swarm-wrapper');
+      if (!hasForge) return;
+
+      if (eventType === 'combatStrike' && payload.zone === 'dungeon') {
+        if (payload.attackerType === 'spirit') {
+          const party = gameState.getPartySpirits();
+          const spiritIdx = party.findIndex(s => s && s.id === payload.spirit?.id);
+          const slot = (spiritIdx >= 0) ? currentContainer.querySelector(`#forge-allied-slot-${spiritIdx}`) : currentContainer.querySelector('.seamless-battle-spirit:not(.spirit-fallen)');
+          if (slot) triggerSpiritAttack(slot);
+
+          const leadEnemy = currentContainer.querySelector('.seamless-enemy-slot:not(.enemy-defeated)');
+          if (leadEnemy) triggerEnemyFlinch(leadEnemy);
+        } else if (payload.attackerType === 'enemy') {
+          const enemySlot = currentContainer.querySelector('.seamless-enemy-slot:not(.enemy-defeated)');
+          if (enemySlot) triggerEnemyAttack(enemySlot);
+
+          if (payload.targetSpirit) {
+            const party = gameState.getPartySpirits();
+            const spiritIdx = party.findIndex(s => s && s.id === payload.targetSpirit.id);
+            const spiritSlot = (spiritIdx >= 0) ? currentContainer.querySelector(`#forge-allied-slot-${spiritIdx}`) : currentContainer.querySelector('.seamless-battle-spirit:not(.spirit-fallen)');
+            if (spiritSlot) triggerSpiritFlinch(spiritSlot);
+          }
+        }
+      } else if (eventType === 'manualPartyStrike' && payload.zone === 'dungeon') {
+        triggerPartyStrikeExchange(currentContainer);
+      }
     });
   }
 

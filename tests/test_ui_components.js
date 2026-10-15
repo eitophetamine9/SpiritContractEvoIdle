@@ -796,6 +796,110 @@ if (freshState.madnessZone.stage !== 1 ||
 
 console.log('[PASS] Fresh Account Reset & State Bleed Prevention validated!');
 
+// 28. Test Combat Animation Engine & Event Cadence Pipeline
+import { 
+  triggerSpiritAttack, 
+  triggerEnemyFlinch, 
+  triggerEnemyAttack, 
+  triggerSpiritFlinch, 
+  triggerPartyStrikeExchange 
+} from '../src/render/combatAnimator.js';
+
+function createMockElement(tag, className = '') {
+  const classes = new Set(className.split(' ').filter(Boolean));
+  const el = {
+    tagName: tag.toUpperCase(),
+    className: className,
+    classList: {
+      add(...cls) { cls.forEach(c => classes.add(c)); el.className = Array.from(classes).join(' '); },
+      remove(...cls) { cls.forEach(c => classes.delete(c)); el.className = Array.from(classes).join(' '); },
+      contains(c) { return classes.has(c); }
+    },
+    offsetWidth: 50,
+    children: [],
+    querySelector(selector) {
+      if (selector.includes('.animated-pixel-sprite')) {
+        return el.children.find(c => c.classList.contains('animated-pixel-sprite')) || null;
+      }
+      if (selector.includes('.seamless-enemy-slot')) {
+        return el.children.find(c => c.classList.contains('seamless-enemy-slot')) || null;
+      }
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector.includes('.seamless-battle-spirit')) {
+        return el.children.filter(c => c.classList.contains('seamless-battle-spirit'));
+      }
+      return [];
+    }
+  };
+  return el;
+}
+
+const mockCombatContainer = createMockElement('div', 'madness-container');
+const mockAllySlot = createMockElement('div', 'seamless-battle-spirit');
+const mockAllySprite = createMockElement('div', 'animated-pixel-sprite sprite-feline_shadow');
+mockAllySlot.children.push(mockAllySprite);
+
+const mockEnemySlot = createMockElement('div', 'seamless-enemy-slot');
+const mockEnemySprite = createMockElement('div', 'animated-pixel-sprite sprite-enemy');
+mockEnemySlot.children.push(mockEnemySprite);
+
+mockCombatContainer.children.push(mockAllySlot, mockEnemySlot);
+
+// Test 1: Spirit Attack Animation
+triggerSpiritAttack(mockAllySlot);
+if (!mockAllySlot.classList.contains('lunge-attack') || !mockAllySprite.classList.contains('attacking')) {
+  throw new Error('triggerSpiritAttack failed to add lunge-attack or attacking class!');
+}
+
+// Test 2: Enemy Flinch Animation
+triggerEnemyFlinch(mockEnemySlot);
+if (!mockEnemySlot.classList.contains('enemy-hit-flash') || !mockEnemySprite.classList.contains('hurt') || !mockEnemySprite.classList.contains('flinching')) {
+  throw new Error('triggerEnemyFlinch failed to add enemy-hit-flash or hurt/flinching class!');
+}
+
+// Test 3: Enemy Attack Animation
+triggerEnemyAttack(mockEnemySlot);
+if (!mockEnemySlot.classList.contains('enemy-lunge-attack') || !mockEnemySprite.classList.contains('attacking')) {
+  throw new Error('triggerEnemyAttack failed to add enemy-lunge-attack or attacking class!');
+}
+
+// Test 4: Spirit Flinch Animation
+triggerSpiritFlinch(mockAllySlot);
+if (!mockAllySlot.classList.contains('spirit-hit-flinch') || !mockAllySprite.classList.contains('hurt') || !mockAllySprite.classList.contains('flinching')) {
+  throw new Error('triggerSpiritFlinch failed to add spirit-hit-flinch or hurt/flinching class!');
+}
+
+// Test 5: Full Party Strike Exchange
+triggerPartyStrikeExchange(mockCombatContainer);
+if (!mockAllySlot.classList.contains('lunge-attack') || !mockEnemySlot.classList.contains('enemy-hit-flash')) {
+  throw new Error('triggerPartyStrikeExchange failed to trigger exchange animations on container!');
+}
+
+// Test 6: Verify combatStrike and manualPartyStrike events from gameState
+let receivedCombatStrike = false;
+let receivedManualStrike = false;
+
+const unsubscribeCombat = gameState.subscribe((eventType, payload) => {
+  if (eventType === 'combatStrike') receivedCombatStrike = true;
+  if (eventType === 'manualPartyStrike') receivedManualStrike = true;
+});
+
+gameState.attackEnemyWithPartyPower();
+if (!receivedManualStrike) {
+  throw new Error('attackEnemyWithPartyPower did not emit manualPartyStrike event!');
+}
+
+// Tick madness zone to trigger auto combat strike cadence
+gameState.state.madnessZone.isEngaged = true;
+gameState.tickMadnessCombat(2.0); // 2s tick exceeds 1.2s cadence
+if (!receivedCombatStrike) {
+  throw new Error('tickMadnessCombat did not emit combatStrike event during auto combat!');
+}
+
+console.log('[PASS] Combat Animation Engine, sprite classes, and event cadence pipeline validated!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 
