@@ -12,6 +12,59 @@ export const summonMethods = {
     return Math.round(200 * Math.pow(Math.max(1, level), 1.35));
   },
 
+  getDailyPurifiedExchangeStatus() {
+    if (!this.state.dailyExchange) {
+      this.state.dailyExchange = {
+        purifiedEssenceCount: 0,
+        purifiedEssenceDate: new Date().toDateString()
+      };
+    }
+    if (this.state.dailyExchange.purifiedEssenceDate !== new Date().toDateString()) {
+      this.state.dailyExchange.purifiedEssenceCount = 0;
+      this.state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+    }
+    const maxPerDay = 10;
+    const used = this.state.dailyExchange.purifiedEssenceCount || 0;
+    const remaining = Math.max(0, maxPerDay - used);
+    return {
+      used,
+      maxPerDay,
+      remaining,
+      rate: 500
+    };
+  },
+
+  exchangeShardsForPurifiedEssence(count = 1) {
+    const num = Math.max(1, Math.floor(count || 1));
+    const status = this.getDailyPurifiedExchangeStatus();
+    if (status.remaining <= 0) {
+      throw new Error('Daily exchange limit reached (10/10 today)! Resets tomorrow.');
+    }
+    if (num > status.remaining) {
+      throw new Error(`Cannot exchange ${num} times! Only ${status.remaining} exchange(s) remaining today.`);
+    }
+    const shardCost = num * 500;
+    if ((this.state.resources.spiritShards || 0) < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost.toLocaleString()} 💎 (Have: ${(this.state.resources.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+
+    this.state.resources.spiritShards -= shardCost;
+    this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + num;
+    this.state.dailyExchange.purifiedEssenceCount += num;
+    this.state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+
+    this.isDirty = true;
+    this.save();
+    this.emit('resourcesUpdated', this.state.resources);
+    this.emit('dailyExchangeUpdated', this.getDailyPurifiedExchangeStatus());
+    return {
+      exchanged: num,
+      cost: shardCost,
+      newPurifiedBalance: this.state.resources.purifiedSoulEssence,
+      remainingExchanges: this.getDailyPurifiedExchangeStatus().remaining
+    };
+  },
+
   /**
    * Contracting random Spirits (Gacha / Summoning)
    * Supports Multi-Banner (Solaris Rate-Up, Gelda Rate-Up, Celestial Conflux, Standard)

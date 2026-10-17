@@ -30,6 +30,7 @@ import { guidedTutorial } from './ui/components/guidedTutorial.js';
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
 const resShardsEl = document.getElementById('res-shards');
+const resPurifiedEl = document.getElementById('res-purified');
 const resEssenceEl = document.getElementById('res-essence');
 const resGodEssencesEl = document.getElementById('res-god-essences');
 const resEnergyEl = document.getElementById('res-energy');
@@ -41,6 +42,7 @@ const authStatusText = document.getElementById('auth-status-text');
 
 let _lastEnergyStr = '';
 let _lastShards = -1;
+let _lastPurified = -1;
 let _lastEssence = -1;
 let _lastGodEssences = -1;
 let _lastHasEvolvable = null;
@@ -60,6 +62,13 @@ function updateResourcesDisplay(force = false) {
     if (force || res.spiritShards !== _lastShards) {
       resShardsEl.textContent = res.spiritShards.toLocaleString();
       _lastShards = res.spiritShards;
+    }
+  }
+  if (resPurifiedEl) {
+    const purifiedVal = res.purifiedSoulEssence || 0;
+    if (force || purifiedVal !== _lastPurified) {
+      resPurifiedEl.textContent = purifiedVal.toLocaleString();
+      _lastPurified = purifiedVal;
     }
   }
   if (resEssenceEl) {

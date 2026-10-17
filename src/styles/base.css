@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    APP CONTAINER (STRICT MOBILE-FIRST: Max 480px, centered on desktop)
    ========================================================================== */
@@ -208,18 +209,18 @@
   animation: authShake 0.35s ease-in-out;
 }
 
-/* Resources Bar: 4 Symmetrical Columns (Energy, Shards, Astral, Gods) */
+/* Resources Bar: 5 Symmetrical Columns (Energy, Shards, Purified Soul, Astral, Gods) */
 .resources-bar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
 }
 
 .resource-pill {
   background: rgba(7, 12, 9, 0.75);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 4px 3px;
+  padding: 4px 2px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -231,7 +232,7 @@
 }
 
 .resource-label {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--text-muted);
   display: flex;
@@ -242,7 +243,7 @@
 
 .resource-val {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 900;
   color: #ffffff;
   white-space: nowrap;
@@ -261,9 +262,19 @@
   text-shadow: 0 0 6px rgba(112, 161, 255, 0.4);
 }
 
+.purified-pill .resource-val {
+  color: #00d2ff;
+  text-shadow: 0 0 6px rgba(0, 210, 255, 0.5);
+}
+
 .essence-pill .resource-val {
   color: #e056fd;
   text-shadow: 0 0 6px rgba(224, 86, 253, 0.4);
+}
+
+.god-essence-pill .resource-val {
+  color: #ffd32a;
+  text-shadow: 0 0 6px rgba(255, 211, 42, 0.4);
 }
 
 /* MAIN VIEW CONTENT AREA */
@@ -488,4 +499,4 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.2); }
 }
-
+

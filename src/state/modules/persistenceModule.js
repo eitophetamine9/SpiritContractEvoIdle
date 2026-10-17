@@ -67,8 +67,9 @@ export const persistenceMethods = {
       version: 2,
       last_saved: Date.now(),
       resources: {
-        spiritShards: 300, // Enough for 3 summons right away!
+        spiritShards: 300, // Enough for starter training!
         soulEssence: 0,
+        purifiedSoulEssence: 3, // Starter 3 Purified Soul Essences for initial contracts
         divineScriptures: 0, // Divine Relic Scripture consumable (select 2 guaranteed substats)
         relicReshapers: 0,   // Relic Reshaper consumable (rerolls relic substats)
         essencesOfTheGods: 0,
@@ -91,6 +92,10 @@ export const persistenceMethods = {
       },
       transmutationsToday: 0,
       lastTransmutationDate: new Date().toDateString(),
+      dailyExchange: {
+        purifiedEssenceCount: 0,
+        purifiedEssenceDate: new Date().toDateString()
+      },
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
       partyFormation: {
@@ -163,6 +168,9 @@ export const persistenceMethods = {
     if (typeof state.resources.divineScriptures !== 'number') {
       state.resources.divineScriptures = 2;
     }
+    if (typeof state.resources.purifiedSoulEssence !== 'number' || isNaN(state.resources.purifiedSoulEssence)) {
+      state.resources.purifiedSoulEssence = 3;
+    }
     if (typeof state.resources.relicReshapers !== 'number') {
       state.resources.relicReshapers = 0;
     }
@@ -171,6 +179,25 @@ export const persistenceMethods = {
     }
     if (typeof state.resources.energySecondsAccumulator !== 'number') {
       state.resources.energySecondsAccumulator = 0;
+    }
+
+    if (!state.dailyExchange || typeof state.dailyExchange !== 'object') {
+      state.dailyExchange = {
+        purifiedEssenceCount: 0,
+        purifiedEssenceDate: new Date().toDateString()
+      };
+    } else {
+      if (typeof state.dailyExchange.purifiedEssenceCount !== 'number') {
+        state.dailyExchange.purifiedEssenceCount = 0;
+      }
+      if (typeof state.dailyExchange.purifiedEssenceDate !== 'string') {
+        state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+      }
+      // Reset if date changed
+      if (state.dailyExchange.purifiedEssenceDate !== new Date().toDateString()) {
+        state.dailyExchange.purifiedEssenceCount = 0;
+        state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+      }
     }
 
     if (!state.dwarvenForge || typeof state.dwarvenForge !== 'object') {

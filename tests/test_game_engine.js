@@ -2233,6 +2233,60 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log('  [PASS] Verified animated sprites and relics for Astral Realm Hero Banner and Dwarven Forge!');
 
+  // [TEST 43] Testing Phase 1 Purified Soul Essence Currency & Daily Shard Exchange (500:1, max 10/day)
+  console.log('\n[TEST 43] Testing Phase 1 Purified Soul Essence Currency & Daily Shard Exchange:');
+  if (typeof gameState.state.resources.purifiedSoulEssence !== 'number' || gameState.state.resources.purifiedSoulEssence < 3) {
+    throw new Error(`Expected initial purifiedSoulEssence >= 3, got ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  const initialPurified = gameState.state.resources.purifiedSoulEssence;
+  const exchangeStatus = gameState.getDailyPurifiedExchangeStatus();
+  if (exchangeStatus.rate !== 500 || exchangeStatus.maxPerDay !== 10 || exchangeStatus.remaining !== 10) {
+    throw new Error(`Unexpected exchange status: ${JSON.stringify(exchangeStatus)}`);
+  }
+  console.log(`  Initial Purified Soul Essence: ${initialPurified} ✨ | Daily exchanges remaining: ${exchangeStatus.remaining}/10`);
+
+  // Give shards to test exchange
+  gameState.state.resources.spiritShards = 1500;
+  const exchangeResult = gameState.exchangeShardsForPurifiedEssence(2);
+  if (exchangeResult.exchanged !== 2 || exchangeResult.cost !== 1000) {
+    throw new Error(`Expected 2 exchanges for 1000 shards, got: ${JSON.stringify(exchangeResult)}`);
+  }
+  if (gameState.state.resources.purifiedSoulEssence !== initialPurified + 2) {
+    throw new Error(`Expected purified balance ${initialPurified + 2}, got ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  if (gameState.state.resources.spiritShards !== 500) {
+    throw new Error(`Expected 500 shards remaining, got ${gameState.state.resources.spiritShards}`);
+  }
+  console.log('  [PASS] Successfully exchanged 1,000 Shards for 2 Purified Soul Essence at 500:1 rate!');
+
+  // Test insufficient shards
+  let failedInsufficient = false;
+  try {
+    gameState.exchangeShardsForPurifiedEssence(2); // Requires 1000, has 500
+  } catch (err) {
+    failedInsufficient = true;
+  }
+  if (!failedInsufficient) throw new Error('Expected failure when exchanging with insufficient shards');
+  console.log('  [PASS] Insufficient shards blocked correctly!');
+
+  // Test exchange limit enforcement
+  gameState.state.resources.spiritShards = 50000;
+  // Already used 2, remaining 8. Exchanging 8 should succeed:
+  gameState.exchangeShardsForPurifiedEssence(8);
+  const cappedStatus = gameState.getDailyPurifiedExchangeStatus();
+  if (cappedStatus.remaining !== 0 || cappedStatus.used !== 10) {
+    throw new Error(`Expected 0 remaining after 10 total exchanges, got ${cappedStatus.remaining}`);
+  }
+
+  let failedOverLimit = false;
+  try {
+    gameState.exchangeShardsForPurifiedEssence(1);
+  } catch (err) {
+    failedOverLimit = true;
+  }
+  if (!failedOverLimit) throw new Error('Expected failure when exceeding 10 daily exchanges');
+  console.log('  [PASS] 10/10 daily exchange limit enforced successfully!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
