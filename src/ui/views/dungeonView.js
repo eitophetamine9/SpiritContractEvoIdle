@@ -18,6 +18,7 @@ let isDungeonEventsBound = false;
 
 let selectedChamberId = 'underworld_crypt';
 let selectedTierNum = 1;
+let chamberAnimClass = '';
 
 export function renderDungeonView(container) {
   const battle = gameState.state.activeDungeonBattle;
@@ -70,81 +71,99 @@ export function renderDungeonView(container) {
         </div>
       </div>
 
-      <!-- Chamber Selection Grid -->
-      <div class="pantheon-chambers-grid grid grid-cols-2 gap-2">
+      <!-- Chamber Selection Carousel Controls -->
+      <div class="carousel-nav-bar mb-1">
+        <button id="btn-prev-chamber" class="pager-nav-btn" title="Previous Chamber">
+          <span>‹</span>
+          <span class="hidden sm:inline">Prev</span>
+        </button>
+
+        <div class="chamber-dropdown-wrap">
+          <select id="select-chamber" class="chamber-dropdown">
+            ${PANTHEON_CHAMBERS.map(c => {
+              const gSet = GREEK_GOD_SETS[c.godId];
+              const isSelected = c.id === selectedChamberId;
+              return `<option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.sigil} ${c.name} (${gSet ? gSet.god : ''} Set)</option>`;
+            }).join('')}
+          </select>
+        </div>
+
+        <button id="btn-next-chamber" class="pager-nav-btn" title="Next Chamber">
+          <span class="hidden sm:inline">Next</span>
+          <span>›</span>
+        </button>
+      </div>
+
+      <!-- Quick Chamber Pills Strip -->
+      <div class="chamber-quick-pills flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 no-scrollbar mb-1">
         ${PANTHEON_CHAMBERS.map(c => {
           const isSelected = c.id === selectedChamberId;
-          const gSet = GREEK_GOD_SETS[c.godId];
           return `
-            <button class="chamber-card relative overflow-hidden rounded-xl p-2.5 flex items-center gap-2 text-left transition-all border cursor-pointer ${isSelected ? 'selected bg-slate-800/90 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'bg-slate-900/60 border-slate-800'}" data-chamber="${c.id}" style="--chamber-color: ${c.color};">
-              <div class="chamber-sigil w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden" style="background: ${c.color}22; border: 1px solid ${c.color};">
-                ${createAnimatedRelicHtml(c.godId, 'headgear', { extraClasses: 'chamber-sprite-icon' })}
-              </div>
-              <div class="chamber-info min-w-0 flex-1">
-                <span class="chamber-name text-xs font-bold text-white truncate block">${c.name}</span>
-                <span class="chamber-god text-[10px] font-semibold truncate block" style="color: ${c.accentColor};">${gSet ? gSet.god : ''} Set</span>
-              </div>
+            <button class="chamber-card px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${isSelected ? 'selected bg-amber-500/20 text-amber-300 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-slate-900/60 text-slate-400 border-slate-800'}" data-chamber="${c.id}">
+              ${c.sigil} ${c.name.split(' ')[0]}
             </button>
           `;
         }).join('')}
       </div>
 
-      <!-- Active Selected Chamber Detail Stage -->
-      <div class="chamber-active-stage rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border: 2px solid ${selectedChamber.color}; background: linear-gradient(180deg, ${selectedChamber.color}15 0%, rgba(10, 15, 20, 0.95) 100%);">
-        
-        <div class="stage-header-row flex items-start gap-3.5 mb-4">
-          <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden" style="background: ${selectedChamber.color}25; border: 2px solid ${selectedChamber.color};">
-            ${createAnimatedRelicHtml(selectedChamber.godId, 'headgear', { extraClasses: 'stage-sigil-sprite-large' })}
-          </div>
-          <div class="stage-text-block flex-1">
-            <h3 class="stage-name text-lg font-black" style="color: ${selectedChamber.accentColor};">${selectedChamber.name}</h3>
-            <span class="stage-god-title text-xs font-bold text-slate-300">${selectedChamber.godTitle}</span>
-            <p class="stage-lore text-xs text-slate-400 mt-1 leading-relaxed">${selectedChamber.lore}</p>
-          </div>
-        </div>
-
-        <!-- Relic Set Bonus Preview Pill -->
-        ${godSet ? `
-          <div class="god-bonuses-preview-box grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 p-3 rounded-xl bg-slate-950/70 border border-slate-800">
-            <div class="bonus-preview-pill flex flex-col gap-0.5">
-              <span class="bonus-tag text-[10px] font-black uppercase text-amber-400">2-PC SET BONUS</span>
-              <span class="bonus-desc text-xs text-slate-300"><strong>${godSet.bonus2pc.name}:</strong> ${godSet.bonus2pc.description}</span>
+      <!-- Active Selected Chamber Detail Stage (Animated Transition) -->
+      <div class="stage-carousel-container">
+        <div class="chamber-active-stage stage-card-animated ${chamberAnimClass} rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border: 2px solid ${selectedChamber.color}; background: linear-gradient(180deg, ${selectedChamber.color}15 0%, rgba(10, 15, 20, 0.95) 100%);">
+          
+          <div class="stage-header-row flex items-start gap-3.5 mb-4">
+            <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden ambient-float" style="background: ${selectedChamber.color}25; border: 2px solid ${selectedChamber.color};">
+              ${createAnimatedRelicHtml(selectedChamber.godId, 'headgear', { extraClasses: 'stage-sigil-sprite-large' })}
             </div>
-            <div class="bonus-preview-pill flex flex-col gap-0.5">
-              <span class="bonus-tag four-pc text-[10px] font-black uppercase text-orange-400">4-PC SET BONUS</span>
-              <span class="bonus-desc text-xs text-slate-300"><strong>${godSet.bonus4pc.name}:</strong> ${godSet.bonus4pc.description}</span>
+            <div class="stage-text-block flex-1">
+              <h3 class="stage-name text-lg font-black" style="color: ${selectedChamber.accentColor};">${selectedChamber.name}</h3>
+              <span class="stage-god-title text-xs font-bold text-slate-300">${selectedChamber.godTitle}</span>
+              <p class="stage-lore text-xs text-slate-400 mt-1 leading-relaxed">${selectedChamber.lore}</p>
             </div>
           </div>
-        ` : ''}
 
-        <!-- Tier Selector Row -->
-        <div class="pantheon-tier-selector mb-4">
-          <div class="tier-label text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">TRIAL DIFFICULTY:</div>
-          <div class="tier-buttons-row grid grid-cols-2 sm:grid-cols-4 gap-2">
-            ${PANTHEON_DIFFICULTY_TIERS.map(t => {
-              const isTierActive = t.tier === selectedTierNum;
-              return `
-                <button class="btn-tier-select p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${isTierActive ? 'active bg-amber-500/20 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.25)]' : 'bg-slate-950/60 border-slate-800'}" data-tier="${t.tier}">
-                  <span class="tier-btn-name text-xs font-black text-white">${t.name}</span>
-                  <span class="tier-btn-cost text-xs font-bold text-amber-400 mt-1">${t.energyCost} ⚡</span>
-                </button>
-              `;
-            }).join('')}
+          <!-- Relic Set Bonus Preview Pill -->
+          ${godSet ? `
+            <div class="god-bonuses-preview-box grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+              <div class="bonus-preview-pill flex flex-col gap-0.5">
+                <span class="bonus-tag text-[10px] font-black uppercase text-amber-400">2-PC SET BONUS</span>
+                <span class="bonus-desc text-xs text-slate-300"><strong>${godSet.bonus2pc.name}:</strong> ${godSet.bonus2pc.description}</span>
+              </div>
+              <div class="bonus-preview-pill flex flex-col gap-0.5">
+                <span class="bonus-tag four-pc text-[10px] font-black uppercase text-orange-400">4-PC SET BONUS</span>
+                <span class="bonus-desc text-xs text-slate-300"><strong>${godSet.bonus4pc.name}:</strong> ${godSet.bonus4pc.description}</span>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Tier Selector Row -->
+          <div class="pantheon-tier-selector mb-4">
+            <div class="tier-label text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">TRIAL DIFFICULTY:</div>
+            <div class="tier-buttons-row grid grid-cols-2 sm:grid-cols-4 gap-2">
+              ${PANTHEON_DIFFICULTY_TIERS.map(t => {
+                const isTierActive = t.tier === selectedTierNum;
+                return `
+                  <button class="btn-tier-select p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${isTierActive ? 'active bg-amber-500/20 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.25)]' : 'bg-slate-950/60 border-slate-800'}" data-tier="${t.tier}">
+                    <span class="tier-btn-name text-xs font-black text-white">${t.name}</span>
+                    <span class="tier-btn-cost text-xs font-bold text-amber-400 mt-1">${t.energyCost} ⚡</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
           </div>
-        </div>
 
-        <!-- Trial Action Strip -->
-        <div class="trial-launch-strip flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
-          <div class="trial-power-info text-xs flex flex-col gap-0.5">
-            <span class="rec-power-tag text-slate-400">Recommended Power: <strong class="text-white">⚡ ${selectedTier.recommendedPower.toLocaleString()}</strong></span>
-            <span class="party-power-tag ${powerClass} text-slate-400">Party Power: <strong class="text-amber-300">⚡ ${partyPower.toLocaleString()} (${powerText})</strong></span>
+          <!-- Trial Action Strip -->
+          <div class="trial-launch-strip flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
+            <div class="trial-power-info text-xs flex flex-col gap-0.5">
+              <span class="rec-power-tag text-slate-400">Recommended Power: <strong class="text-white">⚡ ${selectedTier.recommendedPower.toLocaleString()}</strong></span>
+              <span class="party-power-tag ${powerClass} text-slate-400">Party Power: <strong class="text-amber-300">⚡ ${partyPower.toLocaleString()} (${powerText})</strong></span>
+            </div>
+
+            <button id="btn-enter-trial" class="btn-enter-trial min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'} style="background: linear-gradient(135deg, ${selectedChamber.color}, ${selectedChamber.accentColor});">
+              <span>Challenge ${selectedChamber.sigil} ${selectedTier.name} (${selectedTier.energyCost} ⚡)</span>
+            </button>
           </div>
 
-          <button id="btn-enter-trial" class="btn-enter-trial min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'} style="background: linear-gradient(135deg, ${selectedChamber.color}, ${selectedChamber.accentColor});">
-            <span>Challenge ${selectedChamber.sigil} ${selectedTier.name} (${selectedTier.energyCost} ⚡)</span>
-          </button>
         </div>
-
       </div>
 
       <!-- Loot Preview & Guaranteed Drops Strip -->
@@ -161,9 +180,42 @@ export function renderDungeonView(container) {
     </div>
   `;
 
+  // Attach Chamber Dropdown & Pager listeners
+  const selChamber = container.querySelector('#select-chamber');
+  if (selChamber) {
+    selChamber.addEventListener('change', (e) => {
+      chamberAnimClass = 'stage-enter-next';
+      selectedChamberId = e.target.value;
+      renderDungeonView(container);
+    });
+  }
+
+  const btnPrevChamber = container.querySelector('#btn-prev-chamber');
+  if (btnPrevChamber) {
+    btnPrevChamber.addEventListener('click', () => {
+      const curIdx = PANTHEON_CHAMBERS.findIndex(c => c.id === selectedChamberId);
+      const prevIdx = (curIdx - 1 + PANTHEON_CHAMBERS.length) % PANTHEON_CHAMBERS.length;
+      selectedChamberId = PANTHEON_CHAMBERS[prevIdx].id;
+      chamberAnimClass = 'stage-enter-prev';
+      renderDungeonView(container);
+    });
+  }
+
+  const btnNextChamber = container.querySelector('#btn-next-chamber');
+  if (btnNextChamber) {
+    btnNextChamber.addEventListener('click', () => {
+      const curIdx = PANTHEON_CHAMBERS.findIndex(c => c.id === selectedChamberId);
+      const nextIdx = (curIdx + 1) % PANTHEON_CHAMBERS.length;
+      selectedChamberId = PANTHEON_CHAMBERS[nextIdx].id;
+      chamberAnimClass = 'stage-enter-next';
+      renderDungeonView(container);
+    });
+  }
+
   // Attach Chamber Card Selection listeners
   container.querySelectorAll('.chamber-card').forEach(btn => {
     btn.addEventListener('click', () => {
+      chamberAnimClass = 'stage-enter-next';
       selectedChamberId = btn.dataset.chamber;
       renderDungeonView(container);
     });

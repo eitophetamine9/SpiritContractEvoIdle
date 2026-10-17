@@ -52,18 +52,18 @@ export function showOfflineModal(report, onClaim) {
 
           <div class="offline-loot-row">
             <span style="color: var(--text-muted);">Madness Shards Gathered:</span>
-            <span style="color: #00d2ff; display: inline-flex; align-items: center; gap: 4px;">+${report.offlineShards.toLocaleString()} <span class="game-icon-wrap" style="color: #38bdf8;">${getGameIcon('spiritShards', { size: 14 })}</span></span>
+            <span style="color: #00d2ff; display: inline-flex; align-items: center; gap: 4px;">+${report.offlineShards.toLocaleString()} ${getGameIcon('spiritShards', { size: '14px', style: 'color: #38bdf8;' })}</span>
           </div>
 
           ${report.offlineEssence > 0 ? `
           <div class="offline-loot-row">
             <span style="color: var(--text-muted);">Soul Essence Extracted:</span>
-            <span style="color: #e056fd; display: inline-flex; align-items: center; gap: 4px;">+${report.offlineEssence} <span class="game-icon-wrap" style="color: #c084fc;">${getGameIcon('astralEssence', { size: 14 })}</span></span>
+            <span style="color: #e056fd; display: inline-flex; align-items: center; gap: 4px;">+${report.offlineEssence} ${getGameIcon('astralEssence', { size: '14px', style: 'color: #c084fc;' })}</span>
           </div>` : ''}
           ${(report.offlinePurified && report.offlinePurified > 0) ? `
           <div class="offline-loot-row">
             <span style="color: var(--text-muted);">Purified Soul Essence:</span>
-            <span style="color: #c084fc; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">+${report.offlinePurified} <span class="game-icon-wrap" style="color: #d8b4fe;">${getGameIcon('purifiedSoul', { size: 14 })}</span></span>
+            <span style="color: #c084fc; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">+${report.offlinePurified} ${getGameIcon('purifiedSoul', { size: '14px', style: 'color: #d8b4fe;' })}</span>
           </div>` : ''}
 
           ${report.energyGained > 0 ? `

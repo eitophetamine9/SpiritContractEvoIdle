@@ -328,7 +328,8 @@
 .party-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  padding: 4px 2px;
 }
 
 .afk-training-banner {
@@ -336,8 +337,8 @@
     linear-gradient(135deg, rgba(14, 28, 19, 0.85) 0%, rgba(7, 15, 10, 0.92) 100%),
     url('/theme/gothic_spire.jpg') center/cover no-repeat;
   border: 1px solid var(--border-bright);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 16px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -379,17 +380,17 @@
 .party-slots-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .party-card {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 14px;
+  padding: 14px;
   display: grid;
-  grid-template-columns: 74px 1fr auto;
-  gap: 10px;
+  grid-template-columns: 78px 1fr auto;
+  gap: 14px;
   align-items: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }

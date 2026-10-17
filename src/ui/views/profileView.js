@@ -1,5 +1,6 @@
 import { gameState } from '../../state/gameState.js';
-import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
+import { SPIRIT_SPECIES, getRarityInfo, ELEMENTS } from '../../data/spiritsData.js';
+import { getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showHallOfFamePickerModal } from '../components/modals.js';
 import { getNextFeatureUnlock, getAllFeatureMilestones } from '../../data/contractorData.js';
@@ -149,17 +150,25 @@ export function renderProfileView(container) {
 
             const species = SPIRIT_SPECIES[spirit.speciesId];
             const rarity = getRarityInfo(spirit.rarity || (species ? species.baseRarity : 'COMMON'));
+            const elemKey = (spirit.element || (species ? species.element : 'EARTH')).toUpperCase();
+            const elemObj = ELEMENTS[elemKey] || ELEMENTS.EARTH;
+            const sheetKey = getSheetKeyForSpecies(species ? species.id : spirit.speciesId);
 
             return `
               <div class="hall-pedestal filled-pedestal rarity-${rarity.name.toLowerCase()}">
-                <div class="pedestal-sprite-wrapper">
-                  ${createSpiritPlaceholderBox(spirit, { boxClass: 'hall-box' })}
+                <div class="pedestal-sprite-wrapper ambient-float">
+                  <div class="animated-pixel-sprite sprite-${sheetKey}" style="--sprite-sheet: url('/assets/sprites/creatures/${sheetKey}.svg'); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+                    <div class="sprite-frame-viewer"></div>
+                    <span class="core-glyph-fallback" style="display: none;">${species ? species.avatarEmoji : '✨'}</span>
+                  </div>
                 </div>
 
                 <div class="pedestal-info">
-                  <span class="pedestal-spirit-name">${spirit.customName}</span>
-                  <span class="pedestal-rarity-badge" style="color: ${rarity.color};">[${rarity.name.toUpperCase()}]</span>
-                  <span class="pedestal-power">⚡ ${spirit.power.toLocaleString()}</span>
+                  <span class="pedestal-spirit-name" title="${spirit.customName}">${spirit.customName}</span>
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 3px; margin-top: 1px;">
+                    <span class="pedestal-rarity-badge" style="color: ${rarity.color}; font-weight: 800; font-size: 8.5px;">${rarity.name.toUpperCase()}</span>
+                    <span class="pedestal-element-symbol" style="color: ${elemObj.color}; font-size: 9px;" title="${elemObj.name}">${elemObj.symbol}</span>
+                  </div>
                 </div>
 
                 <button class="btn-remove-hall" data-id="${spirit.id}" title="Remove from Hall of Fame">✕</button>

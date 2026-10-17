@@ -32,6 +32,18 @@ let selectedEssenceTierNum = 1;
 let activeRealmSection = 'dungeon'; // 'dungeon' | 'zodiac' | 'expeditions' | 'dwarven' | 'transmute' | 'energy' | 'potions' | 'blessings'
 let selectedConstellationId = 'draco';
 let isCosmicBoonsOpen = false;
+let realmAnimClass = '';
+
+export const REALM_SECTIONS = [
+  { id: 'dungeon', name: 'Sanctuary (Essence)', icon: '🏛️' },
+  { id: 'zodiac', name: 'Zodiac (Constellations)', icon: '🌌' },
+  { id: 'expeditions', name: 'Astral Expeditions', icon: '🧭' },
+  { id: 'dwarven', name: "Dwarven's Forge", icon: '⚒️' },
+  { id: 'transmute', name: 'Daily Transmute', icon: '⚗️' },
+  { id: 'energy', name: 'Energy Vault', icon: '⚡' },
+  { id: 'potions', name: 'EXP Elixirs', icon: '🧪' },
+  { id: 'blessings', name: 'Passive Blessings', icon: '✨' },
+];
 
 export function setActiveRealmSection(tab) {
   activeRealmSection = tab;
@@ -127,6 +139,28 @@ function renderMysticalSanctumScreen(container) {
         </div>
       </div>
 
+      <!-- Realm Carousel Navigation & Dropdown -->
+      <div class="carousel-nav-bar mb-1">
+        <button id="btn-prev-realm-area" class="pager-nav-btn" title="Previous Realm Area">
+          <span>‹</span>
+          <span class="hidden sm:inline">Prev</span>
+        </button>
+
+        <div class="chamber-dropdown-wrap">
+          <select id="select-realm-area" class="chamber-dropdown">
+            ${REALM_SECTIONS.map(s => {
+              const isSelected = s.id === activeRealmSection;
+              return `<option value="${s.id}" ${isSelected ? 'selected' : ''}>${s.icon} ${s.name}</option>`;
+            }).join('')}
+          </select>
+        </div>
+
+        <button id="btn-next-realm-area" class="pager-nav-btn" title="Next Realm Area">
+          <span class="hidden sm:inline">Next</span>
+          <span>›</span>
+        </button>
+      </div>
+
       <!-- Realm Navigation Section Tabs: 8-Tab Responsive Modern Dock -->
       <div class="realm-tab-grid">
         <button class="realm-tab-btn ${activeRealmSection === 'dungeon' ? 'active' : ''}" data-realm-tab="dungeon">
@@ -163,20 +197,54 @@ function renderMysticalSanctumScreen(container) {
         </button>
       </div>
 
-      <!-- Active Section Content Container -->
-      <div class="realm-section-content">
-        ${activeRealmSection === 'dungeon' ? renderDungeonSectionHtml(chamber, tier, canAffordDungeon, partyPower, selectedEssenceChamberId, selectedEssenceTierNum) : ''}
-        ${activeRealmSection === 'zodiac' ? renderConstellationsSectionHtml(res, selectedConstellationId, isCosmicBoonsOpen) : ''}
-        ${activeRealmSection === 'expeditions' ? renderExpeditionsSectionHtml(state) : ''}
-        ${activeRealmSection === 'dwarven' ? renderDwarvenForgeSectionHtml(res, state) : ''}
-        ${activeRealmSection === 'transmute' ? renderTransmutationSectionHtml(res, state) : ''}
-        ${activeRealmSection === 'energy' ? renderEnergySectionHtml(currentMaxEnergy, energyIsCapped, nextEnergyCostEssence, nextEnergyCostSoul, canAffordEnergy) : ''}
-        ${activeRealmSection === 'potions' ? renderPotionsSectionHtml(res, partySpirits) : ''}
-        ${activeRealmSection === 'blessings' ? renderBlessingsSectionHtml(res, activeBlessings) : ''}
+      <!-- Active Section Content Container (Animated Transition) -->
+      <div class="stage-carousel-container">
+        <div class="realm-section-content stage-card-animated ${realmAnimClass}">
+          ${activeRealmSection === 'dungeon' ? renderDungeonSectionHtml(chamber, tier, canAffordDungeon, partyPower, selectedEssenceChamberId, selectedEssenceTierNum) : ''}
+          ${activeRealmSection === 'zodiac' ? renderConstellationsSectionHtml(res, selectedConstellationId, isCosmicBoonsOpen) : ''}
+          ${activeRealmSection === 'expeditions' ? renderExpeditionsSectionHtml(state) : ''}
+          ${activeRealmSection === 'dwarven' ? renderDwarvenForgeSectionHtml(res, state) : ''}
+          ${activeRealmSection === 'transmute' ? renderTransmutationSectionHtml(res, state) : ''}
+          ${activeRealmSection === 'energy' ? renderEnergySectionHtml(currentMaxEnergy, energyIsCapped, nextEnergyCostEssence, nextEnergyCostSoul, canAffordEnergy) : ''}
+          ${activeRealmSection === 'potions' ? renderPotionsSectionHtml(res, partySpirits) : ''}
+          ${activeRealmSection === 'blessings' ? renderBlessingsSectionHtml(res, activeBlessings) : ''}
+        </div>
       </div>
 
     </div>
   `;
+
+  // Bind realm dropdown and pager controls
+  const selRealm = container.querySelector('#select-realm-area');
+  if (selRealm) {
+    selRealm.addEventListener('change', (e) => {
+      realmAnimClass = 'stage-enter-next';
+      activeRealmSection = e.target.value;
+      renderMysticalView(container);
+    });
+  }
+
+  const btnPrevRealm = container.querySelector('#btn-prev-realm-area');
+  if (btnPrevRealm) {
+    btnPrevRealm.addEventListener('click', () => {
+      const curIdx = REALM_SECTIONS.findIndex(s => s.id === activeRealmSection);
+      const prevIdx = (curIdx - 1 + REALM_SECTIONS.length) % REALM_SECTIONS.length;
+      activeRealmSection = REALM_SECTIONS[prevIdx].id;
+      realmAnimClass = 'stage-enter-prev';
+      renderMysticalView(container);
+    });
+  }
+
+  const btnNextRealm = container.querySelector('#btn-next-realm-area');
+  if (btnNextRealm) {
+    btnNextRealm.addEventListener('click', () => {
+      const curIdx = REALM_SECTIONS.findIndex(s => s.id === activeRealmSection);
+      const nextIdx = (curIdx + 1) % REALM_SECTIONS.length;
+      activeRealmSection = REALM_SECTIONS[nextIdx].id;
+      realmAnimClass = 'stage-enter-next';
+      renderMysticalView(container);
+    });
+  }
 
   // Bind realm tab switching with event delegation
   container.querySelectorAll('.realm-tab-btn').forEach(btn => {
@@ -184,6 +252,7 @@ function renderMysticalSanctumScreen(container) {
       const tabBtn = e.target.closest('[data-realm-tab]') || e.currentTarget;
       const tabVal = tabBtn.getAttribute('data-realm-tab');
       if (tabVal) {
+        realmAnimClass = 'stage-enter-next';
         activeRealmSection = tabVal;
         renderMysticalView(container);
       }

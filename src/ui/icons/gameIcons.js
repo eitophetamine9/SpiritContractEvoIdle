@@ -71,9 +71,12 @@ export const SVG_ICONS = {
  */
 export function getGameIcon(iconKey, options = {}) {
   const svg = SVG_ICONS[iconKey] || SVG_ICONS['madness'];
-  const size = options.size || '18px';
+  let size = options.size || '18px';
+  if (typeof size === 'number') {
+    size = `${size}px`;
+  }
   const extraClass = options.className || '';
   const extraStyle = options.style || '';
 
-  return `<span class="game-icon-wrap ${extraClass}" style="display: inline-flex; align-items: center; justify-content: center; width: ${size}; height: ${size}; vertical-align: middle; ${extraStyle}">${svg}</span>`;
+  return `<span class="game-icon-wrap ${extraClass}" style="display: inline-flex; align-items: center; justify-content: center; width: ${size}; height: ${size}; min-width: ${size}; min-height: ${size}; max-width: ${size}; max-height: ${size}; flex-shrink: 0; vertical-align: middle; line-height: 1; ${extraStyle}">${svg}</span>`;
 }

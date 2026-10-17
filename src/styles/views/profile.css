@@ -104,12 +104,29 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  background: rgba(6, 11, 8, 0.65);
-  border: 1px solid var(--border-color);
+  background: rgba(6, 11, 8, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  padding: 6px 4px;
-  min-height: 125px;
+  padding: 8px 4px 6px 4px;
+  min-height: 118px;
   position: relative;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.hall-pedestal.filled-pedestal {
+  background: radial-gradient(circle at 50% 60%, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+  border: none;
+  box-shadow: none;
+}
+
+.pedestal-sprite-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin-top: 4px;
 }
 
 .hall-pedestal.empty-pedestal {
