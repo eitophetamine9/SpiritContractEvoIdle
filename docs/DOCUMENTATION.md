@@ -350,3 +350,74 @@ All 5 phases of modular decomposition have been completed with 100% test coverag
 | **Phase 4** | `mysticalView.js` (1,627 &rarr; 223 lines) | ✅ Completed | Decomposed into `src/ui/views/astral/`: `zodiacTab.js`, `expeditionsTab.js`, `dwarvenForgeTab.js`, `transmuteTab.js`, `blessingsTab.js`, `energyTab.js`, `sanctuaryTab.js`. |
 | **Phase 5** | `spiritsData.js` (2,241 &rarr; 5 lines) | ✅ Completed | Decomposed into `src/data/spirits/`: `elementsAndRoles.js`, `formationMatrix.js`, `speciesCatalog.js`, `progressionConfig.js`, `scalingProfiles.js`, `ultimatesCatalog.js`. |
 
+---
+
+## 17. HyperFeature v0.4 Polish, Economy Overhaul & Developer Tooling
+
+### 17.1 Singapore (UTC+8) Time-Boundary Engine
+All daily and weekly reset systems operate strictly on the Singapore (UTC+8) time zone to maintain deterministic synchronization regardless of client local time:
+- **Daily Reset**: 00:00 SGT (UTC+8). Tracked via key generation `getSingaporeDayKey()` producing format `YYYY-MM-DD-SGT`. Resets:
+  - Daily Shard Exchange (starts clean at `0/10`).
+  - Dwarven's Forge daily transmutation counter (0/5).
+- **Weekly Reset**: 00:00 SGT (UTC+8) every Sunday. Tracked via `getSingaporeWeekKey()` producing format `YYYY-Www-SGT`. Resets:
+  - Weekly purchase caps on Divine Scripture (3/3) and Relic Reshapers (12/12).
+
+### 17.2 Purified Soul Essence Economy & Summon Costs
+Purified Soul Essence (✨) serves as the primary currency for contract summoning:
+- **Summon Pricing**:
+  - **1x Summon**: 1 Purified Soul Essence.
+  - **10x Summon**: 10 Purified Soul Essence.
+  - **30x Bulk Summon**: 25 Purified Soul Essence (bulk discount saving 5).
+- **Daily Shard Exchange**:
+  - Conversion rate: **500 Spirit Shards : 1 Purified Soul Essence**.
+  - Daily limit: 10 exchanges per day, strictly enforced and reset at 00:00 UTC+8.
+- **Bestiary Discovery & Milestones**:
+  - Discovering any new spirit species awards an immediate **+50 Spirit Shards** bounty.
+  - Reaching Bestiary completion milestones (10%, 25%, 50%, 75%, 100%) awards **Purified Soul Essence**.
+- **Boss & Idle Drops**:
+  - Madness Zone floor bosses drop Purified Soul Essence at guaranteed milestones.
+  - Offline progression earns Purified Soul Essence at balanced diminishing rates.
+
+### 17.3 Evolution & Ascension Gating Rules
+- **Early Exact Duplicate Ascension**: Contractors may ascend spirits immediately using exact duplicate copies of the same species at any Contractor Level.
+- **Pre-Evolution Ascension**: Using a pre-evolved base species to ascend a higher-tier evolution is locked until **Contractor Level 16 (Spirit Rebirth)**.
+
+### 17.4 Gated Progression & Starter Equipment
+- **Madness 2X Combat Speed**: Locked prior to Floor 10. Unlocks upon clearing Floor 10, actively doubling combat tick cadence.
+- **Starter Equipment Grant**: New contractors begin with 0 starter equipment. Upon ascending to **Contractor Level 3** (unlocking Pantheon Trials), the game automatically grants:
+  - 1x Spectral Blade (Weapon)
+  - 2x Hades Relics (Headgear & Armor)
+
+### 17.5 Screen-Wide UI & Navigation Overhaul
+- **Generous Spacing & Padding**: Enhanced breathing room across Level Up Celebration modal (widescreen card with 24px padding), Offline modal, Party formation, Vault, and Bestiary.
+- **Carousel Dropdowns & Slide Pagers**:
+  - **Pantheon Trials**: Dropdown chamber selector + animated `< Prev` / `Next >` carousel pagers.
+  - **The Divine Forge**: Dropdown forge chamber selector + animated pagers.
+  - **Astral Realm**: Dropdown realm area selector + animated `< Prev` / `Next >` sliding pagers.
+- **Borderless Hall of Fame**: Pedestals present spirits without box borders, featuring floating sprites, rarity tags, spirit names, and elemental emblems.
+- **Celestial Summoning Animation**: Full runic vortex animation sequence with counter-rotating celestial circles, core flare, and a persistent "Skip Animation" checkbox (`localStorage['spirit_skip_summon_anim']`).
+- **Contextual Area Unlock Tutorials**: Automatic guided modals featuring the Cat Spirit Familiar mascot guide triggered the first time a player opens any newly unlocked feature (Formation, Trials, Forge, Bestiary, Astral Realm, Rebirth).
+
+### 17.6 Developer / Admin Account & Cheat Console
+- **Credentials**:
+  - **Email**: `admin@email.com`
+  - **Password**: `x@DM1N`
+- **Access Gating**:
+  - Gated via `authService.isAdmin()` and `devCheatMethods.isDevAuthorized()`. All cheat methods verify authorization before mutating state.
+- **Dev Console Interface**:
+  - Accessible via the glowing **`⚡ DEV`** header button (only visible to `admin@email.com`) or keyboard shortcuts **`~`** (tilde) / **`F2`**.
+  - **Command Bar**:
+    - `floor <n>` / `skip <n>`: Jump to any floor.
+    - `levelup <n>` / `maxlevel`: Instant contractor level up with feature unlocks.
+    - `purified <n>`: Boost Purified Soul Essence.
+    - `shards <n>`, `soul <n>`, `gods <n>`, `energy <n>`, `scriptures <n>`, `reshapers <n>`.
+    - `rich` / `boostall`: Max out all currencies simultaneously.
+    - `maxspirits`: Max all active party spirits to Lv. 100 ★5.
+    - `unlockall`: Unlock all features, bestiary entries, and currencies.
+    - `godmode`: Complete god mode activation.
+  - **Quick Buttons & Custom Dropdown**: One-click boost buttons for all currencies and customizable amount inputs.
+- **Supabase Account Provisioning**:
+  - Standalone SQL script: `supabase/migrations/20261017_create_dev_admin_account.sql`.
+  - Automated verification script: `scripts/push_dev_account.js`.
+
+
