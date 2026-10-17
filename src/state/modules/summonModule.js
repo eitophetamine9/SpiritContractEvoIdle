@@ -140,7 +140,7 @@ export const summonMethods = {
 
     this.state.stats.totalSpiritsContracted = (this.state.stats.totalSpiritsContracted || 0) + count;
     this.state.stats.totalBannerSummons = (this.state.stats.totalBannerSummons || 0) + count;
-    this.addContractorXp(count * 25, 'Spirit Contract');
+    this.addContractorXp(count * 50, 'Spirit Contract');
     this.save();
 
     this.emit('spiritsContracted', { spirits: newSpirits, cost: totalCost, bannerId });

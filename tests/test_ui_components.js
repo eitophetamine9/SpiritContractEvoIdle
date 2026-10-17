@@ -680,9 +680,9 @@ const unsub = gameState.on('contractorLevelUp', (payload) => {
   leveledUpEvents.push(payload);
 });
 
-// Level 1 requires 100 XP
+// Level 1 requires 250 XP (was 100)
 const prevShards = gameState.state.resources.spiritShards;
-gameState.addContractorXp(100, 'Test Combat Floor 1');
+gameState.addContractorXp(250, 'Test Combat Floor 1 & 2');
 
 if (gameState.getContractorLevel() !== 2) {
   throw new Error(`Expected contractor level 2, got ${gameState.getContractorLevel()}`);
@@ -690,17 +690,23 @@ if (gameState.getContractorLevel() !== 2) {
 if (gameState.state.resources.spiritShards !== prevShards + 100) {
   throw new Error('Ascension spoils +100 shards not awarded!');
 }
+if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
+  throw new Error('FORMATION_3X3 should be unlocked at Lv 2!');
+}
 
-// Level up to Lv 3 (Lv 2 requires 237 XP)
-gameState.addContractorXp(250, 'Test Summons & Evo');
+// Level up to Lv 3 (Lv 2 requires 683 XP)
+gameState.addContractorXp(683, 'Test Summons & Evo');
 if (gameState.getContractorLevel() < 3) {
   throw new Error(`Expected contractor level >= 3, got ${gameState.getContractorLevel()}`);
 }
-if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
-  throw new Error('FORMATION_3X3 should be unlocked at Lv 3!');
+if (!gameState.isFeatureUnlocked('PANTHEON_TRIALS')) {
+  throw new Error('PANTHEON_TRIALS should be unlocked at Lv 3!');
+}
+if (!gameState.isFeatureUnlocked('DIVINE_FORGE')) {
+  throw new Error('DIVINE_FORGE should be unlocked at Lv 3!');
 }
 
-console.log('[PASS] Contractor Leveling & Feature Gating progression validated (Lv 1 -> Lv 3 unlocks FORMATION_3X3)!');
+console.log('[PASS] Contractor Leveling & Feature Gating progression validated (Lv 1 -> Lv 2 unlocks FORMATION_3X3, Lv 3 unlocks PANTHEON_TRIALS and DIVINE_FORGE)!');
 
 // 3. Test Level Up Celebration Modal rendering
 let claimedLevelUp = false;
@@ -715,7 +721,7 @@ const lvlModalRoot = document.getElementById('modal-root');
 if (!lvlModalRoot.innerHTML.includes('Contractor Ascension') ||
     !lvlModalRoot.innerHTML.includes('Level 3 Reached!') ||
     !lvlModalRoot.innerHTML.includes('New System Unlocked!') ||
-    !lvlModalRoot.innerHTML.includes('3x3 Tactical Grid & Formation Alignment') ||
+    !lvlModalRoot.innerHTML.includes('Pantheon Trials (Artifact Dungeon)') ||
     !lvlModalRoot.innerHTML.includes('+100 Shards') ||
     !lvlModalRoot.innerHTML.includes('+20 Energy') ||
     !lvlModalRoot.innerHTML.includes('btn-claim-levelup')) {

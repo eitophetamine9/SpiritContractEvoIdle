@@ -321,7 +321,7 @@ export const spiritMethods = {
     spirit.evolutionHistory.push(nextSpecies.name);
 
     this.state.stats.totalEvolutions += 1;
-    this.addContractorXp(150, 'Spirit Evolution');
+    this.addContractorXp(75, 'Spirit Evolution');
     this.markSpeciesDiscovered(nextSpecies.id);
     this.invalidateCaches();
     this.save();

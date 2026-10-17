@@ -234,7 +234,7 @@ export function renderCharacterHubView(container, options = {}) {
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'rebirths' ? 'active' : ''}" data-subhub="rebirths">
             <span class="subhub-icon">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? '🌟' : '🔒'}</span>
-            <span class="subhub-text">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? 'Rebirths' : 'Rebirths (Lv.25)'}</span>
+            <span class="subhub-text">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? 'Rebirths' : 'Rebirths (Lv.16)'}</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'talents' ? 'active' : ''}" data-subhub="talents">
             <span class="subhub-icon">📜</span>
@@ -714,7 +714,7 @@ function renderRebirthsSubHub(spirit) {
     <div class="subhub-pane rebirths-pane">
       <div class="pane-section-header">
         <span class="sec-title">CELESTIAL REBIRTH NEXUS (REBIRTH I TO VII)</span>
-        <span class="sec-tag">${isRebirthUnlocked ? `Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%` : '🔒 Requires Contractor Lv. 25'}</span>
+        <span class="sec-tag">${isRebirthUnlocked ? `Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%` : '🔒 Requires Contractor Lv. 16'}</span>
       </div>
 
       ${!isRebirthUnlocked ? `
@@ -722,7 +722,7 @@ function renderRebirthsSubHub(spirit) {
           <div style="font-size: 26px; margin-bottom: 4px;">🔒</div>
           <h4 style="color: #ffd152; font-weight: 900; font-size: 13px; margin-bottom: 2px;">Spirit Rebirth Chamber Locked</h4>
           <p style="color: #cbd5e1; font-size: 11px; line-height: 1.35; max-width: 320px; margin: 0 auto;">
-            Requires <strong>Contractor Level 25</strong> to transcend maximum level limits and ignite 7-star constellation affinities.
+            Requires <strong>Contractor Level 16</strong> to transcend maximum level limits and ignite 7-star constellation affinities.
           </p>
         </div>
       ` : ''}

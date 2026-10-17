@@ -687,8 +687,11 @@ export const combatMethods = {
 
       // First Clear Contractor EXP reward
       if (mz.stage > prevHighest) {
-        const firstClearXp = 100 + mz.stage * 25;
+        const firstClearXp = 50 + mz.stage * 15;
         this.addContractorXp(firstClearXp, `Madness Floor ${mz.stage} First Clear`);
+      } else {
+        // Repeat boss clears provide baseline progression drip
+        this.addContractorXp(5, `Madness Floor ${mz.stage} Boss Cleared`);
       }
 
       // Floor Victory: Revive ALL party spirits to 100% HP!

@@ -669,7 +669,7 @@ export const dungeonMethods = {
     this.state.resources.spiritShards += loot.shardsGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
-    this.addContractorXp(75 + (battle.tier || 1) * 25, 'Dungeon Victory');
+    this.addContractorXp(40 + (battle.tier || 1) * 15, 'Dungeon Victory');
 
     this.getPartySpirits().forEach(s => {
       s.currentHp = s.maxHp;
@@ -720,7 +720,7 @@ export const dungeonMethods = {
     this.state.resources.soulEssence += loot.essenceGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
-    this.addContractorXp(75 + tierNum * 25, 'Forge Dungeon Victory');
+    this.addContractorXp(40 + tierNum * 15, 'Forge Dungeon Victory');
 
     this.save();
     this.emit('dungeonCompleted', loot);
@@ -754,7 +754,7 @@ export const dungeonMethods = {
 
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
-    this.addContractorXp(75 + tierNum * 25, 'Essence Sanctuary Victory');
+    this.addContractorXp(40 + tierNum * 15, 'Essence Sanctuary Victory');
 
     this.save();
     this.emit('dungeonCompleted', loot);

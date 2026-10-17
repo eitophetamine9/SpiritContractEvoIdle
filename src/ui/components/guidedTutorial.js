@@ -71,7 +71,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'contractor_ascension',
     title: 'Contractor Level & Roadmap',
-    speech: 'Clearing floors, summoning allies, and evolving spirits awards **Contractor EXP**. As you ascend, you will unlock the **3x3 Grid (Lv. 3)**, **Bestiary (Lv. 5)**, **Pantheon Trials (Lv. 8)**, and **Divine Forge (Lv. 12)**! May fortune guide your contracts!',
+    speech: 'Clearing floors, summoning allies, and evolving spirits awards **Contractor EXP**. As you ascend, you will unlock the **3x3 Grid (Lv. 2)**, **Pantheon Trials (Lv. 3)**, **Divine Forge (Lv. 3)**, and **Bestiary (Lv. 4)**! May fortune guide your contracts!',
     targetSelector: '#btn-top-profile',
     actionText: 'Claim 150 Shards & Ascend! 🌟',
     isFinal: true
