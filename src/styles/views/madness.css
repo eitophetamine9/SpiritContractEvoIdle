@@ -1400,6 +1400,7 @@
   font-weight: 800;
   background: var(--gold-metallic);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
