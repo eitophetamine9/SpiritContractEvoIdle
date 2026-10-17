@@ -2,6 +2,9 @@ import { supabase, isSupabaseConfigured } from './supabaseClient.js';
 import { gameState } from '../state/gameState.js';
 
 const GUEST_KEY = 'spirit_contract_guest_profile_v1';
+export const DEV_ADMIN_EMAIL = 'admin@email.com';
+export const DEV_ADMIN_PW = 'x@DM1N';
+const DEV_ADMIN_SESSION_KEY = 'spirit_admin_dev_session_v1';
 
 class AuthService {
   constructor() {
@@ -19,6 +22,17 @@ class AuthService {
   async init() {
     if (this.isInitialized) return;
 
+    // Check if previously signed in as Dev Admin
+    try {
+      const devSession = localStorage.getItem(DEV_ADMIN_SESSION_KEY);
+      if (devSession) {
+        this.setAdminDevSession();
+        this.isInitialized = true;
+        this.emit('AUTH_INITIALIZED', { isGuest: false, profile: this.getProfile() });
+        return;
+      }
+    } catch {}
+
     if (isSupabaseConfigured() && supabase) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -33,6 +47,10 @@ class AuthService {
             await this.fetchProfile(session.user.id);
             this.emit('AUTH_STATE_CHANGED', { user: this.currentUser, profile: this.currentProfile, isGuest: false });
           } else {
+            // Only revert to guest if not in dev session
+            try {
+              if (localStorage.getItem(DEV_ADMIN_SESSION_KEY)) return;
+            } catch {}
             this.currentUser = null;
             this.currentProfile = null;
             this.emit('AUTH_STATE_CHANGED', { user: null, profile: this.getGuestProfile(), isGuest: true });
@@ -45,6 +63,52 @@ class AuthService {
 
     this.isInitialized = true;
     this.emit('AUTH_INITIALIZED', { isGuest: this.isGuest(), profile: this.getProfile() });
+  }
+
+  /**
+   * Configures local active session as the Dev Admin
+   */
+  setAdminDevSession() {
+    this.currentUser = {
+      id: '00000000-0000-0000-0000-000000000001',
+      email: DEV_ADMIN_EMAIL,
+      role: 'admin',
+      user_metadata: {
+        username: 'AdminDev',
+        role: 'admin',
+        isDev: true
+      }
+    };
+    this.currentProfile = {
+      id: '00000000-0000-0000-0000-000000000001',
+      username: 'AdminDev [DEV]',
+      contractorLevel: 99,
+      contractorXp: 999999,
+      avatarEmoji: '⚡',
+      role: 'admin',
+      isAdmin: true,
+      isDev: true
+    };
+    try {
+      localStorage.setItem(DEV_ADMIN_SESSION_KEY, JSON.stringify({ email: DEV_ADMIN_EMAIL, ts: Date.now() }));
+    } catch {}
+  }
+
+  /**
+   * Check if current user is the Dev / Admin account
+   */
+  isAdmin() {
+    if (!this.currentUser) return false;
+    return Boolean(
+      this.currentUser.email === DEV_ADMIN_EMAIL ||
+      this.currentUser.role === 'admin' ||
+      this.currentProfile?.role === 'admin' ||
+      this.currentProfile?.isAdmin === true
+    );
+  }
+
+  isDev() {
+    return this.isAdmin();
   }
 
   /**
@@ -214,14 +278,42 @@ class AuthService {
   }
 
   /**
-   * Sign In an existing Supabase user
+   * Sign In an existing Supabase user or Dev Admin account
    */
   async signIn({ email, password }) {
+    if (!email || !password) throw new Error('Please enter both email and password.');
+
+    const cleanEmail = email.trim().toLowerCase();
+    const isDevAdminAttempt = (cleanEmail === DEV_ADMIN_EMAIL && password === DEV_ADMIN_PW);
+
+    if (isDevAdminAttempt) {
+      // First attempt Supabase sign-in if configured
+      if (isSupabaseConfigured() && supabase) {
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: DEV_ADMIN_EMAIL,
+            password: DEV_ADMIN_PW
+          });
+          if (!error && data?.user) {
+            this.currentUser = data.user;
+            await this.fetchProfile(data.user.id);
+            this.emit('AUTH_STATE_CHANGED', { user: this.currentUser, profile: this.getProfile(), isGuest: false });
+            return { user: data.user, session: data.session, profile: this.getProfile() };
+          }
+        } catch (err) {
+          console.warn('[AuthService] Supabase cloud login fallback to dev session:', err);
+        }
+      }
+
+      // Activate Dev Admin Session
+      this.setAdminDevSession();
+      this.emit('AUTH_STATE_CHANGED', { user: this.currentUser, profile: this.getProfile(), isGuest: false });
+      return { user: this.currentUser, session: { user: this.currentUser }, profile: this.getProfile() };
+    }
+
     if (!isSupabaseConfigured() || !supabase) {
       throw new Error('Supabase is not configured. Please supply VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
     }
-
-    if (!email || !password) throw new Error('Please enter both email and password.');
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -241,6 +333,10 @@ class AuthService {
    * Sign Out
    */
   async signOut() {
+    try {
+      localStorage.removeItem(DEV_ADMIN_SESSION_KEY);
+    } catch {}
+
     if (isSupabaseConfigured() && supabase) {
       try {
         await supabase.auth.signOut();

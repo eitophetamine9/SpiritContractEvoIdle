@@ -14,6 +14,7 @@ import { combatMethods } from './modules/combatModule.js';
 import { dungeonMethods } from './modules/dungeonModule.js';
 import { astralMethods } from './modules/astralModule.js';
 import { persistenceMethods } from './modules/persistenceModule.js';
+import { devCheatMethods } from './modules/devCheatModule.js';
 
 export { ENERGY_ENTRY_COST, ENERGY_REGEN_INTERVAL_SEC, SAVE_KEY, AUTO_SAVE_INTERVAL_MS };
 
@@ -180,7 +181,8 @@ Object.assign(
   combatMethods,
   dungeonMethods,
   astralMethods,
-  persistenceMethods
+  persistenceMethods,
+  devCheatMethods
 );
 
 export const gameState = new GameStateManager();

@@ -26,6 +26,7 @@ import { showGameToast } from './ui/components/toast.js';
 import { showLevelUpModal } from './ui/components/levelUpModal.js';
 import { FEATURE_UNLOCKS } from './data/contractorData.js';
 import { guidedTutorial, checkAreaTutorialTrigger } from './ui/components/guidedTutorial.js';
+import { showDevConsoleModal } from './ui/components/devConsoleModal.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -39,6 +40,7 @@ const partyEvolveBadgeEl = document.getElementById('party-evolve-badge');
 const btnTopAuth = document.getElementById('btn-top-auth');
 const authStatusIcon = document.getElementById('auth-status-icon');
 const authStatusText = document.getElementById('auth-status-text');
+const btnTopDevConsole = document.getElementById('btn-top-dev-console');
 
 let _lastEnergyStr = '';
 let _lastShards = -1;
@@ -357,7 +359,13 @@ if (btnDrawerAuth) {
 // Setup Header Auth / Cloud Account button (if present)
 function updateAuthDisplay() {
   const isGuest = authService.isGuest();
+  const isAdmin = authService.isAdmin();
   const profile = authService.getProfile();
+
+  if (btnTopDevConsole) {
+    btnTopDevConsole.style.display = isAdmin ? 'inline-flex' : 'none';
+  }
+
   if (btnTopAuth) {
     if (isGuest) {
       btnTopAuth.classList.remove('cloud-active');
@@ -380,6 +388,24 @@ if (btnTopAuth) {
     showAuthModal(updateAuthDisplay);
   });
 }
+
+if (btnTopDevConsole) {
+  btnTopDevConsole.addEventListener('click', () => {
+    showDevConsoleModal();
+  });
+}
+
+// Global hotkey: ~ (backquote) or F2 to open Dev Console if admin
+window.addEventListener('keydown', (e) => {
+  if ((e.key === '`' || e.key === '~' || e.key === 'F2') && authService.isAdmin()) {
+    // Only toggle if not actively typing inside an input
+    const tag = document.activeElement?.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+      e.preventDefault();
+      showDevConsoleModal();
+    }
+  }
+});
 
 authService.subscribe((event, payload) => {
   updateAuthDisplay();
@@ -407,11 +433,13 @@ gameState.subscribe((eventType, payload, state) => {
     }
   } else if (eventType === 'enemyDefeated') {
     updateResourcesDisplay();
-  } else if (eventType === 'madnessZoneUpdated' || eventType === 'stageUnlocked' || eventType === 'floorCleared') {
+  } else if (eventType === 'madnessZoneUpdated' || eventType === 'stageUnlocked' || eventType === 'floorCleared' || eventType === 'madnessStageChanged' || eventType === 'stageChanged') {
     if (activeTab === 'madness') {
       renderMadnessView(viewContainer);
     }
-    updateResourcesDisplay();
+    updateResourcesDisplay(true);
+  } else if (eventType === 'resourcesChanged') {
+    updateResourcesDisplay(true);
   } else if (eventType === 'spiritLevelCapped' || eventType === 'partyUpdated') {
     updateResourcesDisplay();
     if (activeTab === 'party') {

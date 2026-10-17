@@ -990,6 +990,113 @@ modalRootEl.querySelector('#btn-close-summon')?.click();
 
 console.log('[PASS] Celestial Summoning Animation & Skip Animation toggle validated!');
 
+// 34. Test Admin Dev Account Authentication, Cheat Code System & Access Gating
+import { showDevConsoleModal } from '../src/ui/components/devConsoleModal.js';
+
+// Verify non-admin is blocked
+if (authService.isAdmin()) {
+  throw new Error('Initial session should not be admin!');
+}
+
+const blockedFloor = gameState.devSkipFloor(10);
+if (blockedFloor.success || !blockedFloor.error.includes('Unauthorized')) {
+  throw new Error('devSkipFloor must reject non-admin users!');
+}
+
+const blockedLvl = gameState.devLevelUp(5);
+if (blockedLvl.success || !blockedLvl.error.includes('Unauthorized')) {
+  throw new Error('devLevelUp must reject non-admin users!');
+}
+
+const blockedCurrency = gameState.devAddCurrency({ spiritShards: 1000 });
+if (blockedCurrency.success || !blockedCurrency.error.includes('Unauthorized')) {
+  throw new Error('devAddCurrency must reject non-admin users!');
+}
+
+const blockedCheatCmd = gameState.executeCheatCode('rich');
+if (blockedCheatCmd.success || !blockedCheatCmd.error.includes('Unauthorized')) {
+  throw new Error('executeCheatCode must reject non-admin users!');
+}
+
+// Now sign in as Dev Admin
+await authService.signIn({ email: 'admin@email.com', password: 'x@DM1N' });
+if (!authService.isAdmin() || !authService.isDev()) {
+  throw new Error('authService.signIn failed to authenticate admin@email.com with x@DM1N!');
+}
+
+// Test Floor Skip as Admin
+const skipRes = gameState.devSkipFloor(25, false);
+if (!skipRes.success || gameState.state.madnessZone.stage !== 25) {
+  throw new Error(`devSkipFloor failed! Expected floor 25, got ${gameState.state.madnessZone.stage}`);
+}
+if (gameState.state.madnessZone.highestStageCleared < 24) {
+  throw new Error('devSkipFloor should update highestStageCleared');
+}
+
+// Test Relative Floor Skip (+10 floors)
+gameState.devSkipFloor(10, true);
+if (gameState.state.madnessZone.stage !== 35) {
+  throw new Error(`devSkipFloor relative failed! Expected floor 35, got ${gameState.state.madnessZone.stage}`);
+}
+
+// Test Instant Level Up
+const lvlBeforeDev = gameState.state.contractor.level;
+const lvlRes = gameState.devLevelUp(4, false);
+if (!lvlRes.success || gameState.state.contractor.level !== lvlBeforeDev + 4) {
+  throw new Error(`devLevelUp failed! Expected ${lvlBeforeDev + 4}, got ${gameState.state.contractor.level}`);
+}
+
+// Test Instant Currency
+const shardsBeforeDev = gameState.state.resources.spiritShards;
+const purifiedBeforeDev = gameState.state.resources.purifiedSoulEssence || 0;
+const currRes = gameState.devAddCurrency({ spiritShards: 500000, purifiedEssence: 77 });
+if (!currRes.success || 
+    gameState.state.resources.spiritShards !== shardsBeforeDev + 500000 || 
+    gameState.state.resources.purifiedSoulEssence !== purifiedBeforeDev + 77) {
+  throw new Error('devAddCurrency failed to grant resources correctly!');
+}
+
+// Test Cheat Command Bar
+const cmdFloor = gameState.executeCheatCode('floor 48');
+if (!cmdFloor.success || gameState.state.madnessZone.stage !== 48) {
+  throw new Error('executeCheatCode("floor 48") failed to set floor!');
+}
+
+const cmdLvl = gameState.executeCheatCode('levelup 2');
+if (!cmdLvl.success) {
+  throw new Error('executeCheatCode("levelup 2") failed!');
+}
+
+// Test Purified Soul Essence command boost
+const purifiedBeforeCmd = gameState.state.resources.purifiedSoulEssence;
+const cmdPurified = gameState.executeCheatCode('purified 2500');
+if (!cmdPurified.success || gameState.state.resources.purifiedSoulEssence !== purifiedBeforeCmd + 2500) {
+  throw new Error('executeCheatCode("purified 2500") failed to boost Purified Soul Essence!');
+}
+
+// Test All-Currency Boost (including Purified Soul Essence)
+const cmdRich = gameState.executeCheatCode('rich');
+if (!cmdRich.success || 
+    gameState.state.resources.spiritShards < 1000000 || 
+    gameState.state.resources.purifiedSoulEssence < 10000 ||
+    gameState.state.resources.soulEssence < 5000 ||
+    gameState.state.resources.essencesOfTheGods < 10000) {
+  throw new Error('executeCheatCode("rich") failed to boost all currencies including purified soul essence!');
+}
+
+// Test Dev Console Modal rendering
+showDevConsoleModal();
+if (!modalRootEl.innerHTML.includes('Dev & Admin Cheat Console') ||
+    !modalRootEl.innerHTML.includes('admin@email.com') ||
+    !modalRootEl.innerHTML.includes('dev-cheat-input') ||
+    !modalRootEl.innerHTML.includes('Floor Skip Controls') ||
+    !modalRootEl.innerHTML.includes('Boost Any Currency') ||
+    !modalRootEl.innerHTML.includes('Purified Soul ✨:')) {
+  throw new Error('showDevConsoleModal failed to render console with all currency cheat controls and admin email!');
+}
+
+console.log('[PASS] Dev Admin Account Authentication, Cheat Code System & Access Gating validated!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 
