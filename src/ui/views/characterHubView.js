@@ -704,9 +704,7 @@ function renderRelicsSubHub(spirit) {
 function renderRebirthsSubHub(spirit) {
   const isRebirthUnlocked = gameState.isFeatureUnlocked('SPIRIT_REBIRTH');
   const currentTier = spirit.rebirthLevel || 0;
-  const duplicateSpirits = (gameState.state.spirits || []).filter(
-    s => s.speciesId === spirit.speciesId && s.id !== spirit.id
-  );
+  const duplicateSpirits = gameState.getEligibleAscensionDuplicates(spirit.id);
   const nextTier = currentTier + 1;
   const canAscendRebirth = isRebirthUnlocked && nextTier <= 7 && duplicateSpirits.length >= 1 && (gameState.state.resources.soulEssence || 0) >= (nextTier * 5);
 
@@ -735,14 +733,14 @@ function renderRebirthsSubHub(spirit) {
           <span class="rcard-bonus">+${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}% All Base Stats</span>
         </div>
         <div class="rcard-desc">
-          ${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.uniqueAddition || '') : 'Ascend your spirit using duplicate contracts to awaken celestial power.'}
+          ${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.uniqueAddition || '') : 'Ascend your spirit using duplicate contracts or pre-evolution copies to awaken celestial power.'}
         </div>
       </div>
 
       <!-- Rebirth Ascension Action Chamber -->
       <div class="rebirth-forge-chamber">
         <div class="forge-info-line">
-          <span>Duplicates Available: <strong>${duplicateSpirits.length}</strong> (Requires 1 copy)</span>
+          <span>Copies Available: <strong>${duplicateSpirits.length}</strong> (Requires 1 copy)</span>
           <span>Cost: <strong>${(gameState.state.resources.soulEssence || 0).toLocaleString()} / ${nextTier <= 7 ? nextTier * 5 : 0} 🔮</strong></span>
         </div>
 
@@ -1038,11 +1036,9 @@ function attachSubHubListeners(container, selectedSpirit) {
   const btnRebirthAscend = container.querySelector('#btn-sanctum-rebirth-ascend');
   if (btnRebirthAscend) {
     btnRebirthAscend.addEventListener('click', () => {
-      const duplicateSpirits = (gameState.state.spirits || []).filter(
-        s => s.speciesId === selectedSpirit.speciesId && s.id !== selectedSpirit.id
-      );
+      const duplicateSpirits = gameState.getEligibleAscensionDuplicates(selectedSpirit.id);
       if (duplicateSpirits.length === 0) {
-        alert('You need a duplicate spirit of the same species to perform a Rebirth ascension.');
+        alert('You need a duplicate spirit of the same species or a valid pre-evolution ancestor to perform a Rebirth ascension.');
         return;
       }
       try {

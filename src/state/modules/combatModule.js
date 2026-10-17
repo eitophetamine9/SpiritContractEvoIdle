@@ -5,11 +5,6 @@ import {
   getSpiritRole
 } from '../../data/spiritsData.js';
 import { getEnemyForStage, getSwarmForStage } from '../../data/madnessZoneData.js';
-import {
-  GREEK_GOD_SETS,
-  RELIC_SLOT_TYPES,
-  createRelicInstance
-} from '../../data/equipmentData.js';
 import { ENERGY_ENTRY_COST } from '../constants.js';
 
 export const combatMethods = {
@@ -634,22 +629,6 @@ export const combatMethods = {
       shardsGained,
       essenceGained
     });
-
-    // 35% chance for Overlord Boss to drop a random Greek God Relic
-    if (enemy.isBoss && Math.random() < 0.35) {
-      const godKeys = Object.keys(GREEK_GOD_SETS);
-      const randomGod = godKeys[Math.floor(Math.random() * godKeys.length)];
-      const randomSlot = RELIC_SLOT_TYPES[Math.floor(Math.random() * RELIC_SLOT_TYPES.length)];
-      const rolledRelic = createRelicInstance({
-        setId: randomGod,
-        slotTypeId: randomSlot.id,
-        rarity: Math.random() < 0.65 ? 'UNCOMMON' : 'RARE',
-        level: Math.max(1, Math.min(4, Math.floor(this.state.madnessZone.stage / 25) + 1))
-      });
-      if (!this.state.inventory) this.state.inventory = { equipment: [] };
-      this.state.inventory.equipment.push(rolledRelic);
-      this.emit('relicDropped', rolledRelic);
-    }
 
     // Check if the entire swarm is defeated
     const remaining = (this.state.madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);

@@ -2328,6 +2328,153 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log(`  [PASS] Offline progression accurately calculates +${testOfflineReport.offlinePurified} Purified Soul Essence!`);
 
+  // =========================================================================
+  // TEST 45: Pre-Evolution Duplicate Matching for Ascension / Rebirth
+  // =========================================================================
+  console.log('\n[TEST 45] Testing Pre-Evolution Lineage Matching & Ascension:');
+  // 1. Ancestor lineage validation
+  if (!gameState.isPreEvolutionOf('cat_spirit', 'furious_cat')) {
+    throw new Error('Expected cat_spirit to be identified as pre-evolution of furious_cat');
+  }
+  if (!gameState.isPreEvolutionOf('cat_spirit', 'elemental_cat')) {
+    throw new Error('Expected cat_spirit to be identified as pre-evolution of elemental_cat');
+  }
+  if (gameState.isPreEvolutionOf('dog_spirit', 'furious_cat')) {
+    throw new Error('dog_spirit must NOT be identified as pre-evolution of furious_cat');
+  }
+  console.log('  [PASS] isPreEvolutionOf accurately traverses species evolutionary branches!');
+
+  // 2. Ascension using pre-evolution copy
+  const evolvedCat = {
+    id: 'evo_cat_test_target',
+    speciesId: 'furious_cat',
+    customName: 'Furious Cat Alpha',
+    level: 30,
+    rarity: 'UNCOMMON',
+    ascensionLevel: 0,
+    rebirthLevel: 0
+  };
+  const preEvoCat = {
+    id: 'pre_evo_cat_sacrifice',
+    speciesId: 'cat_spirit',
+    customName: 'Sacrificial Kitten',
+    level: 1,
+    rarity: 'COMMON',
+    favorite: false
+  };
+  const unrelatedDog = {
+    id: 'unrelated_dog_spirit',
+    speciesId: 'dog_spirit',
+    customName: 'Random Dog',
+    level: 1,
+    rarity: 'COMMON',
+    favorite: false
+  };
+
+  gameState.state.spirits.push(evolvedCat, preEvoCat, unrelatedDog);
+  gameState.state.resources.soulEssence = 50;
+
+  // Verify getEligibleAscensionDuplicates returns preEvoCat but NOT unrelatedDog
+  const eligibleCopies = gameState.getEligibleAscensionDuplicates(evolvedCat.id);
+  if (!eligibleCopies.some(c => c.id === preEvoCat.id)) {
+    throw new Error('Expected pre-evolution cat_spirit to be eligible for furious_cat ascension');
+  }
+  if (eligibleCopies.some(c => c.id === unrelatedDog.id)) {
+    throw new Error('Unrelated dog_spirit should NOT be eligible for furious_cat ascension');
+  }
+  console.log('  [PASS] getEligibleAscensionDuplicates correctly includes pre-evolution ancestors!');
+
+  // Verify attempting to ascend with incompatible duplicate fails
+  let blockedInvalidDup = false;
+  try {
+    gameState.ascendSpirit(evolvedCat.id, [unrelatedDog.id]);
+  } catch (err) {
+    blockedInvalidDup = true;
+  }
+  if (!blockedInvalidDup) throw new Error('Expected ascendSpirit to reject unrelated species duplicate');
+  console.log('  [PASS] Incompatible duplicate rejected with descriptive error!');
+
+  // Ascend using preEvoCat
+  const preEvoAscRes = gameState.ascendSpirit(evolvedCat.id, [preEvoCat.id]);
+  if (evolvedCat.ascensionLevel !== 1) {
+    throw new Error(`Expected evolved spirit to ascend to ★1, got ${evolvedCat.ascensionLevel}`);
+  }
+  if (gameState.state.spirits.some(s => s.id === preEvoCat.id)) {
+    throw new Error('Sacrificed pre-evolution spirit was not removed from collection');
+  }
+  console.log(`  [PASS] Evolved spirit ascended to ★${preEvoAscRes.newTier} using pre-evolution copy!`);
+
+  // =========================================================================
+  // TEST 46: Bestiary Duplicate Manifestation
+  // =========================================================================
+  console.log('\n[TEST 46] Testing Bestiary Duplicate Manifestation:');
+  // 1. Locked below Contractor Level 4
+  gameState.state.contractor.level = 2;
+  let blockedLock = false;
+  try {
+    gameState.manifestBestiaryDuplicate('cat_spirit');
+  } catch (err) {
+    blockedLock = true;
+  }
+  if (!blockedLock) throw new Error('Expected manifestBestiaryDuplicate to be locked at Contractor Lv. 2');
+  console.log('  [PASS] Locked below Contractor Level 4 (requires BESTIARY_INDEX)!');
+
+  // 2. Unlock Bestiary at Lv. 4
+  gameState.state.contractor.level = 4;
+  gameState.state.contractor.exp = 2500;
+
+  // Undiscovered species rejection
+  gameState.state.discoveredSpeciesIds = ['cat_spirit'];
+  let blockedUndiscovered = false;
+  try {
+    gameState.manifestBestiaryDuplicate('chicken_spirit');
+  } catch (err) {
+    blockedUndiscovered = true;
+  }
+  if (!blockedUndiscovered) throw new Error('Expected undiscovered species manifestation to be blocked');
+  console.log('  [PASS] Undiscovered species manifestation blocked!');
+
+  // Insufficient shards rejection
+  gameState.state.resources.spiritShards = 200;
+  let blockedShards = false;
+  try {
+    gameState.manifestBestiaryDuplicate('cat_spirit');
+  } catch (err) {
+    blockedShards = true;
+  }
+  if (!blockedShards) throw new Error('Expected insufficient shards to block manifestation');
+  console.log('  [PASS] Insufficient spirit shards blocked (requires 500 shards)!');
+
+  // Successful duplicate manifestation
+  gameState.state.resources.spiritShards = 1200;
+  const manifestedDup = gameState.manifestBestiaryDuplicate('cat_spirit');
+  if (gameState.state.resources.spiritShards !== 700) {
+    throw new Error(`Expected 700 shards remaining, got ${gameState.state.resources.spiritShards}`);
+  }
+  if (manifestedDup.speciesId !== 'cat_spirit' || manifestedDup.level !== 1) {
+    throw new Error('Manifested spirit does not match expected Lv. 1 cat_spirit');
+  }
+  if (!gameState.state.spirits.some(s => s.id === manifestedDup.id)) {
+    throw new Error('Manifested duplicate spirit not added to collection');
+  }
+  console.log(`  [PASS] Successfully manifested Lv. 1 duplicate copy of ${manifestedDup.customName} for 500 Spirit Shards!`);
+
+  // =========================================================================
+  // TEST 47: Relic & Weapon Drop Restriction (Strict Dungeon Sourcing)
+  // =========================================================================
+  console.log('\n[TEST 47] Verifying Relic drops strictly removed from Madness Zone Bosses:');
+  gameState.state.inventory = { equipment: [] };
+  const bossTestInitialEquipCount = gameState.state.inventory.equipment.length;
+  // Simulate 50 boss enemy defeats in Madness Zone
+  for (let i = 0; i < 50; i++) {
+    const bossEnemy = { id: 'boss_test_' + i, isBoss: true, name: 'Void Overlord Boss', hp: 100, maxHp: 5000, power: 300, isDefeated: false };
+    gameState.onIndividualEnemyKilled(bossEnemy);
+  }
+  if (gameState.state.inventory.equipment.length !== bossTestInitialEquipCount) {
+    throw new Error(`Madness zone boss unexpectedly dropped relics into inventory (${gameState.state.inventory.equipment.length} items found)`);
+  }
+  console.log('  [PASS] 50 Boss defeats produced 0 relic drops. Relics & weapons are strictly restricted to dungeons!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 

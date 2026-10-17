@@ -11,6 +11,35 @@ import {
   FORMATION_COLUMNS
 } from '../../data/spiritsData.js';
 
+/**
+ * Recursively checks whether candidateSpeciesId is an ancestor pre-evolution of targetSpeciesId
+ */
+export function isPreEvolutionOf(candidateSpeciesId, targetSpeciesId) {
+  if (!candidateSpeciesId || !targetSpeciesId || candidateSpeciesId === targetSpeciesId) return false;
+
+  const visited = new Set();
+  const queue = [candidateSpeciesId];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    const species = SPIRIT_SPECIES[current];
+    if (species && Array.isArray(species.evolutions)) {
+      for (const evo of species.evolutions) {
+        if (evo && evo.targetSpeciesId) {
+          if (evo.targetSpeciesId === targetSpeciesId) {
+            return true;
+          }
+          queue.push(evo.targetSpeciesId);
+        }
+      }
+    }
+  }
+  return false;
+}
+
 export const spiritMethods = {
   /**
    * Returns comprehensive combat stats for a spirit including formation column perks,
@@ -482,15 +511,20 @@ export const spiritMethods = {
     return { success: true, xpGranted: xpBonus };
   },
 
+  isPreEvolutionOf(candidateSpeciesId, targetSpeciesId) {
+    return isPreEvolutionOf(candidateSpeciesId, targetSpeciesId);
+  },
+
   /**
    * Returns unequipped, non-favorite duplicate spirits sharing speciesId with target spirit
+   * or having an ancestor pre-evolution in the lineage.
    */
   getEligibleAscensionDuplicates(spiritId) {
     const target = this.state.spirits.find(s => s.id === spiritId);
     if (!target) return [];
     return this.state.spirits.filter(s => 
       s.id !== target.id &&
-      s.speciesId === target.speciesId &&
+      (s.speciesId === target.speciesId || isPreEvolutionOf(s.speciesId, target.speciesId)) &&
       !this.state.party.includes(s.id) &&
       !s.favorite
     );
@@ -498,7 +532,7 @@ export const spiritMethods = {
 
   /**
    * Ascend Spirit to next Star Tier (★1 through ★7)
-   * Consumes matching duplicate copies + Astral Essences
+   * Consumes matching duplicate copies (or pre-evolution ancestors) + Astral Essences
    * Grants stacking +12% stats per tier up to +84% at ★7
    */
   ascendSpirit(targetSpiritId, duplicateSpiritIds = []) {
@@ -523,7 +557,7 @@ export const spiritMethods = {
       throw new Error(`Insufficient Astral Essence! Need ${config.astralCost} 🔮 (Have: ${res.soulEssence || 0} 🔮).`);
     }
 
-    // Validate duplicate spirits
+    // Validate duplicate spirits (supports same species OR pre-evolution lineage ancestors)
     for (const dupId of duplicateSpiritIds) {
       if (dupId === targetSpiritId) {
         throw new Error('A spirit cannot consume itself as a duplicate copy!');
@@ -532,8 +566,9 @@ export const spiritMethods = {
       if (!dup) {
         throw new Error(`Duplicate spirit with ID ${dupId} not found in collection!`);
       }
-      if (dup.speciesId !== target.speciesId) {
-        throw new Error(`Duplicate spirit ${dup.customName} must be of the same species (${target.speciesId})!`);
+      const isMatch = dup.speciesId === target.speciesId || isPreEvolutionOf(dup.speciesId, target.speciesId);
+      if (!isMatch) {
+        throw new Error(`Duplicate spirit ${dup.customName} (${dup.speciesId}) must be of the same species or a valid pre-evolution ancestor of ${target.customName} (${target.speciesId})!`);
       }
       if (this.state.party.includes(dupId)) {
         throw new Error(`Cannot sacrifice ${dup.customName} while they are in your active party. Unequip first!`);
@@ -739,6 +774,64 @@ export const spiritMethods = {
   isSpeciesDiscovered(speciesId) {
     if (!Array.isArray(this.state.discoveredSpeciesIds)) return false;
     return this.state.discoveredSpeciesIds.includes(speciesId);
+  },
+
+  /**
+   * Manifest a duplicate Lv. 1 copy of an already discovered spirit species from the Bestiary Index.
+   * Requires Contractor Level 4 (BESTIARY_INDEX) and costs 500 Spirit Shards.
+   */
+  manifestBestiaryDuplicate(speciesId) {
+    if (!this.isFeatureUnlocked('BESTIARY_INDEX')) {
+      throw new Error('Bestiary Index unlocks at Contractor Level 4!');
+    }
+    const species = SPIRIT_SPECIES[speciesId];
+    if (!species) {
+      throw new Error(`Invalid spirit species ID: ${speciesId}!`);
+    }
+    if (!this.isSpeciesDiscovered(speciesId)) {
+      throw new Error(`Cannot manifest duplicate: ${species.name} has not yet been discovered in your Bestiary Archive!`);
+    }
+
+    const cost = 500;
+    const res = this.state.resources;
+    if ((res.spiritShards || 0) < cost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${cost} Spirit Shards (Have: ${res.spiritShards || 0}).`);
+    }
+
+    res.spiritShards -= cost;
+
+    const rarity = species.baseRarity || 'COMMON';
+    const duplicate = {
+      id: this.generateId(),
+      speciesId: species.id,
+      customName: species.name,
+      level: 1,
+      xp: 0,
+      tier: species.tier || 1,
+      rarity: rarity,
+      element: species.element || 'EARTH',
+      power: calculateSpiritPower(species, 1, rarity),
+      maxHp: calculateSpiritMaxHp(species, 1, rarity),
+      currentHp: calculateSpiritMaxHp(species, 1, rarity),
+      maxMp: 100,
+      currentMp: 0,
+      shieldHp: 0,
+      isFallen: false,
+      isEquipped: false,
+      canEvolve: false,
+      evolutionHistory: [species.name],
+      contractedAt: Date.now()
+    };
+
+    this.state.spirits.unshift(duplicate);
+    this.invalidateCaches();
+    this.save();
+
+    this.emit('spiritCreated', duplicate);
+    this.emit('resourcesUpdated', res);
+    this.emit('spiritsUpdated', this.state.spirits);
+
+    return duplicate;
   },
 
   getSpiritTotalPower(spiritOrId) {

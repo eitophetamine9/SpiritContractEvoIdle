@@ -217,6 +217,9 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
   } else {
     const evolutions = species.evolutions || [];
     const roleInfo = getRoleInfo(species.role || 'MAIN_DPS');
+    const isIndexUnlocked = gameState.isFeatureUnlocked('BESTIARY_INDEX');
+    const currentShards = gameState.state.resources?.spiritShards || 0;
+    const canManifest = isIndexUnlocked && currentShards >= 500;
 
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
@@ -293,6 +296,24 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
                 </div>
               `}
             </div>
+
+            <!-- Bestiary Duplicate Manifestation Chamber -->
+            <div class="bestiary-manifest-box" style="margin-top: 10px; padding: 10px 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 11px; font-weight: 800; color: #f3e8ff; display: flex; align-items: center; gap: 4px;">
+                  <span>🔮</span> Manifest Soul Duplicate
+                </span>
+                <span style="font-size: 11px; font-weight: 800; color: ${currentShards >= 500 ? '#38bdf8' : '#f87171'};">
+                  500 💎 Shards
+                </span>
+              </div>
+              <p style="font-size: 10px; color: var(--text-muted); line-height: 1.35; margin: 0 0 8px 0;">
+                Manifest a fresh Lv. 1 copy of this discovered species into your collection to use for evolution or celestial rebirth ascension.
+              </p>
+              <button id="btn-manifest-duplicate" class="modal-btn-confirm" style="width: 100%; min-height: 34px; font-size: 11px; font-weight: 800; border-radius: 8px; background: ${canManifest ? 'linear-gradient(135deg, #9333ea, #4f46e5)' : 'rgba(255,255,255,0.08)'}; color: ${canManifest ? '#fff' : '#64748b'}; border: 1px solid ${canManifest ? '#a855f7' : 'rgba(255,255,255,0.1)'}; cursor: ${canManifest ? 'pointer' : 'not-allowed'}; box-shadow: ${canManifest ? '0 0 10px rgba(147, 51, 234, 0.35)' : 'none'};" ${canManifest ? '' : 'disabled'}>
+                ${canManifest ? `✨ Manifest Lv.1 Duplicate (Have: ${currentShards.toLocaleString()} 💎)` : `🔒 Manifest Duplicate (Need 500 💎 | Have: ${currentShards.toLocaleString()})`}
+              </button>
+            </div>
           </div>
 
           <button id="btn-done-bestiary" class="modal-btn-confirm" style="margin-top: 8px;">
@@ -308,6 +329,16 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
   });
   document.getElementById('btn-done-bestiary')?.addEventListener('click', () => {
     modalRoot.innerHTML = '';
+  });
+  document.getElementById('btn-manifest-duplicate')?.addEventListener('click', () => {
+    try {
+      const dup = gameState.manifestBestiaryDuplicate(species.id);
+      safePlaySfx('summon');
+      alert(`✨ Manifestation Complete!\nA fresh Lv. 1 duplicate copy of ${dup.customName} has been added to your vault!`);
+      showBestiaryInspectModal(species, isDiscovered, bestiaryNum);
+    } catch (err) {
+      alert(err.message);
+    }
   });
 }
 
