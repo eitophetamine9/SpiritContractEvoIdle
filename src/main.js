@@ -25,7 +25,7 @@ import { cloudSaveService } from './services/cloudSaveService.js';
 import { showGameToast } from './ui/components/toast.js';
 import { showLevelUpModal } from './ui/components/levelUpModal.js';
 import { FEATURE_UNLOCKS } from './data/contractorData.js';
-import { guidedTutorial } from './ui/components/guidedTutorial.js';
+import { guidedTutorial, checkAreaTutorialTrigger } from './ui/components/guidedTutorial.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -208,7 +208,10 @@ function switchTab(tabName) {
   });
 
   renderActiveTab();
-  setTimeout(() => guidedTutorial.updateSpotlightPosition(), 150);
+  setTimeout(() => {
+    guidedTutorial.updateSpotlightPosition();
+    checkAreaTutorialTrigger(tabName);
+  }, 150);
 }
 
 function renderActiveTab() {

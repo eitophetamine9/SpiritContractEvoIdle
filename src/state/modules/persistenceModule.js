@@ -261,6 +261,9 @@ export const persistenceMethods = {
       state.tutorial.step = typeof state.tutorial.step === 'number' ? state.tutorial.step : 0;
       state.tutorial.completed = Boolean(state.tutorial.completed);
       state.tutorial.active = Boolean(state.tutorial.active);
+      if (!state.tutorial.unlockedTutorialsSeen || typeof state.tutorial.unlockedTutorialsSeen !== 'object') {
+        state.tutorial.unlockedTutorialsSeen = {};
+      }
     }
 
     // Ensure bestiaryRewards state exists

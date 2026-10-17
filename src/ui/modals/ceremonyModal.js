@@ -63,52 +63,97 @@ export function showEvolutionCeremonyModal(evoResult, onDone) {
   });
 }
 
-export function showSummonRevealModal(spirits, onDone) {
+export function showSummonRevealModal(spirits, options = {}) {
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot) return;
 
+  const onDone = typeof options === 'function' ? options : options.onDone;
+  const skipAnimation = typeof options === 'object' ? Boolean(options.skipAnimation) : false;
+
   const count = spirits.length;
 
+  const renderRevealScreen = () => {
+    safePlaySfx('contract_summon', 0.6);
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal-card" style="max-width: 460px;">
+          <h2 class="modal-title">📜 Spirit Contract Complete!</h2>
+          
+          <div style="font-size: 12px; color: var(--text-muted); text-align: center;">
+            ${count === 1 ? '1 Spirit summoned from the astral realm:' : `${count} Spirits bound by ancient contract:`}
+          </div>
+
+          <div style="display: grid; grid-template-columns: ${count > 1 ? 'repeat(auto-fill, minmax(80px, 1fr))' : '1fr'}; gap: 10px; max-height: 52vh; overflow-y: auto; padding: 4px;">
+            ${spirits.map((s, idx) => `
+              <div class="summon-card-animated" style="display: flex; flex-direction: column; align-items: center; gap: 4px; animation-delay: ${idx * 60}ms;">
+                <div style="width: 76px; height: 76px;">
+                  ${createSpiritPlaceholderBox(s)}
+                </div>
+                <div style="font-size: 11px; font-weight: 800; text-align: center; color: #fff;">
+                  ${s.customName}
+                </div>
+                <div style="font-size: 10px; font-family: var(--font-mono); color: #2ed573;">
+                  ⚡ ${s.power} PWR
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <button id="btn-close-summon" class="modal-btn-confirm">
+            Collect to Vault
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('btn-close-summon')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      if (onDone) onDone();
+    });
+  };
+
+  // If player chose Skip Animation, immediately show reveal
+  if (skipAnimation) {
+    renderRevealScreen();
+    return;
+  }
+
+  // Otherwise, play Celestial Summoning Vortex sequence
+  safePlaySfx('contract_summon', 0.8);
+
   modalRoot.innerHTML = `
-    <div class="modal-backdrop">
-      <div class="modal-card">
-        <h2 class="modal-title">📜 Spirit Contract Complete!</h2>
-        
-        <div style="font-size: 12px; color: var(--text-muted); text-align: center;">
-          ${count === 1 ? '1 Spirit summoned from the astral realm:' : `${count} Spirits bound by ancient contract:`}
-        </div>
+    <div class="summon-vortex-screen">
+      <button id="btn-skip-summon-now" class="summon-skip-btn">
+        <span>⚡</span>
+        <span>Skip Animation</span>
+      </button>
 
-        <div style="display: grid; grid-template-columns: ${count > 1 ? 'repeat(auto-fill, minmax(80px, 1fr))' : '1fr'}; gap: 10px; max-height: 50vh; overflow-y: auto; padding: 4px;">
-          ${spirits.map(s => `
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-              <div style="width: 76px; height: 76px;">
-                ${createSpiritPlaceholderBox(s)}
-              </div>
-              <div style="font-size: 11px; font-weight: 800; text-align: center; color: #fff;">
-                ${s.customName}
-              </div>
-              <div style="font-size: 10px; font-family: var(--font-mono); color: #2ed573;">
-                ⚡ ${s.power} PWR
-              </div>
-            </div>
-          `).join('')}
-        </div>
+      <div class="summon-magic-circle-wrap">
+        <div class="summon-outer-rune"></div>
+        <div class="summon-inner-rune"></div>
+        <div class="summon-core-orb"></div>
+      </div>
 
-        <button id="btn-close-summon" class="modal-btn-confirm">
-          Collect to Vault
-        </button>
+      <div class="summon-vortex-title">
+        Invoking Celestial Spirit Contract...
+      </div>
+      <div style="font-size: 11px; color: #cbd5e1; margin-top: 4px; text-shadow: 0 0 8px rgba(255,255,255,0.4);">
+        Channeling astral mana into ${count} spirit contract(s)...
       </div>
     </div>
   `;
 
-  document.getElementById('btn-close-summon')?.addEventListener('click', () => {
-    modalRoot.innerHTML = '';
-    if (onDone) onDone();
-  });
-}
+  let animTimeout = null;
+  let isSkipped = false;
 
-/**
- * Interactive Visual Hall of Fame Picker Modal
- * Eliminates browser prompt() completely.
- * Features tabs for Highest Power, Favorites, All Vault, search bar, and interactive cards.
- */
+  const triggerReveal = () => {
+    if (isSkipped) return;
+    isSkipped = true;
+    if (animTimeout) clearTimeout(animTimeout);
+    renderRevealScreen();
+  };
+
+  modalRoot.querySelector('#btn-skip-summon-now')?.addEventListener('click', triggerReveal);
+
+  animTimeout = setTimeout(triggerReveal, 1600);
+}

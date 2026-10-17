@@ -4,7 +4,7 @@ import { showSummonRevealModal } from '../components/modals.js';
 import { createAnimatedSpriteHtml, createAnimatedRelicHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 
 let activeBannerIndex = 0;
-let skipAnimation = false;
+let skipAnimation = Boolean(typeof localStorage !== 'undefined' && localStorage.getItem('spirit_skip_summon_anim') === 'true');
 
 export function renderContractView(container, onNavigateToIndex) {
   const state = gameState.state;
@@ -558,6 +558,9 @@ export function renderContractView(container, onNavigateToIndex) {
   if (chkSkip) {
     chkSkip.addEventListener('change', (e) => {
       skipAnimation = e.target.checked;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('spirit_skip_summon_anim', skipAnimation ? 'true' : 'false');
+      }
     });
   }
 
@@ -623,8 +626,10 @@ export function renderContractView(container, onNavigateToIndex) {
   const handleSummon = (count) => {
     try {
       const newSpirits = gameState.contractSpirit(count, activeBanner.id);
-      showSummonRevealModal(newSpirits);
-      renderContractView(container, onNavigateToIndex);
+      showSummonRevealModal(newSpirits, {
+        skipAnimation,
+        onDone: () => renderContractView(container, onNavigateToIndex)
+      });
     } catch (err) {
       alert(err.message);
     }

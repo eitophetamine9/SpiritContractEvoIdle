@@ -33,7 +33,10 @@ globalThis.document = {
     if (id === 'modal-root') return modalRoot;
     if (id === 'title-screen-root') return titleScreenRoot;
     if (id === 'app') return appRoot;
-    return null;
+    return {
+      addEventListener: (evt, fn) => { modalRoot._listeners['#' + id] = fn; },
+      click: () => { if (modalRoot._listeners['#' + id]) modalRoot._listeners['#' + id](); }
+    };
   },
   querySelector: () => null,
   querySelectorAll: () => []
@@ -41,8 +44,17 @@ globalThis.document = {
 
 const modalRoot = {
   innerHTML: '',
+  _listeners: {},
   querySelectorAll: (selector) => [],
-  querySelector: (selector) => ({ addEventListener: () => {} })
+  querySelector: function(selector) {
+    const self = this;
+    return {
+      addEventListener: (evt, fn) => { self._listeners[selector] = fn; },
+      click: () => {
+        if (self._listeners[selector]) self._listeners[selector]();
+      }
+    };
+  }
 };
 
 console.log('--- TESTING UI COMPONENTS & LOGIC ---');
@@ -312,7 +324,16 @@ if (partySpirits.length > 0) {
   
   const modalRoot = {
     innerHTML: '',
-    querySelector: () => ({ addEventListener: () => {} }),
+    _listeners: {},
+    querySelector: function(selector) {
+      const self = this;
+      return {
+        addEventListener: (evt, fn) => { self._listeners[selector] = fn; },
+        click: () => {
+          if (self._listeners[selector]) self._listeners[selector]();
+        }
+      };
+    },
     querySelectorAll: () => []
   };
   global.document.getElementById = (id) => {
@@ -908,6 +929,66 @@ if (!receivedCombatStrike) {
 }
 
 console.log('[PASS] Combat Animation Engine, sprite classes, and event cadence pipeline validated!');
+
+// 32. Test Area Unlock Guided Tutorials (Mascot Guides on Feature Unlock)
+import { showAreaUnlockTutorial, checkAreaTutorialTrigger, AREA_TUTORIALS } from '../src/ui/components/guidedTutorial.js';
+
+if (!AREA_TUTORIALS.formation || !AREA_TUTORIALS.trials || !AREA_TUTORIALS.forge || !AREA_TUTORIALS.bestiary || !AREA_TUTORIALS.astral) {
+  throw new Error('Missing area tutorial configurations for major feature unlocks!');
+}
+
+// Ensure isAreaTutorialSeen and markAreaTutorialSeen operate correctly
+if (gameState.isAreaTutorialSeen('trials')) {
+  throw new Error('trials tutorial should not be seen initially');
+}
+
+gameState.markAreaTutorialSeen('trials');
+if (!gameState.isAreaTutorialSeen('trials')) {
+  throw new Error('trials tutorial should be marked as seen after markAreaTutorialSeen');
+}
+
+// Test modal rendering for an area tutorial
+showAreaUnlockTutorial('forge');
+const modalRootEl = document.getElementById('modal-root');
+if (!modalRootEl.innerHTML.includes('The Divine Forge & Weapon Anvils') || !modalRootEl.innerHTML.includes('Cat Spirit Familiar')) {
+  throw new Error('showAreaUnlockTutorial failed to render modal with area title and Cat Spirit mascot!');
+}
+// Dismiss modal
+modalRootEl.querySelector('#btn-dismiss-area-tut')?.click();
+if (!gameState.isAreaTutorialSeen('forge')) {
+  throw new Error('Dismissing area tutorial should mark forge as seen');
+}
+console.log('[PASS] Area Unlock Guided Tutorials and trigger state tracking validated!');
+
+// 33. Test Celestial Summoning Animation & Skip Animation Toggle
+import { showSummonRevealModal } from '../src/ui/modals/ceremonyModal.js';
+
+const mockSummonResults = [
+  { id: 'summon_test_1', speciesId: 'cat_spirit', customName: 'Astral Feline', power: 120, rarity: 'COMMON' }
+];
+
+// Test with skipAnimation: false -> plays celestial vortex sequence
+showSummonRevealModal(mockSummonResults, { skipAnimation: false });
+if (!modalRootEl.innerHTML.includes('summon-vortex-screen') || !modalRootEl.innerHTML.includes('Skip Animation')) {
+  throw new Error('showSummonRevealModal should render celestial summoning vortex animation with skip button when skipAnimation is false');
+}
+
+// Test clicking the skip animation button during vortex sequence
+const btnSkip = modalRootEl.querySelector('#btn-skip-summon-now');
+if (!btnSkip) throw new Error('Missing skip animation button in summoning vortex');
+btnSkip.click();
+if (!modalRootEl.innerHTML.includes('Spirit Contract Complete!') || !modalRootEl.innerHTML.includes('Collect to Vault')) {
+  throw new Error('Clicking skip animation button should immediately transition to reveal screen');
+}
+
+// Test with skipAnimation: true -> immediately reveals
+showSummonRevealModal(mockSummonResults, { skipAnimation: true });
+if (!modalRootEl.innerHTML.includes('Spirit Contract Complete!') || modalRootEl.innerHTML.includes('summon-vortex-screen')) {
+  throw new Error('showSummonRevealModal with skipAnimation: true should immediately reveal results without vortex animation');
+}
+modalRootEl.querySelector('#btn-close-summon')?.click();
+
+console.log('[PASS] Celestial Summoning Animation & Skip Animation toggle validated!');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

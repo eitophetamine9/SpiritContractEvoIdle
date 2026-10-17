@@ -160,5 +160,24 @@ export const contractorMethods = {
   restartTutorial() {
     this.setTutorialStep(0);
     this.emit('tutorialRestarted');
+  },
+
+  isAreaTutorialSeen(areaKey) {
+    if (!this.state.tutorial) return false;
+    if (!this.state.tutorial.unlockedTutorialsSeen) return false;
+    return Boolean(this.state.tutorial.unlockedTutorialsSeen[areaKey]);
+  },
+
+  markAreaTutorialSeen(areaKey) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 0, completed: false, active: true, unlockedTutorialsSeen: {} };
+    }
+    if (!this.state.tutorial.unlockedTutorialsSeen || typeof this.state.tutorial.unlockedTutorialsSeen !== 'object') {
+      this.state.tutorial.unlockedTutorialsSeen = {};
+    }
+    this.state.tutorial.unlockedTutorialsSeen[areaKey] = true;
+    this.isDirty = true;
+    this.save();
+    this.emit('areaTutorialSeen', { areaKey });
   }
 };
