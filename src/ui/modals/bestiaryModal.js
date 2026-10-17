@@ -217,6 +217,7 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
   } else {
     const evolutions = species.evolutions || [];
     const roleInfo = getRoleInfo(species.role || 'MAIN_DPS');
+    const isClaimed = (gameState.state.bestiaryRewards?.claimedSpecies || []).includes(species.id);
 
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
@@ -293,6 +294,30 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
                 </div>
               `}
             </div>
+
+            <!-- Bestiary Discovery Bounty Chamber -->
+            <div class="bestiary-discovery-bounty-box" style="margin-top: 10px; padding: 10px 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid ${isClaimed ? 'rgba(74, 222, 128, 0.3)' : 'rgba(251, 191, 36, 0.4)'}; border-radius: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 11px; font-weight: 800; color: #f3e8ff; display: flex; align-items: center; gap: 4px;">
+                  <span>🎁</span> Discovery Bounty
+                </span>
+                <span style="font-size: 11px; font-weight: 800; color: #38bdf8;">
+                  +50 💎 Spirit Shards
+                </span>
+              </div>
+              <p style="font-size: 10px; color: var(--text-muted); line-height: 1.35; margin: 0 0 8px 0;">
+                Documenting unique spirit species into your compendium awards sacred Spirit Shards.
+              </p>
+              ${isClaimed ? `
+                <div style="width: 100%; min-height: 32px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #4ade80; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 8px;">
+                  ✓ Discovery Bounty Claimed (+50 💎)
+                </div>
+              ` : `
+                <button id="btn-claim-bestiary-bounty" class="modal-btn-confirm" style="width: 100%; min-height: 34px; font-size: 11px; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: 1px solid #fbbf24; cursor: pointer; box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);">
+                  ✨ Claim Discovery Bounty (+50 💎 Spirit Shards)
+                </button>
+              `}
+            </div>
           </div>
 
           <button id="btn-done-bestiary" class="modal-btn-confirm" style="margin-top: 8px;">
@@ -308,6 +333,16 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
   });
   document.getElementById('btn-done-bestiary')?.addEventListener('click', () => {
     modalRoot.innerHTML = '';
+  });
+  document.getElementById('btn-claim-bestiary-bounty')?.addEventListener('click', () => {
+    try {
+      const res = gameState.claimBestiarySpeciesReward(species.id);
+      safePlaySfx('summon');
+      alert(`🎉 Discovery Bounty Claimed!\nReceived +${res.shardsGranted} Spirit Shards!`);
+      showBestiaryInspectModal(species, isDiscovered, bestiaryNum);
+    } catch (err) {
+      alert(err.message);
+    }
   });
 }
 

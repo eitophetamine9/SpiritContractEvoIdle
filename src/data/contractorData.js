@@ -6,49 +6,49 @@
 export const FEATURE_UNLOCKS = {
   FORMATION_3X3: {
     id: 'FORMATION_3X3',
-    level: 3,
+    level: 2,
     name: '3x3 Tactical Grid & Formation Alignment',
     icon: '♟️',
     desc: 'Deploy spirits strategically across Frontline, Midline, and Backline.'
   },
-  BESTIARY_INDEX: {
-    id: 'BESTIARY_INDEX',
-    level: 5,
-    name: 'Spirit Bestiary & Hall of Fame',
-    icon: '📖',
-    desc: 'Catalog discovered spirits and honor your greatest warriors in the Hall of Fame.'
-  },
   PANTHEON_TRIALS: {
     id: 'PANTHEON_TRIALS',
-    level: 8,
+    level: 3,
     name: 'Pantheon Trials (Artifact Dungeon)',
     icon: '🏛️',
     desc: 'Conquer the Olympian Gods to earn 6-piece Greek God Relic sets.'
   },
   DIVINE_FORGE: {
     id: 'DIVINE_FORGE',
-    level: 12,
+    level: 3,
     name: 'Divine Forge (Weapon Armory)',
     icon: '🔨',
     desc: 'Forge and upgrade 12 diverse weapon archetypes with unique active passives.'
   },
+  BESTIARY_INDEX: {
+    id: 'BESTIARY_INDEX',
+    level: 4,
+    name: 'Spirit Bestiary & Hall of Fame',
+    icon: '📖',
+    desc: 'Catalog discovered spirits and honor your greatest warriors in the Hall of Fame.'
+  },
   SANCTUARY_ESSENCE: {
     id: 'SANCTUARY_ESSENCE',
-    level: 16,
+    level: 8,
     name: 'Sanctuary of the Gods',
     icon: '✨',
     desc: 'Battle God Avatars to harness Essences of the Gods and Energy Vault enhancements.'
   },
   ASTRAL_REALM: {
     id: 'ASTRAL_REALM',
-    level: 20,
+    level: 12,
     name: 'Astral Realm & Dwarven Forge',
     icon: '🌌',
     desc: 'Unlock 8 Zodiac Constellations, Dwarven Smelting, and Astral Expeditions.'
   },
   SPIRIT_REBIRTH: {
     id: 'SPIRIT_REBIRTH',
-    level: 25,
+    level: 16,
     name: 'Spirit Rebirth System (⭐1–7)',
     icon: '🔥',
     desc: 'Transcend maximum level limits and ignite 7-star constellation affinities.'
@@ -57,13 +57,13 @@ export const FEATURE_UNLOCKS = {
 
 /**
  * Calculates the Contractor EXP required to advance from `level` to `level + 1`.
- * Smooth curve: Lv 1=100, Lv 2=150, Lv 3=210, Lv 5=360, Lv 10=870, Lv 25=3150
+ * Deliberate progression curve: Lv 1=250, Lv 2=683, Lv 3=1228, Lv 5=2579, Lv 10=7046, Lv 20=19252
  * @param {number} level - Current contractor level
  * @returns {number} Required EXP
  */
 export function getContractorXpRequired(level) {
   const lvl = Math.max(1, Math.floor(level || 1));
-  return Math.floor(100 * Math.pow(lvl, 1.25));
+  return Math.floor(250 * Math.pow(lvl, 1.45));
 }
 
 /**

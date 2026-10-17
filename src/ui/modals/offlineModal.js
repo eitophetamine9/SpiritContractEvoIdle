@@ -1,5 +1,6 @@
 import { closeActiveModal } from './modalBase.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 export function showOfflineModal(report, onClaim) {
   const modalRoot = document.getElementById('modal-root');
@@ -51,13 +52,18 @@ export function showOfflineModal(report, onClaim) {
 
           <div class="offline-loot-row">
             <span style="color: var(--text-muted);">Madness Shards Gathered:</span>
-            <span style="color: #00d2ff;">+${report.offlineShards.toLocaleString()} 💎</span>
+            <span style="color: #00d2ff; display: inline-flex; align-items: center; gap: 4px;">+${report.offlineShards.toLocaleString()} ${getGameIcon('spiritShards', { size: '14px', style: 'color: #38bdf8;' })}</span>
           </div>
 
           ${report.offlineEssence > 0 ? `
           <div class="offline-loot-row">
             <span style="color: var(--text-muted);">Soul Essence Extracted:</span>
-            <span style="color: #e056fd;">+${report.offlineEssence} 🔮</span>
+            <span style="color: #e056fd; display: inline-flex; align-items: center; gap: 4px;">+${report.offlineEssence} ${getGameIcon('astralEssence', { size: '14px', style: 'color: #c084fc;' })}</span>
+          </div>` : ''}
+          ${(report.offlinePurified && report.offlinePurified > 0) ? `
+          <div class="offline-loot-row">
+            <span style="color: var(--text-muted);">Purified Soul Essence:</span>
+            <span style="color: #c084fc; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">+${report.offlinePurified} ${getGameIcon('purifiedSoul', { size: '14px', style: 'color: #d8b4fe;' })}</span>
           </div>` : ''}
 
           ${report.energyGained > 0 ? `

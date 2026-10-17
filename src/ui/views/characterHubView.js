@@ -234,7 +234,7 @@ export function renderCharacterHubView(container, options = {}) {
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'rebirths' ? 'active' : ''}" data-subhub="rebirths">
             <span class="subhub-icon">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? '🌟' : '🔒'}</span>
-            <span class="subhub-text">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? 'Rebirths' : 'Rebirths (Lv.25)'}</span>
+            <span class="subhub-text">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? 'Rebirths' : 'Rebirths (Lv.16)'}</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'talents' ? 'active' : ''}" data-subhub="talents">
             <span class="subhub-icon">📜</span>
@@ -704,9 +704,7 @@ function renderRelicsSubHub(spirit) {
 function renderRebirthsSubHub(spirit) {
   const isRebirthUnlocked = gameState.isFeatureUnlocked('SPIRIT_REBIRTH');
   const currentTier = spirit.rebirthLevel || 0;
-  const duplicateSpirits = (gameState.state.spirits || []).filter(
-    s => s.speciesId === spirit.speciesId && s.id !== spirit.id
-  );
+  const duplicateSpirits = gameState.getEligibleAscensionDuplicates(spirit.id);
   const nextTier = currentTier + 1;
   const canAscendRebirth = isRebirthUnlocked && nextTier <= 7 && duplicateSpirits.length >= 1 && (gameState.state.resources.soulEssence || 0) >= (nextTier * 5);
 
@@ -714,7 +712,7 @@ function renderRebirthsSubHub(spirit) {
     <div class="subhub-pane rebirths-pane">
       <div class="pane-section-header">
         <span class="sec-title">CELESTIAL REBIRTH NEXUS (REBIRTH I TO VII)</span>
-        <span class="sec-tag">${isRebirthUnlocked ? `Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%` : '🔒 Requires Contractor Lv. 25'}</span>
+        <span class="sec-tag">${isRebirthUnlocked ? `Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%` : '🔒 Requires Contractor Lv. 16'}</span>
       </div>
 
       ${!isRebirthUnlocked ? `
@@ -722,7 +720,7 @@ function renderRebirthsSubHub(spirit) {
           <div style="font-size: 26px; margin-bottom: 4px;">🔒</div>
           <h4 style="color: #ffd152; font-weight: 900; font-size: 13px; margin-bottom: 2px;">Spirit Rebirth Chamber Locked</h4>
           <p style="color: #cbd5e1; font-size: 11px; line-height: 1.35; max-width: 320px; margin: 0 auto;">
-            Requires <strong>Contractor Level 25</strong> to transcend maximum level limits and ignite 7-star constellation affinities.
+            Requires <strong>Contractor Level 16</strong> to transcend maximum level limits and ignite 7-star constellation affinities.
           </p>
         </div>
       ` : ''}
@@ -735,14 +733,14 @@ function renderRebirthsSubHub(spirit) {
           <span class="rcard-bonus">+${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}% All Base Stats</span>
         </div>
         <div class="rcard-desc">
-          ${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.uniqueAddition || '') : 'Ascend your spirit using duplicate contracts to awaken celestial power.'}
+          ${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.uniqueAddition || '') : 'Ascend your spirit using duplicate contracts or pre-evolution copies to awaken celestial power.'}
         </div>
       </div>
 
       <!-- Rebirth Ascension Action Chamber -->
       <div class="rebirth-forge-chamber">
         <div class="forge-info-line">
-          <span>Duplicates Available: <strong>${duplicateSpirits.length}</strong> (Requires 1 copy)</span>
+          <span>Copies Available: <strong>${duplicateSpirits.length}</strong> (Requires 1 copy)</span>
           <span>Cost: <strong>${(gameState.state.resources.soulEssence || 0).toLocaleString()} / ${nextTier <= 7 ? nextTier * 5 : 0} 🔮</strong></span>
         </div>
 
@@ -1038,11 +1036,9 @@ function attachSubHubListeners(container, selectedSpirit) {
   const btnRebirthAscend = container.querySelector('#btn-sanctum-rebirth-ascend');
   if (btnRebirthAscend) {
     btnRebirthAscend.addEventListener('click', () => {
-      const duplicateSpirits = (gameState.state.spirits || []).filter(
-        s => s.speciesId === selectedSpirit.speciesId && s.id !== selectedSpirit.id
-      );
+      const duplicateSpirits = gameState.getEligibleAscensionDuplicates(selectedSpirit.id);
       if (duplicateSpirits.length === 0) {
-        alert('You need a duplicate spirit of the same species to perform a Rebirth ascension.');
+        alert('You need a duplicate spirit of the same species or a valid pre-evolution ancestor to perform a Rebirth ascension.');
         return;
       }
       try {

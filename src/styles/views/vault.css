@@ -154,17 +154,18 @@
 .index-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  padding: 4px 2px;
 }
 
 .index-header-banner {
   background: linear-gradient(135deg, #0e1a14 0%, #172b20 100%);
   border: 1px solid var(--border-bright);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
@@ -280,26 +281,26 @@
 .bestiary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 10px;
   max-height: calc(100vh - 235px);
   overflow-y: auto;
-  padding: 4px 2px 12px 2px;
+  padding: 6px 4px 16px 4px;
 }
 
 .bestiary-tile {
   background: rgba(14, 23, 18, 0.9);
   border: 1.5px solid var(--border-color);
-  border-radius: 8px;
-  padding: 6px 4px;
+  border-radius: 12px;
+  padding: 8px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  min-height: 84px;
+  min-height: 92px;
   position: relative;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  transition: transform 0.08s ease, filter 0.08s ease;
+  transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
 }
 
 .bestiary-tile:active {

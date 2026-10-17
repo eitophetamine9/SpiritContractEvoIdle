@@ -17,55 +17,57 @@
 
 .modal-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: #0e1712;
   border: 2px solid var(--border-bright);
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 18px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95);
   max-height: 90vh;
   overflow-y: auto;
 }
 
 .modal-title {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 900;
   text-align: center;
   color: var(--text-moon);
-  text-shadow: 0 0 10px rgba(212, 228, 120, 0.3);
+  text-shadow: 0 0 12px rgba(212, 228, 120, 0.3);
 }
 
 .modal-btn-confirm {
-  min-height: 50px;
+  min-height: 52px;
   background: linear-gradient(135deg, #1b7a48, #2ecc71);
   color: #ffffff;
   font-size: 15px;
   font-weight: 900;
   border: 1px solid #2ecc71;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 100%;
   box-shadow: 0 4px 14px rgba(46, 204, 113, 0.4);
 }
 
 /* Offline Welcome Gains List */
 .offline-gains-box {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .offline-loot-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 13px;
   font-weight: 800;
+  padding: 3px 0;
 }
 
 /* Evolution Animation Display */

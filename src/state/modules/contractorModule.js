@@ -3,6 +3,10 @@ import {
   getFeaturesUnlockedAtLevel,
   isFeatureUnlocked
 } from '../../data/contractorData.js';
+import {
+  createWeaponInstance,
+  createRelicInstance
+} from '../../data/equipmentData.js';
 
 export const contractorMethods = {
   getContractorLevel() {
@@ -56,6 +60,44 @@ export const contractorMethods = {
           this.state.resources.maxEnergy || 60,
           (this.state.resources.energy || 0) + 20
         );
+
+        // Award 3 Starter Equipments at Contractor Level 3 (Pantheon Trials & Forge unlock)
+        if (newLvl >= 3 && !this.state.claimedLevel3EquipmentGift) {
+          this.state.claimedLevel3EquipmentGift = true;
+          const starterWeapon = createWeaponInstance({ weaponTypeId: 'sword', rarity: 'COMMON', level: 1 });
+          const starterRelic1 = createRelicInstance({ setId: 'hades', slotTypeId: 'headgear', rarity: 'COMMON', level: 1 });
+          const starterRelic2 = createRelicInstance({ setId: 'hades', slotTypeId: 'totem', rarity: 'COMMON', level: 1 });
+
+          if (!this.state.inventory) this.state.inventory = {};
+          if (!Array.isArray(this.state.inventory.equipment)) this.state.inventory.equipment = [];
+          this.state.inventory.equipment.push(starterWeapon, starterRelic1, starterRelic2);
+
+          const starterSpirit = this.state.spirits?.[0];
+          if (starterSpirit) {
+            if (!starterSpirit.weapon) {
+              starterSpirit.weapon = starterWeapon.uid;
+              starterWeapon.equippedToSpiritId = starterSpirit.id;
+            }
+            if (starterSpirit.relics) {
+              if (!starterSpirit.relics.headgear) {
+                starterSpirit.relics.headgear = starterRelic1.uid;
+                starterRelic1.equippedToSpiritId = starterSpirit.id;
+              }
+              if (!starterSpirit.relics.totem) {
+                starterSpirit.relics.totem = starterRelic2.uid;
+                starterRelic2.equippedToSpiritId = starterSpirit.id;
+              }
+            }
+          }
+          if (typeof this.invalidateCaches === 'function') {
+            this.invalidateCaches();
+          }
+          this.emit('equipmentGiftAwarded', {
+            weapons: [starterWeapon],
+            relics: [starterRelic1, starterRelic2]
+          });
+        }
+
         this.emit('resourcesUpdated', this.state.resources);
         this.emit('contractorLevelUp', {
           level: newLvl,
@@ -118,5 +160,24 @@ export const contractorMethods = {
   restartTutorial() {
     this.setTutorialStep(0);
     this.emit('tutorialRestarted');
+  },
+
+  isAreaTutorialSeen(areaKey) {
+    if (!this.state.tutorial) return false;
+    if (!this.state.tutorial.unlockedTutorialsSeen) return false;
+    return Boolean(this.state.tutorial.unlockedTutorialsSeen[areaKey]);
+  },
+
+  markAreaTutorialSeen(areaKey) {
+    if (!this.state.tutorial) {
+      this.state.tutorial = { step: 0, completed: false, active: true, unlockedTutorialsSeen: {} };
+    }
+    if (!this.state.tutorial.unlockedTutorialsSeen || typeof this.state.tutorial.unlockedTutorialsSeen !== 'object') {
+      this.state.tutorial.unlockedTutorialsSeen = {};
+    }
+    this.state.tutorial.unlockedTutorialsSeen[areaKey] = true;
+    this.isDirty = true;
+    this.save();
+    this.emit('areaTutorialSeen', { areaKey });
   }
 };

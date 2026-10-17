@@ -11,6 +11,45 @@ import {
   FORMATION_COLUMNS
 } from '../../data/spiritsData.js';
 
+/**
+ * Recursively checks whether candidateSpeciesId is an ancestor pre-evolution of targetSpeciesId
+ */
+export function isPreEvolutionOf(candidateSpeciesId, targetSpeciesId) {
+  if (!candidateSpeciesId || !targetSpeciesId || candidateSpeciesId === targetSpeciesId) return false;
+
+  const visited = new Set();
+  const queue = [candidateSpeciesId];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    const species = SPIRIT_SPECIES[current];
+    if (species && Array.isArray(species.evolutions)) {
+      for (const evo of species.evolutions) {
+        if (evo && evo.targetSpeciesId) {
+          if (evo.targetSpeciesId === targetSpeciesId) {
+            return true;
+          }
+          queue.push(evo.targetSpeciesId);
+        }
+      }
+    }
+  }
+  return false;
+}
+
+export const BESTIARY_MILESTONES = [
+  { percent: 10, purifiedReward: 1, label: '10% Compendium' },
+  { percent: 25, purifiedReward: 2, label: '25% Compendium' },
+  { percent: 50, purifiedReward: 3, label: '50% Compendium' },
+  { percent: 75, purifiedReward: 5, label: '75% Compendium' },
+  { percent: 100, purifiedReward: 10, label: '100% Master Compendium' }
+];
+
+export const BESTIARY_SPECIES_SHARD_REWARD = 50;
+
 export const spiritMethods = {
   /**
    * Returns comprehensive combat stats for a spirit including formation column perks,
@@ -321,7 +360,7 @@ export const spiritMethods = {
     spirit.evolutionHistory.push(nextSpecies.name);
 
     this.state.stats.totalEvolutions += 1;
-    this.addContractorXp(150, 'Spirit Evolution');
+    this.addContractorXp(75, 'Spirit Evolution');
     this.markSpeciesDiscovered(nextSpecies.id);
     this.invalidateCaches();
     this.save();
@@ -482,23 +521,31 @@ export const spiritMethods = {
     return { success: true, xpGranted: xpBonus };
   },
 
+  isPreEvolutionOf(candidateSpeciesId, targetSpeciesId) {
+    return isPreEvolutionOf(candidateSpeciesId, targetSpeciesId);
+  },
+
   /**
    * Returns unequipped, non-favorite duplicate spirits sharing speciesId with target spirit
+   * or having an ancestor pre-evolution in the lineage (if Spirit Rebirth Lv. 16 is unlocked).
    */
   getEligibleAscensionDuplicates(spiritId) {
     const target = this.state.spirits.find(s => s.id === spiritId);
     if (!target) return [];
-    return this.state.spirits.filter(s => 
-      s.id !== target.id &&
-      s.speciesId === target.speciesId &&
-      !this.state.party.includes(s.id) &&
-      !s.favorite
-    );
+    const isRebirthUnlocked = this.isFeatureUnlocked('SPIRIT_REBIRTH');
+    return this.state.spirits.filter(s => {
+      if (s.id === target.id || this.state.party.includes(s.id) || s.favorite) return false;
+      // Exact species duplicate is allowed early
+      if (s.speciesId === target.speciesId) return true;
+      // Ascending an evolved spirit using pre-evolution copies requires Contractor Lv. 16 (Spirit Rebirth)
+      if (isRebirthUnlocked && isPreEvolutionOf(s.speciesId, target.speciesId)) return true;
+      return false;
+    });
   },
 
   /**
    * Ascend Spirit to next Star Tier (★1 through ★7)
-   * Consumes matching duplicate copies + Astral Essences
+   * Consumes matching duplicate copies (or pre-evolution ancestors if Spirit Rebirth Lv. 16) + Astral Essences
    * Grants stacking +12% stats per tier up to +84% at ★7
    */
   ascendSpirit(targetSpiritId, duplicateSpiritIds = []) {
@@ -532,8 +579,13 @@ export const spiritMethods = {
       if (!dup) {
         throw new Error(`Duplicate spirit with ID ${dupId} not found in collection!`);
       }
-      if (dup.speciesId !== target.speciesId) {
-        throw new Error(`Duplicate spirit ${dup.customName} must be of the same species (${target.speciesId})!`);
+      const isExact = dup.speciesId === target.speciesId;
+      const isPreEvo = isPreEvolutionOf(dup.speciesId, target.speciesId);
+      if (!isExact && !isPreEvo) {
+        throw new Error(`Duplicate spirit ${dup.customName} (${dup.speciesId}) must be of the same species or a valid pre-evolution ancestor of ${target.customName} (${target.speciesId})!`);
+      }
+      if (isPreEvo && !this.isFeatureUnlocked('SPIRIT_REBIRTH')) {
+        throw new Error(`Ascending an evolved spirit using its pre-evolution ancestor requires Contractor Level 16 (Spirit Rebirth)!`);
       }
       if (this.state.party.includes(dupId)) {
         throw new Error(`Cannot sacrifice ${dup.customName} while they are in your active party. Unequip first!`);
@@ -739,6 +791,119 @@ export const spiritMethods = {
   isSpeciesDiscovered(speciesId) {
     if (!Array.isArray(this.state.discoveredSpeciesIds)) return false;
     return this.state.discoveredSpeciesIds.includes(speciesId);
+  },
+
+  /**
+   * Claim regular spirit shard discovery reward for a single discovered species (+50 Shards)
+   */
+  claimBestiarySpeciesReward(speciesId) {
+    if (!this.state.bestiaryRewards) {
+      this.state.bestiaryRewards = { claimedSpecies: [], claimedMilestones: [] };
+    }
+    if (!this.isSpeciesDiscovered(speciesId)) {
+      throw new Error('Spirit species has not yet been discovered in the Bestiary!');
+    }
+    if (this.state.bestiaryRewards.claimedSpecies.includes(speciesId)) {
+      throw new Error('Discovery reward for this species has already been claimed!');
+    }
+
+    this.state.bestiaryRewards.claimedSpecies.push(speciesId);
+    const shardsGranted = BESTIARY_SPECIES_SHARD_REWARD;
+    this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + shardsGranted;
+    this.save();
+
+    this.emit('bestiaryRewardClaimed', { type: 'species', speciesId, shardsGranted });
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return { success: true, speciesId, shardsGranted };
+  },
+
+  /**
+   * Claim all available unclaimed discovery rewards for discovered species
+   */
+  claimAllBestiarySpeciesRewards() {
+    if (!this.state.bestiaryRewards) {
+      this.state.bestiaryRewards = { claimedSpecies: [], claimedMilestones: [] };
+    }
+    const claimedSet = new Set(this.state.bestiaryRewards.claimedSpecies || []);
+    const discovered = this.state.discoveredSpeciesIds || [];
+    const unclaimed = discovered.filter(id => !claimedSet.has(id));
+
+    if (unclaimed.length === 0) {
+      return { success: false, count: 0, shardsGranted: 0 };
+    }
+
+    for (const id of unclaimed) {
+      this.state.bestiaryRewards.claimedSpecies.push(id);
+    }
+    const totalShards = unclaimed.length * BESTIARY_SPECIES_SHARD_REWARD;
+    this.state.resources.spiritShards = (this.state.resources.spiritShards || 0) + totalShards;
+    this.save();
+
+    this.emit('bestiaryRewardClaimed', { type: 'species_bulk', count: unclaimed.length, shardsGranted: totalShards });
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return { success: true, count: unclaimed.length, shardsGranted: totalShards };
+  },
+
+  /**
+   * Claim Purified Soul Essence milestone reward for index completion percentage (10%, 25%, 50%, 75%, 100%)
+   */
+  claimBestiaryMilestoneReward(milestonePercent) {
+    if (!this.state.bestiaryRewards) {
+      this.state.bestiaryRewards = { claimedSpecies: [], claimedMilestones: [] };
+    }
+    const milestone = BESTIARY_MILESTONES.find(m => m.percent === milestonePercent);
+    if (!milestone) {
+      throw new Error(`Invalid milestone percentage: ${milestonePercent}%!`);
+    }
+    if (this.state.bestiaryRewards.claimedMilestones.includes(milestonePercent)) {
+      throw new Error(`${milestonePercent}% milestone reward has already been claimed!`);
+    }
+
+    const totalSpecies = Object.keys(SPIRIT_SPECIES).length;
+    const discoveredCount = (this.state.discoveredSpeciesIds || []).length;
+    const currentPercent = Math.round((discoveredCount / totalSpecies) * 100);
+
+    if (currentPercent < milestonePercent) {
+      throw new Error(`Bestiary progress is only ${currentPercent}%. Need ${milestonePercent}% to claim!`);
+    }
+
+    this.state.bestiaryRewards.claimedMilestones.push(milestonePercent);
+    const purifiedGranted = milestone.purifiedReward;
+    this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + purifiedGranted;
+    this.save();
+
+    this.emit('bestiaryRewardClaimed', { type: 'milestone', milestonePercent, purifiedGranted });
+    this.emit('resourcesUpdated', this.state.resources);
+
+    return { success: true, milestonePercent, purifiedGranted };
+  },
+
+  getBestiaryRewardStatus() {
+    if (!this.state.bestiaryRewards) {
+      this.state.bestiaryRewards = { claimedSpecies: [], claimedMilestones: [] };
+    }
+    const totalSpecies = Object.keys(SPIRIT_SPECIES).length;
+    const discoveredCount = (this.state.discoveredSpeciesIds || []).length;
+    const currentPercent = Math.round((discoveredCount / totalSpecies) * 100);
+    const claimedSpeciesSet = new Set(this.state.bestiaryRewards.claimedSpecies || []);
+    const unclaimedSpeciesCount = (this.state.discoveredSpeciesIds || []).filter(id => !claimedSpeciesSet.has(id)).length;
+
+    const milestones = BESTIARY_MILESTONES.map(m => ({
+      ...m,
+      isReached: currentPercent >= m.percent,
+      isClaimed: this.state.bestiaryRewards.claimedMilestones.includes(m.percent),
+      canClaim: currentPercent >= m.percent && !this.state.bestiaryRewards.claimedMilestones.includes(m.percent)
+    }));
+
+    return {
+      currentPercent,
+      discoveredCount,
+      totalSpecies,
+      unclaimedSpeciesCount,
+      milestones
+    };
   },
 
   getSpiritTotalPower(spiritOrId) {

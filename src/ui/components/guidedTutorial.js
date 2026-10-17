@@ -71,7 +71,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'contractor_ascension',
     title: 'Contractor Level & Roadmap',
-    speech: 'Clearing floors, summoning allies, and evolving spirits awards **Contractor EXP**. As you ascend, you will unlock the **3x3 Grid (Lv. 3)**, **Bestiary (Lv. 5)**, **Pantheon Trials (Lv. 8)**, and **Divine Forge (Lv. 12)**! May fortune guide your contracts!',
+    speech: 'Clearing floors, summoning allies, and evolving spirits awards **Contractor EXP**. As you ascend, you will unlock the **3x3 Grid (Lv. 2)**, **Pantheon Trials (Lv. 3)**, **Divine Forge (Lv. 3)**, and **Bestiary (Lv. 4)**! May fortune guide your contracts!',
     targetSelector: '#btn-top-profile',
     actionText: 'Claim 150 Shards & Ascend! 🌟',
     isFinal: true
@@ -399,3 +399,128 @@ class GuidedTutorialController {
 }
 
 export const guidedTutorial = new GuidedTutorialController();
+
+export const AREA_TUTORIALS = {
+  formation: {
+    id: 'formation',
+    tab: 'party',
+    featureId: 'FORMATION_3X3',
+    title: '♟️ 3x3 Tactical Grid & Formation Alignment',
+    speech: 'Contractor! Reaching Level 2 unlocks the **3x3 tactical battle formation**!\n\nPosition your spirits across Frontline, Midline, or Backline:\n• **Frontline**: Draws direct enemy aggro and shields teammates.\n• **Midline**: Balances offense and defense.\n• **Backline**: Safely unleashes high-damage Ultimates and team heals!',
+    buttonText: "Deploy Formation ➔"
+  },
+  trials: {
+    id: 'trials',
+    tab: 'trials',
+    featureId: 'PANTHEON_TRIALS',
+    title: '🏛️ The Pantheon Relic Trials',
+    speech: 'Welcome to the **Pantheon Trials**! Challenge the 10 Greek God avatars to farm targeted 6-piece Relic Sets.\n\nEquipping matching sets unlocks game-changing **2-piece** and **4-piece divine set bonuses**! You have also been awarded **3 free starter equipments** to begin your trials!',
+    buttonText: 'Conquer Trials ➔'
+  },
+  forge: {
+    id: 'forge',
+    tab: 'forge',
+    featureId: 'DIVINE_FORGE',
+    title: '🔥 The Divine Forge & Weapon Anvils',
+    speech: "Hephaestus's sacred forge is now ignited! Overcome Vulcan automatons across 12 weapon anvils to forge Blades, Bows, Staves, Claws, Daggers, and Mallets.\n\nEach weapon archetype features unique combat abilities—like Scythe Crit execution thresholds, Shield block mitigations, or Staff heal amplifications!",
+    buttonText: 'Ignite Forge ➔'
+  },
+  bestiary: {
+    id: 'bestiary',
+    tab: 'index',
+    featureId: 'BESTIARY_INDEX',
+    title: '📖 Spirit Compendium & Star Ascension',
+    speech: 'Your **Spirit Compendium** is active! Discovering new spirits awards **+50 Spirit Shards** per entry!\n\nHit completion milestones to earn rare **Purified Soul Essences**. You can also **Star-Ascend** your spirits early by sacrificing duplicate copies in the Vault!',
+    buttonText: 'Open Compendium ➔'
+  },
+  astral: {
+    id: 'astral',
+    tab: 'mystical',
+    featureId: 'SANCTUARY_ESSENCE',
+    title: '🌌 The Astral Realm & Sacred Sanctum',
+    speech: 'You have entered the **Astral Plane**!\n\nHarvest Astral Essences & Gods Essences to illuminate the **8 Zodiac Constellations**, transmute shards daily, dispatch squad expeditions, brew EXP elixirs, and acquire divine scriptures from the Dwarven Forge!',
+    buttonText: 'Explore Astral Plane ➔'
+  },
+  rebirth: {
+    id: 'rebirth',
+    tab: 'party',
+    featureId: 'SPIRIT_REBIRTH',
+    title: '🔥 Spirit Rebirth & Evolutionary Ascension',
+    speech: 'Peak contractor authority unlocked! Reaching Contractor Level 16 permits **Spirit Rebirth**:\n\nYou can now ascend your high-tier evolved spirits using any **pre-evolutionary copy**, unlocking ⭐1 through ⭐7 cosmic transcendence!',
+    buttonText: 'Transcend Limits ➔'
+  }
+};
+
+export function showAreaUnlockTutorial(areaKey, onDone) {
+  const info = AREA_TUTORIALS[areaKey];
+  if (!info) return;
+
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) return;
+
+  safePlaySfx('contract_summon', 0.6);
+
+  const formattedSpeech = info.speech
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #ffd152;">$1</strong>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/• /g, '• ');
+
+  modalRoot.innerHTML = `
+    <div class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn select-none">
+      <div class="relative w-full max-w-md bg-slate-900 border-2 border-amber-400/60 rounded-3xl p-6 sm:p-7 shadow-2xl text-white flex flex-col items-center text-center gap-4 overflow-hidden"
+           style="box-shadow: 0 0 50px rgba(245, 158, 11, 0.35), inset 0 0 20px rgba(93, 63, 211, 0.3);">
+        
+        <!-- Mascot Avatar with Floating Animation -->
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-300 flex items-center justify-center text-3xl shadow-lg border-2 border-white/60 ambient-float">
+          🐱
+        </div>
+
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+            Cat Spirit Familiar • System Guide
+          </span>
+          <h3 class="text-lg sm:text-xl font-black text-white tracking-tight">
+            ${info.title}
+          </h3>
+        </div>
+
+        <!-- Speech Bubble -->
+        <div class="w-full p-4 rounded-2xl bg-slate-950/80 border border-slate-700/80 text-xs sm:text-sm text-slate-200 text-left leading-relaxed shadow-inner">
+          ${formattedSpeech}
+        </div>
+
+        <!-- Action Dismiss Button -->
+        <button id="btn-dismiss-area-tut" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-amber-500/30">
+          ${info.buttonText || 'Understood ➔'}
+        </button>
+
+      </div>
+    </div>
+  `;
+
+  modalRoot.querySelector('#btn-dismiss-area-tut')?.addEventListener('click', () => {
+    modalRoot.innerHTML = '';
+    gameState.markAreaTutorialSeen(areaKey);
+    if (onDone) onDone();
+  });
+}
+
+export function checkAreaTutorialTrigger(tabName, onDone) {
+  // Map tabName to area tutorial key and required feature
+  const candidates = [
+    { areaKey: 'formation', tab: 'party', feat: 'FORMATION_3X3' },
+    { areaKey: 'trials', tab: 'trials', feat: 'PANTHEON_TRIALS' },
+    { areaKey: 'forge', tab: 'forge', feat: 'DIVINE_FORGE' },
+    { areaKey: 'bestiary', tab: 'index', feat: 'BESTIARY_INDEX' },
+    { areaKey: 'astral', tab: 'mystical', feat: 'SANCTUARY_ESSENCE' },
+    { areaKey: 'rebirth', tab: 'party', feat: 'SPIRIT_REBIRTH' }
+  ];
+
+  for (const c of candidates) {
+    if (c.tab === tabName && gameState.isFeatureUnlocked(c.feat) && !gameState.isAreaTutorialSeen(c.areaKey)) {
+      showAreaUnlockTutorial(c.areaKey, onDone);
+      return true;
+    }
+  }
+  return false;
+}

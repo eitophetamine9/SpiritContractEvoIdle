@@ -19,6 +19,7 @@ let isForgeEventsBound = false;
 
 let selectedForgeChamberId = 'bladesmith_sanctum';
 let selectedForgeTierNum = 1;
+let forgeAnimClass = '';
 
 export function renderForgeView(container) {
   const battle = gameState.state.activeDungeonBattle;
@@ -77,68 +78,86 @@ function renderForgeChambersStage(container) {
         </div>
       </div>
 
-      <!-- Forge Chambers Selector Grid -->
-      <div class="pantheon-chambers-grid forge-chambers-grid grid grid-cols-2 gap-2">
+      <!-- Forge Chambers Carousel Navigation & Dropdown -->
+      <div class="carousel-nav-bar mb-1">
+        <button id="btn-prev-forge" class="pager-nav-btn" title="Previous Forge Anvil">
+          <span>‹</span>
+          <span class="hidden sm:inline">Prev</span>
+        </button>
+
+        <div class="chamber-dropdown-wrap">
+          <select id="select-forge-chamber" class="chamber-dropdown">
+            ${FORGE_CHAMBERS.map(c => {
+              const isSelected = c.id === selectedForgeChamberId;
+              return `<option value="${c.id}" ${isSelected ? 'selected' : ''}>🔥 ${c.name} (${c.bossName})</option>`;
+            }).join('')}
+          </select>
+        </div>
+
+        <button id="btn-next-forge" class="pager-nav-btn" title="Next Forge Anvil">
+          <span class="hidden sm:inline">Next</span>
+          <span>›</span>
+        </button>
+      </div>
+
+      <!-- Quick Forge Pills Strip -->
+      <div class="chamber-quick-pills flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 no-scrollbar mb-1">
         ${FORGE_CHAMBERS.map(c => {
           const isSelected = c.id === selectedForgeChamberId;
           return `
-            <button class="chamber-card relative overflow-hidden rounded-xl p-2.5 flex items-center gap-2 text-left transition-all border cursor-pointer ${isSelected ? 'selected bg-slate-800/90 border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.25)]' : 'bg-slate-900/60 border-slate-800'}" data-forge-chamber="${c.id}" style="--chamber-color: ${c.color};">
-              <div class="chamber-sigil w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden" style="background: ${c.color}22; border: 1px solid ${c.color};">
-                ${createAnimatedWeaponHtml(c.weaponTypeId || c.id, { extraClasses: 'chamber-sprite-icon' })}
-              </div>
-              <div class="chamber-info min-w-0 flex-1">
-                <span class="chamber-name text-xs font-bold text-white truncate block">${c.name}</span>
-                <span class="chamber-god text-[10px] font-semibold truncate block" style="color: ${c.accentColor};">${c.bossName}</span>
-              </div>
+            <button class="chamber-card px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${isSelected ? 'selected bg-orange-500/20 text-orange-300 border-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-slate-900/60 text-slate-400 border-slate-800'}" data-forge-chamber="${c.id}">
+              ${c.name.split(' ')[0]}
             </button>
           `;
         }).join('')}
       </div>
 
-      <!-- Active Selected Chamber Detail Stage -->
-      <div class="chamber-active-stage rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border: 2px solid ${chamber.color}; background: linear-gradient(180deg, ${chamber.color}15 0%, rgba(15, 12, 10, 0.95) 100%);">
-        
-        <div class="stage-header-row flex items-start gap-3.5 mb-4">
-          <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color}; background: ${chamber.color}25; border: 2px solid ${chamber.color};">
-            ${createAnimatedWeaponHtml(chamber.weaponTypeId || chamber.id, { extraClasses: 'stage-sigil-sprite-large' })}
+      <!-- Active Selected Chamber Detail Stage (Animated Transition) -->
+      <div class="stage-carousel-container">
+        <div class="chamber-active-stage stage-card-animated ${forgeAnimClass} rounded-2xl border p-4 sm:p-5 relative overflow-hidden bg-gradient-to-b from-slate-900/90 to-slate-950/95 shadow-xl" style="border: 2px solid ${chamber.color}; background: linear-gradient(180deg, ${chamber.color}15 0%, rgba(15, 12, 10, 0.95) 100%);">
+          
+          <div class="stage-header-row flex items-start gap-3.5 mb-4">
+            <div class="stage-sigil-large w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shrink-0 overflow-hidden ambient-float" style="border-color: ${chamber.color}; text-shadow: 0 0 20px ${chamber.color}; background: ${chamber.color}25; border: 2px solid ${chamber.color};">
+              ${createAnimatedWeaponHtml(chamber.weaponTypeId || chamber.id, { extraClasses: 'stage-sigil-sprite-large' })}
+            </div>
+            <div class="stage-text-block flex-1">
+              <h3 class="stage-name text-lg font-black" style="color: ${chamber.accentColor};">${chamber.name}</h3>
+              <span class="stage-god-title text-xs font-bold text-slate-300">${chamber.title}</span>
+              <p class="stage-lore text-xs text-slate-400 mt-1 leading-relaxed">${chamber.desc}</p>
+            </div>
           </div>
-          <div class="stage-text-block flex-1">
-            <h3 class="stage-name text-lg font-black" style="color: ${chamber.accentColor};">${chamber.name}</h3>
-            <span class="stage-god-title text-xs font-bold text-slate-300">${chamber.title}</span>
-            <p class="stage-lore text-xs text-slate-400 mt-1 leading-relaxed">${chamber.desc}</p>
+
+          <!-- Tier Selector Row -->
+          <div class="pantheon-tier-selector mb-4">
+            <div class="tier-label text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">FORGE HEAT DIFFICULTY:</div>
+            <div class="tier-buttons-row grid grid-cols-2 sm:grid-cols-4 gap-2">
+              ${FORGE_DIFFICULTY_TIERS.map(t => {
+                const isTierActive = t.tier === selectedForgeTierNum;
+                return `
+                  <button class="btn-tier-select p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${isTierActive ? 'active bg-orange-500/20 border-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.25)]' : 'bg-slate-950/60 border-slate-800'}" data-forge-tier="${t.tier}">
+                    <span class="tier-btn-name text-xs font-black text-white">${t.name}</span>
+                    <span class="tier-btn-cost text-xs font-bold text-amber-400 mt-1">${t.energyCost} ⚡</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
           </div>
+
+          <!-- Trial Action Strip -->
+          <div class="trial-launch-strip flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
+            <div class="trial-power-info text-xs flex flex-col gap-0.5">
+              <span class="rec-power-tag text-slate-400">Required Power: <strong class="text-white">⚡ ${tier.minPartyPower.toLocaleString()}</strong></span>
+              <span class="party-power-tag ${powerClass} text-slate-400">Party Power: <strong class="text-orange-300">⚡ ${partyPower.toLocaleString()} (${powerText})</strong></span>
+            </div>
+
+            <div class="flex gap-2 flex-wrap">
+              <button id="btn-enter-forge-trial" class="btn-enter-trial min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'} style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
+                <span>⚔️ Enter 3-Wave Forge (${tier.energyCost} ⚡)</span>
+              </button>
+            </div>
+          </div>
+
         </div>
-
-        <!-- Tier Selector Row -->
-        <div class="pantheon-tier-selector mb-4">
-          <div class="tier-label text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">FORGE HEAT DIFFICULTY:</div>
-          <div class="tier-buttons-row grid grid-cols-2 sm:grid-cols-4 gap-2">
-            ${FORGE_DIFFICULTY_TIERS.map(t => {
-              const isTierActive = t.tier === selectedForgeTierNum;
-              return `
-                <button class="btn-tier-select p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${isTierActive ? 'active bg-orange-500/20 border-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.25)]' : 'bg-slate-950/60 border-slate-800'}" data-forge-tier="${t.tier}">
-                  <span class="tier-btn-name text-xs font-black text-white">${t.name}</span>
-                  <span class="tier-btn-cost text-xs font-bold text-amber-400 mt-1">${t.energyCost} ⚡</span>
-                </button>
-              `;
-            }).join('')}
-          </div>
-        </div>
-
-        <!-- Trial Action Strip -->
-        <div class="trial-launch-strip flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
-          <div class="trial-power-info text-xs flex flex-col gap-0.5">
-            <span class="rec-power-tag text-slate-400">Required Power: <strong class="text-white">⚡ ${tier.minPartyPower.toLocaleString()}</strong></span>
-            <span class="party-power-tag ${powerClass} text-slate-400">Party Power: <strong class="text-orange-300">⚡ ${partyPower.toLocaleString()} (${powerText})</strong></span>
-          </div>
-
-          <div class="flex gap-2 flex-wrap">
-            <button id="btn-enter-forge-trial" class="btn-enter-trial min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'} style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
-              <span>⚔️ Enter 3-Wave Forge (${tier.energyCost} ⚡)</span>
-            </button>
-          </div>
-        </div>
-
       </div>
 
       <!-- Loot Preview & Guaranteed Drops Strip -->
@@ -155,9 +174,42 @@ function renderForgeChambersStage(container) {
     </div>
   `;
 
+  // Attach Forge Chamber Dropdown & Pager listeners
+  const selForgeChamber = container.querySelector('#select-forge-chamber');
+  if (selForgeChamber) {
+    selForgeChamber.addEventListener('change', (e) => {
+      forgeAnimClass = 'stage-enter-next';
+      selectedForgeChamberId = e.target.value;
+      renderForgeView(container);
+    });
+  }
+
+  const btnPrevForge = container.querySelector('#btn-prev-forge');
+  if (btnPrevForge) {
+    btnPrevForge.addEventListener('click', () => {
+      const curIdx = FORGE_CHAMBERS.findIndex(c => c.id === selectedForgeChamberId);
+      const prevIdx = (curIdx - 1 + FORGE_CHAMBERS.length) % FORGE_CHAMBERS.length;
+      selectedForgeChamberId = FORGE_CHAMBERS[prevIdx].id;
+      forgeAnimClass = 'stage-enter-prev';
+      renderForgeView(container);
+    });
+  }
+
+  const btnNextForge = container.querySelector('#btn-next-forge');
+  if (btnNextForge) {
+    btnNextForge.addEventListener('click', () => {
+      const curIdx = FORGE_CHAMBERS.findIndex(c => c.id === selectedForgeChamberId);
+      const nextIdx = (curIdx + 1) % FORGE_CHAMBERS.length;
+      selectedForgeChamberId = FORGE_CHAMBERS[nextIdx].id;
+      forgeAnimClass = 'stage-enter-next';
+      renderForgeView(container);
+    });
+  }
+
   // Attach Forge Chamber selection listeners
   container.querySelectorAll('[data-forge-chamber]').forEach(btn => {
     btn.addEventListener('click', () => {
+      forgeAnimClass = 'stage-enter-next';
       selectedForgeChamberId = btn.dataset.forgeChamber;
       renderForgeView(container);
     });

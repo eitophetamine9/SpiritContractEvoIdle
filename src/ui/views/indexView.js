@@ -10,6 +10,7 @@ export function renderIndexView(container) {
   const totalCount = allSpecies.length;
   const discoveredCount = allSpecies.filter(sp => gameState.isSpeciesDiscovered(sp.id)).length;
   const progressPercent = Math.round((discoveredCount / totalCount) * 100);
+  const rewardStatus = gameState.getBestiaryRewardStatus ? gameState.getBestiaryRewardStatus() : { unclaimedSpeciesCount: 0, milestones: [] };
 
   // Map each species to its deterministic Bestiary ID number (1-based index)
   const speciesWithIndex = allSpecies.map((sp, idx) => ({
@@ -49,6 +50,47 @@ export function renderIndexView(container) {
         <div class="index-progress-text">
           <span>Completion: ${progressPercent}%</span>
           <span>${totalCount - discoveredCount} Unknown Spirits Awaiting Discovery</span>
+        </div>
+
+        <!-- Milestone Rewards Track (Awards Purified Soul Essence) -->
+        <div class="index-milestones-track" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255, 255, 255, 0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 11px; font-weight: 800; color: #ffd152; display: flex; align-items: center; gap: 4px;">
+              <span>🏆</span> Milestone Rewards (Purified Soul Essence)
+            </span>
+            ${rewardStatus.unclaimedSpeciesCount > 0 ? `
+              <button id="btn-claim-all-bestiary-shards" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; font-size: 10px; font-weight: 800; border: 1px solid #fbbf24; border-radius: 6px; padding: 2px 8px; cursor: pointer;">
+                🎁 Claim ${rewardStatus.unclaimedSpeciesCount} Bounties (+${rewardStatus.unclaimedSpeciesCount * 50} 💎)
+              </button>
+            ` : ''}
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 6px;">
+            ${rewardStatus.milestones.map(m => {
+              if (m.isClaimed) {
+                return `
+                  <div style="padding: 4px 6px; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 6px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 800; color: #4ade80;">${m.percent}% ✓</div>
+                    <div style="font-size: 9px; color: #86efac;">+${m.purifiedReward} ✨</div>
+                  </div>
+                `;
+              }
+              if (m.canClaim) {
+                return `
+                  <button class="btn-claim-milestone" data-percent="${m.percent}" style="padding: 4px 6px; background: linear-gradient(135deg, #a855f7, #6366f1); border: 1px solid #c084fc; border-radius: 6px; text-align: center; cursor: pointer; box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);">
+                    <div style="font-size: 10px; font-weight: 900; color: #fff;">${m.percent}% Claim!</div>
+                    <div style="font-size: 9px; color: #fde047; font-weight: 800;">+${m.purifiedReward} ✨</div>
+                  </button>
+                `;
+              }
+              return `
+                <div style="padding: 4px 6px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; text-align: center; opacity: 0.65;">
+                  <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">${m.percent}%</div>
+                  <div style="font-size: 9px; color: var(--text-moon);">+${m.purifiedReward} ✨</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
         </div>
       </div>
 
@@ -131,6 +173,31 @@ export function renderIndexView(container) {
       if (sp) {
         const isDiscovered = gameState.isSpeciesDiscovered(speciesId);
         showBestiaryInspectModal(sp, isDiscovered, bestiaryNum);
+      }
+    });
+  });
+
+  // Attach claim all discovery shards listener
+  container.querySelector?.('#btn-claim-all-bestiary-shards')?.addEventListener('click', () => {
+    try {
+      const res = gameState.claimAllBestiarySpeciesRewards();
+      alert(`🎉 Claimed ${res.count} Discovery Bounties!\nReceived +${res.shardsGranted} Spirit Shards!`);
+      renderIndexView(container);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // Attach milestone claim listeners
+  container.querySelectorAll('.btn-claim-milestone').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pct = parseInt(btn.dataset.percent, 10);
+      try {
+        const res = gameState.claimBestiaryMilestoneReward(pct);
+        alert(`🏆 ${pct}% Bestiary Milestone Reached!\nReceived +${res.purifiedGranted} Purified Soul Essence!`);
+        renderIndexView(container);
+      } catch (err) {
+        alert(err.message);
       }
     });
   });

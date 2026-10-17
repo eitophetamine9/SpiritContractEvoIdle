@@ -6,10 +6,66 @@ import {
   calculateSpiritPower,
   calculateSpiritMaxHp
 } from '../../data/spiritsData.js';
+import { getSingaporeDayKey } from '../constants.js';
 
 export const summonMethods = {
   getSummonLevelReqXp(level = 1) {
     return Math.round(200 * Math.pow(Math.max(1, level), 1.35));
+  },
+
+  getDailyPurifiedExchangeStatus() {
+    const todayKey = getSingaporeDayKey();
+    if (!this.state.dailyExchange) {
+      this.state.dailyExchange = {
+        purifiedEssenceCount: 0,
+        purifiedEssenceDate: todayKey
+      };
+    }
+    if (this.state.dailyExchange.purifiedEssenceDate !== todayKey) {
+      this.state.dailyExchange.purifiedEssenceCount = 0;
+      this.state.dailyExchange.purifiedEssenceDate = todayKey;
+    }
+    const maxPerDay = 10;
+    const used = this.state.dailyExchange.purifiedEssenceCount || 0;
+    const remaining = Math.max(0, maxPerDay - used);
+    return {
+      used,
+      maxPerDay,
+      remaining,
+      remainingToday: remaining,
+      rate: 500
+    };
+  },
+
+  exchangeShardsForPurifiedEssence(count = 1) {
+    const num = Math.max(1, Math.floor(count || 1));
+    const status = this.getDailyPurifiedExchangeStatus();
+    if (status.remaining <= 0) {
+      throw new Error('Daily exchange limit reached (10/10 today)! Resets tomorrow.');
+    }
+    if (num > status.remaining) {
+      throw new Error(`Cannot exchange ${num} times! Only ${status.remaining} exchange(s) remaining today.`);
+    }
+    const shardCost = num * 500;
+    if ((this.state.resources.spiritShards || 0) < shardCost) {
+      throw new Error(`Insufficient Spirit Shards! Need ${shardCost.toLocaleString()} 💎 (Have: ${(this.state.resources.spiritShards || 0).toLocaleString()} 💎).`);
+    }
+
+    this.state.resources.spiritShards -= shardCost;
+    this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + num;
+    this.state.dailyExchange.purifiedEssenceCount += num;
+    this.state.dailyExchange.purifiedEssenceDate = getSingaporeDayKey();
+
+    this.isDirty = true;
+    this.save();
+    this.emit('resourcesUpdated', this.state.resources);
+    this.emit('dailyExchangeUpdated', this.getDailyPurifiedExchangeStatus());
+    return {
+      exchanged: num,
+      cost: shardCost,
+      newPurifiedBalance: this.state.resources.purifiedSoulEssence,
+      remainingExchanges: this.getDailyPurifiedExchangeStatus().remaining
+    };
   },
 
   /**
@@ -18,16 +74,17 @@ export const summonMethods = {
    * Supports 1x, 10x, and 30x pulls with summon level XP progression
    */
   contractSpirit(count = 1, bannerId = 'standard') {
-    const singleCost = 100;
+    const singleCost = 1;
     let totalCost = singleCost * count;
-    if (count === 10) totalCost = 950;
-    if (count === 30) totalCost = 2700; // 10% discount for 30x contract
+    if (count === 10) totalCost = 10;
+    if (count === 30) totalCost = 25; // Discounted bulk pull: save 5!
 
-    if (this.state.resources.spiritShards < totalCost) {
-      throw new Error(`Insufficient Spirit Shards! Need ${totalCost}, have ${this.state.resources.spiritShards}.`);
+    const currentPurified = this.state.resources.purifiedSoulEssence || 0;
+    if (currentPurified < totalCost) {
+      throw new Error(`Insufficient Purified Soul Essence! Need ${totalCost} ✨, have ${currentPurified} ✨. Defeat Floor Bosses, claim AFK idle rewards, or exchange Spirit Shards.`);
     }
 
-    this.state.resources.spiritShards -= totalCost;
+    this.state.resources.purifiedSoulEssence -= totalCost;
 
     const newSpirits = [];
 
@@ -87,7 +144,7 @@ export const summonMethods = {
 
     this.state.stats.totalSpiritsContracted = (this.state.stats.totalSpiritsContracted || 0) + count;
     this.state.stats.totalBannerSummons = (this.state.stats.totalBannerSummons || 0) + count;
-    this.addContractorXp(count * 25, 'Spirit Contract');
+    this.addContractorXp(count * 50, 'Spirit Contract');
     this.save();
 
     this.emit('spiritsContracted', { spirits: newSpirits, cost: totalCost, bannerId });

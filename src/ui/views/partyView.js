@@ -788,7 +788,7 @@ function attachEventListeners(container) {
   // Mode switcher
   document.getElementById('btn-mode-formation')?.addEventListener('click', () => {
     if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
-      showGameToast('🔒 3×3 Tactical Grid unlocks at Contractor Level 3! Advance in the Madness Zone to level up.', 'lock');
+      showGameToast('🔒 3×3 Tactical Grid unlocks at Contractor Level 2! Advance in the Madness Zone to level up.', 'lock');
       return;
     }
     activeViewMode = 'formation';

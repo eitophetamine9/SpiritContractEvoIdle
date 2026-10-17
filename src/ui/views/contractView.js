@@ -4,11 +4,13 @@ import { showSummonRevealModal } from '../components/modals.js';
 import { createAnimatedSpriteHtml, createAnimatedRelicHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 
 let activeBannerIndex = 0;
-let skipAnimation = false;
+let skipAnimation = Boolean(typeof localStorage !== 'undefined' && localStorage.getItem('spirit_skip_summon_anim') === 'true');
 
 export function renderContractView(container, onNavigateToIndex) {
   const state = gameState.state;
   const shards = state.resources.spiritShards || 0;
+  const purifiedEssence = state.resources.purifiedSoulEssence || 0;
+  const exchangeStatus = gameState.getDailyPurifiedExchangeStatus ? gameState.getDailyPurifiedExchangeStatus() : { remainingToday: 10, countToday: 0 };
   const stats = state.stats || {};
   const summonLevel = stats.summonLevel || 1;
   const summonXp = stats.summonXp || 0;
@@ -408,8 +410,9 @@ export function renderContractView(container, onNavigateToIndex) {
         </label>
 
         <div style="display: flex; align-items: center; gap: 8px;">
-          <div style="font-size: 12px; font-weight: 800; color: #ffd152;">
-            💎 ${shards.toLocaleString()} Shards
+          <div style="font-size: 11px; font-weight: 800; color: #ffd152; display: flex; align-items: center; gap: 8px;">
+            <span>💎 ${shards.toLocaleString()}</span>
+            <span>✨ ${purifiedEssence.toLocaleString()} Soul</span>
           </div>
           <button id="btn-rates-modal" style="
             background: rgba(43,24,7,0.8);
@@ -429,16 +432,16 @@ export function renderContractView(container, onNavigateToIndex) {
         </div>
       </div>
 
-      <!-- Summon Action Buttons: x1, x10, x30 (1-Line Sleek Dock Layout) -->
+      <!-- Summon Action Buttons: x1, x10, x30 (Consumes Purified Soul Essence) -->
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
         <!-- x1 Pull -->
-        <button id="btn-summon-1" ${shards < 100 ? 'disabled' : ''} style="
+        <button id="btn-summon-1" ${purifiedEssence < 1 ? 'disabled' : ''} style="
           min-height: 52px;
-          background: ${shards >= 100 ? 'linear-gradient(180deg, #4b6584 0%, #2c3e50 100%)' : '#2c3e5088'};
-          border: 2px solid ${shards >= 100 ? '#778ca3' : '#4b658444'};
+          background: ${purifiedEssence >= 1 ? 'linear-gradient(180deg, #4b6584 0%, #2c3e50 100%)' : '#2c3e5088'};
+          border: 2px solid ${purifiedEssence >= 1 ? '#778ca3' : '#4b658444'};
           border-radius: 12px;
           color: #fff;
-          cursor: ${shards >= 100 ? 'pointer' : 'not-allowed'};
+          cursor: ${purifiedEssence >= 1 ? 'pointer' : 'not-allowed'};
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -448,17 +451,17 @@ export function renderContractView(container, onNavigateToIndex) {
           transition: transform 0.1s ease;
         ">
           <span style="font-size: 13px; font-weight: 900;">📜 x1</span>
-          <span style="font-size: 11px; font-weight: 700; color: #ffd152;">💎 100</span>
+          <span style="font-size: 11px; font-weight: 700; color: #fde047;">✨ 1 Soul</span>
         </button>
 
-        <!-- x10 Pull (-5%) -->
-        <button id="btn-summon-10" ${shards < 950 ? 'disabled' : ''} style="
+        <!-- x10 Pull (10 Essence, No discount) -->
+        <button id="btn-summon-10" ${purifiedEssence < 10 ? 'disabled' : ''} style="
           min-height: 52px;
-          background: ${shards >= 950 ? 'linear-gradient(180deg, #d35400 0%, #a04000 100%)' : '#a0400088'};
-          border: 2px solid ${shards >= 950 ? '#f39c12' : '#e67e2244'};
+          background: ${purifiedEssence >= 10 ? 'linear-gradient(180deg, #d35400 0%, #a04000 100%)' : '#a0400088'};
+          border: 2px solid ${purifiedEssence >= 10 ? '#f39c12' : '#e67e2244'};
           border-radius: 12px;
           color: #fff;
-          cursor: ${shards >= 950 ? 'pointer' : 'not-allowed'};
+          cursor: ${purifiedEssence >= 10 ? 'pointer' : 'not-allowed'};
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -468,17 +471,17 @@ export function renderContractView(container, onNavigateToIndex) {
           transition: transform 0.1s ease;
         ">
           <span style="font-size: 13px; font-weight: 900;">✨ x10</span>
-          <span style="font-size: 11px; font-weight: 700; color: #ffd152;">💎 950 (-5%)</span>
+          <span style="font-size: 11px; font-weight: 700; color: #fde047;">✨ 10 Soul</span>
         </button>
 
-        <!-- x30 Pull (-10% Bulk) -->
-        <button id="btn-summon-30" ${shards < 2700 ? 'disabled' : ''} style="
+        <!-- x30 Pull (25 Essence, Bulk Discount - save 5) -->
+        <button id="btn-summon-30" ${purifiedEssence < 25 ? 'disabled' : ''} style="
           min-height: 52px;
-          background: ${shards >= 2700 ? 'linear-gradient(180deg, #8e44ad 0%, #5b2c6f 100%)' : '#5b2c6f88'};
-          border: 2px solid ${shards >= 2700 ? '#bb6bd9' : '#8e44ad44'};
+          background: ${purifiedEssence >= 25 ? 'linear-gradient(180deg, #8e44ad 0%, #5b2c6f 100%)' : '#5b2c6f88'};
+          border: 2px solid ${purifiedEssence >= 25 ? '#bb6bd9' : '#8e44ad44'};
           border-radius: 12px;
           color: #fff;
-          cursor: ${shards >= 2700 ? 'pointer' : 'not-allowed'};
+          cursor: ${purifiedEssence >= 25 ? 'pointer' : 'not-allowed'};
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -488,8 +491,63 @@ export function renderContractView(container, onNavigateToIndex) {
           transition: transform 0.1s ease;
         ">
           <span style="font-size: 13px; font-weight: 900;">🌟 x30</span>
-          <span style="font-size: 11px; font-weight: 700; color: #ffd152;">💎 2,700 (-10%)</span>
+          <span style="font-size: 11px; font-weight: 700; color: #ffd152;">✨ 25 Soul (Save 5)</span>
         </button>
+      </div>
+
+      <!-- Purified Soul Altar Exchange Chamber (500:1, Limit 10/day) -->
+      <div class="altar-exchange-card" style="
+        background: linear-gradient(180deg, #2b180d 0%, #170d06 100%);
+        border: 1px solid #8e623b;
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 15px;">✨</span>
+            <span style="font-size: 12px; font-weight: 800; color: #ffd152;">Purified Soul Altar Exchange</span>
+          </div>
+          <span style="font-size: 10.5px; font-weight: 800; color: ${(exchangeStatus.remaining ?? 10) > 0 ? '#4ade80' : '#f87171'};">
+            ${exchangeStatus.used || 0}/10 Used Today (${exchangeStatus.remaining ?? 10} Left)
+          </span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #d4a373;">
+          <span>Exchange Rate: <strong style="color: #fff;">500 💎 Shards ➔ 1 ✨ Soul</strong></span>
+          <span>Balance: <strong style="color: #ffd152;">${purifiedEssence.toLocaleString()} ✨</strong></span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px;">
+          <button id="btn-exchange-1" ${shards < 500 || (exchangeStatus.remaining ?? 10) < 1 ? 'disabled' : ''} style="
+            min-height: 36px;
+            background: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'linear-gradient(135deg, #d97706, #b45309)' : 'rgba(255,255,255,0.08)'};
+            color: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#fff' : '#64748b'};
+            border: 1px solid ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#fbbf24' : 'rgba(255,255,255,0.1)'};
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'pointer' : 'not-allowed'};
+          ">
+            Exchange 1x (500 💎)
+          </button>
+
+          <button id="btn-exchange-max" ${shards < 500 || (exchangeStatus.remaining ?? 10) < 1 ? 'disabled' : ''} style="
+            min-height: 36px;
+            background: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'rgba(255,255,255,0.08)'};
+            color: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#fff' : '#64748b'};
+            border: 1px solid ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#c084fc' : 'rgba(255,255,255,0.1)'};
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'pointer' : 'not-allowed'};
+          ">
+            Exchange Max (${Math.min(exchangeStatus.remaining ?? 10, Math.floor((shards || 0) / 500))}x)
+          </button>
+        </div>
       </div>
 
     </div>
@@ -500,6 +558,9 @@ export function renderContractView(container, onNavigateToIndex) {
   if (chkSkip) {
     chkSkip.addEventListener('change', (e) => {
       skipAnimation = e.target.checked;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('spirit_skip_summon_anim', skipAnimation ? 'true' : 'false');
+      }
     });
   }
 
@@ -565,8 +626,10 @@ export function renderContractView(container, onNavigateToIndex) {
   const handleSummon = (count) => {
     try {
       const newSpirits = gameState.contractSpirit(count, activeBanner.id);
-      showSummonRevealModal(newSpirits);
-      renderContractView(container, onNavigateToIndex);
+      showSummonRevealModal(newSpirits, {
+        skipAnimation,
+        onDone: () => renderContractView(container, onNavigateToIndex)
+      });
     } catch (err) {
       alert(err.message);
     }
@@ -580,6 +643,29 @@ export function renderContractView(container, onNavigateToIndex) {
 
   const btn30 = container.querySelector('#btn-summon-30');
   if (btn30) btn30.addEventListener('click', () => handleSummon(30));
+
+  // Altar Exchange Handlers
+  container.querySelector('#btn-exchange-1')?.addEventListener('click', () => {
+    try {
+      const res = gameState.exchangeShardsForPurifiedEssence(1);
+      alert(`✨ Exchanged 500 Shards for 1 Purified Soul Essence!\nRemaining today: ${res.remainingToday}/10`);
+      renderContractView(container, onNavigateToIndex);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  container.querySelector('#btn-exchange-max')?.addEventListener('click', () => {
+    const maxPossible = Math.min(exchangeStatus.remainingToday, Math.floor(shards / 500));
+    if (maxPossible <= 0) return;
+    try {
+      const res = gameState.exchangeShardsForPurifiedEssence(maxPossible);
+      alert(`✨ Exchanged ${res.shardsSpent.toLocaleString()} Shards for ${res.essenceGained} Purified Soul Essence!\nRemaining today: ${res.remainingToday}/10`);
+      renderContractView(container, onNavigateToIndex);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
 }
 
 function showRatesModal(banner) {

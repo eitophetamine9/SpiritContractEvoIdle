@@ -18,6 +18,7 @@ import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FO
 import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml } from '../src/render/spriteAnimator.js';
 import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
+import { getSingaporeDayKey, getSingaporeWeekKey } from '../src/state/constants.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -211,7 +212,13 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Greek God Sets catalog count: ${Object.keys(GREEK_GOD_SETS).length} (Expected >= 8)`);
   if (Object.keys(GREEK_GOD_SETS).length < 8) throw new Error('Expected at least 8 Greek God Sets');
 
-  // Verify starter equipment and 2-pc Hades set bonus on starter spirit
+  // Equip 2 Hades relics on starter spirit to test 2-pc set bonus
+  const starterHeadgear = createRelicInstance({ setId: 'hades', slotTypeId: 'headgear', rarity: 'COMMON', level: 1 });
+  const starterTotem = createRelicInstance({ setId: 'hades', slotTypeId: 'totem', rarity: 'COMMON', level: 1 });
+  gameState.state.inventory.equipment.push(starterHeadgear, starterTotem);
+  gameState.equipItem(starter.id, starterHeadgear.uid);
+  gameState.equipItem(starter.id, starterTotem.uid);
+
   const activeStarterBonuses = gameState.getSpiritActiveSetBonuses(starter);
   console.log(`  Starter Spirit active set bonuses: ${activeStarterBonuses.map(b => b.name).join(', ')}`);
   const hasHades2pc = activeStarterBonuses.some(b => b.setId === 'hades' && b.tier === '2pc');
@@ -396,7 +403,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Banner catalog count: ${BANNER_CONFIGS.length} (Expected >= 3)`);
   if (BANNER_CONFIGS.length < 3) throw new Error('Expected at least 3 banner configurations');
 
-  gameState.state.resources.spiritShards = 5000;
+  gameState.state.resources.purifiedSoulEssence = 50;
   const initialSpiritCount = gameState.state.spirits.length;
   const pullResult = gameState.contractSpirit(30, 'solaris_rate_up');
   console.log(`  Performed 30x Contract on Solaris Rate-Up! Received ${pullResult.length} spirits.`);
@@ -1355,7 +1362,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  [PASS] Abyssal Rift banner verified (Featured: ${abyssalBanner.characterName})!`);
 
   // Test summon on Abyssal Rift banner
-  gameState.state.resources.spiritShards = 2000;
+  gameState.state.resources.purifiedSoulEssence = 20;
   const abyssalSummons = gameState.contractSpirit(10, 'abyssal_rift');
   if (abyssalSummons.length !== 10) throw new Error('Expected 10 summons from Abyssal Rift banner');
   console.log(`  [PASS] Performed 10x Contract on Abyssal Rift banner (${abyssalSummons.length} spirits received)!`);
@@ -2232,6 +2239,335 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     throw new Error('createAnimatedRelicHtml failed for hephaestus anvil reshaper');
   }
   console.log('  [PASS] Verified animated sprites and relics for Astral Realm Hero Banner and Dwarven Forge!');
+
+  // [TEST 43] Testing Phase 1 Purified Soul Essence Currency & Daily Shard Exchange (500:1, max 10/day)
+  console.log('\n[TEST 43] Testing Phase 1 Purified Soul Essence Currency & Daily Shard Exchange:');
+  if (typeof gameState.state.resources.purifiedSoulEssence !== 'number' || gameState.state.resources.purifiedSoulEssence < 3) {
+    throw new Error(`Expected initial purifiedSoulEssence >= 3, got ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  const initialPurified = gameState.state.resources.purifiedSoulEssence;
+  const exchangeStatus = gameState.getDailyPurifiedExchangeStatus();
+  if (exchangeStatus.rate !== 500 || exchangeStatus.maxPerDay !== 10 || exchangeStatus.remaining !== 10) {
+    throw new Error(`Unexpected exchange status: ${JSON.stringify(exchangeStatus)}`);
+  }
+  console.log(`  Initial Purified Soul Essence: ${initialPurified} ✨ | Daily exchanges remaining: ${exchangeStatus.remaining}/10`);
+
+  // Give shards to test exchange
+  gameState.state.resources.spiritShards = 1500;
+  const exchangeResult = gameState.exchangeShardsForPurifiedEssence(2);
+  if (exchangeResult.exchanged !== 2 || exchangeResult.cost !== 1000) {
+    throw new Error(`Expected 2 exchanges for 1000 shards, got: ${JSON.stringify(exchangeResult)}`);
+  }
+  if (gameState.state.resources.purifiedSoulEssence !== initialPurified + 2) {
+    throw new Error(`Expected purified balance ${initialPurified + 2}, got ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  if (gameState.state.resources.spiritShards !== 500) {
+    throw new Error(`Expected 500 shards remaining, got ${gameState.state.resources.spiritShards}`);
+  }
+  console.log('  [PASS] Successfully exchanged 1,000 Shards for 2 Purified Soul Essence at 500:1 rate!');
+
+  // Test insufficient shards
+  let failedInsufficient = false;
+  try {
+    gameState.exchangeShardsForPurifiedEssence(2); // Requires 1000, has 500
+  } catch (err) {
+    failedInsufficient = true;
+  }
+  if (!failedInsufficient) throw new Error('Expected failure when exchanging with insufficient shards');
+  console.log('  [PASS] Insufficient shards blocked correctly!');
+
+  // Test exchange limit enforcement
+  gameState.state.resources.spiritShards = 50000;
+  // Already used 2, remaining 8. Exchanging 8 should succeed:
+  gameState.exchangeShardsForPurifiedEssence(8);
+  const cappedStatus = gameState.getDailyPurifiedExchangeStatus();
+  if (cappedStatus.remaining !== 0 || cappedStatus.used !== 10) {
+    throw new Error(`Expected 0 remaining after 10 total exchanges, got ${cappedStatus.remaining}`);
+  }
+
+  let failedOverLimit = false;
+  try {
+    gameState.exchangeShardsForPurifiedEssence(1);
+  } catch (err) {
+    failedOverLimit = true;
+  }
+  if (!failedOverLimit) throw new Error('Expected failure when exceeding 10 daily exchanges');
+  // [TEST 44] Testing Phase 3 Purified Soul Essence Summon Costs & Gameplay Drops
+  console.log('\n[TEST 44] Testing Phase 3 Purified Soul Essence Summon Costs & Gameplay Drops:');
+  gameState.state.resources.purifiedSoulEssence = 36; // 1 + 10 + 25 = 36 needed
+  const prePullEssence = gameState.state.resources.purifiedSoulEssence;
+
+  // 1x pull costs 1
+  const pull1 = gameState.contractSpirit(1, 'standard');
+  if (pull1.length !== 1 || gameState.state.resources.purifiedSoulEssence !== prePullEssence - 1) {
+    throw new Error(`Expected 1x pull to cost 1 Purified Soul Essence, got balance: ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  console.log('  [PASS] 1x summon costs exactly 1 Purified Soul Essence!');
+
+  // 10x pull costs 10 (No discount)
+  const pull10 = gameState.contractSpirit(10, 'standard');
+  if (pull10.length !== 10 || gameState.state.resources.purifiedSoulEssence !== prePullEssence - 11) {
+    throw new Error(`Expected 10x pull to cost 10 Purified Soul Essence, got balance: ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  console.log('  [PASS] 10x summon costs exactly 10 Purified Soul Essence (No discount)!');
+
+  // 30x pull costs 25 (Discounted: save 5)
+  const pull30 = gameState.contractSpirit(30, 'standard');
+  if (pull30.length !== 30 || gameState.state.resources.purifiedSoulEssence !== 0) {
+    throw new Error(`Expected 30x pull to cost 25 Purified Soul Essence, got balance: ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  console.log('  [PASS] 30x summon costs exactly 25 Purified Soul Essence (Bulk Discount - save 5)!');
+
+  // Insufficient essence should fail
+  let failedEmptyPull = false;
+  try {
+    gameState.contractSpirit(1, 'standard');
+  } catch (err) {
+    failedEmptyPull = true;
+  }
+  if (!failedEmptyPull) throw new Error('Expected contractSpirit to fail when purifiedSoulEssence is 0');
+  console.log('  [PASS] Insufficient Purified Soul Essence properly blocked!');
+
+  // Offline idle rewards calculation (6 hours = 21600s -> 2 Purified Soul Essence)
+  const testOfflineReport = gameState.applyOfflineGains(21600);
+  if (testOfflineReport.offlinePurified !== 2) {
+    throw new Error(`Expected 2 offline Purified Soul Essence for 6 hours away, got ${testOfflineReport.offlinePurified}`);
+  }
+  console.log(`  [PASS] Offline progression accurately calculates +${testOfflineReport.offlinePurified} Purified Soul Essence!`);
+
+  // =========================================================================
+  // TEST 45: Early Exact Ascension vs Level 16 Pre-Evolution Rebirth Ascension
+  // =========================================================================
+  console.log('\n[TEST 45] Testing Early Exact Ascension vs. Lv. 16 Pre-Evolution Ascension:');
+  // 1. Ancestor lineage validation
+  if (!gameState.isPreEvolutionOf('cat_spirit', 'furious_cat')) {
+    throw new Error('Expected cat_spirit to be identified as pre-evolution of furious_cat');
+  }
+  if (!gameState.isPreEvolutionOf('cat_spirit', 'elemental_cat')) {
+    throw new Error('Expected cat_spirit to be identified as pre-evolution of elemental_cat');
+  }
+  if (gameState.isPreEvolutionOf('dog_spirit', 'furious_cat')) {
+    throw new Error('dog_spirit must NOT be identified as pre-evolution of furious_cat');
+  }
+  console.log('  [PASS] isPreEvolutionOf accurately traverses species evolutionary branches!');
+
+  // 2. Exact duplicate ascension allowed early (Contractor Lv. 4)
+  gameState.state.contractor.level = 4;
+  const baseCatTarget = {
+    id: 'base_cat_target',
+    speciesId: 'cat_spirit',
+    customName: 'Base Cat',
+    level: 10,
+    rarity: 'COMMON',
+    ascensionLevel: 0
+  };
+  const baseCatDuplicate = {
+    id: 'base_cat_duplicate',
+    speciesId: 'cat_spirit',
+    customName: 'Duplicate Cat',
+    level: 1,
+    rarity: 'COMMON',
+    favorite: false
+  };
+  gameState.state.spirits.push(baseCatTarget, baseCatDuplicate);
+  gameState.state.resources.soulEssence = 50;
+
+  const earlyEligible = gameState.getEligibleAscensionDuplicates(baseCatTarget.id);
+  if (!earlyEligible.some(c => c.id === baseCatDuplicate.id)) {
+    throw new Error('Exact species duplicate should be eligible early at Contractor Lv. 4');
+  }
+  const exactAsc = gameState.ascendSpirit(baseCatTarget.id, [baseCatDuplicate.id]);
+  if (baseCatTarget.ascensionLevel !== 1) {
+    throw new Error('Expected base cat to ascend to ★1 early');
+  }
+  console.log('  [PASS] Exact duplicate ascension allowed early (Contractor Lv. 4)!');
+
+  // 3. Pre-evolution ascension on evolved spirit locked until Contractor Lv. 16
+  const evolvedCat = {
+    id: 'evo_cat_test_target',
+    speciesId: 'furious_cat',
+    customName: 'Furious Cat Alpha',
+    level: 30,
+    rarity: 'UNCOMMON',
+    ascensionLevel: 0
+  };
+  const preEvoCat = {
+    id: 'pre_evo_cat_sacrifice',
+    speciesId: 'cat_spirit',
+    customName: 'Sacrificial Kitten',
+    level: 1,
+    rarity: 'COMMON',
+    favorite: false
+  };
+  gameState.state.spirits.push(evolvedCat, preEvoCat);
+
+  // At Contractor Lv. 4, pre-evolution should NOT be eligible
+  const preEvoEligibleEarly = gameState.getEligibleAscensionDuplicates(evolvedCat.id);
+  if (preEvoEligibleEarly.some(c => c.id === preEvoCat.id)) {
+    throw new Error('Pre-evolution duplicate must NOT be eligible before Contractor Lv. 16');
+  }
+  let blockedPreEvoEarly = false;
+  try {
+    gameState.ascendSpirit(evolvedCat.id, [preEvoCat.id]);
+  } catch (err) {
+    blockedPreEvoEarly = true;
+  }
+  if (!blockedPreEvoEarly) throw new Error('Expected ascendSpirit using pre-evolution to be blocked before Lv. 16');
+  console.log('  [PASS] Pre-evolution ascension properly locked until Contractor Level 16 (Spirit Rebirth)!');
+
+  // Elevate to Contractor Lv. 16 (Spirit Rebirth)
+  gameState.state.contractor.level = 16;
+  const preEvoEligibleAt16 = gameState.getEligibleAscensionDuplicates(evolvedCat.id);
+  if (!preEvoEligibleAt16.some(c => c.id === preEvoCat.id)) {
+    throw new Error('Pre-evolution duplicate must be eligible once Contractor Lv. 16 is unlocked');
+  }
+  const preEvoAscRes = gameState.ascendSpirit(evolvedCat.id, [preEvoCat.id]);
+  if (evolvedCat.ascensionLevel !== 1) {
+    throw new Error(`Expected evolved spirit to ascend to ★1, got ${evolvedCat.ascensionLevel}`);
+  }
+  console.log(`  [PASS] Evolved spirit ascended to ★${preEvoAscRes.newTier} using pre-evolution copy at Lv. 16!`);
+
+  // =========================================================================
+  // TEST 46: Bestiary Discovery Shard Bounties & Milestone Purified Soul Rewards
+  // =========================================================================
+  console.log('\n[TEST 46] Testing Bestiary Discovery Shard Bounties & Milestone Purified Soul Rewards:');
+  gameState.state.bestiaryRewards = { claimedSpecies: [], claimedMilestones: [] };
+  gameState.state.discoveredSpeciesIds = ['cat_spirit', 'dog_spirit', 'chicken_spirit', 'furious_cat', 'battle_chicken', 'raging_bull'];
+  gameState.state.resources.spiritShards = 100;
+  gameState.state.resources.purifiedSoulEssence = 0;
+
+  // 1. Single species reward (+50 shards)
+  const singleClaim = gameState.claimBestiarySpeciesReward('cat_spirit');
+  if (singleClaim.shardsGranted !== 50 || gameState.state.resources.spiritShards !== 150) {
+    throw new Error(`Expected 50 shards from discovery reward, balance: ${gameState.state.resources.spiritShards}`);
+  }
+  // Duplicate claim should fail
+  let duplicateClaimBlocked = false;
+  try {
+    gameState.claimBestiarySpeciesReward('cat_spirit');
+  } catch (err) {
+    duplicateClaimBlocked = true;
+  }
+  if (!duplicateClaimBlocked) throw new Error('Expected duplicate species bounty claim to be rejected');
+  console.log('  [PASS] Single species discovery bounty (+50 Spirit Shards) claimed and duplicate blocked!');
+
+  // 2. Claim all remaining discovery bounties
+  const bulkClaim = gameState.claimAllBestiarySpeciesRewards();
+  if (bulkClaim.count !== 5 || bulkClaim.shardsGranted !== 250) {
+    throw new Error(`Expected bulk claim for 5 remaining species (+250 shards), got count: ${bulkClaim.count}, shards: ${bulkClaim.shardsGranted}`);
+  }
+  console.log(`  [PASS] Bulk claimed ${bulkClaim.count} discovery bounties for +${bulkClaim.shardsGranted} Spirit Shards!`);
+
+  // 3. Milestone Rewards (Purified Soul Essence)
+  // 6 discovered species out of 54 is ~11% progress -> 10% milestone unlocked!
+  const status = gameState.getBestiaryRewardStatus();
+  if (status.currentPercent < 10) {
+    throw new Error(`Expected at least 10% bestiary progress, got ${status.currentPercent}%`);
+  }
+  const m10 = status.milestones.find(m => m.percent === 10);
+  if (!m10 || !m10.canClaim) {
+    throw new Error('10% milestone should be eligible to claim');
+  }
+
+  // Claim 10% milestone reward (+1 Purified Soul Essence)
+  const mRes = gameState.claimBestiaryMilestoneReward(10);
+  if (mRes.purifiedGranted !== 1 || gameState.state.resources.purifiedSoulEssence !== 1) {
+    throw new Error(`Expected 1 Purified Soul Essence from 10% milestone, got: ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  // Higher unreached milestone (50%) should fail
+  let lockedMilestoneBlocked = false;
+  try {
+    gameState.claimBestiaryMilestoneReward(50);
+  } catch (err) {
+    lockedMilestoneBlocked = true;
+  }
+  if (!lockedMilestoneBlocked) throw new Error('Expected locked 50% milestone to be blocked');
+  console.log('  [PASS] 10% Milestone awarded +1 Purified Soul Essence, and locked 50% milestone rejected!');
+
+  // =========================================================================
+  // TEST 47: Relic & Weapon Drop Restriction (Strict Dungeon Sourcing)
+  // =========================================================================
+  console.log('\n[TEST 47] Verifying Relic drops strictly removed from Madness Zone Bosses:');
+  gameState.state.inventory = { equipment: [] };
+  const bossTestInitialEquipCount = gameState.state.inventory.equipment.length;
+  // Simulate 50 boss enemy defeats in Madness Zone
+  for (let i = 0; i < 50; i++) {
+    const bossEnemy = { id: 'boss_test_' + i, isBoss: true, name: 'Void Overlord Boss', hp: 100, maxHp: 5000, power: 300, isDefeated: false };
+    gameState.onIndividualEnemyKilled(bossEnemy);
+  }
+  if (gameState.state.inventory.equipment.length !== bossTestInitialEquipCount) {
+    throw new Error(`Madness zone boss unexpectedly dropped relics into inventory (${gameState.state.inventory.equipment.length} items found)`);
+  }
+  // =========================================================================
+  // TEST 48: Phase 1 Singapore UTC+8 Resets, Lv. 3 Equipment Gift, & 2x Speed Gating
+  // =========================================================================
+  console.log('\n[TEST 48] Testing Singapore UTC+8 Resets, Lv. 3 Equipment Gift & 2x Speed Gating:');
+
+  // 1. Test Singapore (UTC+8) Daily & Sunday Weekly Reset Key Calculations
+  // Timestamp for 2026-10-17 15:59:00 UTC -> In UTC+8 this is Saturday 2026-10-17 23:59:00 (Week starts previous Sunday 2026-10-11)
+  const satNightUTC = new Date('2026-10-17T15:59:00Z').getTime();
+  const satDayKey = getSingaporeDayKey(satNightUTC);
+  const satWeekKey = getSingaporeWeekKey(satNightUTC);
+  if (satDayKey !== '2026-10-17') throw new Error(`Expected satDayKey 2026-10-17, got ${satDayKey}`);
+  if (satWeekKey !== '2026-10-11') throw new Error(`Expected satWeekKey 2026-10-11, got ${satWeekKey}`);
+
+  // Timestamp for 2026-10-17 16:00:00 UTC -> In UTC+8 this is Sunday 2026-10-18 00:00:00 (New daily + new Sunday weekly reset!)
+  const sunMidnightUTC = new Date('2026-10-17T16:00:00Z').getTime();
+  const sunDayKey = getSingaporeDayKey(sunMidnightUTC);
+  const sunWeekKey = getSingaporeWeekKey(sunMidnightUTC);
+  if (sunDayKey !== '2026-10-18') throw new Error(`Expected sunDayKey 2026-10-18, got ${sunDayKey}`);
+  if (sunWeekKey !== '2026-10-18') throw new Error(`Expected sunWeekKey 2026-10-18, got ${sunWeekKey}`);
+  console.log('  [PASS] Singapore UTC+8 daily reset (00:00) and Sunday weekly reset (00:00) verified!');
+
+  // 2. Test Day-1 Starter Equipment Gating
+  const freshState = gameState.getInitialState();
+  if (freshState.inventory.equipment.length !== 0) {
+    throw new Error(`Day-1 initial state should have 0 starter equipments, found: ${freshState.inventory.equipment.length}`);
+  }
+  const starterCat = freshState.spirits[0];
+  if (starterCat.weapon !== null || starterCat.relics.headgear !== null || starterCat.relics.totem !== null) {
+    throw new Error('Day-1 starter spirit should have no equipment equipped');
+  }
+  if (freshState.claimedLevel3EquipmentGift !== false) {
+    throw new Error('Day-1 claimedLevel3EquipmentGift should be false');
+  }
+  console.log('  [PASS] Day-1 starts with 0 free equipment; equipment is properly held back until Trials unlock!');
+
+  // 3. Test Level 3 Contractor Ascension Equipment Grant
+  gameState.state = freshState;
+  gameState.state.contractor = { level: 1, xp: 0, xpRequired: 250 };
+  // Add enough XP to level up to Lv. 3
+  // Lv 1->2: 250 XP. Lv 2->3: 683 XP. Total to hit Lv 3: ~950 XP
+  gameState.addContractorXp(1200, 'Test Ascension to Level 3');
+  if (gameState.state.contractor.level < 3) {
+    throw new Error(`Expected contractor level to reach at least 3, got: ${gameState.state.contractor.level}`);
+  }
+  if (!gameState.state.claimedLevel3EquipmentGift) {
+    throw new Error('claimedLevel3EquipmentGift should be true upon reaching Contractor Level 3');
+  }
+  if (gameState.state.inventory.equipment.length !== 3) {
+    throw new Error(`Expected 3 equipment items granted at Lv. 3, found: ${gameState.state.inventory.equipment.length}`);
+  }
+  const catAfterLv3 = gameState.state.spirits[0];
+  if (!catAfterLv3.weapon || !catAfterLv3.relics.headgear || !catAfterLv3.relics.totem) {
+    throw new Error('Cat Spirit should have starter Spectral Blade and Hades Relics equipped after Lv. 3 grant');
+  }
+  console.log('  [PASS] Contractor Level 3 Ascension automatically granted 3 starter equipments (Spectral Blade + 2x Hades Relics)!');
+
+  // 4. Test Madness 2x Battle Speed Gating & Acceleration
+  gameState.state.madnessZone = { stage: 1, highestStageCleared: 1, isEngaged: true, currentSwarm: [] };
+  const is2xUnlockedStage1 = ((gameState.state.madnessZone.highestStageCleared || 1) >= 10 || (gameState.state.madnessZone.stage || 1) >= 10);
+  if (is2xUnlockedStage1) {
+    throw new Error('2X speed should be locked at Stage 1 / Floor 1');
+  }
+  gameState.state.madnessZone.stage = 10;
+  gameState.state.madnessZone.highestStageCleared = 10;
+  const is2xUnlockedStage10 = ((gameState.state.madnessZone.highestStageCleared || 1) >= 10 || (gameState.state.madnessZone.stage || 1) >= 10);
+  if (!is2xUnlockedStage10) {
+    throw new Error('2X speed should be unlocked at Stage 10');
+  }
+  gameState.state.combatSpeed = 2;
+  console.log('  [PASS] 2X Speed correctly locked before Floor 10 and unlocked at Floor 10!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

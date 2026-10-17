@@ -5,11 +5,6 @@ import {
   getSpiritRole
 } from '../../data/spiritsData.js';
 import { getEnemyForStage, getSwarmForStage } from '../../data/madnessZoneData.js';
-import {
-  GREEK_GOD_SETS,
-  RELIC_SLOT_TYPES,
-  createRelicInstance
-} from '../../data/equipmentData.js';
 import { ENERGY_ENTRY_COST } from '../constants.js';
 
 export const combatMethods = {
@@ -635,22 +630,6 @@ export const combatMethods = {
       essenceGained
     });
 
-    // 35% chance for Overlord Boss to drop a random Greek God Relic
-    if (enemy.isBoss && Math.random() < 0.35) {
-      const godKeys = Object.keys(GREEK_GOD_SETS);
-      const randomGod = godKeys[Math.floor(Math.random() * godKeys.length)];
-      const randomSlot = RELIC_SLOT_TYPES[Math.floor(Math.random() * RELIC_SLOT_TYPES.length)];
-      const rolledRelic = createRelicInstance({
-        setId: randomGod,
-        slotTypeId: randomSlot.id,
-        rarity: Math.random() < 0.65 ? 'UNCOMMON' : 'RARE',
-        level: Math.max(1, Math.min(4, Math.floor(this.state.madnessZone.stage / 25) + 1))
-      });
-      if (!this.state.inventory) this.state.inventory = { equipment: [] };
-      this.state.inventory.equipment.push(rolledRelic);
-      this.emit('relicDropped', rolledRelic);
-    }
-
     // Check if the entire swarm is defeated
     const remaining = (this.state.madnessZone.currentSwarm || []).filter(e => !e.isDefeated && e.hp > 0);
     if (remaining.length === 0) {
@@ -685,10 +664,19 @@ export const combatMethods = {
       const prevHighest = mz.highestStageCleared || 0;
       mz.highestStageCleared = Math.max(mz.highestStageCleared || 0, mz.stage);
 
-      // First Clear Contractor EXP reward
+      // First Clear Contractor EXP reward & Purified Soul Essence
       if (mz.stage > prevHighest) {
-        const firstClearXp = 100 + mz.stage * 25;
+        const firstClearXp = 50 + mz.stage * 15;
         this.addContractorXp(firstClearXp, `Madness Floor ${mz.stage} First Clear`);
+        this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + 1;
+        this.emit('resourcesUpdated', this.state.resources);
+      } else {
+        // Repeat boss clears provide baseline progression drip
+        this.addContractorXp(5, `Madness Floor ${mz.stage} Boss Cleared`);
+        if (Math.random() < 0.10) {
+          this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + 1;
+          this.emit('resourcesUpdated', this.state.resources);
+        }
       }
 
       // Floor Victory: Revive ALL party spirits to 100% HP!

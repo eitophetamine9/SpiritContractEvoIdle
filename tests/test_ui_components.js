@@ -33,7 +33,10 @@ globalThis.document = {
     if (id === 'modal-root') return modalRoot;
     if (id === 'title-screen-root') return titleScreenRoot;
     if (id === 'app') return appRoot;
-    return null;
+    return {
+      addEventListener: (evt, fn) => { modalRoot._listeners['#' + id] = fn; },
+      click: () => { if (modalRoot._listeners['#' + id]) modalRoot._listeners['#' + id](); }
+    };
   },
   querySelector: () => null,
   querySelectorAll: () => []
@@ -41,8 +44,17 @@ globalThis.document = {
 
 const modalRoot = {
   innerHTML: '',
+  _listeners: {},
   querySelectorAll: (selector) => [],
-  querySelector: (selector) => ({ addEventListener: () => {} })
+  querySelector: function(selector) {
+    const self = this;
+    return {
+      addEventListener: (evt, fn) => { self._listeners[selector] = fn; },
+      click: () => {
+        if (self._listeners[selector]) self._listeners[selector]();
+      }
+    };
+  }
 };
 
 console.log('--- TESTING UI COMPONENTS & LOGIC ---');
@@ -57,6 +69,9 @@ if (speciesList.length < 47) {
 // 2. Verify Bestiary Grid Generation
 const mockContainer = {
   innerHTML: '',
+  querySelector: function(sel) {
+    return null;
+  },
   querySelectorAll: function(sel) {
     // Basic match simulator
     return [];
@@ -309,7 +324,16 @@ if (partySpirits.length > 0) {
   
   const modalRoot = {
     innerHTML: '',
-    querySelector: () => ({ addEventListener: () => {} }),
+    _listeners: {},
+    querySelector: function(selector) {
+      const self = this;
+      return {
+        addEventListener: (evt, fn) => { self._listeners[selector] = fn; },
+        click: () => {
+          if (self._listeners[selector]) self._listeners[selector]();
+        }
+      };
+    },
     querySelectorAll: () => []
   };
   global.document.getElementById = (id) => {
@@ -680,9 +704,9 @@ const unsub = gameState.on('contractorLevelUp', (payload) => {
   leveledUpEvents.push(payload);
 });
 
-// Level 1 requires 100 XP
+// Level 1 requires 250 XP (was 100)
 const prevShards = gameState.state.resources.spiritShards;
-gameState.addContractorXp(100, 'Test Combat Floor 1');
+gameState.addContractorXp(250, 'Test Combat Floor 1 & 2');
 
 if (gameState.getContractorLevel() !== 2) {
   throw new Error(`Expected contractor level 2, got ${gameState.getContractorLevel()}`);
@@ -690,17 +714,23 @@ if (gameState.getContractorLevel() !== 2) {
 if (gameState.state.resources.spiritShards !== prevShards + 100) {
   throw new Error('Ascension spoils +100 shards not awarded!');
 }
+if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
+  throw new Error('FORMATION_3X3 should be unlocked at Lv 2!');
+}
 
-// Level up to Lv 3 (Lv 2 requires 237 XP)
-gameState.addContractorXp(250, 'Test Summons & Evo');
+// Level up to Lv 3 (Lv 2 requires 683 XP)
+gameState.addContractorXp(683, 'Test Summons & Evo');
 if (gameState.getContractorLevel() < 3) {
   throw new Error(`Expected contractor level >= 3, got ${gameState.getContractorLevel()}`);
 }
-if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
-  throw new Error('FORMATION_3X3 should be unlocked at Lv 3!');
+if (!gameState.isFeatureUnlocked('PANTHEON_TRIALS')) {
+  throw new Error('PANTHEON_TRIALS should be unlocked at Lv 3!');
+}
+if (!gameState.isFeatureUnlocked('DIVINE_FORGE')) {
+  throw new Error('DIVINE_FORGE should be unlocked at Lv 3!');
 }
 
-console.log('[PASS] Contractor Leveling & Feature Gating progression validated (Lv 1 -> Lv 3 unlocks FORMATION_3X3)!');
+console.log('[PASS] Contractor Leveling & Feature Gating progression validated (Lv 1 -> Lv 2 unlocks FORMATION_3X3, Lv 3 unlocks PANTHEON_TRIALS and DIVINE_FORGE)!');
 
 // 3. Test Level Up Celebration Modal rendering
 let claimedLevelUp = false;
@@ -715,7 +745,7 @@ const lvlModalRoot = document.getElementById('modal-root');
 if (!lvlModalRoot.innerHTML.includes('Contractor Ascension') ||
     !lvlModalRoot.innerHTML.includes('Level 3 Reached!') ||
     !lvlModalRoot.innerHTML.includes('New System Unlocked!') ||
-    !lvlModalRoot.innerHTML.includes('3x3 Tactical Grid & Formation Alignment') ||
+    !lvlModalRoot.innerHTML.includes('Pantheon Trials (Artifact Dungeon)') ||
     !lvlModalRoot.innerHTML.includes('+100 Shards') ||
     !lvlModalRoot.innerHTML.includes('+20 Energy') ||
     !lvlModalRoot.innerHTML.includes('btn-claim-levelup')) {
@@ -899,6 +929,66 @@ if (!receivedCombatStrike) {
 }
 
 console.log('[PASS] Combat Animation Engine, sprite classes, and event cadence pipeline validated!');
+
+// 32. Test Area Unlock Guided Tutorials (Mascot Guides on Feature Unlock)
+import { showAreaUnlockTutorial, checkAreaTutorialTrigger, AREA_TUTORIALS } from '../src/ui/components/guidedTutorial.js';
+
+if (!AREA_TUTORIALS.formation || !AREA_TUTORIALS.trials || !AREA_TUTORIALS.forge || !AREA_TUTORIALS.bestiary || !AREA_TUTORIALS.astral) {
+  throw new Error('Missing area tutorial configurations for major feature unlocks!');
+}
+
+// Ensure isAreaTutorialSeen and markAreaTutorialSeen operate correctly
+if (gameState.isAreaTutorialSeen('trials')) {
+  throw new Error('trials tutorial should not be seen initially');
+}
+
+gameState.markAreaTutorialSeen('trials');
+if (!gameState.isAreaTutorialSeen('trials')) {
+  throw new Error('trials tutorial should be marked as seen after markAreaTutorialSeen');
+}
+
+// Test modal rendering for an area tutorial
+showAreaUnlockTutorial('forge');
+const modalRootEl = document.getElementById('modal-root');
+if (!modalRootEl.innerHTML.includes('The Divine Forge & Weapon Anvils') || !modalRootEl.innerHTML.includes('Cat Spirit Familiar')) {
+  throw new Error('showAreaUnlockTutorial failed to render modal with area title and Cat Spirit mascot!');
+}
+// Dismiss modal
+modalRootEl.querySelector('#btn-dismiss-area-tut')?.click();
+if (!gameState.isAreaTutorialSeen('forge')) {
+  throw new Error('Dismissing area tutorial should mark forge as seen');
+}
+console.log('[PASS] Area Unlock Guided Tutorials and trigger state tracking validated!');
+
+// 33. Test Celestial Summoning Animation & Skip Animation Toggle
+import { showSummonRevealModal } from '../src/ui/modals/ceremonyModal.js';
+
+const mockSummonResults = [
+  { id: 'summon_test_1', speciesId: 'cat_spirit', customName: 'Astral Feline', power: 120, rarity: 'COMMON' }
+];
+
+// Test with skipAnimation: false -> plays celestial vortex sequence
+showSummonRevealModal(mockSummonResults, { skipAnimation: false });
+if (!modalRootEl.innerHTML.includes('summon-vortex-screen') || !modalRootEl.innerHTML.includes('Skip Animation')) {
+  throw new Error('showSummonRevealModal should render celestial summoning vortex animation with skip button when skipAnimation is false');
+}
+
+// Test clicking the skip animation button during vortex sequence
+const btnSkip = modalRootEl.querySelector('#btn-skip-summon-now');
+if (!btnSkip) throw new Error('Missing skip animation button in summoning vortex');
+btnSkip.click();
+if (!modalRootEl.innerHTML.includes('Spirit Contract Complete!') || !modalRootEl.innerHTML.includes('Collect to Vault')) {
+  throw new Error('Clicking skip animation button should immediately transition to reveal screen');
+}
+
+// Test with skipAnimation: true -> immediately reveals
+showSummonRevealModal(mockSummonResults, { skipAnimation: true });
+if (!modalRootEl.innerHTML.includes('Spirit Contract Complete!') || modalRootEl.innerHTML.includes('summon-vortex-screen')) {
+  throw new Error('showSummonRevealModal with skipAnimation: true should immediately reveal results without vortex animation');
+}
+modalRootEl.querySelector('#btn-close-summon')?.click();
+
+console.log('[PASS] Celestial Summoning Animation & Skip Animation toggle validated!');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
