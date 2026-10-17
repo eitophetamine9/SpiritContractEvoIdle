@@ -511,41 +511,41 @@ export function renderContractView(container, onNavigateToIndex) {
             <span style="font-size: 15px;">✨</span>
             <span style="font-size: 12px; font-weight: 800; color: #ffd152;">Purified Soul Altar Exchange</span>
           </div>
-          <span style="font-size: 10.5px; font-weight: 800; color: ${exchangeStatus.remainingToday > 0 ? '#4ade80' : '#f87171'};">
-            ${exchangeStatus.remainingToday}/10 Left Today
+          <span style="font-size: 10.5px; font-weight: 800; color: ${(exchangeStatus.remaining ?? 10) > 0 ? '#4ade80' : '#f87171'};">
+            ${exchangeStatus.used || 0}/10 Used Today (${exchangeStatus.remaining ?? 10} Left)
           </span>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #d4a373;">
           <span>Exchange Rate: <strong style="color: #fff;">500 💎 Shards ➔ 1 ✨ Soul</strong></span>
-          <span>Balance: <strong style="color: #ffd152;">${purifiedEssence} ✨</strong></span>
+          <span>Balance: <strong style="color: #ffd152;">${purifiedEssence.toLocaleString()} ✨</strong></span>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px;">
-          <button id="btn-exchange-1" ${shards < 500 || exchangeStatus.remainingToday < 1 ? 'disabled' : ''} style="
+          <button id="btn-exchange-1" ${shards < 500 || (exchangeStatus.remaining ?? 10) < 1 ? 'disabled' : ''} style="
             min-height: 36px;
-            background: ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? 'linear-gradient(135deg, #d97706, #b45309)' : 'rgba(255,255,255,0.08)'};
-            color: ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? '#fff' : '#64748b'};
-            border: 1px solid ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? '#fbbf24' : 'rgba(255,255,255,0.1)'};
+            background: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'linear-gradient(135deg, #d97706, #b45309)' : 'rgba(255,255,255,0.08)'};
+            color: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#fff' : '#64748b'};
+            border: 1px solid ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#fbbf24' : 'rgba(255,255,255,0.1)'};
             border-radius: 8px;
             font-size: 11px;
             font-weight: 800;
-            cursor: ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? 'pointer' : 'not-allowed'};
+            cursor: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'pointer' : 'not-allowed'};
           ">
             Exchange 1x (500 💎)
           </button>
 
-          <button id="btn-exchange-max" ${shards < 500 || exchangeStatus.remainingToday < 1 ? 'disabled' : ''} style="
+          <button id="btn-exchange-max" ${shards < 500 || (exchangeStatus.remaining ?? 10) < 1 ? 'disabled' : ''} style="
             min-height: 36px;
-            background: ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'rgba(255,255,255,0.08)'};
-            color: ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? '#fff' : '#64748b'};
-            border: 1px solid ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? '#c084fc' : 'rgba(255,255,255,0.1)'};
+            background: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'linear-gradient(135deg, #9333ea, #7c3aed)' : 'rgba(255,255,255,0.08)'};
+            color: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#fff' : '#64748b'};
+            border: 1px solid ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? '#c084fc' : 'rgba(255,255,255,0.1)'};
             border-radius: 8px;
             font-size: 11px;
             font-weight: 800;
-            cursor: ${shards >= 500 && exchangeStatus.remainingToday >= 1 ? 'pointer' : 'not-allowed'};
+            cursor: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'pointer' : 'not-allowed'};
           ">
-            Exchange Max (${Math.min(exchangeStatus.remainingToday, Math.floor(shards / 500))}x)
+            Exchange Max (${Math.min(exchangeStatus.remaining ?? 10, Math.floor((shards || 0) / 500))}x)
           </button>
         </div>
       </div>

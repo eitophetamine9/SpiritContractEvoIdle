@@ -12,7 +12,7 @@ import {
   calculateRelicMainStat
 } from '../../data/equipmentData.js';
 import { getContractorXpRequired } from '../../data/contractorData.js';
-import { SAVE_KEY, AUTO_SAVE_INTERVAL_MS, ENERGY_REGEN_INTERVAL_SEC } from '../constants.js';
+import { SAVE_KEY, AUTO_SAVE_INTERVAL_MS, ENERGY_REGEN_INTERVAL_SEC, getSingaporeDayKey, getSingaporeWeekKey } from '../constants.js';
 
 export const persistenceMethods = {
   /**
@@ -23,15 +23,7 @@ export const persistenceMethods = {
     const starterSpecies = SPIRIT_SPECIES['cat_spirit'];
     const starterMaxHp = calculateSpiritMaxHp(starterSpecies, 1, starterSpecies.baseRarity);
     
-    // Starter Equipment: 1 Common Blade + 2 Hades Relics to test 2-pc Hades bonus immediately
-    const starterWeapon = createWeaponInstance({ weaponTypeId: 'sword', rarity: 'COMMON', level: 1 });
-    const starterRelic1 = createRelicInstance({ setId: 'hades', slotTypeId: 'headgear', rarity: 'COMMON', level: 1 });
-    const starterRelic2 = createRelicInstance({ setId: 'hades', slotTypeId: 'totem', rarity: 'COMMON', level: 1 });
-
-    starterWeapon.equippedToSpiritId = starterId;
-    starterRelic1.equippedToSpiritId = starterId;
-    starterRelic2.equippedToSpiritId = starterId;
-
+    // Starter Equipment is awarded at Contractor Level 3 (Pantheon Trials unlock)
     const starterSpirit = {
       id: starterId,
       speciesId: starterSpecies.id,
@@ -52,10 +44,10 @@ export const persistenceMethods = {
       canEvolve: false,
       evolutionHistory: [starterSpecies.name],
       contractedAt: Date.now(),
-      weapon: starterWeapon.uid,
+      weapon: null,
       relics: {
-        headgear: starterRelic1.uid,
-        totem: starterRelic2.uid,
+        headgear: null,
+        totem: null,
         ring: null,
         necklace: null,
         orb: null,
@@ -66,6 +58,8 @@ export const persistenceMethods = {
     return {
       version: 2,
       last_saved: Date.now(),
+      combatSpeed: 1,
+      claimedLevel3EquipmentGift: false,
       resources: {
         spiritShards: 300, // Enough for starter training!
         soulEssence: 0,
@@ -79,22 +73,22 @@ export const persistenceMethods = {
         resonanceTier: 0    // Essence upgrade: permanent +5% power per tier
       },
       inventory: {
-        equipment: [starterWeapon, starterRelic1, starterRelic2]
+        equipment: []
       },
       activeDungeonBattle: null,
       activeBlessings: {}, // Temporary 1-hour spirit blessings
       constellations: { draco: 0, phoenix: 0, pegasus: 0, leo: 0, taurus: 0, scorpio: 0, aquarius: 0, sagittarius: 0 },
       expeditions: {},
       dwarvenForge: {
-        weekKey: '',
+        weekKey: getSingaporeWeekKey(),
         scripturesPurchasedThisWeek: 0,
         reshapersPurchasedThisWeek: 0
       },
       transmutationsToday: 0,
-      lastTransmutationDate: new Date().toDateString(),
+      lastTransmutationDate: getSingaporeDayKey(),
       dailyExchange: {
         purifiedEssenceCount: 0,
-        purifiedEssenceDate: new Date().toDateString()
+        purifiedEssenceDate: getSingaporeDayKey()
       },
       spirits: [starterSpirit],
       party: [starterId], // Max 5 active spirits
@@ -185,31 +179,37 @@ export const persistenceMethods = {
       state.resources.energySecondsAccumulator = 0;
     }
 
+    const todayKey = getSingaporeDayKey();
     if (!state.dailyExchange || typeof state.dailyExchange !== 'object') {
       state.dailyExchange = {
         purifiedEssenceCount: 0,
-        purifiedEssenceDate: new Date().toDateString()
+        purifiedEssenceDate: todayKey
       };
     } else {
       if (typeof state.dailyExchange.purifiedEssenceCount !== 'number') {
         state.dailyExchange.purifiedEssenceCount = 0;
       }
       if (typeof state.dailyExchange.purifiedEssenceDate !== 'string') {
-        state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+        state.dailyExchange.purifiedEssenceDate = todayKey;
       }
       // Reset if date changed
-      if (state.dailyExchange.purifiedEssenceDate !== new Date().toDateString()) {
+      if (state.dailyExchange.purifiedEssenceDate !== todayKey) {
         state.dailyExchange.purifiedEssenceCount = 0;
-        state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+        state.dailyExchange.purifiedEssenceDate = todayKey;
       }
     }
 
+    const currentWeekKey = getSingaporeWeekKey();
     if (!state.dwarvenForge || typeof state.dwarvenForge !== 'object') {
       state.dwarvenForge = {
-        weekKey: '',
+        weekKey: currentWeekKey,
         scripturesPurchasedThisWeek: 0,
         reshapersPurchasedThisWeek: 0
       };
+    } else if (state.dwarvenForge.weekKey !== currentWeekKey) {
+      state.dwarvenForge.weekKey = currentWeekKey;
+      state.dwarvenForge.scripturesPurchasedThisWeek = 0;
+      state.dwarvenForge.reshapersPurchasedThisWeek = 0;
     }
 
     if (!state.constellations || typeof state.constellations !== 'object') {
@@ -228,8 +228,16 @@ export const persistenceMethods = {
     if (typeof state.transmutationsToday !== 'number') {
       state.transmutationsToday = 0;
     }
-    if (typeof state.lastTransmutationDate !== 'string') {
-      state.lastTransmutationDate = new Date().toDateString();
+    if (typeof state.lastTransmutationDate !== 'string' || state.lastTransmutationDate !== todayKey) {
+      state.lastTransmutationDate = todayKey;
+      state.transmutationsToday = 0;
+    }
+
+    if (typeof state.combatSpeed !== 'number') {
+      state.combatSpeed = 1;
+    }
+    if (typeof state.claimedLevel3EquipmentGift !== 'boolean') {
+      state.claimedLevel3EquipmentGift = (state.contractor?.level || 1) >= 3 && (state.inventory?.equipment?.length > 0);
     }
 
     // Ensure contractor level & XP exist
@@ -548,8 +556,11 @@ export const persistenceMethods = {
       const frameDeltaSec = Math.min(0.2, (timestamp - lastFrameTime) / 1000);
       lastFrameTime = timestamp;
 
+      const is2xUnlocked = ((this.state.madnessZone?.highestStageCleared || 1) >= 10 || (this.state.madnessZone?.stage || 1) >= 10);
+      const combatSpeed = (this.state.combatSpeed === 2 && is2xUnlocked) ? 2 : 1;
+
       if (this.state.madnessZone.isEngaged !== false) {
-        this.tickMadnessCombat(frameDeltaSec);
+        this.tickMadnessCombat(frameDeltaSec * combatSpeed);
       }
 
       if (this.state.activeDungeonBattle && this.state.activeDungeonBattle.status === 'active') {

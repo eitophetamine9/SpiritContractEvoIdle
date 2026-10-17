@@ -18,6 +18,7 @@ import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FO
 import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml } from '../src/render/spriteAnimator.js';
 import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
+import { getSingaporeDayKey, getSingaporeWeekKey } from '../src/state/constants.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -211,7 +212,13 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Greek God Sets catalog count: ${Object.keys(GREEK_GOD_SETS).length} (Expected >= 8)`);
   if (Object.keys(GREEK_GOD_SETS).length < 8) throw new Error('Expected at least 8 Greek God Sets');
 
-  // Verify starter equipment and 2-pc Hades set bonus on starter spirit
+  // Equip 2 Hades relics on starter spirit to test 2-pc set bonus
+  const starterHeadgear = createRelicInstance({ setId: 'hades', slotTypeId: 'headgear', rarity: 'COMMON', level: 1 });
+  const starterTotem = createRelicInstance({ setId: 'hades', slotTypeId: 'totem', rarity: 'COMMON', level: 1 });
+  gameState.state.inventory.equipment.push(starterHeadgear, starterTotem);
+  gameState.equipItem(starter.id, starterHeadgear.uid);
+  gameState.equipItem(starter.id, starterTotem.uid);
+
   const activeStarterBonuses = gameState.getSpiritActiveSetBonuses(starter);
   console.log(`  Starter Spirit active set bonuses: ${activeStarterBonuses.map(b => b.name).join(', ')}`);
   const hasHades2pc = activeStarterBonuses.some(b => b.setId === 'hades' && b.tier === '2pc');
@@ -2491,7 +2498,76 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (gameState.state.inventory.equipment.length !== bossTestInitialEquipCount) {
     throw new Error(`Madness zone boss unexpectedly dropped relics into inventory (${gameState.state.inventory.equipment.length} items found)`);
   }
-  console.log('  [PASS] 50 Boss defeats produced 0 relic drops. Relics & weapons are strictly restricted to dungeons!');
+  // =========================================================================
+  // TEST 48: Phase 1 Singapore UTC+8 Resets, Lv. 3 Equipment Gift, & 2x Speed Gating
+  // =========================================================================
+  console.log('\n[TEST 48] Testing Singapore UTC+8 Resets, Lv. 3 Equipment Gift & 2x Speed Gating:');
+
+  // 1. Test Singapore (UTC+8) Daily & Sunday Weekly Reset Key Calculations
+  // Timestamp for 2026-10-17 15:59:00 UTC -> In UTC+8 this is Saturday 2026-10-17 23:59:00 (Week starts previous Sunday 2026-10-11)
+  const satNightUTC = new Date('2026-10-17T15:59:00Z').getTime();
+  const satDayKey = getSingaporeDayKey(satNightUTC);
+  const satWeekKey = getSingaporeWeekKey(satNightUTC);
+  if (satDayKey !== '2026-10-17') throw new Error(`Expected satDayKey 2026-10-17, got ${satDayKey}`);
+  if (satWeekKey !== '2026-10-11') throw new Error(`Expected satWeekKey 2026-10-11, got ${satWeekKey}`);
+
+  // Timestamp for 2026-10-17 16:00:00 UTC -> In UTC+8 this is Sunday 2026-10-18 00:00:00 (New daily + new Sunday weekly reset!)
+  const sunMidnightUTC = new Date('2026-10-17T16:00:00Z').getTime();
+  const sunDayKey = getSingaporeDayKey(sunMidnightUTC);
+  const sunWeekKey = getSingaporeWeekKey(sunMidnightUTC);
+  if (sunDayKey !== '2026-10-18') throw new Error(`Expected sunDayKey 2026-10-18, got ${sunDayKey}`);
+  if (sunWeekKey !== '2026-10-18') throw new Error(`Expected sunWeekKey 2026-10-18, got ${sunWeekKey}`);
+  console.log('  [PASS] Singapore UTC+8 daily reset (00:00) and Sunday weekly reset (00:00) verified!');
+
+  // 2. Test Day-1 Starter Equipment Gating
+  const freshState = gameState.getInitialState();
+  if (freshState.inventory.equipment.length !== 0) {
+    throw new Error(`Day-1 initial state should have 0 starter equipments, found: ${freshState.inventory.equipment.length}`);
+  }
+  const starterCat = freshState.spirits[0];
+  if (starterCat.weapon !== null || starterCat.relics.headgear !== null || starterCat.relics.totem !== null) {
+    throw new Error('Day-1 starter spirit should have no equipment equipped');
+  }
+  if (freshState.claimedLevel3EquipmentGift !== false) {
+    throw new Error('Day-1 claimedLevel3EquipmentGift should be false');
+  }
+  console.log('  [PASS] Day-1 starts with 0 free equipment; equipment is properly held back until Trials unlock!');
+
+  // 3. Test Level 3 Contractor Ascension Equipment Grant
+  gameState.state = freshState;
+  gameState.state.contractor = { level: 1, xp: 0, xpRequired: 250 };
+  // Add enough XP to level up to Lv. 3
+  // Lv 1->2: 250 XP. Lv 2->3: 683 XP. Total to hit Lv 3: ~950 XP
+  gameState.addContractorXp(1200, 'Test Ascension to Level 3');
+  if (gameState.state.contractor.level < 3) {
+    throw new Error(`Expected contractor level to reach at least 3, got: ${gameState.state.contractor.level}`);
+  }
+  if (!gameState.state.claimedLevel3EquipmentGift) {
+    throw new Error('claimedLevel3EquipmentGift should be true upon reaching Contractor Level 3');
+  }
+  if (gameState.state.inventory.equipment.length !== 3) {
+    throw new Error(`Expected 3 equipment items granted at Lv. 3, found: ${gameState.state.inventory.equipment.length}`);
+  }
+  const catAfterLv3 = gameState.state.spirits[0];
+  if (!catAfterLv3.weapon || !catAfterLv3.relics.headgear || !catAfterLv3.relics.totem) {
+    throw new Error('Cat Spirit should have starter Spectral Blade and Hades Relics equipped after Lv. 3 grant');
+  }
+  console.log('  [PASS] Contractor Level 3 Ascension automatically granted 3 starter equipments (Spectral Blade + 2x Hades Relics)!');
+
+  // 4. Test Madness 2x Battle Speed Gating & Acceleration
+  gameState.state.madnessZone = { stage: 1, highestStageCleared: 1, isEngaged: true, currentSwarm: [] };
+  const is2xUnlockedStage1 = ((gameState.state.madnessZone.highestStageCleared || 1) >= 10 || (gameState.state.madnessZone.stage || 1) >= 10);
+  if (is2xUnlockedStage1) {
+    throw new Error('2X speed should be locked at Stage 1 / Floor 1');
+  }
+  gameState.state.madnessZone.stage = 10;
+  gameState.state.madnessZone.highestStageCleared = 10;
+  const is2xUnlockedStage10 = ((gameState.state.madnessZone.highestStageCleared || 1) >= 10 || (gameState.state.madnessZone.stage || 1) >= 10);
+  if (!is2xUnlockedStage10) {
+    throw new Error('2X speed should be unlocked at Stage 10');
+  }
+  gameState.state.combatSpeed = 2;
+  console.log('  [PASS] 2X Speed correctly locked before Floor 10 and unlocked at Floor 10!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

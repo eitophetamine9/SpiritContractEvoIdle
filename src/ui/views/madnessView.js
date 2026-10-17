@@ -71,8 +71,8 @@ export function renderMadnessView(container) {
         </div>
 
         <div class="combat-hud-right">
-          <button id="btn-combat-speed" class="hud-speed-btn ${battleSpeed === 2 ? 'speed-2x' : ''}" title="Battle Speed">
-            ${battleSpeed}X
+          <button id="btn-combat-speed" class="hud-speed-btn ${battleSpeed === 2 ? 'speed-2x' : ''} ${!((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? 'speed-locked' : ''}" style="${!((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? 'opacity: 0.65;' : ''}" title="${((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? 'Battle Speed (1X / 2X)' : '2X Battle Speed unlocks at Madness Floor 10'}">
+            ${((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? `${battleSpeed}X` : '🔒 2X'}
           </button>
         </div>
       </div>
@@ -308,11 +308,21 @@ export function renderMadnessView(container) {
     });
   }
 
-  // Battle Speed Toggle (1X / 2X)
+  // Battle Speed Toggle (1X / 2X) - Gated to Floor 10
   const btnSpeed = container.querySelector('#btn-combat-speed');
   if (btnSpeed) {
     btnSpeed.addEventListener('click', () => {
+      const isUnlocked = ((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10);
+      if (!isUnlocked) {
+        alert('🔒 2X Battle Speed unlocks after reaching Madness Floor 10!');
+        return;
+      }
       battleSpeed = battleSpeed === 1 ? 2 : 1;
+      if (gameState.state) {
+        gameState.state.combatSpeed = battleSpeed;
+        gameState.isDirty = true;
+        gameState.save();
+      }
       renderMadnessView(container);
     });
   }

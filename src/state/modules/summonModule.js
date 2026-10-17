@@ -6,6 +6,7 @@ import {
   calculateSpiritPower,
   calculateSpiritMaxHp
 } from '../../data/spiritsData.js';
+import { getSingaporeDayKey } from '../constants.js';
 
 export const summonMethods = {
   getSummonLevelReqXp(level = 1) {
@@ -13,15 +14,16 @@ export const summonMethods = {
   },
 
   getDailyPurifiedExchangeStatus() {
+    const todayKey = getSingaporeDayKey();
     if (!this.state.dailyExchange) {
       this.state.dailyExchange = {
         purifiedEssenceCount: 0,
-        purifiedEssenceDate: new Date().toDateString()
+        purifiedEssenceDate: todayKey
       };
     }
-    if (this.state.dailyExchange.purifiedEssenceDate !== new Date().toDateString()) {
+    if (this.state.dailyExchange.purifiedEssenceDate !== todayKey) {
       this.state.dailyExchange.purifiedEssenceCount = 0;
-      this.state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+      this.state.dailyExchange.purifiedEssenceDate = todayKey;
     }
     const maxPerDay = 10;
     const used = this.state.dailyExchange.purifiedEssenceCount || 0;
@@ -30,6 +32,7 @@ export const summonMethods = {
       used,
       maxPerDay,
       remaining,
+      remainingToday: remaining,
       rate: 500
     };
   },
@@ -51,7 +54,7 @@ export const summonMethods = {
     this.state.resources.spiritShards -= shardCost;
     this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + num;
     this.state.dailyExchange.purifiedEssenceCount += num;
-    this.state.dailyExchange.purifiedEssenceDate = new Date().toDateString();
+    this.state.dailyExchange.purifiedEssenceDate = getSingaporeDayKey();
 
     this.isDirty = true;
     this.save();
