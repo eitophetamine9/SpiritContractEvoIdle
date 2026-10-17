@@ -57,6 +57,9 @@ if (speciesList.length < 47) {
 // 2. Verify Bestiary Grid Generation
 const mockContainer = {
   innerHTML: '',
+  querySelector: function(sel) {
+    return null;
+  },
   querySelectorAll: function(sel) {
     // Basic match simulator
     return [];

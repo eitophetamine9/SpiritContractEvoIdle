@@ -105,6 +105,10 @@ export const persistenceMethods = {
       },
       hallOfFame: [starterId], // Max 5 showcase spirits
       discoveredSpeciesIds: [starterSpecies.id], // Spirit Compendium
+      bestiaryRewards: {
+        claimedSpecies: [],
+        claimedMilestones: []
+      },
       madnessZone: {
         stage: 1,
         subStage: 1,
@@ -249,6 +253,14 @@ export const persistenceMethods = {
       state.tutorial.step = typeof state.tutorial.step === 'number' ? state.tutorial.step : 0;
       state.tutorial.completed = Boolean(state.tutorial.completed);
       state.tutorial.active = Boolean(state.tutorial.active);
+    }
+
+    // Ensure bestiaryRewards state exists
+    if (!state.bestiaryRewards || typeof state.bestiaryRewards !== 'object') {
+      state.bestiaryRewards = { claimedSpecies: [], claimedMilestones: [] };
+    } else {
+      if (!Array.isArray(state.bestiaryRewards.claimedSpecies)) state.bestiaryRewards.claimedSpecies = [];
+      if (!Array.isArray(state.bestiaryRewards.claimedMilestones)) state.bestiaryRewards.claimedMilestones = [];
     }
 
     // Ensure unlocked stages exist and sanitize floor progression
