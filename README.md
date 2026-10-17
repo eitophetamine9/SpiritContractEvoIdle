@@ -8,7 +8,6 @@
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Ready-5A0FC8?style=flat-square)](#quick-start)
 [![Supabase](https://img.shields.io/badge/Supabase-Auth%20%26%20Cloud%20Sync-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Tests](https://img.shields.io/badge/Tests-70%20Passing-success?style=flat-square)](#testing)
 
 ---
 
@@ -21,16 +20,20 @@ Spirit Contract Evo | Idle blends deep tactical party building with automated AF
 ## Core Features
 
 - **Dynamic Combat Animation Engine**: Real-time physical attack lunges (`.lunge-attack`) and weapon swing frames synced with recoil hit-flashes (`.enemy-hit-flash`, `.spirit-hit-flinch`) and hurt frames across Madness Zone, Pantheon Trials, Divine Forge, and Sanctuary of the Gods.
+- **Singapore UTC+8 Reset Engine & Purified Soul Economy**: Deterministic daily (00:00 SGT) and weekly Sunday resets; sovereign Purified Soul Essence contract summoning, 0/10 daily shard exchange, +50 Shards Bestiary discovery bounties, and compendium milestones.
+- **Interactive Carousel Pagers & UI Overhaul**: Generous layout breathing room; dropdown chamber selectors and animated `< Prev` / `Next >` carousel transitions across Pantheon Trials, Divine Forge, and Astral Realm.
+- **Contextual Area Unlock Tutorials & Celestial Summon Vortex**: Automatic guided modals featuring the Cat Spirit Familiar mascot guide upon feature unlocks, plus an interactive runic summoning vortex with persistent skip animation toggle.
 - **Supabase Cloud Sync & Authentication**: Seamless cross-device gameplay. Play as a guest or create an account with email/password; automatic background cloud saves with client/cloud conflict resolution modals.
-- **Contractor Account Leveling & Feature Gating**: Account progression from Level 1 to 50 with EXP curves, milestone rewards, and level-gated unlocks (e.g. 3x3 Formation at Lv. 3, Pantheon Trials at Lv. 5, Divine Forge at Lv. 8).
+- **Contractor Account Leveling & Feature Gating**: Account progression from Level 1 to 50 with EXP curves, milestone rewards, and level-gated unlocks (e.g. 3x3 Formation at Lv. 2, Pantheon Trials & Forge at Lv. 3, Bestiary at Lv. 4, Spirit Rebirth at Lv. 16).
 - **Spirit Sanctum Hub**: Dedicated portrait-first character dashboard. Features uncluttered high-level combat metrics by default, an expandable breakdown for 7-Core dual attributes and scaling formulas, and a 16-parameter inspection dossier.
 - **7-Core Dual Attributes**: Every spirit calculates Base, Gear Bonus, and Percentage scalings across Max HP, ATK, DEF, CRIT Rate, CRIT DMG, Ultimate Amplification, and Mana Replenishment.
 - **54-Spirit Dynamic Scaling Matrix**: Role-specific formulas for all 54 spirits in the catalog. Healers scale through HP or ATK; Tanks project shields from DEF or Max HP; DPS scale single-target or AOE damage with Crit compatibility.
 - **Celestial Rebirth System (Tier 1 to 7)**: Duplicate spirit contracts unlock Rebirth tiers granting stacking +12% base stat bonuses (up to +84%) and combat milestones (bonus starting MP, ultimate damage amplification, crit upgrades, and golden borders).
 - **3x3 Tactical Formation Grid**: 9-slot positioning (Frontline, Midline, Backline) enforcing role constraints, line aggro threat multipliers, tank taunt locks, and defense mitigation curves.
-- **Greek God Relic Sets & Divine Forge**: 8 Olympian deity sets with 2-piece and 4-piece set bonuses, plus 12 specialized weapon classes forged in dedicated dungeons.
-- **Madness Zone & Biome Tower**: 100+ floors spanning 6 distinct biomes with wave encounters, overlord bosses, and an infinite looping progression cycle.
+- **Greek God Relic Sets & Divine Forge**: 10 Olympian deity sets with 2-piece and 4-piece set bonuses, plus 12 specialized weapon classes forged in dedicated dungeons.
+- **Madness Zone & Biome Tower**: 100+ floors spanning 6 distinct biomes with wave encounters, overlord bosses, 2X battle speed gated to Floor 10, and an infinite looping progression cycle.
 - **Balanced Idle Economy**: Offline training capped at 24 hours with fair diminishing returns. Idle meditation requires a minimum of 1 hour to claim, rewarding deliberate check-ins. Permanent summon banners ensure equal access to featured spirits.
+- **Developer & Admin Tooling**: Dedicated, secure dev console and cheat suite for floor skipping, level scaling, and currency testing.
 
 ---
 
@@ -71,10 +74,10 @@ npm run preview
 ## Testing
 
 ```bash
-# Run core engine tests (42 tests passing)
+# Run core engine tests (48 tests passing)
 node tests/test_game_engine.js
 
-# Run UI & combat animation component tests (28 tests passing)
+# Run UI, tutorial & dev console component tests (34 tests passing)
 node tests/test_ui_components.js
 
 # Run Monte Carlo RNG verification tests
@@ -90,8 +93,8 @@ SpiritContractEvoIdle/
 |-- docs/
 |   `-- DOCUMENTATION.md       # Comprehensive systems, math, and balance specifications
 |-- tests/
-|   |-- test_game_engine.js    # Core engine, attributes, combat, and scaling unit tests (42 tests)
-|   |-- test_ui_components.js  # UI rendering, modals, and combat animation tests (28 tests)
+|   |-- test_game_engine.js    # Core engine, attributes, combat, and scaling unit tests (48 tests)
+|   |-- test_ui_components.js  # UI rendering, modals, and combat animation tests (34 tests)
 |   `-- run_probability_tests.js # Gacha and evolution probability verification
 |-- public/                    # Static icons, web app manifest, audio assets
 |-- src/
@@ -110,21 +113,13 @@ SpiritContractEvoIdle/
 
 ---
 
-## Modular Architecture Roadmap (Completed in `ref/overhaulv0.1`)
+## Future Roadmap
 
-All 5 phases of the Modular Architecture Roadmap have been successfully completed with 100% green test passes and zero API breaking changes:
-
-1. ✅ **Phase 1: `gameState.js` Decomposition** (5,342 lines -> 187 line Coordinator)
-   - Extracted 9 domain submodules into `src/state/modules/`: `contractorModule.js`, `formationModule.js`, `summonModule.js`, `equipmentModule.js`, `spiritModule.js`, `combatModule.js`, `dungeonModule.js`, `astralModule.js`, and `persistenceModule.js`.
-   - Unified prototype composition via `Object.assign(GameStateManager.prototype, ...)`.
-2. ✅ **Phase 2: `style.css` Decomposition** (9,553 lines -> 22 line Master Aggregator)
-   - Partitioned into `src/styles/`: `tokens.css`, `base.css`, `combat.css`, `modals.css`, and `views/` (`madness.css`, `vault.css`, `astral.css`, `sanctum.css`, `profile.css`).
-3. ✅ **Phase 3: `modals.js` Decomposition** (1,956 lines -> 6 line Facade)
-   - Decomposed into `src/ui/modals/`: `modalBase.js`, `offlineModal.js`, `ceremonyModal.js`, `bestiaryModal.js`, `equipmentModal.js`, `spiritModal.js`, and `index.js`.
-4. ✅ **Phase 4: `mysticalView.js` Decomposition** (1,627 lines -> 223 line Coordinator)
-   - Sub-features isolated into `src/ui/views/astral/`: `zodiacTab.js`, `expeditionsTab.js`, `dwarvenForgeTab.js`, `transmuteTab.js`, `blessingsTab.js`, `energyTab.js`, and `sanctuaryTab.js`.
-5. ✅ **Phase 5: `spiritsData.js` Split** (2,241 lines -> 5 line Barrel Facade)
-   - Separated into `src/data/spirits/`: `elementsAndRoles.js`, `formationMatrix.js`, `speciesCatalog.js`, `progressionConfig.js`, `scalingProfiles.js`, and `ultimatesCatalog.js`.
+- **Guild & Cooperative Raids**: Form contractor covenants, summon guild monoliths, and challenge multi-phase raid overlords with synchronized rewards.
+- **PVP Arena & Asynchronous Duels**: Tactical 3x3 formation clashes against other contractors' defense rosters with ranked seasonal leaderboards.
+- **Endless Abyssal Tower**: Procedurally generated infinite labyrinth with rotating elemental afflictions and exclusive mythic spoils.
+- **Spirit Familiar Companions**: Passive cosmetic & tactical familiars that accompany the party, granting global auras and auto-strike perks.
+- **Native Mobile Deployment**: Packaging via Capacitor / Tauri for App Store and Google Play distribution alongside the existing PWA.
 
 ---
 
