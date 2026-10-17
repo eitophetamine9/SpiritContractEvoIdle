@@ -665,6 +665,7 @@ export const dungeonMethods = {
     } else if (loot.essenceGained) {
       this.state.resources.soulEssence += loot.essenceGained;
     }
+    this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + 1;
 
     this.state.resources.spiritShards += loot.shardsGained;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
@@ -718,6 +719,7 @@ export const dungeonMethods = {
 
     this.state.resources.spiritShards += loot.shardsGained;
     this.state.resources.soulEssence += loot.essenceGained;
+    this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + 1;
     this.state.stats.shardsEarnedTotal += loot.shardsGained;
     this.state.stats.totalDungeonRuns = (this.state.stats.totalDungeonRuns || 0) + 1;
     this.addContractorXp(40 + tierNum * 15, 'Forge Dungeon Victory');

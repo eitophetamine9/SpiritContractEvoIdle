@@ -685,13 +685,19 @@ export const combatMethods = {
       const prevHighest = mz.highestStageCleared || 0;
       mz.highestStageCleared = Math.max(mz.highestStageCleared || 0, mz.stage);
 
-      // First Clear Contractor EXP reward
+      // First Clear Contractor EXP reward & Purified Soul Essence
       if (mz.stage > prevHighest) {
         const firstClearXp = 50 + mz.stage * 15;
         this.addContractorXp(firstClearXp, `Madness Floor ${mz.stage} First Clear`);
+        this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + 1;
+        this.emit('resourcesUpdated', this.state.resources);
       } else {
         // Repeat boss clears provide baseline progression drip
         this.addContractorXp(5, `Madness Floor ${mz.stage} Boss Cleared`);
+        if (Math.random() < 0.10) {
+          this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + 1;
+          this.emit('resourcesUpdated', this.state.resources);
+        }
       }
 
       // Floor Victory: Revive ALL party spirits to 100% HP!

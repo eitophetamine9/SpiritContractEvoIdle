@@ -71,16 +71,17 @@ export const summonMethods = {
    * Supports 1x, 10x, and 30x pulls with summon level XP progression
    */
   contractSpirit(count = 1, bannerId = 'standard') {
-    const singleCost = 100;
+    const singleCost = 1;
     let totalCost = singleCost * count;
-    if (count === 10) totalCost = 950;
-    if (count === 30) totalCost = 2700; // 10% discount for 30x contract
+    if (count === 10) totalCost = 10;
+    if (count === 30) totalCost = 25; // Discounted bulk pull: save 5!
 
-    if (this.state.resources.spiritShards < totalCost) {
-      throw new Error(`Insufficient Spirit Shards! Need ${totalCost}, have ${this.state.resources.spiritShards}.`);
+    const currentPurified = this.state.resources.purifiedSoulEssence || 0;
+    if (currentPurified < totalCost) {
+      throw new Error(`Insufficient Purified Soul Essence! Need ${totalCost} ✨, have ${currentPurified} ✨. Defeat Floor Bosses, claim AFK idle rewards, or exchange Spirit Shards.`);
     }
 
-    this.state.resources.spiritShards -= totalCost;
+    this.state.resources.purifiedSoulEssence -= totalCost;
 
     const newSpirits = [];
 

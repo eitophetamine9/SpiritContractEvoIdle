@@ -396,7 +396,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  Banner catalog count: ${BANNER_CONFIGS.length} (Expected >= 3)`);
   if (BANNER_CONFIGS.length < 3) throw new Error('Expected at least 3 banner configurations');
 
-  gameState.state.resources.spiritShards = 5000;
+  gameState.state.resources.purifiedSoulEssence = 50;
   const initialSpiritCount = gameState.state.spirits.length;
   const pullResult = gameState.contractSpirit(30, 'solaris_rate_up');
   console.log(`  Performed 30x Contract on Solaris Rate-Up! Received ${pullResult.length} spirits.`);
@@ -1355,7 +1355,7 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   console.log(`  [PASS] Abyssal Rift banner verified (Featured: ${abyssalBanner.characterName})!`);
 
   // Test summon on Abyssal Rift banner
-  gameState.state.resources.spiritShards = 2000;
+  gameState.state.resources.purifiedSoulEssence = 20;
   const abyssalSummons = gameState.contractSpirit(10, 'abyssal_rift');
   if (abyssalSummons.length !== 10) throw new Error('Expected 10 summons from Abyssal Rift banner');
   console.log(`  [PASS] Performed 10x Contract on Abyssal Rift banner (${abyssalSummons.length} spirits received)!`);
@@ -2285,7 +2285,48 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     failedOverLimit = true;
   }
   if (!failedOverLimit) throw new Error('Expected failure when exceeding 10 daily exchanges');
-  console.log('  [PASS] 10/10 daily exchange limit enforced successfully!');
+  // [TEST 44] Testing Phase 3 Purified Soul Essence Summon Costs & Gameplay Drops
+  console.log('\n[TEST 44] Testing Phase 3 Purified Soul Essence Summon Costs & Gameplay Drops:');
+  gameState.state.resources.purifiedSoulEssence = 36; // 1 + 10 + 25 = 36 needed
+  const prePullEssence = gameState.state.resources.purifiedSoulEssence;
+
+  // 1x pull costs 1
+  const pull1 = gameState.contractSpirit(1, 'standard');
+  if (pull1.length !== 1 || gameState.state.resources.purifiedSoulEssence !== prePullEssence - 1) {
+    throw new Error(`Expected 1x pull to cost 1 Purified Soul Essence, got balance: ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  console.log('  [PASS] 1x summon costs exactly 1 Purified Soul Essence!');
+
+  // 10x pull costs 10 (No discount)
+  const pull10 = gameState.contractSpirit(10, 'standard');
+  if (pull10.length !== 10 || gameState.state.resources.purifiedSoulEssence !== prePullEssence - 11) {
+    throw new Error(`Expected 10x pull to cost 10 Purified Soul Essence, got balance: ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  console.log('  [PASS] 10x summon costs exactly 10 Purified Soul Essence (No discount)!');
+
+  // 30x pull costs 25 (Discounted: save 5)
+  const pull30 = gameState.contractSpirit(30, 'standard');
+  if (pull30.length !== 30 || gameState.state.resources.purifiedSoulEssence !== 0) {
+    throw new Error(`Expected 30x pull to cost 25 Purified Soul Essence, got balance: ${gameState.state.resources.purifiedSoulEssence}`);
+  }
+  console.log('  [PASS] 30x summon costs exactly 25 Purified Soul Essence (Bulk Discount - save 5)!');
+
+  // Insufficient essence should fail
+  let failedEmptyPull = false;
+  try {
+    gameState.contractSpirit(1, 'standard');
+  } catch (err) {
+    failedEmptyPull = true;
+  }
+  if (!failedEmptyPull) throw new Error('Expected contractSpirit to fail when purifiedSoulEssence is 0');
+  console.log('  [PASS] Insufficient Purified Soul Essence properly blocked!');
+
+  // Offline idle rewards calculation (6 hours = 21600s -> 2 Purified Soul Essence)
+  const testOfflineReport = gameState.applyOfflineGains(21600);
+  if (testOfflineReport.offlinePurified !== 2) {
+    throw new Error(`Expected 2 offline Purified Soul Essence for 6 hours away, got ${testOfflineReport.offlinePurified}`);
+  }
+  console.log(`  [PASS] Offline progression accurately calculates +${testOfflineReport.offlinePurified} Purified Soul Essence!`);
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

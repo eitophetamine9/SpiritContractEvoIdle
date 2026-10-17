@@ -734,10 +734,13 @@ export const persistenceMethods = {
     const offlineShards = Math.round(estimatedKills * sampleEnemy.shardReward * 0.05);
     const maxOfflineEssence = Math.min(3, Math.floor(cappedSeconds / 28800));
     const offlineEssence = Math.min(maxOfflineEssence, Math.floor(estimatedKills / 400));
+    // Offline Purified Soul Essence: 1 per 3 hours (10,800s), capped at 3 per offline session
+    const offlinePurified = Math.min(3, Math.floor(cappedSeconds / 10800));
 
     if (canClaim) {
       this.state.resources.spiritShards += offlineShards;
       this.state.resources.soulEssence += offlineEssence;
+      this.state.resources.purifiedSoulEssence = (this.state.resources.purifiedSoulEssence || 0) + offlinePurified;
       this.state.stats.shardsEarnedTotal += offlineShards;
       this.state.stats.totalOfflineTimeSec += cappedSeconds;
       this.save();
@@ -752,6 +755,7 @@ export const persistenceMethods = {
       readyToEvolve,
       offlineShards,
       offlineEssence,
+      offlinePurified,
       offlineGold: Math.round(offlineShards * 1.5),
       energyGained,
       partyCount: partySpirits.length
@@ -774,6 +778,7 @@ export const persistenceMethods = {
       claimedSeconds: report.elapsedSeconds,
       offlineShards: report.offlineShards || 0,
       offlineEssence: report.offlineEssence || 0,
+      offlinePurified: report.offlinePurified || 0,
       soulEssence: report.offlineEssence || 0,
       gold: report.offlineGold || 0
     };
