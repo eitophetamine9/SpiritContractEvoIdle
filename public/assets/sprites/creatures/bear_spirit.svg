@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>.bg{fill:transparent;}</style>
+  </defs>
+
+  <!-- Frame 0: Idle [x: 0..48] -->
+  <g transform="translate(0, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 24) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 26, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#facc15"/>
+      </g>
+  </g>
+  <!-- Frame 1: Idle [x: 48..96] -->
+  <g transform="translate(48, 0)">
+<ellipse cx="24" cy="42" rx="14.56" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 25.5) rotate(0) scale(1.04, 0.96) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 28, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#facc15"/>
+      </g>
+  </g>
+  <!-- Frame 2: Idle [x: 96..144] -->
+  <g transform="translate(96, 0)">
+<ellipse cx="24" cy="42" rx="13.44" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 22.5) rotate(0) scale(0.96, 1.04) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 30, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#facc15"/>
+      </g>
+  </g>
+  <!-- Frame 3: Idle [x: 144..192] -->
+  <g transform="translate(144, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 23.5) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 32, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#facc15"/>
+      </g>
+  </g>
+  <!-- Frame 4: Attack [x: 192..240] -->
+  <g transform="translate(192, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(21, 25) rotate(-6) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 26, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#facc15"/>
+      </g>
+  </g>
+  <!-- Frame 5: Attack [x: 240..288] -->
+  <g transform="translate(240, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(30, 22) rotate(8) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 26, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#facc15"/>
+      
+        <!-- Attack Flash Slash -->
+        <path d="M34 10 L46 22 L36 34" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="44" cy="22" r="4" fill="#d6b797"/>
+      </g>
+  </g>
+  <!-- Frame 6: Attack [x: 288..336] -->
+  <g transform="translate(288, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(27, 24) rotate(3) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 26, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#facc15"/>
+      
+        <!-- Impact Spark Burst -->
+        <polygon points="42,16 46,22 42,28 40,22" fill="#78350f"/>
+        <circle cx="43" cy="22" r="2" fill="#ffffff"/>
+      </g>
+  </g>
+  <!-- Frame 7: Hurt [x: 336..384] -->
+  <g transform="translate(336, 0)">
+<ellipse cx="24" cy="42" rx="12.6" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(19, 27) rotate(-14) scale(0.9, 1) translate(-24, -24)">
+
+        <!-- Tail -->
+        <path d="M14 30 C8 26, 6 18, 12 16" stroke="#27170e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Torso -->
+        <rect x="14" y="22" width="20" height="13" rx="4" fill="#5c381f"/>
+        <rect x="16" y="24" width="16" height="9" rx="2" fill="#85532f"/>
+        <!-- Legs / Paws -->
+        <rect x="14" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="20" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="26" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <rect x="30" y="34" width="4" height="6" rx="1" fill="#27170e"/>
+        <!-- Head -->
+        <rect x="22" y="12" width="14" height="12" rx="3" fill="#5c381f"/>
+        <rect x="24" y="14" width="10" height="8" rx="2" fill="#85532f"/>
+        <!-- Eyes -->
+        <rect x="28" y="16" width="3" height="3" fill="#ef4444"/>
+      </g>
+  </g>
+</svg>

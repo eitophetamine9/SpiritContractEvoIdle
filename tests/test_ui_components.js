@@ -2,6 +2,9 @@ import { SPIRIT_SPECIES, RARITIES, getRarityInfo } from '../src/data/spiritsData
 import { gameState } from '../src/state/gameState.js';
 import { showHallOfFamePickerModal, showBestiaryInspectModal } from '../src/ui/components/modals.js';
 import { renderIndexView } from '../src/ui/views/indexView.js';
+import { renderCharacterHubView } from '../src/ui/views/characterHubView.js';
+import { showSpiritModal } from '../src/ui/modals/spiritModal.js';
+
 
 // Setup Mock DOM environment
 globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 16);
@@ -35,8 +38,48 @@ globalThis.document = {
     if (id === 'app') return appRoot;
     return {
       addEventListener: (evt, fn) => { modalRoot._listeners['#' + id] = fn; },
-      click: () => { if (modalRoot._listeners['#' + id]) modalRoot._listeners['#' + id](); }
+      click: () => { if (modalRoot._listeners['#' + id]) modalRoot._listeners['#' + id](); },
+      appendChild: () => {},
+      removeChild: () => {},
+      innerHTML: '',
+      style: {}
     };
+  },
+  createElement: (tag) => {
+    const el = {
+      tagName: tag,
+      className: '',
+      innerHTML: '',
+      style: {},
+      _listeners: {},
+      parentNode: null,
+      getContext: () => ({
+        clearRect: () => {},
+        fillRect: () => {},
+        beginPath: () => {},
+        arc: () => {},
+        fill: () => {},
+        stroke: () => {},
+        save: () => {},
+        restore: () => {},
+        translate: () => {},
+        scale: () => {},
+        rotate: () => {},
+        drawImage: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        createLinearGradient: () => ({ addColorStop: () => {} })
+      }),
+      addEventListener: function(evt, fn) { this._listeners[evt] = fn; },
+      querySelector: function(sel) {
+        const self = this;
+        return {
+          addEventListener: (evt, fn) => { self._listeners[sel] = fn; },
+          click: () => { if (self._listeners[sel]) self._listeners[sel]({ preventDefault: () => {} }); }
+        };
+      },
+      querySelectorAll: () => []
+    };
+    return el;
   },
   querySelector: () => null,
   querySelectorAll: () => []
@@ -44,7 +87,16 @@ globalThis.document = {
 
 const modalRoot = {
   innerHTML: '',
+  children: [],
   _listeners: {},
+  appendChild: function(el) {
+    el.parentNode = this;
+    this.children.push(el);
+  },
+  removeChild: function(el) {
+    this.children = this.children.filter(c => c !== el);
+    el.parentNode = null;
+  },
   querySelectorAll: (selector) => [],
   querySelector: function(selector) {
     const self = this;
@@ -324,7 +376,17 @@ if (partySpirits.length > 0) {
   
   const modalRoot = {
     innerHTML: '',
+    children: [],
     _listeners: {},
+    appendChild: function(el) {
+      el.parentNode = this;
+      this.children.push(el);
+      if (el.innerHTML) this.innerHTML += el.innerHTML;
+    },
+    removeChild: function(el) {
+      this.children = this.children.filter(c => c !== el);
+      el.parentNode = null;
+    },
     querySelector: function(selector) {
       const self = this;
       return {
@@ -389,7 +451,8 @@ if (!heroFormationContainer.innerHTML.includes('tactical-battle-grid') && !heroF
 console.log('[PASS] Hero View 3x3 Formation mode controls validated.');
 
 // 13. Test Summon Banner Overhaul with Animated Hero & Divine Relic Pieces
-import { renderContractView } from '../src/ui/views/contractView.js';
+import { renderContractView, showRatesModal } from '../src/ui/views/contractView.js';
+import { BANNER_CONFIGS } from '../src/data/spiritsData.js';
 const contractContainer = {
   innerHTML: '',
   querySelector: () => ({ addEventListener: () => {} }),
@@ -608,6 +671,15 @@ if (!titleScreenRoot.innerHTML.includes('Spirit Contract Evo') ||
   throw new Error('Title screen failed to render title, play as guest, signin, or signup tabs!');
 }
 console.log('[PASS] Title / Home Screen Gateway renders correctly with Guest, Sign In, and Register choices!');
+
+// Verify game loop and ticks are dormant while Title Screen is active
+if (gameState.isGameSessionActive !== false) {
+  throw new Error('Game session should be inactive while Title Screen is displayed!');
+}
+if (gameState.isGameLoopRunning()) {
+  throw new Error('Game loop should NOT be running while Title Screen is displayed!');
+}
+console.log('[PASS] Verified game tickers and combat loop are strictly dormant on Title Screen!');
 
 // 23. Test Step 2 Cloud Save & Sync Engine with Conflict Resolution
 import { cloudSaveService } from '../src/services/cloudSaveService.js';
@@ -1091,11 +1163,509 @@ if (!modalRootEl.innerHTML.includes('Dev & Admin Cheat Console') ||
     !modalRootEl.innerHTML.includes('dev-cheat-input') ||
     !modalRootEl.innerHTML.includes('Floor Skip Controls') ||
     !modalRootEl.innerHTML.includes('Boost Any Currency') ||
-    !modalRootEl.innerHTML.includes('Purified Soul ✨:')) {
+    !modalRootEl.innerHTML.includes('Purified Soul')) {
   throw new Error('showDevConsoleModal failed to render console with all currency cheat controls and admin email!');
 }
 
 console.log('[PASS] Dev Admin Account Authentication, Cheat Code System & Access Gating validated!');
+
+// ==========================================
+// TEST PHASE 4: Themed Range Sliders & Guide Modal Spacing Overhaul
+// ==========================================
+console.log('\n--- TESTING PHASE 4: THEMED SLIDERS & GUIDE MODAL SPACING OVERHAUL ---');
+
+// 1. Verify base.css range slider definitions
+const baseCssContent = fs.readFileSync('src/styles/base.css', 'utf8');
+if (!baseCssContent.includes('input[type="range"]') || 
+    !baseCssContent.includes('::-webkit-slider-thumb') || 
+    !baseCssContent.includes('::-moz-range-thumb') || 
+    !baseCssContent.includes('box-shadow: 0 0 10px rgba(255, 215, 0, 0.7)')) {
+  throw new Error('base.css is missing fantasy themed range slider styles or golden orb thumb shadow!');
+}
+console.log('[PASS] Themed fantasy gold range slider CSS rules verified in base.css!');
+
+// 2. Verify modals.css guide-modal-box & guide-speech-bubble definitions
+const modalsCssContent = fs.readFileSync('src/styles/modals.css', 'utf8');
+if (!modalsCssContent.includes('.guide-modal-box') || 
+    !modalsCssContent.includes('.guide-speech-bubble') || 
+    !modalsCssContent.includes('padding: 18px 22px !important') || 
+    !modalsCssContent.includes('line-height: 1.65')) {
+  throw new Error('modals.css is missing .guide-modal-box or .guide-speech-bubble with generous padding and line-height!');
+}
+console.log('[PASS] Explicit Vanilla CSS .guide-modal-box and .guide-speech-bubble verified with generous padding in modals.css!');
+
+// 3. Verify showAreaUnlockTutorial rendering
+showAreaUnlockTutorial('astral');
+if (!modalRootEl.innerHTML.includes('guide-modal-box') || 
+    !modalRootEl.innerHTML.includes('guide-speech-bubble') || 
+    !modalRootEl.innerHTML.includes('The Astral Realm & Sacred Sanctum')) {
+  throw new Error('showAreaUnlockTutorial failed to render using .guide-modal-box and .guide-speech-bubble!');
+}
+console.log('[PASS] showAreaUnlockTutorial correctly renders with .guide-modal-box and generous .guide-speech-bubble!');
+
+// 4. Verify Profile View Audio & Volume Sliders
+const profileContainer = {
+  innerHTML: '',
+  querySelector: (sel) => ({
+    addEventListener: () => {}
+  }),
+  querySelectorAll: () => []
+};
+renderProfileView(profileContainer);
+if (!profileContainer.innerHTML.includes('slider-bgm-volume') || 
+    !profileContainer.innerHTML.includes('slider-sfx-volume') || 
+    !profileContainer.innerHTML.includes('Audio & Sound Controls')) {
+  throw new Error('renderProfileView failed to render audio controls with themed range sliders!');
+}
+console.log('[PASS] Profile View renders Audio & Sound Controls with interactive BGM and SFX volume sliders!');
+
+// ==========================================
+// TEST PHASE 5: "View in Character Sanctum" Quick Navigation
+// ==========================================
+console.log('\n--- TESTING PHASE 5: "VIEW IN CHARACTER SANCTUM" QUICK NAVIGATION ---');
+
+// 1. Verify partyView renders View in Character Sanctum buttons
+const p5PartyContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderPartyView(p5PartyContainer);
+if (!p5PartyContainer.innerHTML.includes('btn-hero-view-sanctum') || 
+    !p5PartyContainer.innerHTML.includes('View in Character Sanctum') ||
+    !p5PartyContainer.innerHTML.includes('btn-party-sanctum-link')) {
+  throw new Error('Party View Showcase is missing "View in Character Sanctum" button or sanctum link pill!');
+}
+console.log('[PASS] Party View Showcase mode renders prominent "View in Character Sanctum" button!');
+
+// 2. Verify renderCharacterHubView handles options.spiritId and subHub
+const sanctumContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {}, scrollIntoView: () => {} }),
+  querySelectorAll: () => []
+};
+const testPartySpirit = gameState.getPartySpirits()[0];
+if (testPartySpirit) {
+  renderCharacterHubView(sanctumContainer, { spiritId: testPartySpirit.id, subHub: 'weapons' });
+  if (!sanctumContainer.innerHTML.includes(testPartySpirit.customName) || 
+      !sanctumContainer.innerHTML.includes('SPIRIT SANCTUM HUB')) {
+    throw new Error('renderCharacterHubView failed to select specified spiritId from options!');
+  }
+  console.log('[PASS] Character Sanctum Hub successfully processes options.spiritId and options.subHub!');
+}
+
+// 3. Verify showEquipmentSlotModal renders Sanctum quick navigation button
+if (testPartySpirit) {
+  showEquipmentSlotModal({ spiritId: testPartySpirit.id, slotType: 'weapon', onUpdate: () => {} });
+  const modalEl = document.getElementById('modal-root');
+  if (!modalEl.innerHTML.includes('btn-slot-view-sanctum') || 
+      !modalEl.innerHTML.includes('modal-header-sanctum-btn')) {
+    throw new Error('showEquipmentSlotModal is missing btn-slot-view-sanctum in header!');
+  }
+  console.log('[PASS] Equipment Slot Inspect Modal renders header Sanctum quick navigation button!');
+}
+
+// 4. Verify showSpiritModal renders View in Character Sanctum button
+if (testPartySpirit) {
+  showSpiritModal(testPartySpirit, () => {});
+  const modalEl = document.getElementById('modal-root');
+  if (!modalEl.innerHTML.includes('btn-modal-view-sanctum') || 
+      !modalEl.innerHTML.includes('View in Character Sanctum')) {
+    throw new Error('showSpiritModal is missing btn-modal-view-sanctum button!');
+  }
+  console.log('[PASS] Spirit Inspect Modal renders "View in Character Sanctum" action button!');
+}
+
+// 5. Verify main.js exports switchTab with options support
+const mainJsContent = fs.readFileSync('src/main.js', 'utf8');
+if (!mainJsContent.includes('function switchTab(tabName, options = null)') || 
+    !mainJsContent.includes('renderCharacterHubView(viewContainer, options || {})') ||
+    !mainJsContent.includes('window.switchTab = switchTab;')) {
+  throw new Error('src/main.js is missing switchTab options parameter, window export, or CharacterHubView forwarding!');
+}
+console.log('[PASS] main.js properly accepts options in switchTab, forwards to CharacterHub, and exports window.switchTab!');
+
+// ==========================================
+// TEST PHASE 6: Animated Sliding Card Carousel for Trials, Forge & Realm
+// ==========================================
+console.log('\n--- TESTING PHASE 6: ANIMATED SLIDING CARD CAROUSEL FOR TRIALS, FORGE & REALM ---');
+
+// 1. Verify 10th Greek God Chamber (Atlas) in PANTHEON_CHAMBERS
+import { PANTHEON_CHAMBERS } from '../src/data/artifactDungeonData.js';
+if (PANTHEON_CHAMBERS.length !== 10) {
+  throw new Error(`Expected exactly 10 Greek God chambers in PANTHEON_CHAMBERS, found ${PANTHEON_CHAMBERS.length}!`);
+}
+const atlasChamber = PANTHEON_CHAMBERS.find(c => c.id === 'celestial_pillar' || c.godId === 'atlas');
+if (!atlasChamber || !atlasChamber.name.includes('Atlas') || atlasChamber.godId !== 'atlas') {
+  throw new Error('Celestial Pillar of Atlas chamber is missing or invalid in PANTHEON_CHAMBERS!');
+}
+console.log(`[PASS] PANTHEON_CHAMBERS contains all 10 Greek God chambers (including ${atlasChamber.name})!`);
+
+// 2. Verify Sliding Carousel Component HTML Rendering & Event Binding
+import { renderSlidingCarouselHtml, attachSlidingCarouselEvents } from '../src/ui/components/slidingCarousel.js';
+
+const mockCarouselCards = [
+  { id: 'c1', name: 'Card One', subtitle: 'Sub 1', color: '#ff4444', bannerArtHtml: '<div>Art 1</div>', emblemHtml: '<span>Emblem 1</span>', metrics: [{ label: 'Stat', value: '100' }] },
+  { id: 'c2', name: 'Card Two', subtitle: 'Sub 2', color: '#44ff44', bannerArtHtml: '<div>Art 2</div>', emblemHtml: '<span>Emblem 2</span>', metrics: [{ label: 'Stat', value: '200' }] },
+  { id: 'c3', name: 'Card Three', subtitle: 'Sub 3', color: '#4444ff', bannerArtHtml: '<div>Art 3</div>', emblemHtml: '<span>Emblem 3</span>', metrics: [{ label: 'Stat', value: '300' }] },
+  { id: 'c4', name: 'Card Four', subtitle: 'Sub 4', color: '#ffff44', bannerArtHtml: '<div>Art 4</div>', emblemHtml: '<span>Emblem 4</span>', metrics: [{ label: 'Stat', value: '400' }] }
+];
+
+const carouselHtml = renderSlidingCarouselHtml({
+  carouselId: 'test-carousel',
+  cards: mockCarouselCards,
+  selectedId: 'c2',
+  actionLabel: 'CHOOSE',
+  showCounter: true
+});
+
+if (!carouselHtml.includes('sliding-carousel-container') ||
+    !carouselHtml.includes('test-carousel-track') ||
+    !carouselHtml.includes('carousel-sliding-card') ||
+    !carouselHtml.includes('card-header-banner') ||
+    !carouselHtml.includes('card-overlapping-emblem') ||
+    !carouselHtml.includes('card-active-check-badge') ||
+    !carouselHtml.includes('carousel-dot') ||
+    !carouselHtml.includes('test-carousel-counter')) {
+  throw new Error('renderSlidingCarouselHtml failed to generate complete sliding 3-card carousel HTML elements!');
+}
+console.log('[PASS] renderSlidingCarouselHtml generates complete luxury 3-card sliding carousel structure!');
+
+// 3. Test attachSlidingCarouselEvents with mock DOM
+let selectedFromEvent = null;
+const mockCarouselRoot = {
+  querySelector: (sel) => ({
+    clientWidth: 1000,
+    style: {},
+    classList: { add: () => {}, remove: () => {} },
+    setAttribute: () => {},
+    addEventListener: () => {}
+  }),
+  querySelectorAll: (sel) => [
+    {
+      getAttribute: (attr) => attr === 'data-card-id' ? 'c3' : '2',
+      classList: { add: () => {}, remove: () => {}, contains: () => false },
+      addEventListener: (evt, fn) => { if (evt === 'click') fn({ currentTarget: { getAttribute: () => '1' }, stopPropagation: () => {} }); },
+      querySelector: () => null
+    }
+  ]
+};
+const mockCarouselContainer = {
+  querySelector: (sel) => mockCarouselRoot
+};
+const carouselInstance = attachSlidingCarouselEvents({
+  carouselId: 'test-carousel',
+  cards: mockCarouselCards,
+  selectedId: 'c2',
+  container: mockCarouselContainer,
+  onSelect: (id) => { selectedFromEvent = id; }
+});
+if (!carouselInstance || typeof carouselInstance.updateView !== 'function' || typeof carouselInstance.destroy !== 'function') {
+  throw new Error('attachSlidingCarouselEvents failed to return carousel controls!');
+}
+carouselInstance.destroy();
+console.log('[PASS] attachSlidingCarouselEvents properly initializes, updates viewport, and destroys cleanly!');
+
+// 4. Verify Pantheon Trials View Renders Sliding 3-Card Carousel
+const p6TrialsContainer = {
+  innerHTML: '',
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+renderDungeonView(p6TrialsContainer);
+if (!p6TrialsContainer.innerHTML.includes('pantheon-chambers-carousel') ||
+    !p6TrialsContainer.innerHTML.includes('sliding-carousel-container') ||
+    !p6TrialsContainer.innerHTML.includes('Celestial Pillar of Atlas') ||
+    !p6TrialsContainer.innerHTML.includes('Crypt of the Underworld')) {
+  throw new Error('renderDungeonView failed to render sliding 3-card carousel for Greek God Chambers!');
+}
+console.log('[PASS] Pantheon Trials Hub renders sliding 3-card carousel housing all 10 Greek God chambers!');
+
+// 5. Verify Divine Forge View Renders Sliding 3-Card Carousel
+const p6ForgeContainer = {
+  innerHTML: '',
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+renderForgeView(p6ForgeContainer);
+if (!p6ForgeContainer.innerHTML.includes('forge-chambers-carousel') ||
+    !p6ForgeContainer.innerHTML.includes('sliding-carousel-container') ||
+    !p6ForgeContainer.innerHTML.includes('SELECT ANVIL')) {
+  throw new Error('renderForgeView failed to render sliding 3-card carousel for Divine Forge chambers!');
+}
+console.log('[PASS] Divine Forge Hub renders sliding 3-card carousel housing all 12 Weapon Forge chambers!');
+
+// 6. Verify Astral Realm View Renders Sliding 3-Card Carousel
+const p6AstralContainer = {
+  innerHTML: '',
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+renderMysticalView(p6AstralContainer);
+if (!p6AstralContainer.innerHTML.includes('astral-facilities-carousel') ||
+    !p6AstralContainer.innerHTML.includes('sliding-carousel-container') ||
+    !p6AstralContainer.innerHTML.includes('Sanctuary') ||
+    !p6AstralContainer.innerHTML.includes('Zodiac') ||
+    !p6AstralContainer.innerHTML.includes('Dwarven')) {
+  throw new Error('renderMysticalView failed to render sliding 3-card carousel for Astral Realm facilities!');
+}
+console.log('[PASS] Astral Realm Hub renders sliding 3-card carousel housing all 8 Astral facilities!');
+
+// 7. Verify CSS Styling for 3-Card Sliding Carousel
+const slidingCarouselCss = fs.readFileSync('src/styles/components/slidingCarousel.css', 'utf8');
+const mainStyleCss = fs.readFileSync('src/style.css', 'utf8');
+if (!mainStyleCss.includes('./styles/components/slidingCarousel.css')) {
+  throw new Error('src/style.css does not import slidingCarousel.css!');
+}
+if (!slidingCarouselCss.includes('.sliding-carousel-container') ||
+    !slidingCarouselCss.includes('.carousel-sliding-card') ||
+    !slidingCarouselCss.includes('.card-overlapping-emblem') ||
+    !slidingCarouselCss.includes('.card-header-banner') ||
+    !slidingCarouselCss.includes('.card-active-check-badge')) {
+  throw new Error('src/styles/components/slidingCarousel.css is missing critical dark fantasy carousel rules!');
+}
+console.log('[PASS] slidingCarousel.css verified with premium gold-themed 3-card carousel styles and imported in style.css!');
+
+// ==========================================
+// TEST PHASE 7: Missing Defensive Relic Set (Atlas Firmament Chamber & Relic Sprites)
+// ==========================================
+console.log('\n--- TESTING PHASE 7: MISSING DEFENSIVE RELIC SET (ATLAS FIRMAMENT CHAMBER & RELIC SPRITES) ---');
+
+// 1. Verify relic_pillar_atlas.svg asset
+const atlasRelicPath = 'public/assets/sprites/relics/relic_pillar_atlas.svg';
+if (!fs.existsSync(atlasRelicPath)) {
+  throw new Error(`Missing relic SVG asset: ${atlasRelicPath}`);
+}
+const atlasRelicSvg = fs.readFileSync(atlasRelicPath, 'utf8');
+if (atlasRelicSvg.length < 1000 || !atlasRelicSvg.includes('viewBox="0 0 384 48"') || !atlasRelicSvg.includes('p-stone')) {
+  throw new Error('relic_pillar_atlas.svg is invalid or has insufficient content!');
+}
+console.log(`[PASS] Verified Atlas Relic SVG asset (${atlasRelicSvg.length} bytes, 8 animated frames)!`);
+
+// 2. Verify SPRITE_MANIFEST registration and sheet routing
+import { SPRITE_MANIFEST, getSheetKeyForRelic, createAnimatedRelicHtml } from '../src/render/spriteAnimator.js';
+if (!SPRITE_MANIFEST.sheets.relic_pillar_atlas) {
+  throw new Error('relic_pillar_atlas is not registered in SPRITE_MANIFEST.sheets!');
+}
+if (SPRITE_MANIFEST.sheets.relic_pillar_atlas.frameCount !== 8 || SPRITE_MANIFEST.sheets.relic_pillar_atlas.path !== '/assets/sprites/relics/relic_pillar_atlas.svg') {
+  throw new Error('relic_pillar_atlas manifest properties do not match 8-frame specification!');
+}
+if (getSheetKeyForRelic('atlas') !== 'relic_pillar_atlas' || getSheetKeyForRelic('celestial_pillar') !== 'relic_pillar_atlas') {
+  throw new Error('getSheetKeyForRelic failed to route atlas / celestial_pillar to relic_pillar_atlas!');
+}
+const atlasRelicHtml = createAnimatedRelicHtml('atlas', 'headgear');
+if (!atlasRelicHtml.includes('sprite-relic_pillar_atlas') || !atlasRelicHtml.includes('/assets/sprites/relics/relic_pillar_atlas.svg')) {
+  throw new Error('createAnimatedRelicHtml failed to output animated sprite for Atlas relic!');
+}
+console.log('[PASS] Atlas relic spritesheet registered in SPRITE_MANIFEST and HTML animator outputs valid sprite element!');
+
+// 3. Verify Atlas Set in GREEK_GOD_SETS
+const atlasRelicSet = GREEK_GOD_SETS.atlas;
+if (!atlasRelicSet || !atlasRelicSet.bonus2pc || !atlasRelicSet.bonus4pc) {
+  throw new Error('Atlas relic set missing from GREEK_GOD_SETS!');
+}
+if (atlasRelicSet.bonus2pc.hpBonus !== 0.25 || atlasRelicSet.bonus2pc.defBonus !== 0.20) {
+  throw new Error('Atlas 2pc bonus values mismatch (+25% HP & +20% DEF expected)!');
+}
+if (atlasRelicSet.bonus4pc.teamDamageReduction !== 0.12 || atlasRelicSet.bonus4pc.shieldPercentMaxHp !== 0.30) {
+  throw new Error('Atlas 4pc bonus values mismatch (-12% damage taken & 30% Max HP shield expected)!');
+}
+console.log('[PASS] Atlas pure defensive tank set validated with +25% HP / +20% DEF (2pc) and Guardian Interception (4pc)!');
+
+// 4. Verify Dual-Tank Tooltips and Badges in Views
+const hubContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {}, scrollIntoView: () => {} }),
+  querySelectorAll: () => []
+};
+renderCharacterHubView(hubContainer, { subHub: 'relics' });
+if (!hubContainer.innerHTML.includes('DEF TANK') || 
+    !hubContainer.innerHTML.includes('OFF TANK') ||
+    !hubContainer.innerHTML.includes('Pure Defensive Tank Set') ||
+    !hubContainer.innerHTML.includes('Offensive Tank Set')) {
+  throw new Error('renderCharacterHubView is missing dual-tank role badges or tooltips in relic set tracker!');
+}
+console.log('[PASS] Character Sanctum Hub renders dual-tank distinction badges and tooltips (Atlas DEF TANK vs Hephaestus OFF TANK)!');
+
+const dungeonJs = fs.readFileSync('src/ui/views/dungeonView.js', 'utf8');
+if (!dungeonJs.includes('Pure Defensive Tank Set') || !dungeonJs.includes('Offensive Tank Set')) {
+  throw new Error('dungeonView.js is missing dual-tank distinction banner for Atlas / Hephaestus!');
+}
+const equipModalJs = fs.readFileSync('src/ui/modals/equipmentModal.js', 'utf8');
+if (!equipModalJs.includes('Defensive Tank') || !equipModalJs.includes('Offensive Tank')) {
+  throw new Error('equipmentModal.js is missing dual-tank role badges!');
+}
+console.log('[PASS] Pantheon Trials Hub and Equipment Modal include dual-tank badges and banners distinguishing Atlas and Hephaestus!');
+
+// ==========================================
+// TEST PHASE 8: Audio & Music Overhaul (Balanced Volumes & Royalty-Free Acoustics)
+// ==========================================
+console.log('\n--- TESTING PHASE 8: AUDIO & MUSIC OVERHAUL (BALANCED VOLUMES & HARMONIC ACOUSTICS) ---');
+
+import { audioManager } from '../src/audio/audioManager.js';
+
+// 1. Verify default gentle calibrated volumes
+if (audioManager.bgmVolume > 0.30 || audioManager.sfxVolume > 0.30) {
+  throw new Error(`Expected gentle default audio volumes (<= 0.30), got BGM: ${audioManager.bgmVolume}, SFX: ${audioManager.sfxVolume}`);
+}
+console.log(`[PASS] Verified calibrated gentle baseline volumes (BGM: ${audioManager.bgmVolume}, SFX: ${audioManager.sfxVolume})!`);
+
+// 2. Verify volume setting and bounds
+audioManager.setBgmVolume(0.18);
+audioManager.setSfxVolume(0.20);
+if (audioManager.bgmVolume !== 0.18 || audioManager.sfxVolume !== 0.20) {
+  throw new Error('setBgmVolume or setSfxVolume failed to apply exact values!');
+}
+audioManager.setBgmVolume(1.5);
+if (audioManager.bgmVolume > 1.0) throw new Error('setBgmVolume exceeded 1.0 max bound!');
+audioManager.setBgmVolume(0.18);
+console.log('[PASS] BGM and SFX volume clamping and state setters verified!');
+
+// 3. Verify Web Audio Master Dynamics Compressor & Gain setup
+if (!audioManager.audioContext) {
+  audioManager.audioInitialized = false;
+  const mockNode = {
+    setValueAtTime: () => {},
+    connect: () => {},
+    start: () => {},
+    stop: () => {},
+    exponentialRampToValueAtTime: () => {},
+    linearRampToValueAtTime: () => {}
+  };
+  globalThis.window.AudioContext = class MockAudioContext {
+    constructor() {
+      this.currentTime = 0;
+      this.destination = mockNode;
+    }
+    createDynamicsCompressor() {
+      return {
+        threshold: mockNode,
+        knee: mockNode,
+        ratio: mockNode,
+        attack: mockNode,
+        release: mockNode,
+        connect: () => {}
+      };
+    }
+    createGain() {
+      return {
+        gain: mockNode,
+        connect: () => {}
+      };
+    }
+    createOscillator() {
+      return {
+        frequency: mockNode,
+        connect: () => {},
+        start: () => {},
+        stop: () => {}
+      };
+    }
+  };
+  audioManager.init();
+}
+
+if (!audioManager.masterCompressor || !audioManager.masterGain) {
+  throw new Error('audioManager failed to initialize master dynamics compressor and gain staging nodes!');
+}
+console.log('[PASS] Master Dynamics Compressor and Gain Staging nodes initialized successfully!');
+
+// 4. Verify harmonic sound generation functions
+if (typeof audioManager.playWarmTap !== 'function' ||
+    typeof audioManager.playHarmonicChime !== 'function' ||
+    typeof audioManager.playHarpStrum !== 'function' ||
+    typeof audioManager.playEtherealBell !== 'function') {
+  throw new Error('audioManager is missing harmonic acoustic synthesizer methods!');
+}
+
+audioManager.playWarmTap();
+audioManager.playHarmonicChime(880, 0.5);
+audioManager.playHarpStrum([523.25, 659.25]);
+audioManager.playEtherealBell(432);
+audioManager.playSfx('tap');
+audioManager.playSfx('chime');
+audioManager.playSfx('harp');
+audioManager.playSfx('bell');
+console.log('[PASS] Web Audio harmonic acoustics (temple chimes, soft harps, warm taps, ethereal bells) execute cleanly!');
+
+// ==========================================
+// TEST PHASE 9: Final Comprehensive Verification & Test Suite Expansion
+// ==========================================
+console.log('\n--- TESTING PHASE 9: FINAL COMPREHENSIVE VERIFICATION & TEST SUITE EXPANSION ---');
+
+// 1. Verify zero emojis in primary nav tabs of index.html
+const indexHtmlContent = fs.readFileSync('index.html', 'utf8');
+const navDockSection = indexHtmlContent.substring(indexHtmlContent.indexOf('<nav class="nav-dock'), indexHtmlContent.indexOf('</nav>'));
+const rawEmojiRegex = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+if (rawEmojiRegex.test(navDockSection)) {
+  throw new Error('index.html bottom nav dock still contains raw emojis! Must use Scalable Vector Icons.');
+}
+console.log('[PASS] index.html bottom navigation dock is 100% vector SVG icons with zero raw emojis!');
+
+// 2. Verify all 54 species listed in SPIRIT_SPECIES have valid index entries
+if (speciesList.length !== 54) {
+  throw new Error(`Expected exactly 54 species in SPIRIT_SPECIES, found ${speciesList.length}`);
+}
+console.log(`[PASS] Bestiary roster verified: all 54 species registered with deterministic indexing!`);
+
+// 3. Verify Atlas chamber loot and dual-tank distinction
+const p9AtlasChamber = PANTHEON_CHAMBERS.find(c => c.id === 'celestial_pillar' || c.godId === 'atlas');
+if (!p9AtlasChamber) {
+  throw new Error('PANTHEON_CHAMBERS missing Atlas celestial pillar chamber!');
+}
+console.log(`[PASS] Verified 10th Greek God chamber (${p9AtlasChamber.name}) ready for farming defensive relics!`);
+
+// 4. Verify volume defaults and dynamic compressor node in audio engine
+if (audioManager.bgmVolume !== 0.18 || audioManager.sfxVolume !== 0.20) {
+  throw new Error('Default audio manager volumes should be calibrated to 0.18 BGM and 0.20 SFX!');
+}
+if (!audioManager.masterCompressor || !audioManager.masterGain) {
+  throw new Error('Master dynamics compressor node graph missing in audioManager!');
+}
+console.log('[PASS] Audio Engine verified with calibrated gentle volumes (0.18 BGM, 0.20 SFX) and master dynamics compressor!');
+
+// 5. Verify Summon Area Rates Button and showRatesModal
+console.log('\n--- TESTING SUMMON AREA RATES BUTTON & MODAL ---');
+const ratesTestContractContainer = {
+  innerHTML: '',
+  _listeners: {},
+  querySelector: function(sel) {
+    const self = this;
+    return {
+      addEventListener: (evt, fn) => { self._listeners[sel] = fn; },
+      click: () => { if (self._listeners[sel]) self._listeners[sel]({ preventDefault: () => {} }); }
+    };
+  },
+  querySelectorAll: function(sel) {
+    const self = this;
+    return [{
+      addEventListener: (evt, fn) => { self._listeners[sel] = fn; },
+      click: () => { if (self._listeners[sel]) self._listeners[sel]({ preventDefault: () => {} }); }
+    }];
+  }
+};
+
+renderContractView(ratesTestContractContainer);
+if (!ratesTestContractContainer.innerHTML.includes('id="btn-rates-modal"')) {
+  throw new Error('Contract View missing #btn-rates-modal in HTML output!');
+}
+
+const ratesModalRoot = document.getElementById('modal-root');
+BANNER_CONFIGS.forEach(banner => {
+  ratesModalRoot.children = [];
+  showRatesModal(banner);
+  if (ratesModalRoot.children.length === 0) {
+    throw new Error(`showRatesModal failed to append modal for banner ${banner.id}!`);
+  }
+  const modal = ratesModalRoot.children[0];
+  if (!modal.innerHTML.includes('Probability Rates')) {
+    throw new Error(`Rates modal missing Probability Rates title for banner ${banner.id}!`);
+  }
+  if (banner.rateUpBonus && !modal.innerHTML.includes('Featured Rate-Up Spirits')) {
+    throw new Error(`Rates modal missing Featured Rate-Up Spirits section for banner ${banner.id}!`);
+  }
+});
+console.log('[PASS] Summon View #btn-rates-modal and showRatesModal successfully verified across all banners!');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

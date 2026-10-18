@@ -2,6 +2,7 @@ import { gameState } from '../../../state/gameState.js';
 import { audioManager } from '../../../audio/audioManager.js';
 import { CONSTELLATIONS_CONFIG } from '../../../data/astralRealmData.js';
 import { createAnimatedRelicHtml } from '../../../render/spriteAnimator.js';
+import { getGameIcon } from '../../icons/gameIcons.js';
 
 export function renderConstellationsSectionHtml(res, selectedConstellationId = "draco", isCosmicBoonsOpen = false) {
   const constellations = gameState.state.constellations || { draco: 0, phoenix: 0, pegasus: 0 };
@@ -18,9 +19,9 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
   if (bonuses.damageMitigationPercent) activeBonusLabels.push(`+${bonuses.damageMitigationPercent}% Mitigation`);
   if (bonuses.energyRegenBonus) activeBonusLabels.push(`+${bonuses.energyRegenBonus}% Energy Regen`);
   if (bonuses.maxEnergyBonus) activeBonusLabels.push(`+${bonuses.maxEnergyBonus} Max Energy`);
-  if (bonuses.bonusAstralDropChance) activeBonusLabels.push(`+${bonuses.bonusAstralDropChance}% Boss 🔮 Drops`);
+  if (bonuses.bonusAstralDropChance) activeBonusLabels.push(`+${bonuses.bonusAstralDropChance}% Boss Astral Drops`);
   if (bonuses.afkXpBonus) activeBonusLabels.push(`+${bonuses.afkXpBonus}% AFK XP`);
-  if (bonuses.bonusGodEssencesPercent) activeBonusLabels.push(`+${bonuses.bonusGodEssencesPercent}% Trial 💠 Gods`);
+  if (bonuses.bonusGodEssencesPercent) activeBonusLabels.push(`+${bonuses.bonusGodEssencesPercent}% Trial Gods`);
   if (bonuses.bossDmgPercent) activeBonusLabels.push(`+${bonuses.bossDmgPercent}% Boss DMG`);
   if (bonuses.executionerDmgPercent) activeBonusLabels.push(`+${bonuses.executionerDmgPercent}% Executioner`);
   if (bonuses.tankThreatPercent) activeBonusLabels.push(`+${bonuses.tankThreatPercent}% Tank Aggro`);
@@ -46,15 +47,15 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
       <!-- Top Overview & Balance -->
       <div class="rounded-xl border border-rose-500/30 p-3 bg-gradient-to-b from-rose-950/20 via-slate-900/90 to-slate-950 shadow-md flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">🌌</span>
+          ${getGameIcon('realm', { size: 24, color: '#c084fc' })}
           <div>
             <h3 class="text-xs sm:text-sm font-extrabold text-white">Celestial Constellations (Zodiac Star-Chart)</h3>
             <p class="text-[10px] sm:text-[11px] text-slate-400">Select a constellation below to view its celestial star-chart and awaken permanent party passives.</p>
           </div>
         </div>
         <div class="text-right shrink-0">
-          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/20 border border-purple-400/40 text-purple-300">
-            🔮 ${(res.soulEssence || 0).toLocaleString()} Astral
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/20 border border-purple-400/40 text-purple-300 inline-flex items-center gap-1">
+            ${getGameIcon('astralEssence', { size: 12 })} ${(res.soulEssence || 0).toLocaleString()} Astral
           </span>
         </div>
       </div>
@@ -69,10 +70,10 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
             <button class="constellation-chip-btn ${isSelected ? 'active' : ''}" 
                     data-constellation-id="${c.id}" 
                     style="--const-color: ${c.themeColor}; --const-glow: ${c.themeColor}55;">
-              <span class="text-base pointer-events-none">${c.icon}</span>
+              <span class="text-base pointer-events-none inline-flex items-center justify-center">${getGameIcon('star', { size: 14, color: c.themeColor })}</span>
               <span class="pointer-events-none">${c.name}</span>
               <span class="constellation-star-progress-pill pointer-events-none" style="${isMaxed ? 'background: #f1c40f33; color: #f1c40f; border-color: #f1c40f55;' : (lvl > 0 ? `background: ${c.themeColor}33; color: ${c.accentColor};` : 'color: #94a3b8;')}">
-                ${isMaxed ? '★ MAX' : `★${lvl}/5`}
+                ${isMaxed ? 'MAX' : `${lvl}/5`}
               </span>
             </button>
           `;
@@ -85,9 +86,9 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
         <!-- Showcase Header -->
         <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-800 flex-wrap">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-3xl shadow-lg shrink-0" 
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0" 
                  style="background: ${activeConst.themeColor}22; border: 1.5px solid ${activeConst.themeColor}66;">
-              ${activeConst.icon}
+              ${getGameIcon('realm', { size: 26, color: activeConst.themeColor })}
             </div>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
@@ -105,7 +106,7 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
               <span class="text-[11px] font-black" style="color: ${activeConst.accentColor};">
                 ${curLevel}/5 Stars Illuminated
               </span>
-              ${curLevel >= 5 ? '<span class="text-xs">✨</span>' : ''}
+              ${curLevel >= 5 ? `<span class="text-xs">${getGameIcon('sparkle', { size: 12, color: '#facc15' })}</span>` : ''}
             </div>
             <div class="w-24 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800 mt-1">
               <div class="h-full rounded-full transition-all duration-300" style="width: ${completionPct}%; background-color: ${activeConst.themeColor};"></div>
@@ -121,11 +122,11 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
             const canAfford = (res.soulEssence || 0) >= star.cost;
 
             let cardStateClass = 'locked';
-            let statusMarkup = `<span class="text-[9px] text-slate-500 font-bold">🔒 Requires Star ${star.node - 1}</span>`;
+            let statusMarkup = `<span class="text-[9px] text-slate-500 font-bold inline-flex items-center gap-1">${getGameIcon('lock', { size: 10 })} Requires Star ${star.node - 1}</span>`;
 
             if (isUnlocked) {
               cardStateClass = 'illuminated';
-              statusMarkup = `<span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-400">★ Illuminated</span>`;
+              statusMarkup = `<span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-400">${getGameIcon('star', { size: 10, color: '#34d399' })} Illuminated</span>`;
             } else if (isAvailable) {
               cardStateClass = 'available';
               statusMarkup = `
@@ -133,7 +134,7 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
                         data-constellation-id="${activeConst.id}" 
                         data-node="${star.node}" 
                         ${canAfford ? '' : 'disabled'}>
-                  <span>${canAfford ? `Unlock (${star.cost} 🔮)` : `Need ${star.cost} 🔮`}</span>
+                  <span>${canAfford ? `Unlock (${star.cost} Astral)` : `Need ${star.cost} Astral`}</span>
                 </button>
               `;
             }
@@ -143,7 +144,7 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
                 <div class="flex flex-col gap-1">
                   <div class="flex items-center justify-between text-[11px] gap-1">
                     <span class="font-extrabold text-white truncate">${star.node}. ${star.name}</span>
-                    <span class="text-[10px] text-purple-300 font-bold px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/30 shrink-0">${star.cost} 🔮</span>
+                    <span class="text-[10px] text-purple-300 font-bold px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-500/30 shrink-0 inline-flex items-center gap-0.5">${star.cost} ${getGameIcon('astralEssence', { size: 9 })}</span>
                   </div>
                   <div class="text-[10px] text-cyan-300 font-semibold leading-snug">${star.desc}</div>
                 </div>
@@ -161,7 +162,7 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
       <div class="cosmic-boons-drawer">
         <button id="btn-toggle-cosmic-boons" class="cosmic-boons-toggle-btn">
           <div class="flex items-center gap-2">
-            <span class="text-amber-400">✨</span>
+            ${getGameIcon('sparkle', { size: 13, color: '#facc15' })}
             <span>Illuminated Cosmic Boons (${activeBonusLabels.length} Active Passives)</span>
           </div>
           <span class="text-xs text-slate-400 font-black">${isCosmicBoonsOpen ? '▲ Hide' : '▼ View All'}</span>
@@ -172,9 +173,9 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
             <div class="flex flex-wrap gap-1.5 pt-2">
               ${activeBonusLabels.length > 0 ? activeBonusLabels.map(b => `
                 <span class="px-2 py-1 rounded-lg text-[10px] font-bold bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 shadow-sm flex items-center gap-1">
-                  <span>✦</span> ${b}
+                  ${getGameIcon('sparkle', { size: 9, color: '#22d3ee' })} ${b}
                 </span>
-              `).join('') : '<span class="text-[10px] text-slate-500 italic p-1">No celestial stars illuminated yet. Spend 🔮 Astral Essences above to awaken your party!</span>'}
+              `).join('') : '<span class="text-[10px] text-slate-500 italic p-1">No celestial stars illuminated yet. Spend Astral Essences above to awaken your party!</span>'}
             </div>
           </div>
         ` : ''}
@@ -183,7 +184,6 @@ export function renderConstellationsSectionHtml(res, selectedConstellationId = "
     </div>
   `;
 }
-
 
 export function bindConstellationEvents(container, stateObj = {}, callbacks = {}) {
   // 1. Constellation chip selection

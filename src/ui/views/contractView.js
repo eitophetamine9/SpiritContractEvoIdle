@@ -1,7 +1,8 @@
 import { gameState } from '../../state/gameState.js';
-import { BANNER_CONFIGS, RARITIES, getRarityInfo } from '../../data/spiritsData.js';
+import { BANNER_CONFIGS, RARITIES, getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { showSummonRevealModal } from '../components/modals.js';
 import { createAnimatedSpriteHtml, createAnimatedRelicHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 let activeBannerIndex = 0;
 let skipAnimation = Boolean(typeof localStorage !== 'undefined' && localStorage.getItem('spirit_skip_summon_anim') === 'true');
@@ -34,9 +35,9 @@ export function renderContractView(container, onNavigateToIndex) {
     { count: 20, reward: '500 Shards & 20 Gods' },
     { count: 50, reward: '1,200 Shards & 50 Gods' },
     { count: 100, reward: '10 Essence & 100 Gods' },
-    { count: 200, reward: '★ Astraea Valkyrie' },
-    { count: 500, reward: '★ Solaris Sin of Pride' },
-    { count: 1000, reward: '★ Solaris The One' }
+    { count: 200, reward: 'Astraea Valkyrie' },
+    { count: 500, reward: 'Solaris Sin of Pride' },
+    { count: 1000, reward: 'Solaris The One' }
   ];
 
   container.innerHTML = `
@@ -62,7 +63,7 @@ export function renderContractView(container, onNavigateToIndex) {
       ">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 22px;">⛩️</span>
+            <span>${getGameIcon('torii', { size: '22px', color: '#ffd152' })}</span>
             <div>
               <h2 style="margin: 0; font-size: 17px; font-weight: 900; color: #ffebc8; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
                 Hero Summon & Contract Altar
@@ -87,7 +88,7 @@ export function renderContractView(container, onNavigateToIndex) {
             gap: 6px;
             box-shadow: 0 3px 8px rgba(0,0,0,0.4);
           ">
-            <span>🎁</span>
+            <span>${getGameIcon('trophy', { size: '16px', color: '#ffd152' })}</span>
             <span>Rewards</span>
           </button>
         </div>
@@ -225,7 +226,7 @@ export function renderContractView(container, onNavigateToIndex) {
             border: 1px solid rgba(255,118,117,0.4);
             backdrop-filter: blur(6px);
           ">
-            ${activeBanner.timerText === 'Permanent' ? '✨ Permanent Altar' : `⏳ ${activeBanner.timerText}`}
+            ${activeBanner.timerText === 'Permanent' ? `${getGameIcon('sparkle', { size: '11px', color: '#ffd152' })} Permanent Altar` : `${getGameIcon('refresh', { size: '11px' })} ${activeBanner.timerText}`}
           </div>
 
           <!-- Central Dual Showcase Pedestal: Animated Hero + Animated Relic Artifact -->
@@ -243,7 +244,7 @@ export function renderContractView(container, onNavigateToIndex) {
                 box-shadow: 0 0 25px ${activeBanner.accentColor}88, inset 0 0 15px rgba(255,255,255,0.2);
                 border: 2.5px solid ${activeBanner.accentColor};
               ">
-                ${createAnimatedSpriteHtml(heroSheetKey, { glyph: activeBanner.icon })}
+                ${createAnimatedSpriteHtml(heroSheetKey, { glyph: '' })}
               </div>
               <div class="combat-ground-shadow" style="width: 54px; margin-top: -6px;"></div>
             </div>
@@ -269,7 +270,7 @@ export function renderContractView(container, onNavigateToIndex) {
 
           <!-- Featured Divine Relic Showcase Strip -->
           <div class="banner-relic-feature-pill" style="border-color: ${featuredRelic.color}88;">
-            <span style="font-size: 14px;">⚡</span>
+            <span>${getGameIcon('statPower', { size: '13px', color: '#ffd152' })}</span>
             <div style="text-align: left;">
               <div style="font-size: 10px; font-weight: 900; color: #ffffff; letter-spacing: 0.3px;">
                 ${featuredRelic.name}
@@ -329,8 +330,11 @@ export function renderContractView(container, onNavigateToIndex) {
                 font-size: 10px;
                 border: 1px solid #e74c3c;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
               ">
-                📜 ${totalSummons} Summons
+                ${getGameIcon('scroll', { size: '12px' })} ${totalSummons} Summons
               </span>
               <span>Milestone Track</span>
             </div>
@@ -355,7 +359,7 @@ export function renderContractView(container, onNavigateToIndex) {
                   gap: 2px;
                 ">
                   <span style="font-weight: 800; color: ${reached ? '#ffd152' : '#a89379'};">${m.count}</span>
-                  ${claimed ? '<span style="color: #2ecc71;">✓</span>' : (reached ? `<button class="btn-claim-milestone" data-count="${m.count}" style="background: #27ae60; color: #fff; border: none; border-radius: 4px; font-size: 8px; font-weight: 800; padding: 2px 4px; cursor: pointer;">Claim</button>` : '<span style="color: #7f8c8d;">🔒</span>')}
+                  ${claimed ? `<span style="color: #2ecc71;">${getGameIcon('check', { size: '12px' })}</span>` : (reached ? `<button class="btn-claim-milestone" data-count="${m.count}" style="background: #27ae60; color: #fff; border: none; border-radius: 4px; font-size: 8px; font-weight: 800; padding: 2px 4px; cursor: pointer;">Claim</button>` : `<span style="color: #7f8c8d;">${getGameIcon('lock', { size: '12px' })}</span>`)}
                 </div>
               `;
             }).join('')}
@@ -411,8 +415,8 @@ export function renderContractView(container, onNavigateToIndex) {
 
         <div style="display: flex; align-items: center; gap: 8px;">
           <div style="font-size: 11px; font-weight: 800; color: #ffd152; display: flex; align-items: center; gap: 8px;">
-            <span>💎 ${shards.toLocaleString()}</span>
-            <span>✨ ${purifiedEssence.toLocaleString()} Soul</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('spiritShards', { size: '13px' })} ${shards.toLocaleString()}</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('purifiedSoul', { size: '13px' })} ${purifiedEssence.toLocaleString()} Soul</span>
           </div>
           <button id="btn-rates-modal" style="
             background: rgba(43,24,7,0.8);
@@ -427,7 +431,7 @@ export function renderContractView(container, onNavigateToIndex) {
             align-items: center;
             gap: 4px;
           ">
-            🎲 Rates
+            ${getGameIcon('info', { size: '12px' })} Rates
           </button>
         </div>
       </div>
@@ -450,8 +454,8 @@ export function renderContractView(container, onNavigateToIndex) {
           box-shadow: 0 4px 10px rgba(0,0,0,0.4);
           transition: transform 0.1s ease;
         ">
-          <span style="font-size: 13px; font-weight: 900;">📜 x1</span>
-          <span style="font-size: 11px; font-weight: 700; color: #fde047;">✨ 1 Soul</span>
+          <span style="font-size: 13px; font-weight: 900; display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('scroll', { size: '13px' })} x1</span>
+          <span style="font-size: 11px; font-weight: 700; color: #fde047; display: inline-flex; align-items: center; gap: 3px;">${getGameIcon('purifiedSoul', { size: '12px' })} 1 Soul</span>
         </button>
 
         <!-- x10 Pull (10 Essence, No discount) -->
@@ -470,8 +474,8 @@ export function renderContractView(container, onNavigateToIndex) {
           box-shadow: 0 4px 10px rgba(0,0,0,0.4);
           transition: transform 0.1s ease;
         ">
-          <span style="font-size: 13px; font-weight: 900;">✨ x10</span>
-          <span style="font-size: 11px; font-weight: 700; color: #fde047;">✨ 10 Soul</span>
+          <span style="font-size: 13px; font-weight: 900; display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('sparkle', { size: '13px', color: '#facc15' })} x10</span>
+          <span style="font-size: 11px; font-weight: 700; color: #fde047; display: inline-flex; align-items: center; gap: 3px;">${getGameIcon('purifiedSoul', { size: '12px' })} 10 Soul</span>
         </button>
 
         <!-- x30 Pull (25 Essence, Bulk Discount - save 5) -->
@@ -490,8 +494,8 @@ export function renderContractView(container, onNavigateToIndex) {
           box-shadow: 0 4px 10px rgba(0,0,0,0.4);
           transition: transform 0.1s ease;
         ">
-          <span style="font-size: 13px; font-weight: 900;">🌟 x30</span>
-          <span style="font-size: 11px; font-weight: 700; color: #ffd152;">✨ 25 Soul (Save 5)</span>
+          <span style="font-size: 13px; font-weight: 900; display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('star', { size: '13px', color: '#facc15' })} x30</span>
+          <span style="font-size: 11px; font-weight: 700; color: #ffd152; display: inline-flex; align-items: center; gap: 3px;">${getGameIcon('purifiedSoul', { size: '12px' })} 25 Soul (Save 5)</span>
         </button>
       </div>
 
@@ -508,7 +512,7 @@ export function renderContractView(container, onNavigateToIndex) {
       ">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 15px;">✨</span>
+            <span>${getGameIcon('purifiedSoul', { size: '15px' })}</span>
             <span style="font-size: 12px; font-weight: 800; color: #ffd152;">Purified Soul Altar Exchange</span>
           </div>
           <span style="font-size: 10.5px; font-weight: 800; color: ${(exchangeStatus.remaining ?? 10) > 0 ? '#4ade80' : '#f87171'};">
@@ -517,8 +521,8 @@ export function renderContractView(container, onNavigateToIndex) {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #d4a373;">
-          <span>Exchange Rate: <strong style="color: #fff;">500 💎 Shards ➔ 1 ✨ Soul</strong></span>
-          <span>Balance: <strong style="color: #ffd152;">${purifiedEssence.toLocaleString()} ✨</strong></span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">Exchange Rate: <strong style="color: #fff; display: inline-flex; align-items: center; gap: 3px;">500 ${getGameIcon('spiritShards', { size: '12px' })} Shards ${getGameIcon('arrowRight', { size: '11px' })} 1 ${getGameIcon('purifiedSoul', { size: '12px' })} Soul</strong></span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">Balance: <strong style="color: #ffd152; display: inline-flex; align-items: center; gap: 3px;">${purifiedEssence.toLocaleString()} ${getGameIcon('purifiedSoul', { size: '12px' })}</strong></span>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px;">
@@ -531,8 +535,12 @@ export function renderContractView(container, onNavigateToIndex) {
             font-size: 11px;
             font-weight: 800;
             cursor: ${shards >= 500 && (exchangeStatus.remaining ?? 10) >= 1 ? 'pointer' : 'not-allowed'};
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
           ">
-            Exchange 1x (500 💎)
+            Exchange 1x (500 ${getGameIcon('spiritShards', { size: '11px' })})
           </button>
 
           <button id="btn-exchange-max" ${shards < 500 || (exchangeStatus.remaining ?? 10) < 1 ? 'disabled' : ''} style="
@@ -593,12 +601,12 @@ export function renderContractView(container, onNavigateToIndex) {
   });
 
   // Rates Modal
-  const btnRates = container.querySelector('#btn-rates-modal');
-  if (btnRates) {
-    btnRates.addEventListener('click', () => {
+  container.querySelectorAll('#btn-rates-modal, .btn-rates-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       showRatesModal(activeBanner);
     });
-  }
+  });
 
   // Milestone Chest Modal
   const btnMilestoneChest = container.querySelector('#btn-milestone-chest');
@@ -614,7 +622,7 @@ export function renderContractView(container, onNavigateToIndex) {
       const count = parseInt(e.target.getAttribute('data-count'), 10);
       try {
         const reward = gameState.claimSummonMilestone(count);
-        alert(`🎉 Milestone ${count} Claimed!\n${reward.desc}`);
+        alert(`Milestone ${count} Claimed!\n${reward.desc}`);
         renderContractView(container, onNavigateToIndex);
       } catch (err) {
         alert(err.message);
@@ -648,7 +656,9 @@ export function renderContractView(container, onNavigateToIndex) {
   container.querySelector('#btn-exchange-1')?.addEventListener('click', () => {
     try {
       const res = gameState.exchangeShardsForPurifiedEssence(1);
-      alert(`✨ Exchanged 500 Shards for 1 Purified Soul Essence!\nRemaining today: ${res.remainingToday}/10`);
+      if (typeof window !== 'undefined' && typeof window.updateResourcesDisplay === 'function') {
+        window.updateResourcesDisplay(true);
+      }
       renderContractView(container, onNavigateToIndex);
     } catch (err) {
       alert(err.message);
@@ -656,11 +666,15 @@ export function renderContractView(container, onNavigateToIndex) {
   });
 
   container.querySelector('#btn-exchange-max')?.addEventListener('click', () => {
-    const maxPossible = Math.min(exchangeStatus.remainingToday, Math.floor(shards / 500));
+    const curStatus = gameState.getDailyPurifiedExchangeStatus ? gameState.getDailyPurifiedExchangeStatus() : { remaining: 10 };
+    const curShards = gameState.state.resources?.spiritShards || 0;
+    const maxPossible = Math.min(curStatus.remaining ?? curStatus.remainingToday ?? 10, Math.floor(curShards / 500));
     if (maxPossible <= 0) return;
     try {
       const res = gameState.exchangeShardsForPurifiedEssence(maxPossible);
-      alert(`✨ Exchanged ${res.shardsSpent.toLocaleString()} Shards for ${res.essenceGained} Purified Soul Essence!\nRemaining today: ${res.remainingToday}/10`);
+      if (typeof window !== 'undefined' && typeof window.updateResourcesDisplay === 'function') {
+        window.updateResourcesDisplay(true);
+      }
       renderContractView(container, onNavigateToIndex);
     } catch (err) {
       alert(err.message);
@@ -668,27 +682,95 @@ export function renderContractView(container, onNavigateToIndex) {
   });
 }
 
-function showRatesModal(banner) {
-  const modalRoot = document.getElementById('modal-root');
-  if (!modalRoot) return;
+export function showRatesModal(banner) {
+  const modalRoot = document.getElementById('modal-root') || document.body;
+  if (!modalRoot || !banner) return;
+
+  // Extract all featured rate-up spirits from banner config
+  const rateUpSpirits = [];
+  if (banner.rateUpBonus) {
+    for (const [tier, speciesVal] of Object.entries(banner.rateUpBonus)) {
+      if (tier === 'rateUpShare') continue;
+      const ids = Array.isArray(speciesVal) ? speciesVal : [speciesVal];
+      ids.forEach(id => {
+        const sp = SPIRIT_SPECIES[id];
+        if (sp) {
+          rateUpSpirits.push({
+            id,
+            name: sp.name,
+            tier,
+            rarity: getRarityInfo(sp.baseRarity || tier),
+            share: Math.round((banner.rateUpBonus.rateUpShare || 0.6) * 100)
+          });
+        }
+      });
+    }
+  }
+  if (rateUpSpirits.length === 0 && banner.featuredSpeciesId) {
+    const sp = SPIRIT_SPECIES[banner.featuredSpeciesId];
+    if (sp) {
+      rateUpSpirits.push({
+        id: banner.featuredSpeciesId,
+        name: sp.name,
+        tier: sp.baseRarity,
+        rarity: getRarityInfo(sp.baseRarity),
+        share: 60
+      });
+    }
+  }
 
   const modalEl = document.createElement('div');
   modalEl.className = 'modal-backdrop';
   modalEl.innerHTML = `
-    <div class="modal-card" style="max-width: 420px; padding: 18px; border: 2px solid ${banner.accentColor}; background: #140d07;">
+    <div class="modal-card" style="max-width: 440px; padding: 18px; border: 2px solid ${banner.accentColor}; background: #140d07; box-shadow: 0 8px 32px rgba(0,0,0,0.85);">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-        <h3 style="margin: 0; font-size: 16px; color: #ffd700; display: flex; align-items: center; gap: 6px;">
-          <span>🎲</span>
+        <h3 style="margin: 0; font-size: 15px; color: #ffd700; display: flex; align-items: center; gap: 6px;">
+          <span>${getGameIcon('info', { size: '16px', color: '#ffd700' })}</span>
           <span>${banner.name} Probability Rates</span>
         </h3>
-        <button id="btn-close-rates" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">✕</button>
+        <button id="btn-close-rates" style="background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center;">${getGameIcon('close', { size: '14px' })}</button>
       </div>
 
-      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+      <!-- Featured Rate-Up Spirits Section -->
+      ${rateUpSpirits.length > 0 ? `
+        <div style="margin-top: 12px; background: rgba(0,0,0,0.55); border: 1.5px solid ${banner.accentColor}; border-radius: 12px; padding: 12px;">
+          <div style="font-size: 11px; font-weight: 900; color: #ffd700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: inline-flex; align-items: center; gap: 4px;">
+              ${getGameIcon('sparkle', { size: '12px', color: '#ffd152' })} Featured Rate-Up Spirits
+            </span>
+            <span style="color: ${banner.accentColor}; font-weight: 800; font-size: 10px;">${rateUpSpirits[0].share}% Rate-Up Share</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${rateUpSpirits.map(s => `
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid ${s.rarity.border || banner.accentColor}44; border-radius: 8px; padding: 6px 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, ${s.rarity.color}33 0%, rgba(0,0,0,0.6) 80%); border-radius: 50%; overflow: hidden; border: 1.5px solid ${s.rarity.color};">
+                    ${createAnimatedSpriteHtml(s.id, { extraClasses: 'scale-90' })}
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #ffffff;">${s.name}</span>
+                    <span style="font-size: 9.5px; font-weight: 800; color: ${s.rarity.color}; text-transform: uppercase; letter-spacing: 0.5px;">${s.rarity.name} • Featured</span>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                  <span style="font-size: 11px; font-weight: 900; color: #ffd152; display: inline-flex; align-items: center; gap: 2px;">
+                    ${getGameIcon('arrowUp', { size: '10px', color: '#ffd152' })} ${s.share}%
+                  </span>
+                  <span style="font-size: 8.5px; color: #94a3b8;">of ${s.tier} pulls</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Tier Probability Rates -->
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Base Rarity Odds</div>
         ${banner.odds.map(o => {
           const rInfo = getRarityInfo(o.rarity);
           return `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 8px; border-left: 4px solid ${rInfo.color};">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 6px; border-left: 3.5px solid ${rInfo.color};">
               <span style="font-weight: 800; color: ${rInfo.color};">${rInfo.name}</span>
               <span style="font-weight: 900; color: #fff;">${o.weight.toFixed(1)}%</span>
             </div>
@@ -696,14 +778,7 @@ function showRatesModal(banner) {
         }).join('')}
       </div>
 
-      ${banner.rateUpBonus ? `
-        <div style="margin-top: 12px; background: rgba(243,156,18,0.15); border: 1px solid #f39c12; border-radius: 8px; padding: 10px; font-size: 11px; color: #ffeaa7;">
-          <strong>⭐ Rate-Up Guarantee:</strong><br>
-          When pulling the featured highest rarity, there is a <strong>${Math.round((banner.rateUpBonus.rateUpShare || 0.5) * 100)}% chance</strong> to receive the featured banner character!
-        </div>
-      ` : ''}
-
-      <button id="btn-dismiss-rates" style="margin-top: 16px; width: 100%; min-height: 42px; background: #e67e22; border: none; border-radius: 8px; color: #fff; font-weight: 800; cursor: pointer;">
+      <button id="btn-dismiss-rates" style="margin-top: 14px; width: 100%; min-height: 40px; background: ${banner.accentColor}; border: none; border-radius: 8px; color: #fff; font-weight: 800; cursor: pointer; transition: filter 0.15s ease;">
         Close
       </button>
     </div>
@@ -740,10 +815,10 @@ function showMilestonesModal(totalSummons, claimedMilestones, container, onNavig
     <div class="modal-card" style="max-width: 440px; padding: 18px; border: 2px solid #e67e22; background: #1a110a;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
         <h3 style="margin: 0; font-size: 16px; color: #ffd700; display: flex; align-items: center; gap: 6px;">
-          <span>🎁</span>
+          <span>${getGameIcon('trophy', { size: '16px', color: '#ffd700' })}</span>
           <span>Summon Milestone Rewards</span>
         </h3>
-        <button id="btn-close-milestones" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">✕</button>
+        <button id="btn-close-milestones" style="background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center;">${getGameIcon('close', { size: '14px' })}</button>
       </div>
 
       <div style="font-size: 12px; color: #d4a373; margin: 10px 0 14px 0;">
@@ -770,7 +845,7 @@ function showMilestonesModal(totalSummons, claimedMilestones, container, onNavig
               </div>
               <div>
                 ${claimed ? `
-                  <span style="font-size: 11px; font-weight: 800; color: #2ecc71;">Claimed ✓</span>
+                  <span style="font-size: 11px; font-weight: 800; color: #2ecc71; display: inline-flex; align-items: center; gap: 4px;">Claimed ${getGameIcon('check', { size: '12px', color: '#2ecc71' })}</span>
                 ` : (reached ? `
                   <button class="btn-claim-modal" data-count="${m.count}" style="
                     background: #27ae60; 
@@ -783,7 +858,7 @@ function showMilestonesModal(totalSummons, claimedMilestones, container, onNavig
                     cursor: pointer;
                   ">Claim</button>
                 ` : `
-                  <span style="font-size: 11px; font-weight: 700; color: #7f8c8d;">Locked 🔒</span>
+                  <span style="font-size: 11px; font-weight: 700; color: #7f8c8d; display: inline-flex; align-items: center; gap: 4px;">Locked ${getGameIcon('lock', { size: '12px', color: '#7f8c8d' })}</span>
                 `)}
               </div>
             </div>
@@ -813,7 +888,7 @@ function showMilestonesModal(totalSummons, claimedMilestones, container, onNavig
       const count = parseInt(e.target.getAttribute('data-count'), 10);
       try {
         const reward = gameState.claimSummonMilestone(count);
-        alert(`🎉 Milestone ${count} Claimed!\n${reward.desc}`);
+        alert(`Milestone ${count} Claimed!\n${reward.desc}`);
         close();
         renderContractView(container, onNavigateToIndex);
       } catch (err) {

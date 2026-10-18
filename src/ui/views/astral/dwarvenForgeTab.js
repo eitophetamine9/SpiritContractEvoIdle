@@ -1,6 +1,7 @@
 import { gameState } from '../../../state/gameState.js';
 import { audioManager } from '../../../audio/audioManager.js';
 import { createAnimatedSpriteHtml, createAnimatedRelicHtml } from '../../../render/spriteAnimator.js';
+import { getGameIcon } from '../../icons/gameIcons.js';
 
 export function renderDwarvenForgeSectionHtml(res, state) {
   // Ensure weekly reset logic is executed
@@ -45,14 +46,14 @@ export function renderDwarvenForgeSectionHtml(res, state) {
             </div>
           </div>
           <div class="text-right shrink-0">
-            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800/80 border border-slate-700 text-slate-300">
-              📅 Resets Mondays 00:00 UTC
+            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800/80 border border-slate-700 text-slate-300 inline-flex items-center gap-1">
+              ${getGameIcon('calendar', { size: 12 })} Resets Mondays 00:00 UTC
             </span>
           </div>
         </div>
 
-        <div class="text-[10px] text-amber-300/90 bg-amber-950/40 border border-amber-500/30 rounded-lg px-2.5 py-1 mt-0.5">
-          ⚖️ <strong>Dwarven Trading Quota:</strong> Master dwarven smiths strictly ration their rare catalysts each week. Purchases consume Spirit Shards 💎, Essences of the Gods 💠, and Soul Essences 🔮.
+        <div class="text-[10px] text-amber-300/90 bg-amber-950/40 border border-amber-500/30 rounded-lg px-2.5 py-1 mt-0.5 flex items-center gap-1.5 flex-wrap">
+          ${getGameIcon('balance', { size: 12 })} <strong>Dwarven Trading Quota:</strong> Master dwarven smiths strictly ration their rare catalysts each week. Purchases consume Spirit Shards ${getGameIcon('spiritShards', { size: 11 })}, Essences of the Gods ${getGameIcon('godsEssence', { size: 11 })}, and Soul Essences ${getGameIcon('astralEssence', { size: 11 })}.
         </div>
       </div>
 
@@ -60,14 +61,14 @@ export function renderDwarvenForgeSectionHtml(res, state) {
       <div class="grid grid-cols-2 gap-2 text-xs">
         <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-lg">📜</span>
+            ${getGameIcon('scroll', { size: 16, color: '#f59e0b' })}
             <span class="text-slate-300 text-[11px] font-bold">Divine Scriptures Owned</span>
           </div>
           <strong class="text-amber-400 font-extrabold">${(res.divineScriptures || 0).toLocaleString()}</strong>
         </div>
         <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-lg">🌀</span>
+            ${getGameIcon('vortex', { size: 16, color: '#06b6d4' })}
             <span class="text-slate-300 text-[11px] font-bold">Relic Reshapers Owned</span>
           </div>
           <strong class="text-cyan-400 font-extrabold">${(res.relicReshapers || 0).toLocaleString()}</strong>
@@ -103,15 +104,15 @@ export function renderDwarvenForgeSectionHtml(res, state) {
             <div class="rounded-lg bg-slate-950/80 border border-slate-800 p-2 flex flex-col gap-1 text-[11px]">
               <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Required Materials:</div>
               <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.spiritShards || 0) >= scriptureCost.shards ? 'text-emerald-300' : 'text-red-300'}">
-                <span>💎 Spirit Shards:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('spiritShards', { size: 11 })} Spirit Shards:</span>
                 <strong>${scriptureCost.shards.toLocaleString()} (${(res.spiritShards || 0).toLocaleString()})</strong>
               </div>
               <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.essencesOfTheGods || 0) >= scriptureCost.gods ? 'text-emerald-300' : 'text-red-300'}">
-                <span>💠 Essences of Gods:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('godsEssence', { size: 11 })} Essences of Gods:</span>
                 <strong>${scriptureCost.gods} (${res.essencesOfTheGods || 0})</strong>
               </div>
               <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.soulEssence || 0) >= scriptureCost.soul ? 'text-emerald-300' : 'text-red-300'}">
-                <span>🔮 Soul Essence:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('astralEssence', { size: 11 })} Soul Essence:</span>
                 <strong>${scriptureCost.soul} (${res.soulEssence || 0})</strong>
               </div>
             </div>
@@ -150,15 +151,15 @@ export function renderDwarvenForgeSectionHtml(res, state) {
             <div class="rounded-lg bg-slate-950/80 border border-slate-800 p-2 flex flex-col gap-1 text-[11px]">
               <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Required Materials:</div>
               <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.spiritShards || 0) >= reshaperCost.shards ? 'text-emerald-300' : 'text-red-300'}">
-                <span>💎 Spirit Shards:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('spiritShards', { size: 11 })} Spirit Shards:</span>
                 <strong>${reshaperCost.shards.toLocaleString()} (${(res.spiritShards || 0).toLocaleString()})</strong>
               </div>
               <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.essencesOfTheGods || 0) >= reshaperCost.gods ? 'text-emerald-300' : 'text-red-300'}">
-                <span>💠 Essences of Gods:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('godsEssence', { size: 11 })} Essences of Gods:</span>
                 <strong>${reshaperCost.gods} (${res.essencesOfTheGods || 0})</strong>
               </div>
               <div class="flex items-center justify-between px-1.5 py-0.5 rounded ${(res.soulEssence || 0) >= reshaperCost.soul ? 'text-emerald-300' : 'text-red-300'}">
-                <span>🔮 Soul Essence:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('astralEssence', { size: 11 })} Soul Essence:</span>
                 <strong>${reshaperCost.soul} (${res.soulEssence || 0})</strong>
               </div>
             </div>

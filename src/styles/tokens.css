@@ -211,5 +211,63 @@ button:disabled {
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+
+/* ==========================================================================
+   Vector Icon Micro-Animations & Glow FX
+   ========================================================================== */
+.game-svg-icon {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.game-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes iconGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px currentColor); opacity: 0.92; }
+  50% { filter: drop-shadow(0 0 8px currentColor); opacity: 1; }
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes iconSpinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animated-icon-pulse {
+  animation: iconPulse 2.4s ease-in-out infinite;
+}
+
+.animated-icon-glow {
+  animation: iconGlow 2.8s ease-in-out infinite;
+}
+
+.animated-icon-float {
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+.animated-icon-spin {
+  animation: iconSpinSlow 12s linear infinite;
+}
+
 

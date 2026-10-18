@@ -1,0 +1,355 @@
+/* ==========================================================================
+   SLIDING 3-CARD CAROUSEL COMPONENT - REFERENCE UI AESTHETIC
+   ========================================================================== */
+
+.sliding-carousel-container {
+  position: relative;
+  width: 100%;
+  margin: 10px 0 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  user-select: none;
+}
+
+/* Navigation Arrow Header / Floating Controls */
+.carousel-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.carousel-counter-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffd152;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.carousel-nav-arrows {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1.5px solid rgba(250, 204, 21, 0.4);
+  color: #ffd152;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(255, 215, 0, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.carousel-arrow-btn:hover:not(:disabled) {
+  border-color: #ffd152;
+  box-shadow: 0 0 16px rgba(255, 209, 82, 0.55);
+  transform: translateY(-2px) scale(1.05);
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
+}
+
+.carousel-arrow-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.carousel-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #64748b;
+  box-shadow: none;
+}
+
+/* Viewport & Sliding Track */
+.carousel-viewport {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 6px 2px;
+  touch-action: pan-y;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 16px;
+  will-change: transform;
+}
+
+/* Individual Sliding Card */
+.carousel-sliding-card {
+  flex: 0 0 calc((100% - 32px) / 3);
+  max-width: calc((100% - 32px) / 3);
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(23, 31, 46, 0.95) 0%, rgba(12, 16, 24, 0.98) 100%);
+  border: 1.5px solid rgba(250, 204, 21, 0.3);
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.22s ease;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.carousel-sliding-card:hover {
+  border-color: rgba(250, 204, 21, 0.7);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75), 0 0 18px rgba(250, 204, 21, 0.25);
+  transform: translateY(-3px);
+}
+
+.carousel-sliding-card.selected {
+  border: 2px solid #ffd152;
+  box-shadow: 0 0 24px rgba(255, 209, 82, 0.4), inset 0 0 16px rgba(255, 209, 82, 0.15);
+  background: linear-gradient(180deg, rgba(35, 45, 65, 0.98) 0%, rgba(15, 20, 30, 0.99) 100%);
+}
+
+/* Card Top Illustrated Banner Art */
+.card-header-banner {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-banner-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.85;
+}
+
+.card-banner-overlay-shading {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 60%, rgba(12, 16, 24, 0.95) 100%);
+}
+
+.card-banner-ambient-art {
+  position: relative;
+  z-index: 2;
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.75));
+  transition: transform 0.25s ease;
+}
+
+.carousel-sliding-card:hover .card-banner-ambient-art {
+  transform: scale(1.1) translateY(-2px);
+}
+
+/* Active Checkmark Pill (Top Right) */
+.card-active-check-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #fff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+  animation: popBadge 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popBadge {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Overlapping Emblem Hexagon Badge */
+.card-overlapping-emblem-wrap {
+  position: relative;
+  margin-top: -30px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: center;
+  z-index: 5;
+}
+
+.card-overlapping-emblem {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 2px solid #ffd152;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 209, 82, 0.35);
+  font-size: 22px;
+  color: #ffd152;
+}
+
+/* Card Body & Texts */
+.card-body-content {
+  padding: 8px 14px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  text-align: center;
+  gap: 8px;
+}
+
+.card-title-text {
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.carousel-sliding-card.selected .card-title-text {
+  color: #ffd152;
+}
+
+.card-subtitle-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.card-metrics-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 2px 0;
+}
+
+.card-metric-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-metric-pill.highlight {
+  border-color: rgba(250, 204, 21, 0.5);
+  color: #ffd152;
+  background: rgba(250, 204, 21, 0.12);
+}
+
+/* Bottom Action Button */
+.card-bottom-action-btn {
+  width: 100%;
+  min-height: 38px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1.5px solid rgba(250, 204, 21, 0.5);
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(217, 119, 6, 0.25) 100%);
+  color: #ffd152;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.card-bottom-action-btn:hover {
+  background: linear-gradient(135deg, #ffd152 0%, #f59e0b 100%);
+  color: #000;
+  border-color: #ffd152;
+  box-shadow: 0 0 16px rgba(255, 209, 82, 0.6);
+  transform: translateY(-1px);
+}
+
+.card-bottom-action-btn:active {
+  transform: scale(0.97);
+}
+
+.carousel-sliding-card.selected .card-bottom-action-btn {
+  background: linear-gradient(135deg, #ffd152 0%, #f59e0b 100%);
+  color: #000;
+  border-color: #fff;
+  box-shadow: 0 0 14px rgba(255, 209, 82, 0.5);
+}
+
+/* Pagination Dots */
+.carousel-pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.carousel-dot:hover {
+  background: rgba(250, 204, 21, 0.6);
+}
+
+.carousel-dot.active {
+  width: 24px;
+  background: linear-gradient(90deg, #ffd152 0%, #f59e0b 100%);
+  border-color: #ffd152;
+  box-shadow: 0 0 8px rgba(255, 209, 82, 0.6);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 859px) {
+  .carousel-sliding-card {
+    flex: 0 0 calc((100% - 16px) / 2);
+    max-width: calc((100% - 16px) / 2);
+  }
+}
+
+@media (max-width: 599px) {
+  .carousel-sliding-card {
+    flex: 0 0 84%;
+    max-width: 84%;
+  }
+}

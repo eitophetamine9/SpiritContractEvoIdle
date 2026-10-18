@@ -2,6 +2,7 @@ import { gameState } from '../../state/gameState.js';
 import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showBestiaryInspectModal } from '../components/modals.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 let activeRarityFilter = 'ALL';
 
@@ -33,7 +34,7 @@ export function renderIndexView(container) {
       <div class="index-header-banner">
         <div class="index-header-top">
           <div class="index-title-group">
-            <span class="index-main-title">📖 Spirit Bestiary</span>
+            <span class="index-main-title" style="display: inline-flex; align-items: center; gap: 6px;">${getGameIcon('book', { size: 16, color: '#38bdf8' })} Spirit Bestiary</span>
             <span class="index-subtitle">Contractor's Ancient Bestiary & Evolution Lineage</span>
           </div>
 
@@ -56,11 +57,11 @@ export function renderIndexView(container) {
         <div class="index-milestones-track" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255, 255, 255, 0.1);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <span style="font-size: 11px; font-weight: 800; color: #ffd152; display: flex; align-items: center; gap: 4px;">
-              <span>🏆</span> Milestone Rewards (Purified Soul Essence)
+              ${getGameIcon('trophy', { size: 13, color: '#ffd152' })} Milestone Rewards (Purified Soul Essence)
             </span>
             ${rewardStatus.unclaimedSpeciesCount > 0 ? `
-              <button id="btn-claim-all-bestiary-shards" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; font-size: 10px; font-weight: 800; border: 1px solid #fbbf24; border-radius: 6px; padding: 2px 8px; cursor: pointer;">
-                🎁 Claim ${rewardStatus.unclaimedSpeciesCount} Bounties (+${rewardStatus.unclaimedSpeciesCount * 50} 💎)
+              <button id="btn-claim-all-bestiary-shards" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; font-size: 10px; font-weight: 800; border: 1px solid #fbbf24; border-radius: 6px; padding: 2px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                ${getGameIcon('gift', { size: 12 })} Claim ${rewardStatus.unclaimedSpeciesCount} Bounties (+${rewardStatus.unclaimedSpeciesCount * 50} ${getGameIcon('spiritShards', { size: 11 })})
               </button>
             ` : ''}
           </div>
@@ -70,8 +71,8 @@ export function renderIndexView(container) {
               if (m.isClaimed) {
                 return `
                   <div style="padding: 4px 6px; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 6px; text-align: center;">
-                    <div style="font-size: 10px; font-weight: 800; color: #4ade80;">${m.percent}% ✓</div>
-                    <div style="font-size: 9px; color: #86efac;">+${m.purifiedReward} ✨</div>
+                    <div style="font-size: 10px; font-weight: 800; color: #4ade80; display: inline-flex; align-items: center; gap: 2px;">${m.percent}% ${getGameIcon('check', { size: 10, color: '#4ade80' })}</div>
+                    <div style="font-size: 9px; color: #86efac; display: inline-flex; align-items: center; gap: 2px;">+${m.purifiedReward} ${getGameIcon('sparkle', { size: 9, color: '#86efac' })}</div>
                   </div>
                 `;
               }
@@ -79,14 +80,14 @@ export function renderIndexView(container) {
                 return `
                   <button class="btn-claim-milestone" data-percent="${m.percent}" style="padding: 4px 6px; background: linear-gradient(135deg, #a855f7, #6366f1); border: 1px solid #c084fc; border-radius: 6px; text-align: center; cursor: pointer; box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);">
                     <div style="font-size: 10px; font-weight: 900; color: #fff;">${m.percent}% Claim!</div>
-                    <div style="font-size: 9px; color: #fde047; font-weight: 800;">+${m.purifiedReward} ✨</div>
+                    <div style="font-size: 9px; color: #fde047; font-weight: 800; display: inline-flex; align-items: center; gap: 2px;">+${m.purifiedReward} ${getGameIcon('sparkle', { size: 9, color: '#fde047' })}</div>
                   </button>
                 `;
               }
               return `
                 <div style="padding: 4px 6px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; text-align: center; opacity: 0.65;">
                   <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">${m.percent}%</div>
-                  <div style="font-size: 9px; color: var(--text-moon);">+${m.purifiedReward} ✨</div>
+                  <div style="font-size: 9px; color: var(--text-moon); display: inline-flex; align-items: center; gap: 2px;">+${m.purifiedReward} ${getGameIcon('sparkle', { size: 9, color: '#94a3b8' })}</div>
                 </div>
               `;
             }).join('')}
@@ -181,7 +182,7 @@ export function renderIndexView(container) {
   container.querySelector?.('#btn-claim-all-bestiary-shards')?.addEventListener('click', () => {
     try {
       const res = gameState.claimAllBestiarySpeciesRewards();
-      alert(`🎉 Claimed ${res.count} Discovery Bounties!\nReceived +${res.shardsGranted} Spirit Shards!`);
+      alert(`Claimed ${res.count} Discovery Bounties!\nReceived +${res.shardsGranted} Spirit Shards!`);
       renderIndexView(container);
     } catch (err) {
       alert(err.message);
@@ -194,7 +195,7 @@ export function renderIndexView(container) {
       const pct = parseInt(btn.dataset.percent, 10);
       try {
         const res = gameState.claimBestiaryMilestoneReward(pct);
-        alert(`🏆 ${pct}% Bestiary Milestone Reached!\nReceived +${res.purifiedGranted} Purified Soul Essence!`);
+        alert(`${pct}% Bestiary Milestone Reached!\nReceived +${res.purifiedGranted} Purified Soul Essence!`);
         renderIndexView(container);
       } catch (err) {
         alert(err.message);

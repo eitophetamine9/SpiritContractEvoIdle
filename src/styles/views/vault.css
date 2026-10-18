@@ -289,8 +289,8 @@
 
 .bestiary-tile {
   background: rgba(14, 23, 18, 0.9);
-  border: 1.5px solid var(--border-color);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   padding: 8px 6px;
   display: flex;
   flex-direction: column;
@@ -299,7 +299,7 @@
   min-height: 92px;
   position: relative;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
 }
 
@@ -311,8 +311,8 @@
 .bestiary-tile.locked {
   background: rgba(8, 12, 10, 0.7);
   border-style: dashed;
-  border-color: #273b2e;
-  opacity: 0.7;
+  border-color: rgba(255, 255, 255, 0.06);
+  opacity: 0.65;
 }
 
 .bestiary-tile-num {
@@ -584,5 +584,27 @@
   gap: 12px;
   padding: 4px 0 16px 0;
   color: #f1f5f9;
+}
+
+/* Vault Creature Sprite Breathing Animation */
+.vault-creature-sprite,
+.vault-artwork-pedestal .animated-pixel-sprite {
+  animation: creatureBreathingBob 2.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.vault-creature-sprite .sprite-frame-viewer,
+.vault-artwork-pedestal .sprite-frame-viewer {
+  animation: none !important;
+  background-position: 0px 0px !important;
+}
+
+@keyframes creatureBreathingBob {
+  0%, 100% {
+    transform: translateY(0px) scale(1, 1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.02, 1.05);
+  }
 }
 

@@ -19,8 +19,8 @@ export function showOfflineModal(report, onClaim) {
   if (report.levelUps.length > 0) {
     levelUpsHtml = `
       <div style="font-size: 12px; color: #70a1ff; font-weight: 700; margin-top: 4px;">
-        ⬆️ Level Ups:
-        ${report.levelUps.map(l => `<div>• ${l.name}: Lv. ${l.oldLevel} ➔ Lv. ${l.newLevel}</div>`).join('')}
+        Level Ups:
+        ${report.levelUps.map(l => `<div>• ${l.name}: Lv. ${l.oldLevel} ${getGameIcon('arrowRight', { size: 10 })} Lv. ${l.newLevel}</div>`).join('')}
       </div>
     `;
   }
@@ -29,8 +29,8 @@ export function showOfflineModal(report, onClaim) {
   if (report.readyToEvolve.length > 0) {
     evoHtml = `
       <div style="font-size: 12px; color: #ffd700; font-weight: 800; margin-top: 4px; padding: 6px; background: rgba(255,215,0,0.1); border-radius: 6px;">
-        ⚡ Ready to Evolve (${report.readyToEvolve.length}):
-        ${report.readyToEvolve.map(s => `<div>🌟 ${s.customName} hit Level Cap!</div>`).join('')}
+        <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('zap', { size: 12, color: '#ffd700' })} Ready to Evolve (${report.readyToEvolve.length}):</span>
+        ${report.readyToEvolve.map(s => `<div style="display: flex; align-items: center; gap: 4px;">${getGameIcon('star', { size: 11, color: '#facc15' })} ${s.customName} hit Level Cap!</div>`).join('')}
       </div>
     `;
   }
@@ -38,7 +38,9 @@ export function showOfflineModal(report, onClaim) {
   modalRoot.innerHTML = `
     <div class="modal-backdrop">
       <div class="modal-card">
-        <h2 class="modal-title">⛩️ Welcome Back, Contractor!</h2>
+        <h2 class="modal-title" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+          ${getGameIcon('torii', { size: 20 })} Welcome Back, Contractor!
+        </h2>
         
         <div style="text-align: center; font-size: 13px; color: var(--text-muted);">
           While you were away for <strong style="color: #ffffff;">${timeStr}</strong>, your ${report.partyCount} equipped Spirit(s) trained tirelessly in the astral plane:
@@ -69,7 +71,7 @@ export function showOfflineModal(report, onClaim) {
           ${report.energyGained > 0 ? `
           <div class="offline-loot-row">
             <span style="color: var(--text-muted);">Madness Energy Restored:</span>
-            <span style="color: #f1c40f;">+${report.energyGained} ⚡</span>
+            <span style="color: #f1c40f; display: inline-flex; align-items: center; gap: 4px;">+${report.energyGained} ${getGameIcon('energy', { size: 12, color: '#facc15' })}</span>
           </div>` : ''}
 
           ${levelUpsHtml}
@@ -77,13 +79,13 @@ export function showOfflineModal(report, onClaim) {
         </div>
 
         ${(report.elapsedSeconds >= 3600 || report.canClaim) ? `
-        <button id="btn-claim-offline" class="modal-btn-confirm" style="background: linear-gradient(135deg, #00d2ff, #70a1ff); font-weight: 800; cursor: pointer;">
-          ✨ Claim Idle Spoils (${timeStr})
+        <button id="btn-claim-offline" class="modal-btn-confirm" style="background: linear-gradient(135deg, #00d2ff, #70a1ff); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          ${getGameIcon('sparkle', { size: 14 })} Claim Idle Spoils (${timeStr})
         </button>
         ` : `
         <div style="display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%;">
           <button id="btn-claim-offline" class="modal-btn-confirm" disabled style="opacity: 0.55; cursor: not-allowed; background: #2f3542; border: 1px solid #57606f;">
-            ⏳ 1 Hour Minimum Required to Claim (${timeStr} / 1h)
+            1 Hour Minimum Required to Claim (${timeStr} / 1h)
           </button>
           <button id="btn-dismiss-offline" style="background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; text-decoration: underline;">
             Dismiss & Continue Meditating

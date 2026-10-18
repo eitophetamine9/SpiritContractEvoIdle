@@ -18,3 +18,6 @@
 
 /* 4. Interactive Modals & Dialogs */
 @import './styles/modals.css';
+
+/* 5. Reusable Components */
+@import './styles/components/slidingCarousel.css';

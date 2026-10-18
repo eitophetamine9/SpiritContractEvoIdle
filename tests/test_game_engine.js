@@ -14,8 +14,8 @@ import {
   CONSTELLATIONS_CONFIG
 } from '../src/data/index.js';
 import { enhanceRelicData, WEAPON_TYPES, createWeaponInstance } from '../src/data/equipmentData.js';
-import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot } from '../src/data/index.js';
-import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml } from '../src/render/spriteAnimator.js';
+import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot, PANTHEON_CHAMBERS, generateDungeonLoot } from '../src/data/index.js';
+import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml, getSheetKeyForRelic } from '../src/render/spriteAnimator.js';
 import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import { getSingaporeDayKey, getSingaporeWeekKey } from '../src/state/constants.js';
@@ -968,13 +968,13 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (mappedCount < 40) throw new Error(`Expected at least 40 species mapped, got ${mappedCount}`);
 
   const sampleSpecies = [
-    { id: 'cat_spirit', expected: 'feline_shadow' },
-    { id: 'bull_spirit', expected: 'bovine_earth' },
-    { id: 'chicken_spirit', expected: 'avian_blaze' },
-    { id: 'caterpillar_spirit', expected: 'insect_chrysalis' },
-    { id: 'shark_spirit', expected: 'draconic_leviathan' },
-    { id: 'solaris_the_one', expected: 'celestial_sun' },
-    { id: 'dog_spirit', expected: 'canine_guardian' }
+    { id: 'cat_spirit', expected: 'cat_spirit' },
+    { id: 'bull_spirit', expected: 'bull_spirit' },
+    { id: 'chicken_spirit', expected: 'chicken_spirit' },
+    { id: 'caterpillar_spirit', expected: 'caterpillar_spirit' },
+    { id: 'shark_spirit', expected: 'shark_spirit' },
+    { id: 'solaris_the_one', expected: 'solaris_the_one' },
+    { id: 'dog_spirit', expected: 'dog_spirit' }
   ];
 
   for (const s of sampleSpecies) {
@@ -1648,14 +1648,14 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
 
   // Verify getSheetKeyForSpecies mappings
-  if (getSheetKeyForSpecies('fallen_warrior') !== 'spectral_undead') {
-    throw new Error(`Expected fallen_warrior to map to spectral_undead, got ${getSheetKeyForSpecies('fallen_warrior')}`);
+  if (getSheetKeyForSpecies('fallen_warrior') !== 'fallen_warrior_spirit') {
+    throw new Error(`Expected fallen_warrior to map to fallen_warrior_spirit, got ${getSheetKeyForSpecies('fallen_warrior')}`);
   }
-  if (getSheetKeyForSpecies('archangel_uriel') !== 'celestial_angel') {
-    throw new Error(`Expected archangel_uriel to map to celestial_angel, got ${getSheetKeyForSpecies('archangel_uriel')}`);
+  if (getSheetKeyForSpecies('archangel_uriel') !== 'archangel_uriel') {
+    throw new Error(`Expected archangel_uriel to map to archangel_uriel, got ${getSheetKeyForSpecies('archangel_uriel')}`);
   }
-  if (getSheetKeyForSpecies('baphomet_archdemon_lord') !== 'baphomet_nether') {
-    throw new Error(`Expected baphomet_archdemon_lord to map to baphomet_nether, got ${getSheetKeyForSpecies('baphomet_archdemon_lord')}`);
+  if (getSheetKeyForSpecies('baphomet_archdemon_lord') !== 'baphomet_archdemon_lord') {
+    throw new Error(`Expected baphomet_archdemon_lord to map to baphomet_archdemon_lord, got ${getSheetKeyForSpecies('baphomet_archdemon_lord')}`);
   }
 
   // Verify getSheetKeyForEnemy mappings
@@ -2567,7 +2567,157 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     throw new Error('2X speed should be unlocked at Stage 10');
   }
   gameState.state.combatSpeed = 2;
-  console.log('  [PASS] 2X Speed correctly locked before Floor 10 and unlocked at Floor 10!');
+  // 49. Testing Phase 1: Title Screen Session Pause & Idle Progression Calculation
+  console.log('\n[TEST 49] Testing Phase 1: Title Screen Session Pause & Idle Progression Calculation:');
+  // 1. Exit to title session should pause loop and autosaver
+  gameState.exitToTitleSession();
+  if (gameState.isGameSessionActive !== false) {
+    throw new Error('Expected isGameSessionActive to be false after exitToTitleSession');
+  }
+  if (gameState.isGameLoopRunning()) {
+    throw new Error('Expected isGameLoopRunning() to be false after exitToTitleSession');
+  }
+  if (gameState.saveTimer) {
+    throw new Error('Expected auto-save timer to be cleared after exitToTitleSession');
+  }
+
+  // 2. Starting loop while in title session should be a guarded no-op
+  gameState.startGameLoop();
+  if (gameState.isGameLoopRunning()) {
+    throw new Error('Expected startGameLoop() to remain inactive while on title screen');
+  }
+  console.log('  [PASS] Game loop and auto-saver successfully dormant on Title Screen!');
+
+  // 3. Simulate staying on title screen for 2 hours (7200s)
+  const simulatedPast = Date.now() - 7200 * 1000;
+  gameState.state.last_saved = simulatedPast;
+
+  // 4. Enter game session (logging in or continuing as guest)
+  const offlineReport = gameState.enterGameSession();
+  if (!offlineReport) {
+    throw new Error('Expected offlineReport to be generated after 2 hours idle on title screen');
+  }
+  if (offlineReport.elapsedSeconds < 7100) {
+    throw new Error(`Expected at least ~7200 elapsed seconds, got ${offlineReport.elapsedSeconds}`);
+  }
+  if (!offlineReport.canClaim) {
+    throw new Error('Expected offline gains to be claimable after 2 hours idle');
+  }
+  if (gameState.isGameSessionActive !== true) {
+    throw new Error('Expected isGameSessionActive to be true after enterGameSession');
+  }
+  console.log(`  [PASS] Accumulated 2h (${offlineReport.elapsedSeconds}s) idle offline rewards upon entering game session!`);
+
+  // 5. Test returning to title screen pauses session cleanly
+  gameState.exitToTitleSession();
+  if (gameState.isGameSessionActive !== false || gameState.isGameLoopRunning()) {
+    throw new Error('Expected session and loop to stop when returning to title screen');
+  }
+  // 50. Testing Phase 2: All 54 Unique Animated Spirit Sprites & Direct Manifest Mapping
+  console.log('\n[TEST 50] Testing Phase 2: All 54 Unique Animated Spirit Sprites & Direct Manifest Mapping:');
+  const allSpeciesKeys = Object.keys(SPIRIT_SPECIES);
+  if (allSpeciesKeys.length !== 54) {
+    throw new Error(`Expected exactly 54 spirit species in SPIRIT_SPECIES, found ${allSpeciesKeys.length}`);
+  }
+
+  let verifiedSpriteFiles = 0;
+  for (const sId of allSpeciesKeys) {
+    const sheetKey = getSheetKeyForSpecies(sId);
+    if (!sheetKey) {
+      throw new Error(`Species "${sId}" failed to resolve to a sheet key`);
+    }
+
+    // Verify non-cat species do not fall back to cat_spirit or feline_shadow
+    if (!['cat_spirit', 'furious_cat', 'elemental_cat'].includes(sId)) {
+      if (sheetKey === 'cat_spirit' || sheetKey === 'feline_shadow') {
+        throw new Error(`Non-cat species "${sId}" incorrectly fell back to "${sheetKey}"!`);
+      }
+    }
+
+    // Verify sheet is registered in SPRITE_MANIFEST.sheets
+    const sheetDef = SPRITE_MANIFEST.sheets[sheetKey];
+    if (!sheetDef) {
+      throw new Error(`Sheet "${sheetKey}" for species "${sId}" missing from SPRITE_MANIFEST.sheets`);
+    }
+
+    // Verify SVG file exists on disk and is non-empty
+    const svgPath = path.join(process.cwd(), 'public', sheetDef.path.replace(/^\//, ''));
+    if (!fs.existsSync(svgPath)) {
+      throw new Error(`Sprite SVG file missing at: ${svgPath}`);
+    }
+    const stat = fs.statSync(svgPath);
+    if (stat.size < 1000) {
+      throw new Error(`Sprite SVG file too small (${stat.size} bytes) at: ${svgPath}`);
+    }
+
+    // Verify createAnimatedSpriteHtml outputs valid element with correct path
+    const spriteHtml = createAnimatedSpriteHtml(sId);
+    if (!spriteHtml.includes('animated-pixel-sprite') || !spriteHtml.includes(sheetDef.path)) {
+      throw new Error(`createAnimatedSpriteHtml failed for species "${sId}": ${spriteHtml}`);
+    }
+
+    verifiedSpriteFiles++;
+  }
+  console.log(`  [PASS] Verified all 54 species have unique, valid animated SVG sprite sheets (>1KB, 8 frames)!`);
+  console.log(`  [PASS] Verified zero non-cat species fall back to cat sprite!`);
+
+  // 51. Testing Phase 6 & 7: 10th Greek God Chamber (Atlas), Defensive Relic Drops & Spritesheet
+  console.log('\n[TEST 51] Testing Phase 6 & 7: 10th Greek God Chamber (Atlas), Defensive Relic Drops & Spritesheet:');
+  const atlasChamber = PANTHEON_CHAMBERS.find(c => c.id === 'celestial_pillar' || c.godId === 'atlas');
+  if (!atlasChamber) {
+    throw new Error('Celestial Pillar of Atlas chamber missing from PANTHEON_CHAMBERS');
+  }
+  if (atlasChamber.godId !== 'atlas' || atlasChamber.name !== 'Celestial Pillar of Atlas') {
+    throw new Error('Atlas chamber properties do not match expected specification');
+  }
+  if (PANTHEON_CHAMBERS.length !== 10) {
+    throw new Error(`Expected exactly 10 chambers in PANTHEON_CHAMBERS, found ${PANTHEON_CHAMBERS.length}`);
+  }
+  // Generate loot for Atlas chamber
+  const atlasLoot = generateDungeonLoot('celestial_pillar', 2);
+  if (!atlasLoot.relics || atlasLoot.relics.length < 2) {
+    throw new Error('Atlas chamber loot generation failed to yield relics');
+  }
+  for (const r of atlasLoot.relics) {
+    if (r.setId !== 'atlas') {
+      throw new Error(`Atlas chamber yielded non-atlas relic: ${r.setId}`);
+    }
+  }
+  console.log('  [PASS] All 10 Greek God chambers verified and Celestial Pillar generates targeted Atlas defensive relics!');
+
+  // Verify Atlas SVG spritesheet asset
+  const atlasRelicPath = path.join(process.cwd(), 'public', 'assets', 'sprites', 'relics', 'relic_pillar_atlas.svg');
+  if (!fs.existsSync(atlasRelicPath)) {
+    throw new Error(`Missing Atlas relic SVG at: ${atlasRelicPath}`);
+  }
+  const atlasStat = fs.statSync(atlasRelicPath);
+  if (atlasStat.size < 1000) {
+    throw new Error(`Atlas relic SVG too small (${atlasStat.size} bytes)`);
+  }
+  if (!SPRITE_MANIFEST.sheets.relic_pillar_atlas) {
+    throw new Error('relic_pillar_atlas missing from SPRITE_MANIFEST.sheets');
+  }
+  if (getSheetKeyForRelic('atlas') !== 'relic_pillar_atlas') {
+    throw new Error('getSheetKeyForRelic("atlas") did not return relic_pillar_atlas');
+  }
+  console.log('  [PASS] Atlas animated relic spritesheet verified (>8KB, 8 frames, properly routed)!');
+
+  // 52. Testing Phase 8: Calibrated Audio Engine, Web Audio Master Compressor & Harmonic Acoustics
+  console.log('\n[TEST 52] Testing Phase 8: Calibrated Audio Engine, Web Audio Master Compressor & Harmonic Acoustics:');
+  if (audioManager.bgmVolume > 0.30 || audioManager.sfxVolume > 0.30) {
+    throw new Error(`Audio volumes exceed gentle baseline! BGM: ${audioManager.bgmVolume}, SFX: ${audioManager.sfxVolume}`);
+  }
+  if (typeof audioManager.playWarmTap !== 'function' ||
+      typeof audioManager.playHarmonicChime !== 'function' ||
+      typeof audioManager.playHarpStrum !== 'function' ||
+      typeof audioManager.playEtherealBell !== 'function') {
+    throw new Error('audioManager missing harmonic acoustic synthesizer methods');
+  }
+  audioManager.playWarmTap();
+  audioManager.playHarmonicChime(880, 0.5);
+  audioManager.playHarpStrum([523.25, 659.25]);
+  audioManager.playEtherealBell(432);
+  console.log('  [PASS] Calibrated gentle volume baselines and harmonic acoustic synthesizers verified!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

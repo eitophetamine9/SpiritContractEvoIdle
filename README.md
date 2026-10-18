@@ -21,7 +21,9 @@ Spirit Contract Evo | Idle blends deep tactical party building with automated AF
 
 - **Dynamic Combat Animation Engine**: Real-time physical attack lunges (`.lunge-attack`) and weapon swing frames synced with recoil hit-flashes (`.enemy-hit-flash`, `.spirit-hit-flinch`) and hurt frames across Madness Zone, Pantheon Trials, Divine Forge, and Sanctuary of the Gods.
 - **Singapore UTC+8 Reset Engine & Purified Soul Economy**: Deterministic daily (00:00 SGT) and weekly Sunday resets; sovereign Purified Soul Essence contract summoning, 0/10 daily shard exchange, +50 Shards Bestiary discovery bounties, and compendium milestones.
-- **Interactive Carousel Pagers & UI Overhaul**: Generous layout breathing room; dropdown chamber selectors and animated `< Prev` / `Next >` carousel transitions across Pantheon Trials, Divine Forge, and Astral Realm.
+- **Interactive 3-Card Sliding Carousel Engine**: Luxury sliding carousel with peek preview cards, touch swipe, and gold indicator pills across Pantheon Trials (10 Greek God Chambers), The Divine Forge (12 Weapon Dungeons), and The Astral Realm (8 Celestial Sanctums).
+- **Summon Banner Overhaul & Probability Rates**: Dual showcase hero + relic pedestal with vertical creature breathing animations, plus an interactive Rates modal displaying live animated rate-up sprites, base rarity odds, and guaranteed tier shares.
+- **Pure Defensive Tank Archetype & Atlas Relic Set**: Dedicated 10th Olympian Deity relic set (Celestial Pillar of Atlas) granting `+25% Max HP`, `+20% DEF`, and *Guardian Interception* aura alongside custom 8-frame animated SVG relic artifacts.
 - **Contextual Area Unlock Tutorials & Celestial Summon Vortex**: Automatic guided modals featuring the Cat Spirit Familiar mascot guide upon feature unlocks, plus an interactive runic summoning vortex with persistent skip animation toggle.
 - **Supabase Cloud Sync & Authentication**: Seamless cross-device gameplay. Play as a guest or create an account with email/password; automatic background cloud saves with client/cloud conflict resolution modals.
 - **Contractor Account Leveling & Feature Gating**: Account progression from Level 1 to 50 with EXP curves, milestone rewards, and level-gated unlocks (e.g. 3x3 Formation at Lv. 2, Pantheon Trials & Forge at Lv. 3, Bestiary at Lv. 4, Spirit Rebirth at Lv. 16).
@@ -33,7 +35,7 @@ Spirit Contract Evo | Idle blends deep tactical party building with automated AF
 - **Greek God Relic Sets & Divine Forge**: 10 Olympian deity sets with 2-piece and 4-piece set bonuses, plus 12 specialized weapon classes forged in dedicated dungeons.
 - **Madness Zone & Biome Tower**: 100+ floors spanning 6 distinct biomes with wave encounters, overlord bosses, 2X battle speed gated to Floor 10, and an infinite looping progression cycle.
 - **Balanced Idle Economy**: Offline training capped at 24 hours with fair diminishing returns. Idle meditation requires a minimum of 1 hour to claim, rewarding deliberate check-ins. Permanent summon banners ensure equal access to featured spirits.
-- **Developer & Admin Tooling**: Dedicated, secure dev console and cheat suite for floor skipping, level scaling, and currency testing.
+- **Developer & Admin Tooling**: Dedicated, secure dev console and cheat suite for authorized administrative testing, floor skipping, level scaling, and currency testing.
 
 ---
 
@@ -74,10 +76,13 @@ npm run preview
 ## Testing
 
 ```bash
-# Run core engine tests (48 tests passing)
+# Run all automated tests (Core engine + UI components)
+npm test
+
+# Run core engine tests individually (52 tests passing)
 node tests/test_game_engine.js
 
-# Run UI, tutorial & dev console component tests (34 tests passing)
+# Run UI, carousel, modal & dev console component tests
 node tests/test_ui_components.js
 
 # Run Monte Carlo RNG verification tests

@@ -3,6 +3,8 @@
  * Displays sleek, responsive notifications for feature gating, alerts, and achievements.
  */
 
+import { getGameIcon } from '../icons/gameIcons.js';
+
 export function showGameToast(message, type = 'lock') {
   if (typeof document === 'undefined') return;
 
@@ -15,7 +17,11 @@ export function showGameToast(message, type = 'lock') {
   }
 
   const toast = document.createElement('div');
-  const icon = type === 'lock' ? '🔒' : (type === 'success' ? '✨' : '⚠️');
+  const icon = type === 'lock' 
+    ? getGameIcon('lock', { size: '16px', color: '#facc15' }) 
+    : (type === 'success' 
+        ? getGameIcon('sparkle', { size: '16px', color: '#22d3ee' }) 
+        : getGameIcon('alert', { size: '16px', color: '#f87171' }));
   const borderCol = type === 'lock' 
     ? 'border-amber-400/40 bg-slate-900/95 text-amber-200 shadow-amber-950/50' 
     : 'border-cyan-400/40 bg-slate-900/95 text-cyan-200 shadow-cyan-950/50';
@@ -23,7 +29,7 @@ export function showGameToast(message, type = 'lock') {
   toast.className = `flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shadow-2xl backdrop-blur-md text-xs font-semibold tracking-wide animate-fadeIn transition-all pointer-events-auto ${borderCol}`;
   toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.7)';
   toast.innerHTML = `
-    <span class="text-base shrink-0">${icon}</span>
+    <span class="inline-flex items-center shrink-0">${icon}</span>
     <span class="leading-snug text-left">${message}</span>
   `;
 

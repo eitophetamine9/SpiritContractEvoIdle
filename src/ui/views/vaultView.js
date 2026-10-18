@@ -1,7 +1,7 @@
 /**
  * The Arcane Vault - Card Collection & Inventory View
  * Features:
- * 1) 3 Distinct Sections: ⛩️ Spirits, 🔱 Relics, ⚔️ Weapons
+ * 1) 3 Distinct Sections: Spirits, Relics, Weapons
  * 2) TCG / Gacha Card Collection Aesthetic with rarity frames & holographic sheen
  * 3) Pixi.js 2.5D Animated Card Altar Viewport ('vault' mode)
  * 4) Real-Time Search, Multi-Tier Rarity & Category Filters, and Favorites (All 3)
@@ -17,6 +17,7 @@ import { createSpiritPlaceholderBox } from '../components/pixelBox.js';
 import { showSpiritModal, showItemInspectModal } from '../components/modals.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { createAnimatedSpriteHtml, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
+import { getGameIcon, getElementIcon } from '../icons/gameIcons.js';
 
 let activeCategory = 'spirits'; // 'spirits' | 'relics' | 'weapons'
 let activeRarityFilter = 'ALL';
@@ -163,7 +164,7 @@ export function renderVaultView(container) {
         <div class="relative z-10 flex flex-col gap-2">
           <div class="flex items-center justify-between gap-2">
             <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-              🎴 ARCANE CARD COLLECTION
+              ${getGameIcon('cards', { size: '13px', color: '#a5b4fc' })} ARCANE CARD COLLECTION
             </div>
 
             <!-- Total Collection Count Badge -->
@@ -183,27 +184,27 @@ export function renderVaultView(container) {
           <div class="flex items-center justify-between gap-2">
             <div>
               <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-                <span>📜</span> The Divine Vault
+                ${getGameIcon('scroll', { size: '18px', color: '#818cf8' })} The Divine Vault
               </h2>
               <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
                 Manage your collectible cards: contract spirits, Olympian relics, and sacred weapons.
               </p>
             </div>
             <button id="btn-vault-goto-index" class="shrink-0 px-2.5 py-1.5 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/40 text-[10px] font-bold cursor-pointer hover:bg-indigo-500/30 flex items-center gap-1 shadow-sm">
-              <span>📖</span> Bestiary Index
+              ${getGameIcon('book', { size: '14px', color: '#a5b4fc' })} Bestiary Index
             </button>
           </div>
 
           <!-- 3-Category Navigation Switcher -->
           <div class="vault-category-switcher">
             <button class="vault-cat-btn ${activeCategory === 'spirits' ? 'active' : ''}" data-cat="spirits">
-              <span>⛩️</span> Spirits (${spirits.length})
+              ${getGameIcon('torii', { size: '14px', color: '#c084fc' })} Spirits (${spirits.length})
             </button>
             <button class="vault-cat-btn ${activeCategory === 'relics' ? 'active' : ''}" data-cat="relics">
-              <span>🔱</span> Relics (${relics.length})
+              ${getGameIcon('relic', { size: '14px', color: '#f59e0b' })} Relics (${relics.length})
             </button>
             <button class="vault-cat-btn ${activeCategory === 'weapons' ? 'active' : ''}" data-cat="weapons">
-              <span>⚔️</span> Weapons (${weapons.length})
+              ${getGameIcon('sword', { size: '14px', color: '#f97316' })} Weapons (${weapons.length})
             </button>
           </div>
         </div>
@@ -216,11 +217,11 @@ export function renderVaultView(container) {
                  class="vault-search-input" 
                  placeholder="Search by name, set, or stat..." 
                  value="${searchQuery}" />
-          ${searchQuery ? `<button id="btn-clear-search" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>` : ''}
+          ${searchQuery ? `<button id="btn-clear-search" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs cursor-pointer">${getGameIcon('close', { size: '12px' })}</button>` : ''}
         </div>
 
         <button id="btn-toggle-bulk" class="vault-bulk-btn ${isBulkMode ? 'active' : ''}">
-          ${isBulkMode ? 'Done' : (activeCategory === 'spirits' ? '📦 Bulk Annul' : '🔨 Bulk Dismantle')}
+          ${isBulkMode ? 'Done' : (activeCategory === 'spirits' ? `${getGameIcon('box', { size: '13px' })} Bulk Annul` : `${getGameIcon('hammer', { size: '13px' })} Bulk Dismantle`)}
         </button>
       </div>
 
@@ -233,7 +234,7 @@ export function renderVaultView(container) {
             <button class="index-filter-btn vault-rarity-chip ${isActive ? 'active' : ''}" 
                     data-tier="${tier}"
                     style="${isActive && tier !== 'ALL' && tier !== 'FAVORITES' ? `border-color: ${info.color}; color: ${info.color};` : ''}">
-              ${tier === 'FAVORITES' ? '⭐ Favorites' : tier}
+              ${tier === 'FAVORITES' ? `${getGameIcon('star', { size: '12px', color: '#facc15' })} Favorites` : tier}
             </button>
           `;
         }).join('')}
@@ -244,8 +245,13 @@ export function renderVaultView(container) {
         ${(activeCategory === 'spirits' ? spiritElements : activeCategory === 'relics' ? relicSlots : weaponArchetypes).map(sub => {
           const isActive = activeSubFilter.toUpperCase() === sub.toUpperCase();
           const elemIcons = {
-            FIRE: '🔥 Fire', WATER: '💧 Water', EARTH: '🌿 Earth',
-            WIND: '⚡ Wind', LIGHT: '☀️ Light', DARK: '🌑 Dark', ALL: 'All'
+            FIRE: `${getElementIcon('FIRE', { size: '12px' })} Fire`,
+            WATER: `${getElementIcon('WATER', { size: '12px' })} Water`,
+            EARTH: `${getElementIcon('EARTH', { size: '12px' })} Earth`,
+            WIND: `${getElementIcon('WIND', { size: '12px' })} Wind`,
+            LIGHT: `${getElementIcon('LIGHT', { size: '12px' })} Light`,
+            DARK: `${getElementIcon('DARK', { size: '12px' })} Dark`,
+            ALL: 'All'
           };
           const label = activeCategory === 'spirits' ? (elemIcons[sub] || sub) : sub;
           return `
@@ -265,8 +271,8 @@ export function renderVaultView(container) {
               <button id="btn-select-commons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Commons</button>
               <button id="btn-select-uncommons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Uncommons</button>
             ` : activeCategory === 'relics' ? `
-              <button id="btn-select-3star" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">3★ Stars</button>
-              <button id="btn-select-4star" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">4★ Stars</button>
+              <button id="btn-select-3star" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">3-Star</button>
+              <button id="btn-select-4star" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">4-Star</button>
             ` : `
               <button id="btn-select-commons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Commons</button>
               <button id="btn-select-uncommons" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Uncommons</button>
@@ -274,10 +280,10 @@ export function renderVaultView(container) {
             <button id="btn-select-all-filtered" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-300 border border-slate-700 hover:bg-slate-700 cursor-pointer">Select All</button>
             <button id="btn-clear-selection" class="px-2 py-1 rounded bg-slate-800 text-[10px] font-bold text-slate-400 hover:text-white cursor-pointer">Clear</button>
           </div>
-          <button id="btn-execute-bulk" class="px-3 py-1.5 rounded-lg text-xs font-extrabold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 cursor-pointer" ${selectedForBulk.size === 0 ? 'disabled' : ''}>
+          <button id="btn-execute-bulk" class="px-3 py-1.5 rounded-lg text-xs font-extrabold text-white bg-red-600 hover:bg-red-500 disabled:opacity-40 cursor-pointer flex items-center gap-1" ${selectedForBulk.size === 0 ? 'disabled' : ''}>
             ${activeCategory === 'spirits'
-              ? `Annul ${selectedForBulk.size} (+${bulkShardsRefund} 💎)`
-              : `Dismantle ${selectedForBulk.size} (+${bulkShardsRefund} 💎${bulkEssencesRefund > 0 ? ` +${bulkEssencesRefund} 💠` : ''})`
+              ? `Annul ${selectedForBulk.size} (+${bulkShardsRefund} ${getGameIcon('spiritShards', { size: '12px' })})`
+              : `Dismantle ${selectedForBulk.size} (+${bulkShardsRefund} ${getGameIcon('spiritShards', { size: '12px' })}${bulkEssencesRefund > 0 ? ` +${bulkEssencesRefund} ${getGameIcon('astralEssence', { size: '12px' })}` : ''})`
             }
           </button>
         </div>
@@ -317,7 +323,7 @@ export function renderVaultView(container) {
                 ${isBulkMode ? `
                   <div class="absolute top-2 left-2 z-30 flex items-center justify-center">
                     <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-red-500 text-white shadow-sm' : 'bg-slate-950/80 border border-slate-600 text-transparent'}">
-                      ✓
+                      ${getGameIcon('check', { size: '12px' })}
                     </span>
                   </div>
                 ` : ''}
@@ -333,16 +339,16 @@ export function renderVaultView(container) {
                     </span>
                     <span class="text-[9px] font-extrabold text-slate-400">Lv.${s.level}</span>
                     ${(s.ascensionLevel || 0) > 0 ? `
-                      <span class="vault-card-tag ${s.ascensionLevel === 7 ? 'bg-amber-400/30 text-yellow-300 border border-yellow-400 shadow-[0_0_6px_rgba(253,224,71,0.5)]' : 'bg-purple-500/25 text-purple-200 border border-purple-400/40'}">
-                        ★${s.ascensionLevel}${s.ascensionLevel === 7 ? ' MAX' : ''}
+                      <span class="vault-card-tag ${s.ascensionLevel === 7 ? 'bg-amber-400/30 text-yellow-300 border border-yellow-400 shadow-[0_0_6px_rgba(253,224,71,0.5)]' : 'bg-purple-500/25 text-purple-200 border border-purple-400/40'} flex items-center gap-0.5">
+                        ${getGameIcon('star', { size: '9px', color: '#facc15' })}${s.ascensionLevel}${s.ascensionLevel === 7 ? ' MAX' : ''}
                       </span>
                     ` : ''}
                   </div>
 
                   <div class="flex items-center gap-1">
-                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-emerald-500/25 text-emerald-300 border border-emerald-400/35">⛩️ PARTY</span>` : ''}
-                    <button class="btn-card-fav text-xs transition-transform active:scale-125" data-fav-spirit-id="${s.id}" title="Toggle Favorite">
-                      ${s.favorite ? '<span class="text-amber-400 font-black">★</span>' : '<span class="text-slate-600">☆</span>'}
+                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-emerald-500/25 text-emerald-300 border border-emerald-400/35 flex items-center gap-0.5">${getGameIcon('party', { size: '9px', color: '#6ee7b7' })} PARTY</span>` : ''}
+                    <button class="btn-card-fav text-xs transition-transform active:scale-125 cursor-pointer" data-fav-spirit-id="${s.id}" title="Toggle Favorite">
+                      ${s.favorite ? getGameIcon('star', { size: '12px', color: '#fbbf24' }) : getGameIcon('star', { size: '12px', color: '#475569' })}
                     </button>
                   </div>
                 </div>
@@ -350,7 +356,7 @@ export function renderVaultView(container) {
                 <!-- Card Artwork Frame -->
                 <div class="vault-card-artwork" style="background: radial-gradient(circle, ${rarity.color}25 0%, rgba(10,15,25,0.85) 75%); border-color: ${rarity.color}44;">
                   <div class="vault-artwork-pedestal">
-                    ${createAnimatedSpriteHtml(sheetKey, { extraClasses: 'vault-creature-sprite', glyph: species?.avatarEmoji || '✨' })}
+                    ${createAnimatedSpriteHtml(sheetKey, { extraClasses: 'vault-creature-sprite', glyph: '' })}
                   </div>
                   <div class="vault-card-ribbon rarity-${rarityLower}" style="color: ${rarity.color}; background: rgba(0,0,0,0.75); border: 1px solid ${rarity.color}55;">
                     ${rarity.name.toUpperCase()}
@@ -362,14 +368,14 @@ export function renderVaultView(container) {
                   <div class="vault-card-name-row">
                     <span class="vault-card-title">${s.customName}</span>
                     <button class="btn-card-rename text-slate-400 hover:text-cyan-300 text-[11px] p-0.5 rounded cursor-pointer" data-rename-spirit-id="${s.id}" data-current-name="${s.customName}" title="Rename Spirit">
-                      ✏️
+                      ${getGameIcon('edit', { size: '11px' })}
                     </button>
                   </div>
                 </div>
 
                 <!-- Stats Strip -->
                 <div class="vault-card-footer">
-                  <span class="vault-card-pwr">⚡ ${s.power.toLocaleString()}</span>
+                  <span class="vault-card-pwr flex items-center gap-1">${getGameIcon('statPower', { size: '11px', color: '#facc15' })} ${s.power.toLocaleString()}</span>
                   <span class="vault-card-sub">${species?.name || 'Spirit'}</span>
                 </div>
 
@@ -403,21 +409,21 @@ export function renderVaultView(container) {
                 ${isBulkMode ? `
                   <div class="absolute top-2 left-2 z-30 flex items-center justify-center">
                     <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-red-500 text-white shadow-sm' : 'bg-slate-950/80 border border-slate-600 text-transparent'}">
-                      ✓
+                      ${getGameIcon('check', { size: '12px' })}
                     </span>
                   </div>
                 ` : ''}
                 
                 <!-- Card Header -->
                 <div class="vault-card-header">
-                  <span class="text-[9px] font-extrabold" style="color: ${starColor};">
-                    ${'★'.repeat(stars)}
+                  <span class="text-[9px] font-extrabold flex items-center gap-0.5" style="color: ${starColor};">
+                    ${Array.from({ length: stars }).map(() => getGameIcon('star', { size: '9px', color: starColor })).join('')}
                   </span>
                   
                   <div class="flex items-center gap-1">
-                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/35">✓ ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
-                    <button class="btn-card-fav text-xs transition-transform active:scale-125" data-fav-relic-uid="${r.uid}" title="Toggle Favorite">
-                      ${r.favorite ? '<span class="text-amber-400 font-black">★</span>' : '<span class="text-slate-600">☆</span>'}
+                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/35 flex items-center gap-0.5">${getGameIcon('check', { size: '8px' })} ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
+                    <button class="btn-card-fav text-xs transition-transform active:scale-125 cursor-pointer" data-fav-relic-uid="${r.uid}" title="Toggle Favorite">
+                      ${r.favorite ? getGameIcon('star', { size: '12px', color: '#fbbf24' }) : getGameIcon('star', { size: '12px', color: '#475569' })}
                     </button>
                   </div>
                 </div>
@@ -472,7 +478,7 @@ export function renderVaultView(container) {
                 ${isBulkMode ? `
                   <div class="absolute top-2 left-2 z-30 flex items-center justify-center">
                     <span class="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-red-500 text-white shadow-sm' : 'bg-slate-950/80 border border-slate-600 text-transparent'}">
-                      ✓
+                      ${getGameIcon('check', { size: '12px' })}
                     </span>
                   </div>
                 ` : ''}
@@ -485,9 +491,9 @@ export function renderVaultView(container) {
 
                   <div class="flex items-center gap-1">
                     <span class="px-1.5 py-0.2 rounded text-[8px] font-black bg-amber-500/25 text-amber-300 border border-amber-400/35">+${w.level || 1}</span>
-                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/35">✓ ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
-                    <button class="btn-card-fav text-xs transition-transform active:scale-125" data-fav-weapon-uid="${w.uid}" title="Toggle Favorite">
-                      ${w.favorite ? '<span class="text-amber-400 font-black">★</span>' : '<span class="text-slate-600">☆</span>'}
+                    ${isEquipped ? `<span class="px-1.5 py-0.2 rounded text-[7.5px] font-black bg-cyan-500/25 text-cyan-300 border border-cyan-400/35 flex items-center gap-0.5">${getGameIcon('check', { size: '8px' })} ON ${equippedSpirit ? equippedSpirit.customName.slice(0, 5) : 'HERO'}</span>` : ''}
+                    <button class="btn-card-fav text-xs transition-transform active:scale-125 cursor-pointer" data-fav-weapon-uid="${w.uid}" title="Toggle Favorite">
+                      ${w.favorite ? getGameIcon('star', { size: '12px', color: '#fbbf24' }) : getGameIcon('star', { size: '12px', color: '#475569' })}
                     </button>
                   </div>
                 </div>
@@ -511,7 +517,7 @@ export function renderVaultView(container) {
 
                 <!-- Stats Strip -->
                 <div class="vault-card-footer">
-                  <span class="text-orange-400 font-extrabold">⚡ +${w.atkPower} PWR</span>
+                  <span class="text-orange-400 font-extrabold flex items-center gap-1">${getGameIcon('statPower', { size: '11px', color: '#fb923c' })} +${w.atkPower} PWR</span>
                   <span class="text-[9px] text-amber-300 font-bold">${w.critRate}% Crit</span>
                 </div>
 
@@ -877,9 +883,11 @@ export function renderVaultView(container) {
 
   // Navigate to Index from Vault
   container.querySelector('#btn-vault-goto-index')?.addEventListener('click', () => {
-    const navIndex = document.getElementById('nav-index');
-    if (navIndex) {
-      navIndex.click();
+    if (typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+      window.switchTab('index');
+    } else {
+      const drawerItem = document.querySelector('.nav-drawer-item[data-tab="index"]');
+      if (drawerItem) drawerItem.click();
     }
   });
 }

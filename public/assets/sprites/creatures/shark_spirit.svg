@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>.bg{fill:transparent;}</style>
+  </defs>
+
+  <!-- Frame 0: Idle [x: 0..48] -->
+  <g transform="translate(0, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 24) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,16 2,32" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ffffff"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      </g>
+  </g>
+  <!-- Frame 1: Idle [x: 48..96] -->
+  <g transform="translate(48, 0)">
+<ellipse cx="24" cy="42" rx="14.56" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 25.5) rotate(0) scale(1.04, 0.96) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,17.682941969615793 2,33.68294196961579" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ffffff"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      </g>
+  </g>
+  <!-- Frame 2: Idle [x: 96..144] -->
+  <g transform="translate(96, 0)">
+<ellipse cx="24" cy="42" rx="13.44" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 22.5) rotate(0) scale(0.96, 1.04) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,17.818594853651362 2,33.81859485365136" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ffffff"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      </g>
+  </g>
+  <!-- Frame 3: Idle [x: 144..192] -->
+  <g transform="translate(144, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 23.5) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,16.282240016119733 2,32.28224001611974" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ffffff"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      </g>
+  </g>
+  <!-- Frame 4: Attack [x: 192..240] -->
+  <g transform="translate(192, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(21, 25) rotate(-6) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,16 2,32" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ffffff"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      </g>
+  </g>
+  <!-- Frame 5: Attack [x: 240..288] -->
+  <g transform="translate(240, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(30, 22) rotate(8) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,16 2,32" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ffffff"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      
+        <!-- Attack Flash Slash -->
+        <path d="M34 10 L46 22 L36 34" stroke="#0369a1" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="44" cy="22" r="4" fill="#bae6fd"/>
+      </g>
+  </g>
+  <!-- Frame 6: Attack [x: 288..336] -->
+  <g transform="translate(288, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(27, 24) rotate(3) scale(1, 1) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,16 2,32" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ffffff"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      
+        <!-- Impact Spark Burst -->
+        <polygon points="42,16 46,22 42,28 40,22" fill="#0369a1"/>
+        <circle cx="43" cy="22" r="2" fill="#ffffff"/>
+      </g>
+  </g>
+  <!-- Frame 7: Hurt [x: 336..384] -->
+  <g transform="translate(336, 0)">
+<ellipse cx="24" cy="42" rx="12.6" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(19, 27) rotate(-14) scale(0.9, 1) translate(-24, -24)">
+
+        <!-- Tail Fin -->
+        <polygon points="8,24 2,16 2,32" fill="#082f49"/>
+        <!-- Main Shark Body -->
+        <ellipse cx="24" cy="24" rx="16" ry="9" fill="#0284c7"/>
+        <path d="M12 24 C16 30, 32 30, 38 24 Z" fill="#38bdf8"/>
+        <!-- Dorsal Fin -->
+        <polygon points="22,15 26,7 28,15" fill="#082f49"/>
+        <!-- Pectoral Fin -->
+        <polygon points="26,27 28,35 34,27" fill="#082f49"/>
+        <!-- Eye & Gills -->
+        <circle cx="34" cy="22" r="1.5" fill="#ef4444"/>
+        <line x1="28" y1="20" x2="28" y2="24" stroke="#082f49" stroke-width="1"/>
+        <line x1="30" y1="20" x2="30" y2="24" stroke="#082f49" stroke-width="1"/>
+      </g>
+  </g>
+</svg>

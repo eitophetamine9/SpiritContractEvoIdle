@@ -1040,4 +1040,322 @@
   filter: brightness(1.15);
   box-shadow: 0 0 10px rgba(190, 46, 221, 0.5);
 }
+
+/* ==========================================================================
+   Phase 4: Guided Tutorial, Dialog & Info Box Spacing Overhaul
+   ========================================================================== */
+
+/* Guide Modal Backdrop */
+.guide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(3, 7, 18, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Main Guide Modal Dialog Box */
+.guide-modal-box {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(180deg, #0f172a 0%, #0a0e1a 100%);
+  border: 2px solid rgba(255, 209, 82, 0.65);
+  border-radius: 24px;
+  padding: 24px 22px;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.95), 0 0 40px rgba(245, 158, 11, 0.3), inset 0 0 25px rgba(93, 63, 211, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Floating Card Mode for Onboarding Steps */
+.guide-tutorial-card {
+  position: absolute;
+  pointer-events: auto;
+  max-width: 380px;
+  z-index: 50;
+  padding: 16px 18px;
+  gap: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), inset 0 0 18px rgba(245, 158, 11, 0.18);
+  border-radius: 20px;
+}
+
+/* Large Mascot Avatar */
+.guide-mascot-avatar {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #fbbf24 100%);
+  border: 2.5px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 30px rgba(245, 158, 11, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -4px;
+}
+
+/* Compact Mascot Avatar */
+.guide-mascot-avatar-small {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Header Blocks */
+.guide-header-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.guide-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.guide-header-mascot-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guide-header-titles {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.guide-badge-subtitle {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffd152;
+}
+
+.guide-step-counter {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.guide-badge-pill {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #38bdf8;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+.guide-modal-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Generous Speech Bubble Container (Replaces Cramped 0px Utility Divs) */
+.guide-speech-bubble {
+  box-sizing: border-box;
+  width: 100%;
+  background: rgba(5, 9, 18, 0.92);
+  border: 1.5px solid rgba(255, 209, 82, 0.35);
+  border-radius: 16px;
+  padding: 18px 22px !important;
+  margin: 12px 0 !important;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #e2e8f0;
+  text-align: left;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 4px 16px rgba(0, 0, 0, 0.4);
+  word-break: break-word;
+}
+
+.guide-speech-bubble strong {
+  color: #ffd152;
+  font-weight: 800;
+}
+
+.guide-speech-bubble-compact {
+  padding: 12px 16px !important;
+  margin: 6px 0 !important;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.guide-speech-title {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #fef08a;
+  letter-spacing: -0.2px;
+  margin: 0 0 4px 0;
+}
+
+.guide-speech-text {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Action Dismiss & Next Buttons */
+.guide-action-btn {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #d97706 100%);
+  color: #0b0f17;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.guide-action-btn:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 6px 26px rgba(245, 158, 11, 0.6);
+  transform: translateY(-1px);
+}
+
+.guide-action-btn:active {
+  transform: scale(0.98);
+  filter: brightness(0.95);
+}
+
+.guide-action-btn-small {
+  min-height: 38px;
+  padding: 8px 16px;
+  font-size: 11.5px;
+  width: auto;
+}
+
+.guide-btn-skip {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.guide-btn-skip:hover {
+  color: #ffffff;
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.guide-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 4px;
+}
+
+.guide-step-pills {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.guide-pill {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #334155;
+  transition: all 0.2s ease;
+}
+
+.guide-pill.active {
+  width: 16px;
+  background: #f59e0b;
+}
+
+.guide-pill.completed {
+  background: #10b981;
+}
+
+/* ==========================================================================
+   GLOBAL DIALOG & INFO BOX SPACING REFINEMENTS
+   ========================================================================== */
+
+.modal-dialog-box,
+.modal-info-box,
+.modal-detail-card {
+  padding: 18px 22px !important;
+  margin: 12px 0 !important;
+  line-height: 1.6 !important;
+  border-radius: 14px !important;
+  box-sizing: border-box !important;
+}
+
+.modal-header-sanctum-btn {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(234, 179, 8, 0.18) 100%);
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  color: #ffd152;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.modal-header-sanctum-btn:hover {
+  border-color: #ffd152;
+  box-shadow: 0 0 10px rgba(255, 209, 82, 0.4);
+  transform: translateY(-1px);
+}
+
 

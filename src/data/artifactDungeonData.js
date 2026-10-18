@@ -169,6 +169,19 @@ export const PANTHEON_CHAMBERS = [
     bossName: 'Hephaestus Avatar: Magma Colossus',
     bossPowerMultiplier: 1.35,
     bossMaxHpMultiplier: 2.3
+  },
+  {
+    id: 'celestial_pillar',
+    name: 'Celestial Pillar of Atlas',
+    godId: 'atlas',
+    godTitle: 'Atlas, Titan of the Celestial Heavens',
+    sigil: '🏛️',
+    color: '#7f8c8d',
+    accentColor: '#bdc3c7',
+    lore: 'Enduring cosmic foundation where the titan bears the weight of the heavens, forging impregnable defensive relics.',
+    bossName: 'Atlas Avatar: Celestial Titan',
+    bossPowerMultiplier: 1.20,
+    bossMaxHpMultiplier: 3.2
   }
 ];
 

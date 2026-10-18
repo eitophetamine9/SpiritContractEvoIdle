@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient.js';
 import { authService } from './authService.js';
 import { gameState } from '../state/gameState.js';
 import { showConflictModal } from '../ui/components/conflictModal.js';
+import { getGameIcon } from '../ui/icons/gameIcons.js';
 
 class CloudSaveService {
   constructor() {
@@ -141,7 +142,7 @@ class CloudSaveService {
       await supabase.from('leaderboards').upsert({
         user_id: user.id,
         username: profile.username || 'Contractor',
-        avatar_emoji: profile.avatarEmoji || '🧙‍♂️',
+        avatar_emoji: profile.avatarEmoji || 'wizard',
         contractor_level: profile.contractorLevel || 1,
         highest_stage: highestStage,
         total_party_power: partyPower,
@@ -309,7 +310,7 @@ class CloudSaveService {
     if (!el) return;
 
     if (authService.isGuest()) {
-      el.innerHTML = `<span class="save-dot" style="color:#d4e478;">●</span> 💾 Local`;
+      el.innerHTML = `<span class="save-dot" style="color:#d4e478;">●</span> ${getGameIcon('save', { size: 12, className: 'inline mr-0.5' })} Local`;
       el.title = 'Saved locally in browser storage (Guest Mode)';
       el.classList.remove('syncing');
       return;
@@ -317,28 +318,28 @@ class CloudSaveService {
 
     switch (this.syncStatus) {
       case 'syncing':
-        el.innerHTML = `<span class="save-dot animate-pulse" style="color:#00d0ff;">●</span> ⏳ Syncing...`;
+        el.innerHTML = `<span class="save-dot animate-pulse" style="color:#00d0ff;">●</span> ${getGameIcon('recycle', { size: 12, className: 'inline mr-0.5 animate-spin' })} Syncing...`;
         el.title = 'Synchronizing progress with Supabase Cloud...';
         el.classList.add('syncing');
         break;
       case 'synced':
-        el.innerHTML = `<span class="save-dot" style="color:#10b981;">●</span> ☁️ Synced`;
+        el.innerHTML = `<span class="save-dot" style="color:#10b981;">●</span> ${getGameIcon('cloud', { size: 12, className: 'inline mr-0.5' })} Synced`;
         el.title = `Cloud synchronized with Supabase (${this.lastSyncTimestamp ? new Date(this.lastSyncTimestamp).toLocaleTimeString() : 'Active'})`;
         el.classList.remove('syncing');
         break;
       case 'error':
-        el.innerHTML = `<span class="save-dot" style="color:#f59e0b;">●</span> ⚠️ Offline`;
+        el.innerHTML = `<span class="save-dot" style="color:#f59e0b;">●</span> ${getGameIcon('alert', { size: 12, className: 'inline mr-0.5' })} Offline`;
         el.title = 'Network interrupted. Local browser save preserved!';
         el.classList.remove('syncing');
         break;
       case 'conflict':
-        el.innerHTML = `<span class="save-dot animate-pulse" style="color:#ef4444;">●</span> ⚖️ Conflict`;
+        el.innerHTML = `<span class="save-dot animate-pulse" style="color:#ef4444;">●</span> ${getGameIcon('scale', { size: 12, className: 'inline mr-0.5' })} Conflict`;
         el.title = 'Save conflict detected between local device and cloud.';
         el.classList.remove('syncing');
         break;
       case 'local':
       default:
-        el.innerHTML = `<span class="save-dot" style="color:#d4e478;">●</span> 💾 Local`;
+        el.innerHTML = `<span class="save-dot" style="color:#d4e478;">●</span> ${getGameIcon('save', { size: 12, className: 'inline mr-0.5' })} Local`;
         el.title = 'Saved locally in browser storage';
         el.classList.remove('syncing');
         break;

@@ -6,6 +6,8 @@ import { showHallOfFamePickerModal } from '../components/modals.js';
 import { getNextFeatureUnlock, getAllFeatureMilestones } from '../../data/contractorData.js';
 import { authService } from '../../services/authService.js';
 import { cloudSaveService } from '../../services/cloudSaveService.js';
+import { getGameIcon } from '../icons/gameIcons.js';
+import { audioManager } from '../../audio/audioManager.js';
 
 export function renderProfileView(container) {
   const state = gameState.state;
@@ -41,8 +43,8 @@ export function renderProfileView(container) {
       <!-- Contractor Profile Card -->
       <div class="profile-hero-card">
         <div class="profile-hero-top">
-          <div class="profile-avatar-frame">
-            <span style="font-size: 38px;">🧙‍♂️</span>
+          <div class="profile-avatar-frame" style="display: flex; align-items: center; justify-content: center;">
+            ${getGameIcon('contractor', { size: '38px', color: '#ffd152' })}
           </div>
 
           <div class="profile-hero-details">
@@ -51,13 +53,13 @@ export function renderProfileView(container) {
             <div class="profile-quick-meta">
               <span>Highest Floor: <strong>Floor ${mz.highestStageCleared}</strong></span>
               <span>•</span>
-              <span>Power: <strong style="color: #2ed573;">⚡ ${totalPower.toLocaleString()}</strong></span>
+              <span>Power: <strong style="color: #2ed573;">${getGameIcon('statPower', { size: '13px', color: '#2ed573' })} ${totalPower.toLocaleString()}</strong></span>
             </div>
           </div>
         </div>
 
         <div class="profile-compendium-pill">
-          <span>📖 Spirit Compendium: <strong>${discoveredCount}/${allSpecies.length}</strong> (${compendiumPercent}%)</span>
+          <span>${getGameIcon('index', { size: '14px', color: '#38bdf8' })} Spirit Compendium: <strong>${discoveredCount}/${allSpecies.length}</strong> (${compendiumPercent}%)</span>
         </div>
       </div>
 
@@ -65,7 +67,7 @@ export function renderProfileView(container) {
       <div class="profile-contractor-level-card">
         <div class="contractor-level-header">
           <div class="contractor-lvl-badge">
-            <span class="lvl-crown">👑</span>
+            <span class="lvl-crown">${getGameIcon('crown', { size: '14px', color: '#ffd152' })}</span>
             <span class="lvl-number">Lv. ${contractorLvl}</span>
           </div>
           <div class="contractor-xp-stats">
@@ -82,13 +84,13 @@ export function renderProfileView(container) {
         <!-- Next Upcoming Milestone Pill -->
         <div class="upcoming-milestone-pill">
           ${nextUnlock ? `
-            <span class="milestone-icon">${nextUnlock.icon || '🔒'}</span>
+            <span class="milestone-icon">${nextUnlock.icon || getGameIcon('lock', { size: '14px', color: '#facc15' })}</span>
             <div class="milestone-info">
               <span class="milestone-name">Next Unlock: <strong>${nextUnlock.name}</strong></span>
               <span class="milestone-req">Unlocks at Contractor Level ${nextUnlock.level}</span>
             </div>
           ` : `
-            <span class="milestone-icon">🌟</span>
+            <span class="milestone-icon">${getGameIcon('star', { size: '16px', color: '#ffd152' })}</span>
             <div class="milestone-info">
               <span class="milestone-name"><strong>All System Milestones Mastered!</strong></span>
               <span class="milestone-req">You have attained peak contractor authority.</span>
@@ -99,7 +101,7 @@ export function renderProfileView(container) {
         <!-- Collapsible System Milestones Overview -->
         <details class="milestones-accordion">
           <summary class="milestones-accordion-summary">
-            <span>📜 View Feature Unlock Roadmap (7)</span>
+            <span>${getGameIcon('scroll', { size: '14px' })} View Feature Unlock Roadmap (7)</span>
             <span class="summary-arrow">▼</span>
           </summary>
           <div class="milestones-timeline-list">
@@ -108,7 +110,7 @@ export function renderProfileView(container) {
               return `
                 <div class="milestone-timeline-item ${isUnlocked ? 'unlocked' : 'locked'}">
                   <div class="milestone-status-badge">
-                    ${isUnlocked ? '✓' : `Lv.${m.level}`}
+                    ${isUnlocked ? getGameIcon('check', { size: '12px', color: '#2ecc71' }) : `Lv.${m.level}`}
                   </div>
                   <div class="milestone-timeline-details">
                     <div class="milestone-item-title">
@@ -129,7 +131,7 @@ export function renderProfileView(container) {
       <div class="hall-of-fame-section">
         <div class="hall-of-fame-header">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 16px;">🏛️</span>
+            <span>${getGameIcon('trials', { size: '16px', color: '#ffd152' })}</span>
             <span style="font-size: 14px; font-weight: 900; color: #ffd152;">Hall of Fame (5)</span>
           </div>
           <span style="font-size: 11px; color: var(--text-muted);">${hallOfFameSpirits.length} / 5 Showcased</span>
@@ -159,7 +161,6 @@ export function renderProfileView(container) {
                 <div class="pedestal-sprite-wrapper ambient-float">
                   <div class="animated-pixel-sprite sprite-${sheetKey}" style="--sprite-sheet: url('/assets/sprites/creatures/${sheetKey}.svg'); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
                     <div class="sprite-frame-viewer"></div>
-                    <span class="core-glyph-fallback" style="display: none;">${species ? species.avatarEmoji : '✨'}</span>
                   </div>
                 </div>
 
@@ -171,7 +172,7 @@ export function renderProfileView(container) {
                   </div>
                 </div>
 
-                <button class="btn-remove-hall" data-id="${spirit.id}" title="Remove from Hall of Fame">✕</button>
+                <button class="btn-remove-hall" data-id="${spirit.id}" title="Remove from Hall of Fame">${getGameIcon('close', { size: '10px' })}</button>
               </div>
             `;
           }).join('')}
@@ -180,7 +181,7 @@ export function renderProfileView(container) {
 
       <!-- Account & Gameplay Statistics Card -->
       <div class="profile-stats-card">
-        <div class="stats-section-title">📊 Contractor Lifetime Records</div>
+        <div class="stats-section-title">${getGameIcon('trophy', { size: '14px', color: '#ffd152' })} Contractor Lifetime Records</div>
 
         <div class="stat-row">
           <span class="stat-label">Total Spirits Contracted</span>
@@ -199,7 +200,7 @@ export function renderProfileView(container) {
 
         <div class="stat-row">
           <span class="stat-label">Total Shards Harvested</span>
-          <span class="stat-value">💎 ${stats.shardsEarnedTotal.toLocaleString()}</span>
+          <span class="stat-value" style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('spiritShards', { size: '12px' })} ${stats.shardsEarnedTotal.toLocaleString()}</span>
         </div>
 
         <div class="stat-row">
@@ -208,37 +209,119 @@ export function renderProfileView(container) {
         </div>
       </div>
 
+      <!-- Audio & Sound Settings (Themed Range Sliders) -->
+      <div class="profile-actions-card audio-settings-card">
+        <div class="stats-section-title">
+          ${getGameIcon('audioOn', { size: '14px', color: '#ffd152' })} Audio & Sound Controls
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 4px 2px;">
+          
+          <!-- BGM Volume Slider -->
+          <div class="fantasy-slider-row">
+            <div class="fantasy-slider-header">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                ${getGameIcon('audioOn', { size: '13px', color: '#38bdf8' })} Background Music (BGM)
+              </span>
+              <span id="label-bgm-val" class="fantasy-slider-badge">${Math.round(audioManager.bgmVolume * 100)}%</span>
+            </div>
+            <input type="range" id="slider-bgm-volume" min="0" max="1" step="0.05" value="${audioManager.bgmVolume}" aria-label="BGM Volume" />
+          </div>
+
+          <!-- SFX Volume Slider -->
+          <div class="fantasy-slider-row">
+            <div class="fantasy-slider-header">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                ${getGameIcon('zap', { size: '13px', color: '#facc15' })} Sound Effects (SFX)
+              </span>
+              <span id="label-sfx-val" class="fantasy-slider-badge">${Math.round(audioManager.sfxVolume * 100)}%</span>
+            </div>
+            <input type="range" id="slider-sfx-volume" min="0" max="1" step="0.05" value="${audioManager.sfxVolume}" aria-label="SFX Volume" />
+          </div>
+
+          <!-- Quick Audio Mute Toggle -->
+          <button id="btn-profile-toggle-mute" class="zone-toggle-btn" style="min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px;">
+            ${audioManager.isMuted 
+              ? `${getGameIcon('audioOff', { size: '14px', color: '#ef4444' })} Unmute Sound` 
+              : `${getGameIcon('audioOn', { size: '14px', color: '#10b981' })} Sound Enabled (Tap to Mute)`}
+          </button>
+
+        </div>
+      </div>
+
       <!-- System Controls & Save Data -->
       <div class="profile-actions-card">
-        <div class="stats-section-title">💾 Save & Account Data</div>
+        <div class="stats-section-title">${getGameIcon('save', { size: '14px' })} Save & Account Data</div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <button id="btn-save-manual" class="btn-save-manual">
-            💾 Save Progress
+            ${getGameIcon('save', { size: '14px' })} Save Progress
           </button>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button id="btn-export-save" class="zone-toggle-btn" style="min-height: 44px;">
-              📤 Export Backup
+            <button id="btn-export-save" class="zone-toggle-btn" style="min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              ${getGameIcon('cloud', { size: '14px' })} Export Backup
             </button>
-            <button id="btn-import-save" class="zone-toggle-btn" style="min-height: 44px;">
-              📥 Import Backup
+            <button id="btn-import-save" class="zone-toggle-btn" style="min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+              ${getGameIcon('recycle', { size: '14px' })} Import Backup
             </button>
           </div>
 
           <button id="btn-replay-tutorial" class="zone-toggle-btn" style="min-height: 42px; border-color: rgba(255, 209, 82, 0.4); color: #ffd152; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>🐱</span>
+            <span>${getGameIcon('sparkle', { size: '14px', color: '#ffd152' })}</span>
             <span>Replay Guided Tutorial</span>
           </button>
 
-          <button id="btn-reset-game" class="btn-reset-danger" style="margin-top: 6px;">
-            ⚠️ Reset All Progress
+          <button id="btn-reset-game" class="btn-reset-danger" style="margin-top: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+            ${getGameIcon('alert', { size: '14px', color: '#ff4757' })} Reset All Progress
           </button>
         </div>
       </div>
 
     </div>
   `;
+
+  // Audio Slider Bindings
+  const sliderBgm = container.querySelector('#slider-bgm-volume');
+  const labelBgm = container.querySelector('#label-bgm-val');
+  if (sliderBgm) {
+    sliderBgm.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      audioManager.setBgmVolume(val);
+      if (labelBgm) labelBgm.textContent = `${Math.round(val * 100)}%`;
+    });
+  }
+
+  const sliderSfx = container.querySelector('#slider-sfx-volume');
+  const labelSfx = container.querySelector('#label-sfx-val');
+  if (sliderSfx) {
+    sliderSfx.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      audioManager.setSfxVolume(val);
+      if (labelSfx) labelSfx.textContent = `${Math.round(val * 100)}%`;
+    });
+    sliderSfx.addEventListener('change', () => {
+      audioManager.playSfx('button_click', 0.5);
+    });
+  }
+
+  const btnProfileMute = container.querySelector('#btn-profile-toggle-mute');
+  if (btnProfileMute) {
+    btnProfileMute.addEventListener('click', () => {
+      audioManager.toggleMute();
+      renderProfileView(container);
+      const topBtn = document.getElementById('btn-top-audio');
+      if (topBtn) {
+        topBtn.classList.toggle('muted', audioManager.isMuted);
+        const iconSym = document.getElementById('audio-icon-symbol');
+        if (iconSym) {
+          iconSym.innerHTML = audioManager.isMuted 
+            ? getGameIcon('audioOff', { size: '15px' }) 
+            : getGameIcon('audioOn', { size: '15px' });
+        }
+      }
+    });
+  }
 
   // Replay Tutorial
   const btnReplay = container.querySelector('#btn-replay-tutorial');

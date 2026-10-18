@@ -47,16 +47,18 @@ export function isSwarmFloor(stage) {
   return lastDigit === 3 || lastDigit === 7;
 }
 
-export function getSwarmForStage(stage, subStage) {
-  const isBossWave = subStage >= 5;
-  const biome = getBiomeForStage(stage);
+export function getSwarmForStage(stage = 1, subStage = 1) {
+  const safeStage = Math.max(1, Number(stage) || 1);
+  const safeSubStage = Math.max(1, Number(subStage) || 1);
+  const isBossWave = safeSubStage >= 5;
+  const biome = getBiomeForStage(safeStage);
   const prefixes = biome.enemyPrefixes && biome.enemyPrefixes.length > 0 
     ? biome.enemyPrefixes 
     : CORRUPTED_PREFIXES;
 
-  const baseScale = getEnemyBaseScale(stage);
-  const waveScale = 1 + (subStage - 1) * 0.12;
-  const isSwarm = isSwarmFloor(stage);
+  const baseScale = getEnemyBaseScale(safeStage);
+  const waveScale = 1 + (safeSubStage - 1) * 0.12;
+  const isSwarm = isSwarmFloor(safeStage);
 
   // Rebalanced total shard & essence rewards
   const rawShardReward = isBossWave 
@@ -128,15 +130,15 @@ export function getSwarmForStage(stage, subStage) {
   // On Standard Floors: Wave 1: 1-2, Wave 2: 2, Wave 3: 3, Wave 4: 3-4
   let swarmCount = 1;
   if (isSwarm) {
-    if (subStage === 1) swarmCount = 3;
-    else if (subStage === 2) swarmCount = 4;
-    else if (subStage === 3) swarmCount = 5;
-    else if (subStage === 4) swarmCount = (stage >= 7) ? 6 : 5;
+    if (safeSubStage === 1) swarmCount = 3;
+    else if (safeSubStage === 2) swarmCount = 4;
+    else if (safeSubStage === 3) swarmCount = 5;
+    else if (safeSubStage === 4) swarmCount = (safeStage >= 7) ? 6 : 5;
   } else {
-    if (subStage === 1) swarmCount = (stage % 2 === 0) ? 2 : 1;
-    else if (subStage === 2) swarmCount = 2;
-    else if (subStage === 3) swarmCount = 3;
-    else if (subStage === 4) swarmCount = (stage > 2) ? 4 : 3;
+    if (safeSubStage === 1) swarmCount = (safeStage % 2 === 0) ? 2 : 1;
+    else if (safeSubStage === 2) swarmCount = 2;
+    else if (safeSubStage === 3) swarmCount = 3;
+    else if (safeSubStage === 4) swarmCount = (safeStage > 2) ? 4 : 3;
   }
 
   const enemies = [];
@@ -144,9 +146,9 @@ export function getSwarmForStage(stage, subStage) {
   let remainingShards = totalShardReward;
 
   for (let i = 0; i < swarmCount; i++) {
-    const typeIndex = (subStage - 1 + i) % (CORRUPTED_TYPES.length - 1);
-    const typeObj = CORRUPTED_TYPES[typeIndex];
-    const prefix = prefixes[(stage * 3 + subStage + i) % prefixes.length];
+    const typeIndex = Math.abs(safeSubStage - 1 + i) % Math.max(1, CORRUPTED_TYPES.length - 1);
+    const typeObj = CORRUPTED_TYPES[typeIndex] || CORRUPTED_TYPES[0];
+    const prefix = prefixes[(safeStage * 3 + safeSubStage + i) % prefixes.length] || prefixes[0];
     const name = `${prefix} ${typeObj.name}`;
 
     const mobPower = Math.max(
@@ -158,7 +160,7 @@ export function getSwarmForStage(stage, subStage) {
     remainingShards = Math.max(0, remainingShards - shards);
 
     enemies.push({
-      id: `mob_${stage}_${subStage}_${i}`,
+      id: `mob_${safeStage}_${safeSubStage}_${i}`,
       name,
       isBoss: false,
       element: biome.element || 'EARTH',
@@ -167,7 +169,7 @@ export function getSwarmForStage(stage, subStage) {
       hp: mobMaxHp,
       shardReward: shards,
       essenceReward: (i === 0) ? totalEssenceReward : 0,
-      color: typeObj.color,
+      color: typeObj.color || '#ff0055',
       attackCooldown: Math.max(1.5, 2.2 - (swarmCount >= 4 ? 0.4 : 0) + (i * 0.12)),
       attackTimer: 0.8 + (i * 0.28)
     });

@@ -3,12 +3,13 @@ import { audioManager } from '../../../audio/audioManager.js';
 import { SPIRIT_SPECIES } from '../../../data/spiritsData.js';
 import { createSpiritPlaceholderBox } from '../../components/pixelBox.js';
 import { closeActiveModal } from '../../modals/modalBase.js';
+import { getGameIcon } from '../../icons/gameIcons.js';
 
 export function renderPotionsSectionHtml(res, spirits) {
   const POTIONS = [
-    { id: 'lesser_elixir', name: 'Lesser Astral Elixir', icon: '🧪', xp: 10000, shardCost: 1200, essenceGodCost: 10, astralCost: 1, desc: 'Brewed elixir granting +10,000 Spirit XP.' },
-    { id: 'grand_elixir', name: 'Grand Astral Elixir', icon: '⚗️', xp: 50000, shardCost: 3000, essenceGodCost: 25, astralCost: 3, desc: 'Concentrated starlight granting +50,000 Spirit XP.' },
-    { id: 'divine_ambrosia', name: 'Divine Ambrosia', icon: '🏺', xp: 250000, shardCost: 7500, essenceGodCost: 60, astralCost: 10, desc: 'Nectar of the gods granting +250,000 Spirit XP.' }
+    { id: 'lesser_elixir', name: 'Lesser Astral Elixir', iconKey: 'potion', xp: 10000, shardCost: 1200, essenceGodCost: 10, astralCost: 1, desc: 'Brewed elixir granting +10,000 Spirit XP.' },
+    { id: 'grand_elixir', name: 'Grand Astral Elixir', iconKey: 'alembic', xp: 50000, shardCost: 3000, essenceGodCost: 25, astralCost: 3, desc: 'Concentrated starlight granting +50,000 Spirit XP.' },
+    { id: 'divine_ambrosia', name: 'Divine Ambrosia', iconKey: 'relic', xp: 250000, shardCost: 7500, essenceGodCost: 60, astralCost: 10, desc: 'Nectar of the gods granting +250,000 Spirit XP.' }
   ];
 
   return `
@@ -26,8 +27,8 @@ export function renderPotionsSectionHtml(res, spirits) {
           return `
             <div class="rounded-xl border border-emerald-500/30 bg-slate-900/80 p-3 flex items-center justify-between gap-2.5 shadow-sm">
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shrink-0">
-                  ${pot.icon}
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                  ${getGameIcon(pot.iconKey, { size: 20 })}
                 </div>
                 <div class="min-w-0">
                   <div class="flex items-center gap-1.5 flex-wrap">
@@ -37,7 +38,7 @@ export function renderPotionsSectionHtml(res, spirits) {
                     </span>
                   </div>
                   <div class="text-[10px] text-slate-400 mt-0.5">
-                    Cost: <span class="text-amber-300 font-bold">💎 ${pot.shardCost.toLocaleString()}</span> • <span class="text-cyan-300 font-bold">💠 ${pot.essenceGodCost} Gods</span> • <span class="text-purple-300 font-bold">🔮 ${pot.astralCost} Astral</span>
+                    Cost: <span class="text-amber-300 font-bold inline-flex items-center gap-0.5">${getGameIcon('spiritShards', { size: 11 })} ${pot.shardCost.toLocaleString()}</span> • <span class="text-cyan-300 font-bold inline-flex items-center gap-0.5">${getGameIcon('godsEssence', { size: 11 })} ${pot.essenceGodCost} Gods</span> • <span class="text-purple-300 font-bold inline-flex items-center gap-0.5">${getGameIcon('astralEssence', { size: 11 })} ${pot.astralCost} Astral</span>
                   </div>
                 </div>
               </div>
@@ -58,10 +59,10 @@ export function renderPotionsSectionHtml(res, spirits) {
 
 export function renderBlessingsSectionHtml(res, activeBlessings) {
   const BLESSINGS = [
-    { id: 'ares_blessing', name: 'Blessing of Ares', icon: '⚔️', stat: 'ATK Power +25%', cost: 10, desc: '+25% all party damage for 1 hour.' },
-    { id: 'athena_blessing', name: 'Blessing of Athena', icon: '🛡️', stat: 'Max HP +30%', cost: 10, desc: '+30% party maximum health for 1 hour.' },
-    { id: 'zeus_blessing', name: 'Blessing of Zeus', icon: '⚡', stat: 'Crit Rate +20%', cost: 15, desc: '+20% Critical Hit Chance for 1 hour.' },
-    { id: 'poseidon_blessing', name: 'Blessing of Poseidon', icon: '🌊', stat: 'Shard Yield +35%', cost: 15, desc: '+35% bonus Spirit Shards for 1 hour.' }
+    { id: 'ares_blessing', name: 'Blessing of Ares', iconKey: 'swords', stat: 'ATK Power +25%', cost: 10, desc: '+25% all party damage for 1 hour.' },
+    { id: 'athena_blessing', name: 'Blessing of Athena', iconKey: 'shield', stat: 'Max HP +30%', cost: 10, desc: '+30% party maximum health for 1 hour.' },
+    { id: 'zeus_blessing', name: 'Blessing of Zeus', iconKey: 'zap', stat: 'Crit Rate +20%', cost: 15, desc: '+20% Critical Hit Chance for 1 hour.' },
+    { id: 'poseidon_blessing', name: 'Blessing of Poseidon', iconKey: 'drop', stat: 'Shard Yield +35%', cost: 15, desc: '+35% bonus Spirit Shards for 1 hour.' }
   ];
 
   return `
@@ -82,8 +83,8 @@ export function renderBlessingsSectionHtml(res, activeBlessings) {
           return `
             <div class="rounded-xl border p-3 flex items-center justify-between gap-2.5 shadow-sm transition-all ${active ? 'bg-purple-950/30 border-purple-400/60' : 'bg-slate-900/80 border-slate-800'}">
               <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-xl shrink-0">
-                  ${b.icon}
+                <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center shrink-0">
+                  ${getGameIcon(b.iconKey, { size: 20 })}
                 </div>
                 <div class="min-w-0">
                   <div class="flex items-center gap-1.5 flex-wrap">
@@ -107,7 +108,7 @@ export function renderBlessingsSectionHtml(res, activeBlessings) {
                           data-blessing-id="${b.id}"
                           data-cost="${b.cost}"
                           data-name="${b.name}">
-                    ${canAfford ? 'Invoke Boon' : `Need ${b.cost} 💠`}
+                    ${canAfford ? 'Invoke Boon' : `Need ${b.cost} Gods`}
                   </button>
                 `}
               </div>
@@ -140,7 +141,7 @@ export function bindBlessingEvents(container, callbacks = {}) {
       const userEssences = gameState.state.resources.essencesOfTheGods || 0;
 
       if (userEssences < cost) {
-        alert(`⚠️ Insufficient Essences of the Gods!\nYou need ${cost} Essences to invoke ${name} (You have ${userEssences}).\n\nFarm Sanctuary Trials or dismantle 3★+ Relics in your Vault to earn more!`);
+        alert(`Insufficient Essences of the Gods!\nYou need ${cost} Essences to invoke ${name} (You have ${userEssences}).\n\nFarm Sanctuary Trials or dismantle 3-Star+ Relics in your Vault to earn more!`);
         return;
       }
 
@@ -165,7 +166,7 @@ export function openPotionSpiritSelector(potionId, container, callbacks = {}) {
     <div class="modal-backdrop">
       <div class="modal-card max-w-md w-full bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 shadow-2xl text-white">
         <h3 class="text-sm font-extrabold text-emerald-300 flex items-center gap-1.5">
-          🧪 Feed Astral Elixir
+          ${getGameIcon('potion', { size: 16 })} Feed Astral Elixir
         </h3>
         <p class="text-[11px] text-slate-400 mt-0.5 mb-2.5">Choose an active party member to receive the XP surge:</p>
         
@@ -176,7 +177,7 @@ export function openPotionSpiritSelector(potionId, container, callbacks = {}) {
                 <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0">${createSpiritPlaceholderBox(s)}</div>
                 <div>
                   <div class="font-extrabold text-xs text-white">${s.customName}</div>
-                  <div class="text-[10px] text-slate-400">Lv. ${s.level} • ⚡ ${s.power} PWR</div>
+                  <div class="text-[10px] text-slate-400 inline-flex items-center gap-1">Lv. ${s.level} • ${getGameIcon('zap', { size: 11, color: '#facc15' })} ${s.power} PWR</div>
                 </div>
               </div>
               <button class="btn-feed-confirm px-3 py-1 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-bold transition-all cursor-pointer min-h-[34px]">

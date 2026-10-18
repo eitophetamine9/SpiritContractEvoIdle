@@ -14,6 +14,8 @@ import { SPIRIT_SPECIES, getRarityInfo } from '../../data/spiritsData.js';
 import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedWeaponHtml, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
 import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../render/combatAnimator.js';
+import { getGameIcon } from '../icons/gameIcons.js';
+import { renderSlidingCarouselHtml, attachSlidingCarouselEvents } from '../components/slidingCarousel.js';
 
 let isForgeEventsBound = false;
 
@@ -44,13 +46,13 @@ function renderForgeChambersStage(container) {
   const canAfford = res.energy >= tier.energyCost;
   const powerRatio = partyPower / Math.max(1, tier.minPartyPower);
   let powerClass = 'even';
-  let powerText = '⚖️ Balanced Match';
+  let powerText = 'Balanced Match';
   if (powerRatio >= 1.25) {
     powerClass = 'strong';
-    powerText = '⚡ Overwhelming Mastery';
+    powerText = 'Overwhelming Mastery';
   } else if (powerRatio < 0.85) {
     powerClass = 'under';
-    powerText = '⚠️ High Heat Danger';
+    powerText = 'High Heat Danger';
   }
 
   container.innerHTML = `
@@ -61,7 +63,7 @@ function renderForgeChambersStage(container) {
         <div class="flex items-center justify-between gap-2">
           <div class="pantheon-title-col">
             <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-orange-500/20 text-orange-300 border border-orange-400/30">
-              🔥 THE DIVINE FORGE
+              ${getGameIcon('fire', { size: '12px' })} THE DIVINE FORGE
             </div>
             <h2 class="text-sm sm:text-base font-extrabold text-white mt-0.5">
               Sacred Weapon Anvils
@@ -72,45 +74,34 @@ function renderForgeChambersStage(container) {
           </div>
 
           <div class="pantheon-energy-badge flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-950/80 border border-orange-500/40 text-[11px] shrink-0">
-            <span class="text-amber-400 font-bold">⚡</span>
+            <span class="text-amber-400 font-bold">${getGameIcon('energy', { size: '13px' })}</span>
             <span class="font-extrabold text-amber-300">${res.energy} / ${res.maxEnergy}</span>
           </div>
         </div>
       </div>
 
-      <!-- Forge Chambers Carousel Navigation & Dropdown -->
-      <div class="carousel-nav-bar mb-1">
-        <button id="btn-prev-forge" class="pager-nav-btn" title="Previous Forge Anvil">
-          <span>‹</span>
-          <span class="hidden sm:inline">Prev</span>
-        </button>
-
-        <div class="chamber-dropdown-wrap">
-          <select id="select-forge-chamber" class="chamber-dropdown">
-            ${FORGE_CHAMBERS.map(c => {
-              const isSelected = c.id === selectedForgeChamberId;
-              return `<option value="${c.id}" ${isSelected ? 'selected' : ''}>🔥 ${c.name} (${c.bossName})</option>`;
-            }).join('')}
-          </select>
-        </div>
-
-        <button id="btn-next-forge" class="pager-nav-btn" title="Next Forge Anvil">
-          <span class="hidden sm:inline">Next</span>
-          <span>›</span>
-        </button>
-      </div>
-
-      <!-- Quick Forge Pills Strip -->
-      <div class="chamber-quick-pills flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 no-scrollbar mb-1">
-        ${FORGE_CHAMBERS.map(c => {
-          const isSelected = c.id === selectedForgeChamberId;
-          return `
-            <button class="chamber-card px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${isSelected ? 'selected bg-orange-500/20 text-orange-300 border-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-slate-900/60 text-slate-400 border-slate-800'}" data-forge-chamber="${c.id}">
-              ${c.name.split(' ')[0]}
-            </button>
-          `;
-        }).join('')}
-      </div>
+      <!-- Divine Forge Weapon Chambers Sliding 3-Card Carousel -->
+      ${renderSlidingCarouselHtml({
+        carouselId: 'forge-chambers-carousel',
+        cards: FORGE_CHAMBERS.map(c => ({
+          id: c.id,
+          name: c.name,
+          subtitle: c.title,
+          color: c.color,
+          accentColor: c.accentColor,
+          sigil: '⚔️',
+          bannerArtHtml: createAnimatedWeaponHtml(c.weaponTypeId || c.id, { extraClasses: 'stage-sigil-sprite-large' }),
+          emblemHtml: getGameIcon('sword', { size: '20px', color: c.accentColor }),
+          metrics: [
+            { label: 'Weapon', value: c.weaponTypeId || 'Arsenal', highlight: true },
+            { label: 'Boss', value: c.bossName ? c.bossName.split(' ')[0] : 'Vulcan' }
+          ],
+          actionLabel: c.id === selectedForgeChamberId ? 'SELECTED' : 'SELECT ANVIL'
+        })),
+        selectedId: selectedForgeChamberId,
+        actionLabel: 'SELECT ANVIL',
+        showCounter: true
+      })}
 
       <!-- Active Selected Chamber Detail Stage (Animated Transition) -->
       <div class="stage-carousel-container">
@@ -136,7 +127,7 @@ function renderForgeChambersStage(container) {
                 return `
                   <button class="btn-tier-select p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${isTierActive ? 'active bg-orange-500/20 border-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.25)]' : 'bg-slate-950/60 border-slate-800'}" data-forge-tier="${t.tier}">
                     <span class="tier-btn-name text-xs font-black text-white">${t.name}</span>
-                    <span class="tier-btn-cost text-xs font-bold text-amber-400 mt-1">${t.energyCost} ⚡</span>
+                    <span class="tier-btn-cost text-xs font-bold text-amber-400 mt-1 flex items-center gap-1">${t.energyCost} ${getGameIcon('energy', { size: '11px' })}</span>
                   </button>
                 `;
               }).join('')}
@@ -146,13 +137,13 @@ function renderForgeChambersStage(container) {
           <!-- Trial Action Strip -->
           <div class="trial-launch-strip flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-800">
             <div class="trial-power-info text-xs flex flex-col gap-0.5">
-              <span class="rec-power-tag text-slate-400">Required Power: <strong class="text-white">⚡ ${tier.minPartyPower.toLocaleString()}</strong></span>
-              <span class="party-power-tag ${powerClass} text-slate-400">Party Power: <strong class="text-orange-300">⚡ ${partyPower.toLocaleString()} (${powerText})</strong></span>
+              <span class="rec-power-tag text-slate-400 flex items-center gap-1">Required Power: <strong class="text-white flex items-center gap-1">${getGameIcon('statPower', { size: '11px', color: '#ffd152' })} ${tier.minPartyPower.toLocaleString()}</strong></span>
+              <span class="party-power-tag ${powerClass} text-slate-400 flex items-center gap-1">Party Power: <strong class="text-orange-300 flex items-center gap-1">${getGameIcon('statPower', { size: '11px', color: '#fb923c' })} ${partyPower.toLocaleString()} (${powerText})</strong></span>
             </div>
 
             <div class="flex gap-2 flex-wrap">
-              <button id="btn-enter-forge-trial" class="btn-enter-trial min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'} style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
-                <span>⚔️ Enter 3-Wave Forge (${tier.energyCost} ⚡)</span>
+              <button id="btn-enter-forge-trial" class="btn-enter-trial min-h-[46px] px-6 py-2.5 rounded-xl font-black text-sm text-slate-950 transition-all duration-200 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5" ${canAfford ? '' : 'disabled'} style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});">
+                <span>${getGameIcon('sword', { size: '14px' })} Enter 3-Wave Forge (${tier.energyCost} Energy)</span>
               </button>
             </div>
           </div>
@@ -164,10 +155,10 @@ function renderForgeChambersStage(container) {
       <div class="pantheon-loot-preview-strip rounded-xl bg-slate-950/80 border border-slate-800 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <span class="loot-preview-title text-[11px] font-black uppercase tracking-wider text-slate-400">FORGE DROPS:</span>
         <div class="loot-pills-list flex items-center gap-2 flex-wrap">
-          <span class="loot-badge px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 text-xs font-bold border border-orange-500/30">⚔️ ${tier.weaponDropCount}x Targeted ${chamber.name.split(' ')[0]} Weapons</span>
-          <span class="loot-badge px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">💎 +${tier.shardsReward} Spirit Shards</span>
-          <span class="loot-badge px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30">🔮 +${tier.essenceReward} Soul Essence</span>
-          <span class="loot-badge px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30">🌊 3 Combat Waves (Boss: ${chamber.bossName})</span>
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 text-xs font-bold border border-orange-500/30 flex items-center gap-1">${getGameIcon('sword', { size: '12px' })} ${tier.weaponDropCount}x Targeted ${chamber.name.split(' ')[0]} Weapons</span>
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 flex items-center gap-1">${getGameIcon('spiritShards', { size: '12px' })} +${tier.shardsReward} Spirit Shards</span>
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30 flex items-center gap-1">${getGameIcon('astralEssence', { size: '12px' })} +${tier.essenceReward} Soul Essence</span>
+          <span class="loot-badge px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30">3 Combat Waves (Boss: ${chamber.bossName})</span>
         </div>
       </div>
 
@@ -184,35 +175,29 @@ function renderForgeChambersStage(container) {
     });
   }
 
-  const btnPrevForge = container.querySelector('#btn-prev-forge');
-  if (btnPrevForge) {
-    btnPrevForge.addEventListener('click', () => {
-      const curIdx = FORGE_CHAMBERS.findIndex(c => c.id === selectedForgeChamberId);
-      const prevIdx = (curIdx - 1 + FORGE_CHAMBERS.length) % FORGE_CHAMBERS.length;
-      selectedForgeChamberId = FORGE_CHAMBERS[prevIdx].id;
-      forgeAnimClass = 'stage-enter-prev';
+  // Attach Sliding Carousel Events for Forge Chambers
+  attachSlidingCarouselEvents({
+    carouselId: 'forge-chambers-carousel',
+    cards: FORGE_CHAMBERS,
+    selectedId: selectedForgeChamberId,
+    container,
+    onSelect: (chamberId) => {
+      if (selectedForgeChamberId !== chamberId) {
+        selectedForgeChamberId = chamberId;
+        forgeAnimClass = 'stage-enter-next';
+        audioManager.playSfx('button_click', 0.5);
+        renderForgeView(container);
+      }
+    },
+    onAction: (chamberId) => {
+      selectedForgeChamberId = chamberId;
+      audioManager.playSfx('button_click', 0.5);
       renderForgeView(container);
-    });
-  }
-
-  const btnNextForge = container.querySelector('#btn-next-forge');
-  if (btnNextForge) {
-    btnNextForge.addEventListener('click', () => {
-      const curIdx = FORGE_CHAMBERS.findIndex(c => c.id === selectedForgeChamberId);
-      const nextIdx = (curIdx + 1) % FORGE_CHAMBERS.length;
-      selectedForgeChamberId = FORGE_CHAMBERS[nextIdx].id;
-      forgeAnimClass = 'stage-enter-next';
-      renderForgeView(container);
-    });
-  }
-
-  // Attach Forge Chamber selection listeners
-  container.querySelectorAll('[data-forge-chamber]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      forgeAnimClass = 'stage-enter-next';
-      selectedForgeChamberId = btn.dataset.forgeChamber;
-      renderForgeView(container);
-    });
+      const tierSelector = container.querySelector('.pantheon-tier-selector');
+      if (tierSelector) {
+        tierSelector.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
   });
 
   // Attach Forge Tier selection listeners
@@ -257,7 +242,7 @@ function renderForgeBattleArena(container, battle) {
         </div>
 
         <div class="combat-vs-banner flex items-center gap-2">
-          <span class="vs-ally-tag text-xs font-bold text-orange-300">${chamber.icon} ${chamber.name.toUpperCase()}</span>
+          <span class="vs-ally-tag text-xs font-bold text-orange-300 flex items-center gap-1">${getGameIcon('fire', { size: '12px' })} ${chamber.name.toUpperCase()}</span>
           <span class="vs-center-tag text-[10px] text-slate-500">|</span>
           <span class="vs-enemy-tag text-xs font-black text-white">
             WAVE ${battle.currentWave}/3: ${battle.currentWave === 3 ? `TITAN: ${chamber.bossName.toUpperCase()}` : 'AUTOMATONS'}
@@ -265,7 +250,7 @@ function renderForgeBattleArena(container, battle) {
         </div>
 
         <div class="combat-hud-right">
-          <span class="hud-speed-btn px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-amber-400">⚡ ${tier.energyCost}</span>
+          <span class="hud-speed-btn px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-amber-400 flex items-center gap-1">${getGameIcon('energy', { size: '12px' })} ${tier.energyCost}</span>
         </div>
       </div>
 
@@ -290,7 +275,6 @@ function renderForgeBattleArena(container, battle) {
               const isFallen = spirit.isFallen || curHp <= 0;
               const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
               const sheetKey = getSheetKeyForSpecies(species ? species.id : null);
-              const glyph = species ? (species.avatarEmoji || '✨') : '✨';
 
               return `
                 <div class="seamless-battle-spirit ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="forge-allied-slot-${idx}" style="--stagger-offset: ${idx % 2 === 1 ? '12px' : '0px'};">
@@ -302,8 +286,8 @@ function renderForgeBattleArena(container, battle) {
 
                   <!-- Animated Creature Sprite (No Box, No Border) -->
                   <div class="spirit-sprite-container seamless-sprite-container">
-                    ${createAnimatedSpriteHtml(sheetKey, { glyph })}
-                    ${isUltReady ? `<div class="ult-ready-tag" id="forge-ult-ready-${idx}">✨ ULT</div>` : ''}
+                    ${createAnimatedSpriteHtml(sheetKey, { glyph: '' })}
+                    ${isUltReady ? `<div class="ult-ready-tag" id="forge-ult-ready-${idx}">ULT</div>` : ''}
                     ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
                     <div class="combat-ground-shadow"></div>
                   </div>
@@ -326,13 +310,13 @@ function renderForgeBattleArena(container, battle) {
 
         <!-- Center Combat Clash Point -->
         <div class="combat-clash-divider relative z-10 text-2xl animate-pulse">
-          <div class="clash-sparks-icon">⚔️</div>
+          <div class="clash-sparks-icon">${getGameIcon('sword', { size: '22px' })}</div>
         </div>
 
         <!-- Right Side: Wave Enemies (Seamless, Uncluttered) -->
         <div class="enemy-formation-column seamless-enemy-column relative z-10 flex flex-col gap-2 items-end">
           <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-orange-400">
-            ${battle.currentWave === 3 ? `👑 TITAN: ${chamber.bossName.toUpperCase()}` : `FORGE AUTOMATONS (${swarm.filter(e => !e.isDefeated && e.hp > 0).length}/${swarm.length})`}
+            ${battle.currentWave === 3 ? `TITAN: ${chamber.bossName.toUpperCase()}` : `FORGE AUTOMATONS (${swarm.filter(e => !e.isDefeated && e.hp > 0).length}/${swarm.length})`}
           </div>
 
           <div class="enemy-swarm-wrapper flex flex-col gap-3 items-end" id="forge-enemy-swarm-wrapper">
@@ -347,13 +331,13 @@ function renderForgeBattleArena(container, battle) {
                   <!-- Enemy Details & Floating Health Bar (Overhead, Borderless) -->
                   <div class="seamless-enemy-overhead">
                     <div class="seamless-enemy-name">
-                      ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
+                      ${em.isBoss ? `<span class="boss-crown-badge">${getGameIcon('crown', { size: '12px', color: '#facc15' })}</span>` : ''}
                       <span>${em.name}</span>
                     </div>
                     <div class="flex items-center gap-1.5 flex-wrap">
-                      <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
-                      ${em.shieldHp > 0 ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">🛡️ BARRIER</span>' : ''}
-                      ${em.isEnraged ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse">🔥 ENRAGED</span>' : ''}
+                      <div class="seamless-enemy-pwr flex items-center gap-1">${getGameIcon('statPower', { size: '11px' })} ${em.power.toLocaleString()} PWR</div>
+                      ${em.shieldHp > 0 ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 flex items-center gap-0.5">${getGameIcon('shield', { size: '8px' })} BARRIER</span>` : ''}
+                      ${em.isEnraged ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse flex items-center gap-0.5">${getGameIcon('fire', { size: '8px' })} ENRAGED</span>` : ''}
                     </div>
 
                     <div class="seamless-enemy-hp-track">
@@ -378,7 +362,7 @@ function renderForgeBattleArena(container, battle) {
       <!-- Action Strike Command Strip -->
       <div class="combat-action-footer">
         <button id="btn-forge-strike" class="btn-main-attack min-h-[48px] w-full py-3 rounded-2xl font-black text-sm text-slate-950 transition-all cursor-pointer shadow-xl flex flex-col items-center justify-center" style="background: linear-gradient(135deg, ${chamber.color}, #d35400);">
-          <span>⚔️ Forge Strike (Party Attack • Charges +10 MP)</span>
+          <span class="flex items-center gap-1.5">${getGameIcon('sword', { size: '14px' })} Forge Strike (Party Attack • Charges +10 MP)</span>
           <span class="btn-subtext text-[10px] font-bold opacity-80">Defeat Wave ${battle.currentWave}/3 to claim targeted ${chamber.name} Weapons</span>
         </button>
       </div>
@@ -476,7 +460,7 @@ export function showForgeVictoryModal(loot, onClose) {
     <div class="pantheon-victory-modal max-w-lg w-full rounded-2xl bg-slate-900 border overflow-hidden shadow-2xl text-white" style="border: 2px solid #e67e22;">
       <div class="victory-header p-4 flex items-center justify-between gap-3.5" style="background: linear-gradient(135deg, rgba(230, 126, 34, 0.4), #000);">
         <div class="flex items-center gap-3.5">
-          <div class="victory-sigil text-4xl">🔨</div>
+          <div class="victory-sigil">${getGameIcon('hammer', { size: '36px', color: '#f97316' })}</div>
           <div class="victory-title-col">
             <span class="victory-sub text-[10px] font-black uppercase tracking-widest text-orange-400">FORGE CONQUERED</span>
             <h3 class="victory-name text-lg font-black text-white">${loot.chamber.name} Cleared!</h3>
@@ -517,8 +501,8 @@ export function showForgeVictoryModal(loot, onClose) {
         </div>
 
         <div class="victory-resources-row flex items-center gap-2 pt-2 border-t border-slate-800">
-          <span class="res-reward-pill px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">💎 +${loot.shardsGained} Spirit Shards</span>
-          <span class="res-reward-pill px-3 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30">🔮 +${loot.essenceGained} Soul Essence</span>
+          <span class="res-reward-pill px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30 flex items-center gap-1">${getGameIcon('spiritShards', { size: '12px' })} +${loot.shardsGained} Spirit Shards</span>
+          <span class="res-reward-pill px-3 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30 flex items-center gap-1">${getGameIcon('astralEssence', { size: '12px' })} +${loot.essenceGained} Soul Essence</span>
         </div>
 
         <button id="btn-claim-forge-loot" class="btn-claim-dungeon-loot min-h-[46px] w-full py-2.5 rounded-xl font-black text-xs text-slate-950 transition-all cursor-pointer shadow-lg" style="background: linear-gradient(135deg, #e67e22, #f39c12);">
@@ -545,7 +529,7 @@ function showForgeDefeatModal(onClose) {
 
   modalEl.innerHTML = `
     <div class="pantheon-victory-modal max-w-md w-full rounded-2xl bg-slate-900 border border-red-500/50 p-5 shadow-2xl text-white flex flex-col items-center text-center gap-3">
-      <div class="text-3xl">💀</div>
+      <div class="text-3xl">${getGameIcon('skull', { size: '36px', color: '#f87171' })}</div>
       <div>
         <h3 class="text-base font-black text-red-400">HEAT OVERLOAD</h3>
         <p class="text-xs text-slate-400 mt-1">Party Fallen in Forge. Regroup and upgrade equipment to endure the flames.</p>

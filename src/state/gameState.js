@@ -37,7 +37,8 @@ class GameStateManager {
     this._setBonusesCache = new Map();
     this._partyPowerCache = null;
     this._isTabHidden = false;
-    this._tabHiddenTimestamp = null;
+    this.isGameSessionActive = false;
+    this._lifecycleListenersBound = false;
   }
 
   invalidateCaches() {
@@ -70,9 +71,12 @@ class GameStateManager {
   }
 
   /**
-   * Initialize state, compute offline gains, and start tickers
+   * Initialize state from localStorage and bind lifecycle listeners.
+   * Note: Combat game loop and auto-saver remain dormant until enterGameSession() is called.
+   * @param {Object} options
+   * @param {boolean} options.startLoop - If true, immediately enter game session (useful for headless testing)
    */
-  init() {
+  init({ startLoop = false } = {}) {
     // Try v2 save key first, fallback to v1 for migration
     let rawSaved = localStorage.getItem(SAVE_KEY);
     if (!rawSaved) {
@@ -96,19 +100,101 @@ class GameStateManager {
     }
     this.invalidateCaches();
 
-    // Process Offline Progression based on last_saved (Minimum 1 hour / 3600s to claim)
+    // Ensure Madness Zone current enemy is active and living
+    const mz = this.state.madnessZone;
+    if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
+      this.spawnMadnessEnemy();
+    }
+
+    // Attach unload & lifecycle visibility listeners for offline progression and data safety
+    if (!this._lifecycleListenersBound) {
+      this._lifecycleListenersBound = true;
+      const handleTabHide = () => {
+        if (this._isTabHidden) return;
+        this._isTabHidden = true;
+        this._tabHiddenTimestamp = Date.now();
+        if (this.state) {
+          this.state.last_saved = this._tabHiddenTimestamp;
+        }
+        this.save(true);
+      };
+
+      const handleTabShow = () => {
+        if (!this._isTabHidden && this._tabHiddenTimestamp === null) return;
+        this._isTabHidden = false;
+        const refocusNow = Date.now();
+        const hiddenTime = this._tabHiddenTimestamp || this.state?.last_saved || refocusNow;
+        this._tabHiddenTimestamp = null;
+
+        // If session is paused (Title Screen active), preserve last_saved and do not launch tickers
+        if (!this.isGameSessionActive) {
+          return;
+        }
+
+        const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - hiddenTime) / 1000));
+
+        if (this.state) {
+          this.state.last_saved = refocusNow;
+        }
+        this.save(true);
+
+        // Trigger offline gains if away for at least 1 hour (3600 seconds)
+        if (refocusOfflineSec >= 3600) {
+          const refocusReport = this.applyOfflineGains(refocusOfflineSec);
+          if (refocusReport && refocusReport.canClaim) {
+            this.emit('offlineGains', refocusReport);
+          }
+        }
+      };
+
+      if (typeof window !== 'undefined') {
+        window.addEventListener('beforeunload', handleTabHide);
+        window.addEventListener('pagehide', handleTabHide);
+        window.addEventListener('pageshow', handleTabShow);
+      }
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            handleTabHide();
+          } else {
+            handleTabShow();
+          }
+        });
+      }
+    }
+
+    if (startLoop) {
+      return this.enterGameSession();
+    }
+
+    return null;
+  }
+
+  /**
+   * Enters the active game session: calculates accumulated offline/idle gains since last_saved,
+   * starts auto-saver and launches the real-time combat & game loop ticker.
+   */
+  enterGameSession() {
+    this.isGameSessionActive = true;
     const now = Date.now();
-    const offlineSeconds = Math.max(0, Math.floor((now - (this.state.last_saved || now)) / 1000));
-    
+    const offlineSeconds = Math.max(0, Math.floor((now - (this.state?.last_saved || now)) / 1000));
+
     let offlineReport = null;
     if (offlineSeconds >= 3600) {
       offlineReport = this.applyOfflineGains(offlineSeconds);
     }
 
-    // Ensure Madness Zone current enemy is active and living
-    const mz = this.state.madnessZone;
-    if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
-      this.spawnMadnessEnemy();
+    if (this.state) {
+      this.state.last_saved = now;
+      this.save(true);
+    }
+
+    // Ensure current Madness Zone combat target is active
+    if (this.state?.madnessZone) {
+      const mz = this.state.madnessZone;
+      if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
+        this.spawnMadnessEnemy();
+      }
     }
 
     // Start 5-second localStorage auto-saver
@@ -117,56 +203,22 @@ class GameStateManager {
     // Start Real-time AFK Training & Combat ticker
     this.startGameLoop();
 
-    // Attach unload & lifecycle visibility listeners for offline progression and data safety
-    const handleTabHide = () => {
-      if (this._isTabHidden) return;
-      this._isTabHidden = true;
-      this._tabHiddenTimestamp = Date.now();
-      if (this.state) {
-        this.state.last_saved = this._tabHiddenTimestamp;
-      }
-      this.save(true);
-    };
-
-    const handleTabShow = () => {
-      if (!this._isTabHidden && this._tabHiddenTimestamp === null) return;
-      this._isTabHidden = false;
-      const refocusNow = Date.now();
-      const hiddenTime = this._tabHiddenTimestamp || this.state?.last_saved || refocusNow;
-      this._tabHiddenTimestamp = null;
-
-      const refocusOfflineSec = Math.max(0, Math.floor((refocusNow - hiddenTime) / 1000));
-
-      if (this.state) {
-        this.state.last_saved = refocusNow;
-      }
-      this.save(true);
-
-      // Trigger offline gains if away for at least 1 hour (3600 seconds)
-      if (refocusOfflineSec >= 3600) {
-        const refocusReport = this.applyOfflineGains(refocusOfflineSec);
-        if (refocusReport && refocusReport.canClaim) {
-          this.emit('offlineGains', refocusReport);
-        }
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', handleTabHide);
-      window.addEventListener('pagehide', handleTabHide);
-      window.addEventListener('pageshow', handleTabShow);
-    }
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          handleTabHide();
-        } else {
-          handleTabShow();
-        }
-      });
-    }
-
     return offlineReport;
+  }
+
+  /**
+   * Pauses the active game session when returning to the Title/Home screen:
+   * Stops real-time game loop and auto-saver, records exact pause time in last_saved,
+   * so time spent on the Title Screen accumulates towards idle/offline gains.
+   */
+  exitToTitleSession() {
+    this.isGameSessionActive = false;
+    this.stopGameLoop();
+    this.stopAutoSaver();
+    if (this.state) {
+      this.state.last_saved = Date.now();
+      this.save(true);
+    }
   }
 }
 

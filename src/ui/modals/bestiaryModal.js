@@ -1,8 +1,10 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from '../components/pixelBox.js';
+import { createAnimatedSpriteHtml } from '../../render/spriteAnimator.js';
 import { SPIRIT_SPECIES, getRarityInfo, getRoleInfo } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
 import { closeActiveModal } from './modalBase.js';
+import { getGameIcon, getRoleIcon } from '../icons/gameIcons.js';
 
 export function showHallOfFamePickerModal(onSelect) {
   const modalRoot = document.getElementById('modal-root');
@@ -43,10 +45,10 @@ export function showHallOfFamePickerModal(onSelect) {
         <div class="modal-card hof-picker-modal-card">
           <div class="hof-modal-header">
             <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 18px;">🏛️</span>
+              ${getGameIcon('temple', { size: 18, color: '#ffd152' })}
               <span style="font-size: 15px; font-weight: 900; color: #ffd152;">Assign Spirit to Hall of Fame</span>
             </div>
-            <button id="btn-close-hof-modal" class="modal-close-icon-btn" title="Close">✕</button>
+            <button id="btn-close-hof-modal" class="modal-close-icon-btn" title="Close">${getGameIcon('close', { size: 14 })}</button>
           </div>
 
           <div style="font-size: 11px; color: var(--text-muted);">
@@ -56,20 +58,20 @@ export function showHallOfFamePickerModal(onSelect) {
           <!-- Tab Selection & Search -->
           <div class="hof-picker-controls">
             <div class="hof-picker-tabs">
-              <button class="hof-tab-btn ${currentTab === 'POWER' ? 'active' : ''}" data-tab="POWER">
-                ⚡ Highest Power
+              <button class="hof-tab-btn ${currentTab === 'POWER' ? 'active' : ''}" data-tab="POWER" style="display: inline-flex; align-items: center; gap: 4px;">
+                ${getGameIcon('zap', { size: 12, color: '#facc15' })} Highest Power
               </button>
-              <button class="hof-tab-btn ${currentTab === 'FAVORITES' ? 'active' : ''}" data-tab="FAVORITES">
-                ⭐ Favorites
+              <button class="hof-tab-btn ${currentTab === 'FAVORITES' ? 'active' : ''}" data-tab="FAVORITES" style="display: inline-flex; align-items: center; gap: 4px;">
+                ${getGameIcon('star', { size: 12, color: '#ffd152' })} Favorites
               </button>
-              <button class="hof-tab-btn ${currentTab === 'ALL' ? 'active' : ''}" data-tab="ALL">
-                🎒 All Vault
+              <button class="hof-tab-btn ${currentTab === 'ALL' ? 'active' : ''}" data-tab="ALL" style="display: inline-flex; align-items: center; gap: 4px;">
+                ${getGameIcon('bag', { size: 12, color: '#f59e0b' })} All Vault
               </button>
             </div>
 
             <div class="hof-search-input-wrap">
               <input type="text" id="hof-search-input" class="vault-search-input" placeholder="Search spirit name..." value="${filterQuery}" />
-              ${filterQuery ? `<button id="btn-clear-hof-search" class="btn-clear-search">✕</button>` : ''}
+              ${filterQuery ? `<button id="btn-clear-hof-search" class="btn-clear-search">${getGameIcon('close', { size: 12 })}</button>` : ''}
             </div>
           </div>
 
@@ -94,7 +96,7 @@ export function showHallOfFamePickerModal(onSelect) {
                   <div class="hof-candidate-details">
                     <div style="display: flex; align-items: center; gap: 6px;">
                       <span class="hof-candidate-name">${spirit.customName}</span>
-                      ${spirit.favorite ? '<span style="font-size: 11px; color: #ffd152;">⭐</span>' : ''}
+                      ${spirit.favorite ? `<span style="font-size: 11px; color: #ffd152; display: inline-flex; align-items: center;">${getGameIcon('star', { size: 11, color: '#ffd152' })}</span>` : ''}
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 10px;">
@@ -102,8 +104,8 @@ export function showHallOfFamePickerModal(onSelect) {
                       <span style="color: var(--text-muted);">Lv. ${spirit.level}</span>
                     </div>
 
-                    <div style="font-size: 11px; font-family: var(--font-mono); color: #2ed573; font-weight: 800;">
-                      ⚡ ${spirit.power.toLocaleString()} Power
+                    <div style="font-size: 11px; font-family: var(--font-mono); color: #2ed573; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                      ${getGameIcon('zap', { size: 10, color: '#2ed573' })} ${spirit.power.toLocaleString()} Power
                     </div>
                   </div>
 
@@ -188,7 +190,7 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
               <span class="bestiary-id-tag">${numStr}</span>
               <span style="font-size: 16px; font-weight: 900; color: var(--text-muted);">??? (Undiscovered)</span>
             </div>
-            <button id="btn-close-bestiary" class="modal-close-icon-btn">✕</button>
+            <button id="btn-close-bestiary" class="modal-close-icon-btn">${getGameIcon('close', { size: 14 })}</button>
           </div>
 
           <div class="bestiary-inspect-body">
@@ -227,13 +229,22 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
               <span class="bestiary-id-tag">${numStr}</span>
               <span style="font-size: 16px; font-weight: 900; color: #ffffff;">${species.name}</span>
             </div>
-            <button id="btn-close-bestiary" class="modal-close-icon-btn">✕</button>
+            <button id="btn-close-bestiary" class="modal-close-icon-btn">${getGameIcon('close', { size: 14 })}</button>
           </div>
 
           <div class="bestiary-inspect-body">
             <div class="bestiary-sprite-showcase">
-              <div style="width: 84px; height: 84px;">
-                ${createSpiritPlaceholderBox(species)}
+              <div class="bestiary-inspect-sprite-wrap" style="
+                width: 96px; 
+                height: 96px; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+                background: radial-gradient(circle, ${rarity.color}33 0%, rgba(10,15,25,0.7) 75%);
+                border-radius: 50%;
+                box-shadow: 0 0 24px ${rarity.color}44;
+              ">
+                ${createAnimatedSpriteHtml(species.id, { extraClasses: 'bestiary-inspect-pure-sprite scale-125' })}
               </div>
               
               <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
@@ -241,8 +252,8 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
                   <span class="rarity-pill ${species.baseRarity.toLowerCase()}" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
                     ${rarity.name.toUpperCase()}
                   </span>
-                  <span style="font-size: 10px; font-weight: 800; color: ${roleInfo.color}; background: ${roleInfo.bg}; border: 1px solid ${roleInfo.border}; padding: 1px 6px; border-radius: 4px;" title="${roleInfo.name}: ${roleInfo.desc}">
-                    ${roleInfo.icon} ${roleInfo.name}
+                  <span style="font-size: 10px; font-weight: 800; color: ${roleInfo.color}; background: ${roleInfo.bg}; border: 1px solid ${roleInfo.border}; padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" title="${roleInfo.name}: ${roleInfo.desc}">
+                    ${getRoleIcon(species.role || 'MAIN_DPS', { size: 12 })} ${roleInfo.name}
                   </span>
                 </div>
                 <div style="display: flex; gap: 8px; font-size: 11px; color: var(--text-moon); font-weight: 700; margin-top: 2px;">
@@ -262,7 +273,7 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
             <!-- Evolution Lineage -->
             <div class="bestiary-evo-lineage">
               <div class="bestiary-evo-heading">
-                <span>🧬 Evolution Lineage (Unlocks at Lv. ${species.levelCap}):</span>
+                <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('dna', { size: 12 })} Evolution Lineage (Unlocks at Lv. ${species.levelCap}):</span>
               </div>
 
               ${evolutions.length > 0 ? `
@@ -289,8 +300,8 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
                   }).join('')}
                 </div>
               ` : `
-                <div class="bestiary-terminal-branch">
-                  <span>✨ Apex Evolution Form (Max Tier reached in this lineage)</span>
+                <div class="bestiary-terminal-branch" style="display: flex; align-items: center; gap: 4px;">
+                  <span>${getGameIcon('sparkle', { size: 11, color: '#facc15' })} Apex Evolution Form (Max Tier reached in this lineage)</span>
                 </div>
               `}
             </div>
@@ -299,22 +310,22 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
             <div class="bestiary-discovery-bounty-box" style="margin-top: 10px; padding: 10px 12px; background: rgba(15, 23, 42, 0.7); border: 1px solid ${isClaimed ? 'rgba(74, 222, 128, 0.3)' : 'rgba(251, 191, 36, 0.4)'}; border-radius: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                 <span style="font-size: 11px; font-weight: 800; color: #f3e8ff; display: flex; align-items: center; gap: 4px;">
-                  <span>🎁</span> Discovery Bounty
+                  ${getGameIcon('gift', { size: 13, color: '#facc15' })} Discovery Bounty
                 </span>
-                <span style="font-size: 11px; font-weight: 800; color: #38bdf8;">
-                  +50 💎 Spirit Shards
+                <span style="font-size: 11px; font-weight: 800; color: #38bdf8; display: inline-flex; align-items: center; gap: 4px;">
+                  +50 ${getGameIcon('spiritShards', { size: 11 })} Spirit Shards
                 </span>
               </div>
               <p style="font-size: 10px; color: var(--text-muted); line-height: 1.35; margin: 0 0 8px 0;">
                 Documenting unique spirit species into your compendium awards sacred Spirit Shards.
               </p>
               ${isClaimed ? `
-                <div style="width: 100%; min-height: 32px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #4ade80; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 8px;">
-                  ✓ Discovery Bounty Claimed (+50 💎)
+                <div style="width: 100%; min-height: 32px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #4ade80; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 8px; gap: 4px;">
+                  ${getGameIcon('check', { size: 12, color: '#4ade80' })} Discovery Bounty Claimed (+50 ${getGameIcon('spiritShards', { size: 10 })})
                 </div>
               ` : `
-                <button id="btn-claim-bestiary-bounty" class="modal-btn-confirm" style="width: 100%; min-height: 34px; font-size: 11px; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: 1px solid #fbbf24; cursor: pointer; box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);">
-                  ✨ Claim Discovery Bounty (+50 💎 Spirit Shards)
+                <button id="btn-claim-bestiary-bounty" class="modal-btn-confirm" style="width: 100%; min-height: 34px; font-size: 11px; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: 1px solid #fbbf24; cursor: pointer; box-shadow: 0 0 10px rgba(245, 158, 11, 0.35); display: flex; align-items: center; justify-content: center; gap: 6px;">
+                  ${getGameIcon('sparkle', { size: 12 })} Claim Discovery Bounty (+50 ${getGameIcon('spiritShards', { size: 11 })} Spirit Shards)
                 </button>
               `}
             </div>
@@ -338,7 +349,7 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
     try {
       const res = gameState.claimBestiarySpeciesReward(species.id);
       safePlaySfx('summon');
-      alert(`🎉 Discovery Bounty Claimed!\nReceived +${res.shardsGranted} Spirit Shards!`);
+      alert(`Discovery Bounty Claimed!\nReceived +${res.shardsGranted} Spirit Shards!`);
       showBestiaryInspectModal(species, isDiscovered, bestiaryNum);
     } catch (err) {
       alert(err.message);

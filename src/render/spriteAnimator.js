@@ -4,65 +4,99 @@
  * and canvas rendering for modular 2D creature spritesheets.
  */
 
+import { getGameIcon } from '../ui/icons/gameIcons.js';
+
 // Embedded Manifest for instantaneous, offline-ready operation
+export const ALL_54_SPIRIT_SPECIES = [
+  'cat_spirit', 'dog_spirit', 'chicken_spirit', 'caterpillar_spirit', 'bull_spirit',
+  'lizard_spirit', 'python_spirit', 'shark_spirit', 'bear_spirit', 'wisp_spirit',
+  'fallen_warrior_spirit', 'furious_cat', 'elemental_cat', 'vitality_dog', 'guardian_dog',
+  'battle_chicken', 'dino_genus_chicken', 'elegant_butterfly', 'mystical_butterfly',
+  'raging_bull', 'elemental_bull', 'minotaur', 'multi_venom_lizard', 'komodo_dragon',
+  'drake', 'highlord_python', 'huge_albino_anaconda', 'wyrm', 'great_white_shark',
+  'megalodon', 'cosmic_oceanic_devourer', 'highlord_bear', 'bear_of_dreams',
+  'cosmic_bear_ursalite', 'high_elf', 'sovereign_warrior', 'dreadlord_warrior',
+  'solaris_lion_pride', 'solaris_the_one', 'gelda_ashes_empress', 'gelda_blood_sovereign',
+  'astraea_valkyrie', 'astraea_celestial_queen', 'leviathan_behemoth',
+  'leviathan_abyssal_primordial', 'baphomet_initiate', 'baphomet_voidbinder',
+  'baphomet_archdemon_lord', 'chrono_hatchling', 'chrono_drake', 'ouroboros_time_sovereign',
+  'dawn_herald', 'seraph_guardian', 'archangel_uriel'
+];
+
 export const SPRITE_MANIFEST = {
   defaultFrameWidth: 48,
   defaultFrameHeight: 48,
   speciesMapping: {
-    cat_spirit: 'feline_shadow',
-    furious_cat: 'feline_shadow',
-    elemental_cat: 'feline_shadow',
-    dog_spirit: 'canine_guardian',
-    vitality_dog: 'canine_guardian',
-    guardian_dog: 'canine_guardian',
-    chicken_spirit: 'avian_blaze',
-    blazing_rooster: 'avian_blaze',
-    phoenix_scion: 'avian_blaze',
-    bull_spirit: 'bovine_earth',
-    iron_bull: 'bovine_earth',
-    minotaur: 'bovine_earth',
-    caterpillar_spirit: 'insect_chrysalis',
-    chrysalis_spirit: 'insect_chrysalis',
-    mystical_butterfly: 'insect_chrysalis',
-    lizard_spirit: 'feline_shadow',
-    multi_venom_lizard: 'feline_shadow',
-    komodo_dragon: 'bovine_earth',
-    drake: 'draconic_leviathan',
-    python_spirit: 'draconic_leviathan',
-    highlord_python: 'draconic_leviathan',
-    albino_anaconda: 'draconic_leviathan',
-    wyrm: 'draconic_leviathan',
-    shark_spirit: 'draconic_leviathan',
-    great_white_shark: 'draconic_leviathan',
-    megalodon: 'draconic_leviathan',
-    cosmic_devourer: 'draconic_leviathan',
-    bear_spirit: 'bovine_earth',
-    highlord_bear: 'bovine_earth',
-    bear_of_dreams: 'bovine_earth',
-    ursalite: 'bovine_earth',
-    high_elf: 'celestial_sun',
-    fallen_warrior: 'spectral_undead',
-    sovereign_warrior: 'spectral_undead',
-    dreadlord_warrior: 'spectral_undead',
-    solaris_lion_of_pride: 'celestial_sun',
-    solaris_the_one: 'celestial_sun',
-    gelda_thousand_ashes: 'feline_shadow',
-    gelda_sanguine: 'feline_shadow',
-    astraea_valkyrie: 'seraph_valkyrie',
-    astraea_celestial_queen: 'seraph_valkyrie',
-    leviathan_behemoth: 'draconic_leviathan',
-    leviathan_primordial: 'draconic_leviathan',
-    baphomet_initiate: 'baphomet_nether',
-    baphomet_voidbinder: 'baphomet_nether',
-    baphomet_archdemon_lord: 'baphomet_nether',
-    baphomet_archdemon: 'baphomet_nether',
-    chrono_hatchling: 'chrono_drake',
+    // 1:1 direct species mappings for all 54 spirits
+    cat_spirit: 'cat_spirit',
+    dog_spirit: 'dog_spirit',
+    chicken_spirit: 'chicken_spirit',
+    caterpillar_spirit: 'caterpillar_spirit',
+    bull_spirit: 'bull_spirit',
+    lizard_spirit: 'lizard_spirit',
+    python_spirit: 'python_spirit',
+    shark_spirit: 'shark_spirit',
+    bear_spirit: 'bear_spirit',
+    wisp_spirit: 'wisp_spirit',
+    fallen_warrior_spirit: 'fallen_warrior_spirit',
+    furious_cat: 'furious_cat',
+    elemental_cat: 'elemental_cat',
+    vitality_dog: 'vitality_dog',
+    guardian_dog: 'guardian_dog',
+    battle_chicken: 'battle_chicken',
+    dino_genus_chicken: 'dino_genus_chicken',
+    elegant_butterfly: 'elegant_butterfly',
+    mystical_butterfly: 'mystical_butterfly',
+    raging_bull: 'raging_bull',
+    elemental_bull: 'elemental_bull',
+    minotaur: 'minotaur',
+    multi_venom_lizard: 'multi_venom_lizard',
+    komodo_dragon: 'komodo_dragon',
+    drake: 'drake',
+    highlord_python: 'highlord_python',
+    huge_albino_anaconda: 'huge_albino_anaconda',
+    wyrm: 'wyrm',
+    great_white_shark: 'great_white_shark',
+    megalodon: 'megalodon',
+    cosmic_oceanic_devourer: 'cosmic_oceanic_devourer',
+    highlord_bear: 'highlord_bear',
+    bear_of_dreams: 'bear_of_dreams',
+    cosmic_bear_ursalite: 'cosmic_bear_ursalite',
+    high_elf: 'high_elf',
+    sovereign_warrior: 'sovereign_warrior',
+    dreadlord_warrior: 'dreadlord_warrior',
+    solaris_lion_pride: 'solaris_lion_pride',
+    solaris_the_one: 'solaris_the_one',
+    gelda_ashes_empress: 'gelda_ashes_empress',
+    gelda_blood_sovereign: 'gelda_blood_sovereign',
+    astraea_valkyrie: 'astraea_valkyrie',
+    astraea_celestial_queen: 'astraea_celestial_queen',
+    leviathan_behemoth: 'leviathan_behemoth',
+    leviathan_abyssal_primordial: 'leviathan_abyssal_primordial',
+    baphomet_initiate: 'baphomet_initiate',
+    baphomet_voidbinder: 'baphomet_voidbinder',
+    baphomet_archdemon_lord: 'baphomet_archdemon_lord',
+    chrono_hatchling: 'chrono_hatchling',
     chrono_drake: 'chrono_drake',
-    ouroboros_time_sovereign: 'chrono_drake',
-    dawn_herald: 'celestial_angel',
-    seraph_guardian: 'celestial_angel',
-    archangel_uriel: 'celestial_angel',
-    wisp_spirit: 'celestial_sun'
+    ouroboros_time_sovereign: 'ouroboros_time_sovereign',
+    dawn_herald: 'dawn_herald',
+    seraph_guardian: 'seraph_guardian',
+    archangel_uriel: 'archangel_uriel',
+
+    // Legacy and variant aliases
+    blazing_rooster: 'battle_chicken',
+    phoenix_scion: 'dino_genus_chicken',
+    chrysalis_spirit: 'caterpillar_spirit',
+    iron_bull: 'raging_bull',
+    albino_anaconda: 'huge_albino_anaconda',
+    cosmic_devourer: 'cosmic_oceanic_devourer',
+    ursalite: 'cosmic_bear_ursalite',
+    fallen_warrior: 'fallen_warrior_spirit',
+    solaris_lion_of_pride: 'solaris_lion_pride',
+    gelda_thousand_ashes: 'gelda_ashes_empress',
+    gelda_sanguine: 'gelda_blood_sovereign',
+    leviathan_primordial: 'leviathan_abyssal_primordial',
+    baphomet_archdemon: 'baphomet_archdemon_lord'
   },
   sheets: {
     feline_shadow: {
@@ -417,6 +451,17 @@ export const SPRITE_MANIFEST = {
         hurt: { frames: [7], fps: 6, loop: false }
       }
     },
+    relic_pillar_atlas: {
+      path: '/assets/sprites/relics/relic_pillar_atlas.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
     divine_relic_scripture: {
       path: '/assets/sprites/relics/divine_relic_scripture.svg',
       frameCount: 8,
@@ -497,6 +542,23 @@ export const SPRITE_MANIFEST = {
   }
 };
 
+// Register all 54 unique spirit species sheets
+for (const speciesId of ALL_54_SPIRIT_SPECIES) {
+  if (!SPRITE_MANIFEST.sheets[speciesId]) {
+    SPRITE_MANIFEST.sheets[speciesId] = {
+      path: `/assets/sprites/creatures/${speciesId}.svg`,
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    };
+  }
+}
+
 // Global Image Cache to avoid redundant network loads
 const imageCache = new Map();
 
@@ -514,13 +576,16 @@ export function preloadSpriteSheet(sheetKey) {
 }
 
 export function getSheetKeyForSpecies(speciesOrId) {
-  if (!speciesOrId) return 'feline_shadow';
+  if (!speciesOrId) return 'cat_spirit';
   const id = typeof speciesOrId === 'object'
     ? (speciesOrId.speciesId || speciesOrId.id || speciesOrId.sheetKey)
     : speciesOrId;
-  if (!id) return 'feline_shadow';
+  if (!id) return 'cat_spirit';
   if (SPRITE_MANIFEST.sheets[id]) return id;
-  return SPRITE_MANIFEST.speciesMapping[id] || 'feline_shadow';
+  if (SPRITE_MANIFEST.speciesMapping[id] && SPRITE_MANIFEST.sheets[SPRITE_MANIFEST.speciesMapping[id]]) {
+    return SPRITE_MANIFEST.speciesMapping[id];
+  }
+  return 'cat_spirit';
 }
 
 export function getSheetKeyForEnemy(enemy) {
@@ -594,6 +659,9 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
   if (godId === 'hephaestus' || slot === 'anvil' || slot === 'hammer') {
     return 'relic_anvil_hephaestus';
   }
+  if (godId === 'atlas' || godId === 'celestial_pillar' || slot === 'pillar') {
+    return 'relic_pillar_atlas';
+  }
   if (godId === 'divine_scripture' || godId === 'scripture' || slot === 'scripture') {
     return 'divine_relic_scripture';
   }
@@ -615,7 +683,7 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
 /**
  * Generates HTML string for an animated creature/hero sprite
  */
-export function createAnimatedSpriteHtml(speciesOrSheetKey, { isFlipped = false, extraClasses = '', glyph = '✨' } = {}) {
+export function createAnimatedSpriteHtml(speciesOrSheetKey, { isFlipped = false, extraClasses = '', glyph = '' } = {}) {
   let sheetKey = 'feline_shadow';
   if (typeof speciesOrSheetKey === 'string' && SPRITE_MANIFEST.sheets[speciesOrSheetKey]) {
     sheetKey = speciesOrSheetKey;
@@ -641,7 +709,7 @@ export function createAnimatedEnemyHtml(enemy, { extraClasses = '' } = {}) {
   return `
     <div class="animated-pixel-sprite sprite-enemy sprite-${sheetKey} ${isBoss ? 'boss-animated-sprite' : ''} ${extraClasses}" style="--sprite-sheet: url('${path}');">
       <div class="sprite-frame-viewer"></div>
-      <span class="core-glyph-fallback" style="display: none;">👾</span>
+      <span class="core-glyph-fallback" style="display: none;"></span>
     </div>
   `;
 }
@@ -705,7 +773,7 @@ export function createAnimatedChestHtml({ extraClasses = '' } = {}) {
   return `
     <div class="animated-treasure-chest ${extraClasses}" style="--sprite-sheet: url('${path}');">
       <div class="chest-frame-viewer"></div>
-      <div class="chest-sparkles">✨</div>
+      <div class="chest-sparkles">${getGameIcon('sparkle', { size: 14, className: 'text-amber-300 animate-spin' })}</div>
     </div>
   `;
 }

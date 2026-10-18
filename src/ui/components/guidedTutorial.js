@@ -6,6 +6,7 @@
 
 import { gameState } from '../../state/gameState.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 export const TUTORIAL_STEPS = [
   {
@@ -13,7 +14,7 @@ export const TUTORIAL_STEPS = [
     title: 'Welcome, Apprentice Contractor!',
     speech: 'Greetings! I am your celestial familiar, **Cat Spirit**. The celestial veil has shattered, unleashing corrupted shadows upon the realm. Together, we must forge sacred spirit contracts and restore balance!',
     targetSelector: null, // Centered dialog
-    actionText: 'Begin Contractor Journey ➔',
+    actionText: 'Begin Contractor Journey',
     expectedTab: null
   },
   {
@@ -21,7 +22,7 @@ export const TUTORIAL_STEPS = [
     title: 'The Altar of Contracts',
     speech: 'Every legendary journey begins with a sacred contract. Tap the **Summon Altar** below to invoke new celestial allies from the spirit stream!',
     targetSelector: '#nav-contract',
-    actionText: 'Next ➔',
+    actionText: 'Next',
     expectedTab: 'contract',
     targetClickAdvances: true
   },
@@ -30,7 +31,7 @@ export const TUTORIAL_STEPS = [
     title: 'Forging Your Spirit Ally',
     speech: 'Here at the Altar, spend your Spirit Shards to forge a bond. Tap **x1 Contract** to summon your companion into existence!',
     targetSelector: '#btn-summon-1',
-    actionText: 'Next ➔',
+    actionText: 'Next',
     expectedTab: 'contract',
     advanceOnEvent: 'spiritsContracted'
   },
@@ -39,7 +40,7 @@ export const TUTORIAL_STEPS = [
     title: 'Hero Squad & Alignment',
     speech: 'A new celestial ally has answered your call! Now tap **Party** below to inspect your active squad and formation.',
     targetSelector: '#nav-party',
-    actionText: 'Go to Party ➔',
+    actionText: 'Go to Party',
     expectedTab: 'party',
     targetClickAdvances: true
   },
@@ -48,7 +49,7 @@ export const TUTORIAL_STEPS = [
     title: 'AFK Training Chamber',
     speech: 'Notice the **AFK Training Chamber**! All spirits deployed to your active party continuously train and gain EXP—even while you are offline!',
     targetSelector: '.afk-training-banner',
-    actionText: 'To The Battlefront! ➔',
+    actionText: 'To The Battlefront!',
     expectedTab: 'party'
   },
   {
@@ -56,7 +57,7 @@ export const TUTORIAL_STEPS = [
     title: 'The Tower of Madness',
     speech: 'Now let us test your party in combat! Tap **Madness** below to deploy your spirits into the frontlines against the corrupted swarm.',
     targetSelector: '#nav-madness',
-    actionText: 'Enter Combat ➔',
+    actionText: 'Enter Combat',
     expectedTab: 'madness',
     targetClickAdvances: true
   },
@@ -65,7 +66,7 @@ export const TUTORIAL_STEPS = [
     title: 'Real-Time Combat & Ultimates',
     speech: 'Your party attacks automatically and casts devastating Ultimates when their MP reaches 100! You can also tap the corrupted beast directly to unleash burst click damage.',
     targetSelector: '#view-container',
-    actionText: 'Next: Milestones ➔',
+    actionText: 'Next: Milestones',
     expectedTab: 'madness'
   },
   {
@@ -73,7 +74,7 @@ export const TUTORIAL_STEPS = [
     title: 'Contractor Level & Roadmap',
     speech: 'Clearing floors, summoning allies, and evolving spirits awards **Contractor EXP**. As you ascend, you will unlock the **3x3 Grid (Lv. 2)**, **Pantheon Trials (Lv. 3)**, **Divine Forge (Lv. 3)**, and **Bestiary (Lv. 4)**! May fortune guide your contracts!',
     targetSelector: '#btn-top-profile',
-    actionText: 'Claim 150 Shards & Ascend! 🌟',
+    actionText: 'Claim 150 Shards & Ascend!',
     isFinal: true
   }
 ];
@@ -116,6 +117,17 @@ class GuidedTutorialController {
       this.start();
     });
 
+    gameState.on('gameReset', () => {
+      this.destroy();
+      this.currentStepIdx = 0;
+      setTimeout(() => {
+        const tutState = gameState.getTutorialState();
+        if (tutState && !tutState.completed && tutState.active) {
+          this.start();
+        }
+      }, 500);
+    });
+
     // Auto-advance if event occurs
     gameState.on('spiritsContracted', () => {
       const stepConfig = TUTORIAL_STEPS[this.currentStepIdx];
@@ -145,8 +157,8 @@ class GuidedTutorialController {
     this.overlayEl.style.opacity = '1';
 
     this.overlayEl.innerHTML = `
-      <!-- Dynamic SVG Spotlight Mask Layer -->
-      <svg id="tutorial-svg-mask" class="absolute inset-0 w-full h-full pointer-events-auto" style="overflow: visible;">
+      <!-- Dynamic SVG Spotlight Mask Layer (pointer-events-none so highlighted elements can be tapped seamlessly) -->
+      <svg id="tutorial-svg-mask" class="absolute inset-0 w-full h-full pointer-events-none" style="overflow: visible;">
         <defs>
           <mask id="tutorial-spotlight-cutout-mask">
             <rect width="100%" height="100%" fill="white" />
@@ -160,40 +172,42 @@ class GuidedTutorialController {
       </svg>
 
       <!-- Floating Cat Spirit Guidance Card -->
-      <div id="tutorial-card" class="absolute pointer-events-auto flex flex-col gap-3 p-4 rounded-3xl bg-slate-900/95 border border-amber-400/40 text-white shadow-2xl backdrop-blur-md max-w-[340px] sm:max-w-[380px] transition-all duration-300"
-           style="box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(245, 158, 11, 0.15); left: 50%; transform: translateX(-50%);">
+      <div id="tutorial-card" class="guide-modal-box guide-tutorial-card animate-fadeIn"
+           style="left: 50%; transform: translateX(-50%);">
         
         <!-- Header: Mascot & Controls -->
-        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-xl shadow-md shadow-amber-500/30 border border-white/50">
-              🐱
+        <div class="guide-modal-header">
+          <div class="guide-header-mascot-wrap">
+            <div class="guide-mascot-avatar-small">
+              ${getGameIcon('cat', { size: 22, className: 'text-amber-200' })}
             </div>
-            <div class="flex flex-col text-left">
-              <span class="text-[10px] font-black uppercase tracking-wider text-amber-300">Cat Spirit Guide</span>
-              <span class="text-[10px] text-slate-400">Step <span id="tut-step-num">1</span> of ${TUTORIAL_STEPS.length}</span>
+            <div class="guide-header-titles">
+              <span class="guide-badge-subtitle">Cat Spirit Guide</span>
+              <span class="guide-step-counter">Step <span id="tut-step-num">1</span> of ${TUTORIAL_STEPS.length}</span>
             </div>
           </div>
 
-          <button id="btn-skip-tutorial" class="text-[11px] font-bold text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 cursor-pointer transition-colors" title="Skip tutorial and proceed with game">
-            Skip ✕
+          <button id="btn-skip-tutorial" class="guide-btn-skip" title="Skip tutorial and proceed with game">
+            <span>Skip</span>
+            ${getGameIcon('close', { size: 10, className: 'inline text-slate-400' })}
           </button>
         </div>
 
-        <!-- Body Content -->
-        <div class="flex flex-col text-left gap-1.5">
-          <h3 id="tut-title" class="text-sm font-black text-amber-100 tracking-tight"></h3>
-          <p id="tut-speech" class="text-xs text-slate-300 leading-relaxed"></p>
+        <!-- Body Content (Generous Speech Bubble) -->
+        <div class="guide-speech-bubble guide-speech-bubble-compact">
+          <h3 id="tut-title" class="guide-speech-title"></h3>
+          <p id="tut-speech" class="guide-speech-text"></p>
         </div>
 
         <!-- Action Footer -->
-        <div class="flex items-center justify-between pt-1">
-          <div class="flex gap-1" id="tut-pills">
-            ${TUTORIAL_STEPS.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-amber-400' : 'bg-slate-700'}"></span>`).join('')}
+        <div class="guide-modal-footer">
+          <div class="guide-step-pills" id="tut-pills">
+            ${TUTORIAL_STEPS.map((_, i) => `<span class="guide-pill ${i === 0 ? 'active' : ''}"></span>`).join('')}
           </div>
 
-          <button id="btn-tut-action" class="py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-slate-950 font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-amber-500/30">
-            Next ➔
+          <button id="btn-tut-action" class="guide-action-btn guide-action-btn-small">
+            <span>Next</span>
+            ${getGameIcon('chevronRight', { size: 12, className: 'inline' })}
           </button>
         </div>
 
@@ -238,6 +252,14 @@ class GuidedTutorialController {
 
     safePlaySfx('relic_click', 0.4);
 
+    // Auto-switch to expected tab if specified and not already active
+    if (step.expectedTab && typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+      const activeNavTab = document.querySelector('.nav-tab.active')?.getAttribute('data-tab');
+      if (activeNavTab !== step.expectedTab) {
+        window.switchTab(step.expectedTab);
+      }
+    }
+
     // Update text
     const titleEl = this.overlayEl.querySelector('#tut-title');
     const speechEl = this.overlayEl.querySelector('#tut-speech');
@@ -247,7 +269,10 @@ class GuidedTutorialController {
     if (titleEl) titleEl.textContent = step.title;
     if (speechEl) speechEl.innerHTML = step.speech.replace(/\*\*(.*?)\*\*/g, '<strong class="text-amber-300 font-bold">$1</strong>');
     if (stepNumEl) stepNumEl.textContent = (this.currentStepIdx + 1).toString();
-    if (actionBtn) actionBtn.textContent = step.actionText || 'Next ➔';
+    if (actionBtn) {
+      const text = step.actionText || 'Next';
+      actionBtn.innerHTML = `<span>${text}</span> ${getGameIcon('chevronRight', { size: 12, className: 'inline ml-0.5' })}`;
+    }
 
     // Update pill indicators
     const pills = this.overlayEl.querySelectorAll('#tut-pills span');
@@ -274,6 +299,8 @@ class GuidedTutorialController {
     }
 
     this.updateSpotlightPosition();
+    // Schedule follow-up alignment in case tab view just rendered
+    setTimeout(() => this.updateSpotlightPosition(), 120);
   }
 
   updateSpotlightPosition() {
@@ -356,6 +383,9 @@ class GuidedTutorialController {
     if (step && step.isFinal) {
       this.complete();
     } else {
+      if (step?.expectedTab && typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+        window.switchTab(step.expectedTab);
+      }
       this.nextStep();
     }
   }
@@ -364,6 +394,10 @@ class GuidedTutorialController {
     if (this.currentStepIdx < TUTORIAL_STEPS.length - 1) {
       this.currentStepIdx += 1;
       gameState.advanceTutorialStep(this.currentStepIdx);
+      const nextStepConfig = TUTORIAL_STEPS[this.currentStepIdx];
+      if (nextStepConfig?.expectedTab && typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+        window.switchTab(nextStepConfig.expectedTab);
+      }
       this.renderCurrentStep();
     } else {
       this.complete();
@@ -405,49 +439,55 @@ export const AREA_TUTORIALS = {
     id: 'formation',
     tab: 'party',
     featureId: 'FORMATION_3X3',
-    title: '♟️ 3x3 Tactical Grid & Formation Alignment',
+    icon: 'chess',
+    title: '3x3 Tactical Grid & Formation Alignment',
     speech: 'Contractor! Reaching Level 2 unlocks the **3x3 tactical battle formation**!\n\nPosition your spirits across Frontline, Midline, or Backline:\n• **Frontline**: Draws direct enemy aggro and shields teammates.\n• **Midline**: Balances offense and defense.\n• **Backline**: Safely unleashes high-damage Ultimates and team heals!',
-    buttonText: "Deploy Formation ➔"
+    buttonText: "Deploy Formation"
   },
   trials: {
     id: 'trials',
     tab: 'trials',
     featureId: 'PANTHEON_TRIALS',
-    title: '🏛️ The Pantheon Relic Trials',
+    icon: 'trials',
+    title: 'The Pantheon Relic Trials',
     speech: 'Welcome to the **Pantheon Trials**! Challenge the 10 Greek God avatars to farm targeted 6-piece Relic Sets.\n\nEquipping matching sets unlocks game-changing **2-piece** and **4-piece divine set bonuses**! You have also been awarded **3 free starter equipments** to begin your trials!',
-    buttonText: 'Conquer Trials ➔'
+    buttonText: 'Conquer Trials'
   },
   forge: {
     id: 'forge',
     tab: 'forge',
     featureId: 'DIVINE_FORGE',
-    title: '🔥 The Divine Forge & Weapon Anvils',
+    icon: 'forge',
+    title: 'The Divine Forge & Weapon Anvils',
     speech: "Hephaestus's sacred forge is now ignited! Overcome Vulcan automatons across 12 weapon anvils to forge Blades, Bows, Staves, Claws, Daggers, and Mallets.\n\nEach weapon archetype features unique combat abilities—like Scythe Crit execution thresholds, Shield block mitigations, or Staff heal amplifications!",
-    buttonText: 'Ignite Forge ➔'
+    buttonText: 'Ignite Forge'
   },
   bestiary: {
     id: 'bestiary',
     tab: 'index',
     featureId: 'BESTIARY_INDEX',
-    title: '📖 Spirit Compendium & Star Ascension',
+    icon: 'index',
+    title: 'Spirit Compendium & Star Ascension',
     speech: 'Your **Spirit Compendium** is active! Discovering new spirits awards **+50 Spirit Shards** per entry!\n\nHit completion milestones to earn rare **Purified Soul Essences**. You can also **Star-Ascend** your spirits early by sacrificing duplicate copies in the Vault!',
-    buttonText: 'Open Compendium ➔'
+    buttonText: 'Open Compendium'
   },
   astral: {
     id: 'astral',
     tab: 'mystical',
     featureId: 'SANCTUARY_ESSENCE',
-    title: '🌌 The Astral Realm & Sacred Sanctum',
+    icon: 'sanctum',
+    title: 'The Astral Realm & Sacred Sanctum',
     speech: 'You have entered the **Astral Plane**!\n\nHarvest Astral Essences & Gods Essences to illuminate the **8 Zodiac Constellations**, transmute shards daily, dispatch squad expeditions, brew EXP elixirs, and acquire divine scriptures from the Dwarven Forge!',
-    buttonText: 'Explore Astral Plane ➔'
+    buttonText: 'Explore Astral Plane'
   },
   rebirth: {
     id: 'rebirth',
     tab: 'party',
     featureId: 'SPIRIT_REBIRTH',
-    title: '🔥 Spirit Rebirth & Evolutionary Ascension',
-    speech: 'Peak contractor authority unlocked! Reaching Contractor Level 16 permits **Spirit Rebirth**:\n\nYou can now ascend your high-tier evolved spirits using any **pre-evolutionary copy**, unlocking ⭐1 through ⭐7 cosmic transcendence!',
-    buttonText: 'Transcend Limits ➔'
+    icon: 'flame',
+    title: 'Spirit Rebirth & Evolutionary Ascension',
+    speech: 'Peak contractor authority unlocked! Reaching Contractor Level 16 permits **Spirit Rebirth**:\n\nYou can now ascend your high-tier evolved spirits using any **pre-evolutionary copy**, unlocking Star 1 through Star 7 cosmic transcendence!',
+    buttonText: 'Transcend Limits'
   }
 };
 
@@ -466,32 +506,33 @@ export function showAreaUnlockTutorial(areaKey, onDone) {
     .replace(/• /g, '• ');
 
   modalRoot.innerHTML = `
-    <div class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn select-none">
-      <div class="relative w-full max-w-md bg-slate-900 border-2 border-amber-400/60 rounded-3xl p-6 sm:p-7 shadow-2xl text-white flex flex-col items-center text-center gap-4 overflow-hidden"
-           style="box-shadow: 0 0 50px rgba(245, 158, 11, 0.35), inset 0 0 20px rgba(93, 63, 211, 0.3);">
+    <div class="guide-backdrop animate-fadeIn select-none">
+      <div class="guide-modal-box animate-scaleUp">
         
         <!-- Mascot Avatar with Floating Animation -->
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-300 flex items-center justify-center text-3xl shadow-lg border-2 border-white/60 ambient-float">
-          🐱
+        <div class="guide-mascot-avatar ambient-float">
+          ${getGameIcon('cat', { size: 36, className: 'text-amber-200' })}
         </div>
 
-        <div class="flex flex-col items-center gap-1">
-          <span class="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+        <div class="guide-header-block">
+          <span class="guide-badge-pill">
             Cat Spirit Familiar • System Guide
           </span>
-          <h3 class="text-lg sm:text-xl font-black text-white tracking-tight">
-            ${info.title}
+          <h3 class="guide-modal-title">
+            ${info.icon ? getGameIcon(info.icon, { size: 20, className: 'inline text-amber-300' }) : ''}
+            <span>${info.title}</span>
           </h3>
         </div>
 
-        <!-- Speech Bubble -->
-        <div class="w-full p-4 rounded-2xl bg-slate-950/80 border border-slate-700/80 text-xs sm:text-sm text-slate-200 text-left leading-relaxed shadow-inner">
+        <!-- Speech Bubble with Generous Spacing -->
+        <div class="guide-speech-bubble">
           ${formattedSpeech}
         </div>
 
         <!-- Action Dismiss Button -->
-        <button id="btn-dismiss-area-tut" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-amber-500/30">
-          ${info.buttonText || 'Understood ➔'}
+        <button id="btn-dismiss-area-tut" class="guide-action-btn">
+          <span>${info.buttonText || 'Understood'}</span>
+          ${getGameIcon('chevronRight', { size: 14, className: 'inline' })}
         </button>
 
       </div>

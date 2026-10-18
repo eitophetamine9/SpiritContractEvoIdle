@@ -4,6 +4,7 @@ import { EXPEDITIONS_CONFIG } from '../../../data/astralRealmData.js';
 import { SPIRIT_SPECIES } from '../../../data/spiritsData.js';
 import { createSpiritPlaceholderBox } from '../../components/pixelBox.js';
 import { closeActiveModal } from '../../modals/modalBase.js';
+import { getGameIcon } from '../../icons/gameIcons.js';
 
 export function renderExpeditionsSectionHtml(state) {
   const expeditions = state.expeditions || {};
@@ -15,10 +16,10 @@ export function renderExpeditionsSectionHtml(state) {
       <div class="rounded-xl border border-indigo-500/30 p-3 bg-gradient-to-b from-indigo-950/20 via-slate-900/90 to-slate-950 shadow-md flex flex-col gap-1.5">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <span class="text-2xl">🧭</span>
+            ${getGameIcon('compass', { size: 24, color: '#818cf8' })}
             <div>
               <h3 class="text-xs sm:text-sm font-extrabold text-white">Astral Expeditions (Spirit Dispatch)</h3>
-              <p class="text-[10px] sm:text-[11px] text-slate-400">Dispatch idle spirits into celestial fissures to gather rare 🔮 Astral Essences, 💠 God Essences, and Greek God Relics.</p>
+              <p class="text-[10px] sm:text-[11px] text-slate-400">Dispatch idle spirits into celestial fissures to gather rare ${getGameIcon('astralEssence', { size: 11 })} Astral Essences, ${getGameIcon('godsEssence', { size: 11 })} God Essences, and Greek God Relics.</p>
             </div>
           </div>
           <div class="text-right shrink-0">
@@ -27,8 +28,8 @@ export function renderExpeditionsSectionHtml(state) {
             </span>
           </div>
         </div>
-        <div class="text-[10px] text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 rounded-lg px-2.5 py-1">
-          💡 <strong>Elemental Synergy:</strong> Dispatching at least 1 spirit matching the fissure's recommended element grants <strong>+25% bonus yield</strong> to all rewards!
+        <div class="text-[10px] text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 rounded-lg px-2.5 py-1 flex items-center gap-1.5 flex-wrap">
+          ${getGameIcon('bulb', { size: 12, color: '#facc15' })} <strong>Elemental Synergy:</strong> Dispatching at least 1 spirit matching the fissure's recommended element grants <strong>+25% bonus yield</strong> to all rewards!
         </div>
       </div>
 
@@ -59,14 +60,14 @@ export function renderExpeditionsSectionHtml(state) {
               <!-- Fissure Header -->
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2 min-w-0">
-                  <div class="w-10 h-10 rounded-xl bg-slate-950/80 border border-indigo-500/30 flex items-center justify-center text-xl shrink-0">
-                    ${fissure.icon}
+                  <div class="w-10 h-10 rounded-xl bg-slate-950/80 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                    ${getGameIcon('compass', { size: 18, color: '#818cf8' })}
                   </div>
                   <div class="min-w-0">
                     <div class="flex items-center gap-1.5 flex-wrap">
                       <span class="text-xs sm:text-sm font-bold text-white">${fissure.name}</span>
                       <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                        ${fissure.tier} • ⏱️ ${fissure.durationLabel}
+                        ${fissure.tier} • ${fissure.durationLabel}
                       </span>
                       <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
                         Req: ${fissure.recommendedElement} (+25%)
@@ -85,10 +86,10 @@ export function renderExpeditionsSectionHtml(state) {
               <!-- Rewards Preview Strip -->
               <div class="rounded-lg bg-slate-950/80 border border-slate-800/80 p-2 flex items-center justify-between text-[11px] flex-wrap gap-2">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-purple-300 font-bold">🔮 ${fissure.rewards.minAstral}–${fissure.rewards.maxAstral} Astral</span>
-                  <span class="text-cyan-300 font-bold">💠 ${fissure.rewards.minGods}–${fissure.rewards.maxGods} Gods</span>
-                  <span class="text-emerald-300 font-bold">💎 ${fissure.rewards.shards} Shards</span>
-                  ${fissure.rewards.dropRelicChance ? `<span class="text-amber-300 font-bold">🎁 ${(fissure.rewards.dropRelicChance * 100)}% Relic Chance</span>` : ''}
+                  <span class="text-purple-300 font-bold inline-flex items-center gap-1">${getGameIcon('astralEssence', { size: 11 })} ${fissure.rewards.minAstral}–${fissure.rewards.maxAstral} Astral</span>
+                  <span class="text-cyan-300 font-bold inline-flex items-center gap-1">${getGameIcon('godsEssence', { size: 11 })} ${fissure.rewards.minGods}–${fissure.rewards.maxGods} Gods</span>
+                  <span class="text-emerald-300 font-bold inline-flex items-center gap-1">${getGameIcon('spiritShards', { size: 11 })} ${fissure.rewards.shards} Shards</span>
+                  ${fissure.rewards.dropRelicChance ? `<span class="text-amber-300 font-bold inline-flex items-center gap-1">${getGameIcon('gift', { size: 11 })} ${(fissure.rewards.dropRelicChance * 100)}% Relic Chance</span>` : ''}
                 </div>
               </div>
 
@@ -103,8 +104,8 @@ export function renderExpeditionsSectionHtml(state) {
                           const sp = state.spirits.find(s => s.id === sId);
                           const isMatch = sp && sp.element === fissure.recommendedElement;
                           return `
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-900 border ${isMatch ? 'border-amber-400 text-amber-300' : 'border-slate-700 text-slate-300'}" title="${sp?.customName || sId}">
-                              ${isMatch ? '✨ ' : ''}${sp?.customName || (SPIRIT_SPECIES[sp?.speciesId]?.name) || sId}
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-900 border ${isMatch ? 'border-amber-400 text-amber-300' : 'border-slate-700 text-slate-300'} inline-flex items-center gap-1" title="${sp?.customName || sId}">
+                              ${isMatch ? `${getGameIcon('sparkle', { size: 9, color: '#fde047' })} ` : ''}${sp?.customName || (SPIRIT_SPECIES[sp?.speciesId]?.name) || sId}
                             </span>
                           `;
                         }).join('')}
@@ -113,9 +114,9 @@ export function renderExpeditionsSectionHtml(state) {
 
                     <div>
                       ${isComplete ? `
-                        <span class="text-emerald-400 font-black animate-pulse text-[11px]">🎉 Ready to Claim!</span>
+                        <span class="text-emerald-400 font-black animate-pulse text-[11px] inline-flex items-center gap-1">${getGameIcon('check', { size: 11, color: '#4ade80' })} Ready to Claim!</span>
                       ` : `
-                        <span class="text-slate-400 text-[11px]">⏱️ ${timeLabel}</span>
+                        <span class="text-slate-400 text-[11px]">${timeLabel}</span>
                       `}
                     </div>
                   </div>
@@ -128,22 +129,22 @@ export function renderExpeditionsSectionHtml(state) {
                   <!-- Action Buttons -->
                   <div>
                     ${isComplete ? `
-                      <button class="btn-claim-expedition w-full py-2 rounded-lg font-black text-xs text-slate-950 transition-all cursor-pointer shadow bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 hover:brightness-110" data-fissure-id="${fissure.id}">
-                        🎁 Claim Expedition Spoils
+                      <button class="btn-claim-expedition w-full py-2 rounded-lg font-black text-xs text-slate-950 transition-all cursor-pointer shadow bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 hover:brightness-110 inline-flex items-center justify-center gap-1.5" data-fissure-id="${fissure.id}">
+                        ${getGameIcon('gift', { size: 12 })} Claim Expedition Spoils
                       </button>
                     ` : `
                       <button class="w-full py-1.5 rounded-lg font-bold text-xs bg-slate-800 text-slate-400 cursor-not-allowed opacity-80" disabled>
-                        ⏳ Expedition in Progress (${timeLabel})
+                        Expedition in Progress (${timeLabel})
                       </button>
                     `}
                   </div>
                 </div>
               ` : `
                 <div class="flex items-center gap-2">
-                  <button class="btn-quick-dispatch flex-1 py-2 px-3 rounded-lg font-bold text-xs text-slate-950 transition-all cursor-pointer shadow bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 hover:brightness-110 disabled:opacity-50" 
+                  <button class="btn-quick-dispatch flex-1 py-2 px-3 rounded-lg font-bold text-xs text-slate-950 transition-all cursor-pointer shadow bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 hover:brightness-110 disabled:opacity-50 inline-flex items-center justify-center gap-1.5" 
                           data-fissure-id="${fissure.id}" 
                           ${eligibleSpirits.length >= fissure.requiredSpirits ? '' : 'disabled'}>
-                    ⚡ Quick Dispatch (Auto-Pick Best)
+                    ${getGameIcon('zap', { size: 12, color: '#0f172a' })} Quick Dispatch (Auto-Pick Best)
                   </button>
                   <button class="btn-open-dispatch-picker py-2 px-3 rounded-lg font-bold text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer disabled:opacity-50" 
                           data-fissure-id="${fissure.id}" 
@@ -170,7 +171,7 @@ export function bindExpeditionEvents(container, callbacks = {}) {
       try {
         const loot = gameState.claimExpeditionRewards(fId);
         try { audioManager.playSfx('reward'); } catch {}
-        alert(`🏆 Expedition Spoils Collected!\n+${loot.astralGained} 🔮 Astral Essences\n+${loot.godsGained} 💠 Essences of the Gods\n+${loot.shardsGained.toLocaleString()} 💎 Spirit Shards${loot.relicGained ? `\n🎁 BONUS RELIC: ${loot.relicGained.name} (${loot.relicGained.rarity})` : ''}${loot.hasElementMatch ? '\n✨ Elemental Synergy: +25% Bonus Applied!' : ''}`);
+        alert(`Expedition Spoils Collected!\n+${loot.astralGained} Astral Essences\n+${loot.godsGained} Essences of the Gods\n+${loot.shardsGained.toLocaleString()} Spirit Shards${loot.relicGained ? `\nBONUS RELIC: ${loot.relicGained.name} (${loot.relicGained.rarity})` : ''}${loot.hasElementMatch ? '\nElemental Synergy: +25% Bonus Applied!' : ''}`);
         if (callbacks && callbacks.onRefresh) callbacks.onRefresh();;
       } catch (err) {
         alert(err.message);
@@ -233,13 +234,13 @@ export function openExpeditionSpiritPickerModal(fissureId, container, callbacks 
       <div class="modal-card max-w-lg w-full bg-slate-900 border border-indigo-500/40 rounded-2xl p-4 shadow-2xl text-white flex flex-col gap-3">
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
           <div class="flex items-center gap-2">
-            <span class="text-2xl">${fissure.icon}</span>
+            ${getGameIcon('compass', { size: 22, color: '#818cf8' })}
             <div>
               <h3 class="text-sm font-extrabold text-white">Dispatch: ${fissure.name}</h3>
               <p class="text-[11px] text-slate-400">Select <strong class="text-amber-300">${fissure.requiredSpirits}</strong> idle spirit(s) • Recommended Element: <strong class="text-amber-400">${fissure.recommendedElement}</strong></p>
             </div>
           </div>
-          <button id="btn-close-expedition-modal" class="text-slate-400 hover:text-white text-base cursor-pointer">✕</button>
+          <button id="btn-close-expedition-modal" class="text-slate-400 hover:text-white text-base cursor-pointer inline-flex items-center justify-center p-1">${getGameIcon('close', { size: 16 })}</button>
         </div>
 
         <div id="expedition-picker-list" class="flex flex-col gap-1.5 max-h-[50vh] overflow-y-auto pr-1">
@@ -252,9 +253,9 @@ export function openExpeditionSpiritPickerModal(fissureId, container, callbacks 
                   <div>
                     <div class="flex items-center gap-1.5">
                       <span class="font-extrabold text-xs text-white">${s.customName || (SPIRIT_SPECIES[s.speciesId]?.name) || s.id}</span>
-                      ${isMatch ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">✨ +25% Synergy</span>' : ''}
+                      ${isMatch ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 inline-flex items-center gap-1">${getGameIcon('sparkle', { size: 8, color: '#fde047' })} +25% Synergy</span>` : ''}
                     </div>
-                    <div class="text-[10px] text-slate-400">Lv. ${s.level} • ${s.element} • ⚡ ${s.power} PWR</div>
+                    <div class="text-[10px] text-slate-400 inline-flex items-center gap-1">Lv. ${s.level} • ${s.element} • ${getGameIcon('zap', { size: 10, color: '#facc15' })} ${s.power} PWR</div>
                   </div>
                 </div>
                 <input type="checkbox" class="exp-checkbox w-4 h-4 rounded accent-indigo-500 pointer-events-none" data-spirit-id="${s.id}">

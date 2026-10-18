@@ -1,4 +1,5 @@
 import { gameState } from '../../state/gameState.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 export function renderStatsView(container) {
   const state = gameState.state;
@@ -10,8 +11,8 @@ export function renderStatsView(container) {
     <div class="stats-container">
       
       <div class="stats-card">
-        <h3 style="font-size: 15px; font-weight: 800; color: #70a1ff; margin-bottom: 6px;">
-          📊 Contractor Record & Stats
+        <h3 style="font-size: 15px; font-weight: 800; color: #70a1ff; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          ${getGameIcon('trophy', { size: '15px', color: '#70a1ff' })} Contractor Record & Stats
         </h3>
 
         <div class="stat-row">
@@ -36,7 +37,7 @@ export function renderStatsView(container) {
 
         <div class="stat-row">
           <span class="stat-key">Total Shards Harvested:</span>
-          <span class="stat-value" style="color: #00d2ff;">${stats.shardsEarnedTotal.toLocaleString()} 💎</span>
+          <span class="stat-value" style="color: #00d2ff; display: inline-flex; align-items: center; gap: 4px;">${stats.shardsEarnedTotal.toLocaleString()} ${getGameIcon('spiritShards', { size: '13px' })}</span>
         </div>
 
         <div class="stat-row">
@@ -52,12 +53,12 @@ export function renderStatsView(container) {
 
       <!-- System Actions (Buttons min 48px) -->
       <div class="system-actions">
-        <button id="btn-manual-save" class="btn-save-manual">
-          💾 Force Save Game (Local Storage)
+        <button id="btn-manual-save" class="btn-save-manual" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+          ${getGameIcon('save', { size: '14px' })} Force Save Game (Local Storage)
         </button>
 
-        <button id="btn-reset-save" class="btn-reset-danger">
-          ⚠️ Reset Game Data (Fresh Start)
+        <button id="btn-reset-save" class="btn-reset-danger" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+          ${getGameIcon('alert', { size: '14px', color: '#ff4757' })} Reset Game Data (Fresh Start)
         </button>
       </div>
 
@@ -73,12 +74,12 @@ export function renderStatsView(container) {
     gameState.save();
     const btn = document.getElementById('btn-manual-save');
     if (btn) {
-      const origText = btn.textContent;
-      btn.textContent = '✅ Saved Successfully!';
+      const origHtml = btn.innerHTML;
+      btn.innerHTML = `${getGameIcon('check', { size: '14px', color: '#000' })} Saved Successfully!`;
       btn.style.background = '#2ed573';
       btn.style.color = '#000';
       setTimeout(() => {
-        btn.textContent = origText;
+        btn.innerHTML = origHtml;
         btn.style.background = '#3742fa';
         btn.style.color = '#fff';
       }, 1500);

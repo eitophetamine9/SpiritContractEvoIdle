@@ -33,7 +33,7 @@ export class ArenaRenderer25D {
 
   init(containerEl, { mode = 'madness', element = 'EARTH', chamberId = null } = {}) {
     if (typeof window === 'undefined' || typeof document === 'undefined' || typeof document.createElement !== 'function') return;
-    if (!containerEl) return;
+    if (!containerEl || typeof containerEl.appendChild !== 'function') return;
 
     this.destroy();
     this.container = containerEl;

@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>
+      .p-dark   { fill: #2c3e50; }
+      .p-stone  { fill: #7f8c8d; }
+      .p-light  { fill: #bdc3c7; }
+      .p-white  { fill: #ecf0f1; }
+      .p-gold   { fill: #f1c40f; }
+      .p-cyan   { fill: #00d2d3; }
+      .p-blue   { fill: #3498db; }
+      .p-shadow { fill: rgba(0,0,0,0.35); }
+    </style>
+  </defs>
+
+  <!-- Frame 0: Idle 1 [0..48] -->
+  <g transform="translate(0, 0)">
+    <ellipse cx="24" cy="43" rx="14" ry="4" class="p-shadow"/>
+    <!-- Pedestal Base -->
+    <rect x="14" y="38" width="20" height="4" rx="1" class="p-dark"/>
+    <rect x="16" y="35" width="16" height="3" class="p-stone"/>
+    <!-- Column Shaft -->
+    <rect x="19" y="18" width="10" height="17" class="p-light"/>
+    <rect x="21" y="18" width="2" height="17" class="p-white"/>
+    <rect x="25" y="18" width="2" height="17" class="p-white"/>
+    <!-- Rune glow on shaft -->
+    <rect x="23" y="24" width="2" height="6" class="p-cyan"/>
+    <!-- Column Capital -->
+    <polygon points="17,18 31,18 29,15 19,15" class="p-stone"/>
+    <rect x="16" y="13" width="16" height="2" class="p-gold"/>
+    <!-- Celestial Firmament Sphere / Globe -->
+    <circle cx="24" cy="8" r="6" class="p-blue"/>
+    <circle cx="24" cy="8" r="4.5" class="p-cyan"/>
+    <circle cx="23" cy="7" r="2" class="p-white"/>
+    <!-- Orbital Celestial Ring -->
+    <ellipse cx="24" cy="8" rx="8" ry="2.5" fill="none" stroke="#f1c40f" stroke-width="1.2"/>
+  </g>
+
+  <!-- Frame 1: Idle 2 [48..96] (Gentle float +0.5px, glow shift) -->
+  <g transform="translate(48, 0)">
+    <ellipse cx="24" cy="44" rx="13" ry="3.8" class="p-shadow"/>
+    <!-- Pedestal Base -->
+    <rect x="14" y="37" width="20" height="4" rx="1" class="p-dark"/>
+    <rect x="16" y="34" width="16" height="3" class="p-stone"/>
+    <!-- Column Shaft -->
+    <rect x="19" y="17" width="10" height="17" class="p-light"/>
+    <rect x="21" y="17" width="2" height="17" class="p-white"/>
+    <rect x="25" y="17" width="2" height="17" class="p-white"/>
+    <rect x="23" y="23" width="2" height="6" class="p-gold"/>
+    <!-- Column Capital -->
+    <polygon points="17,17 31,17 29,14 19,14" class="p-stone"/>
+    <rect x="16" y="12" width="16" height="2" class="p-gold"/>
+    <!-- Celestial Firmament Sphere -->
+    <circle cx="24" cy="7" r="6" class="p-blue"/>
+    <circle cx="24" cy="7" r="4.5" class="p-cyan"/>
+    <circle cx="23" cy="6" r="2.2" class="p-white"/>
+    <!-- Orbital Celestial Ring -->
+    <ellipse cx="24" cy="7" rx="8.5" ry="3" fill="none" stroke="#f1c40f" stroke-width="1.2"/>
+    <circle cx="31" cy="6" r="1.2" class="p-gold"/>
+  </g>
+
+  <!-- Frame 2: Idle 3 [96..144] (Apex float +1px) -->
+  <g transform="translate(96, 0)">
+    <ellipse cx="24" cy="44" rx="12" ry="3.5" class="p-shadow"/>
+    <!-- Pedestal Base -->
+    <rect x="14" y="36" width="20" height="4" rx="1" class="p-dark"/>
+    <rect x="16" y="33" width="16" height="3" class="p-stone"/>
+    <!-- Column Shaft -->
+    <rect x="19" y="16" width="10" height="17" class="p-light"/>
+    <rect x="21" y="16" width="2" height="17" class="p-white"/>
+    <rect x="25" y="16" width="2" height="17" class="p-white"/>
+    <rect x="23" y="21" width="2" height="7" class="p-cyan"/>
+    <!-- Column Capital -->
+    <polygon points="17,16 31,16 29,13 19,13" class="p-stone"/>
+    <rect x="16" y="11" width="16" height="2" class="p-gold"/>
+    <!-- Celestial Firmament Sphere -->
+    <circle cx="24" cy="6" r="6.2" class="p-blue"/>
+    <circle cx="24" cy="6" r="4.8" class="p-cyan"/>
+    <circle cx="23" cy="5" r="2.4" class="p-white"/>
+    <!-- Orbital Celestial Ring -->
+    <ellipse cx="24" cy="6" rx="9" ry="3.2" fill="none" stroke="#f1c40f" stroke-width="1.3"/>
+    <circle cx="32" cy="6" r="1.4" class="p-gold"/>
+    <circle cx="16" cy="6" r="1" class="p-white"/>
+  </g>
+
+  <!-- Frame 3: Idle 4 [144..192] (Returning downwards) -->
+  <g transform="translate(144, 0)">
+    <ellipse cx="24" cy="43.5" rx="13.5" ry="3.8" class="p-shadow"/>
+    <!-- Pedestal Base -->
+    <rect x="14" y="37" width="20" height="4" rx="1" class="p-dark"/>
+    <rect x="16" y="34" width="16" height="3" class="p-stone"/>
+    <!-- Column Shaft -->
+    <rect x="19" y="17" width="10" height="17" class="p-light"/>
+    <rect x="21" y="17" width="2" height="17" class="p-white"/>
+    <rect x="25" y="17" width="2" height="17" class="p-white"/>
+    <rect x="23" y="23" width="2" height="6" class="p-gold"/>
+    <!-- Column Capital -->
+    <polygon points="17,17 31,17 29,14 19,14" class="p-stone"/>
+    <rect x="16" y="12" width="16" height="2" class="p-gold"/>
+    <!-- Celestial Firmament Sphere -->
+    <circle cx="24" cy="7" r="6" class="p-blue"/>
+    <circle cx="24" cy="7" r="4.5" class="p-cyan"/>
+    <circle cx="23" cy="6" r="2.2" class="p-white"/>
+    <!-- Orbital Celestial Ring -->
+    <ellipse cx="24" cy="7" rx="8.5" ry="2.8" fill="none" stroke="#f1c40f" stroke-width="1.2"/>
+  </g>
+
+  <!-- Frame 4: Action/Activate 1 [192..240] (Firmament flare) -->
+  <g transform="translate(192, 0)">
+    <ellipse cx="24" cy="44" rx="15" ry="4.5" class="p-shadow"/>
+    <rect x="13" y="37" width="22" height="4" rx="1" class="p-dark"/>
+    <rect x="15" y="34" width="18" height="3" class="p-stone"/>
+    <rect x="18" y="17" width="12" height="17" class="p-light"/>
+    <rect x="21" y="17" width="2" height="17" class="p-white"/>
+    <rect x="25" y="17" width="2" height="17" class="p-white"/>
+    <rect x="22" y="20" width="4" height="11" class="p-cyan"/>
+    <polygon points="16,17 32,17 30,13 18,13" class="p-stone"/>
+    <rect x="15" y="11" width="18" height="2" class="p-gold"/>
+    <!-- Expanded Radiant Globe -->
+    <circle cx="24" cy="6" r="7.5" class="p-gold"/>
+    <circle cx="24" cy="6" r="5.5" class="p-cyan"/>
+    <circle cx="24" cy="6" r="3" class="p-white"/>
+    <!-- Dual Ring Flash -->
+    <ellipse cx="24" cy="6" rx="10" ry="3.5" fill="none" stroke="#f1c40f" stroke-width="1.5"/>
+    <ellipse cx="24" cy="6" rx="7" ry="5" fill="none" stroke="#00d2d3" stroke-width="1"/>
+  </g>
+
+  <!-- Frame 5: Action/Activate 2 [240..288] (Full Cosmic Shield Flare) -->
+  <g transform="translate(240, 0)">
+    <ellipse cx="24" cy="44" rx="16" ry="5" class="p-shadow"/>
+    <!-- Barrier Dome aura -->
+    <ellipse cx="24" cy="24" rx="20" ry="22" fill="none" stroke="rgba(0, 210, 211, 0.4)" stroke-width="2"/>
+    <rect x="13" y="37" width="22" height="4" rx="1" class="p-dark"/>
+    <rect x="15" y="34" width="18" height="3" class="p-stone"/>
+    <rect x="18" y="17" width="12" height="17" class="p-white"/>
+    <rect x="21" y="17" width="6" height="17" class="p-cyan"/>
+    <polygon points="16,17 32,17 30,13 18,13" class="p-gold"/>
+    <rect x="15" y="11" width="18" height="2" class="p-white"/>
+    <!-- Supernova Firmament Globe -->
+    <circle cx="24" cy="6" r="8.5" class="p-white"/>
+    <circle cx="24" cy="6" r="6" class="p-gold"/>
+    <circle cx="24" cy="6" r="3.5" class="p-cyan"/>
+    <ellipse cx="24" cy="6" rx="12" ry="4" fill="none" stroke="#ffffff" stroke-width="1.8"/>
+  </g>
+
+  <!-- Frame 6: Action/Activate 3 [288..336] (Resonating Shockwave) -->
+  <g transform="translate(288, 0)">
+    <ellipse cx="24" cy="44" rx="14" ry="4" class="p-shadow"/>
+    <ellipse cx="24" cy="24" rx="22" ry="20" fill="none" stroke="rgba(241, 196, 15, 0.35)" stroke-width="1.5"/>
+    <rect x="14" y="37" width="20" height="4" rx="1" class="p-dark"/>
+    <rect x="16" y="34" width="16" height="3" class="p-stone"/>
+    <rect x="19" y="17" width="10" height="17" class="p-light"/>
+    <rect x="21" y="17" width="2" height="17" class="p-white"/>
+    <rect x="25" y="17" width="2" height="17" class="p-white"/>
+    <rect x="23" y="21" width="2" height="8" class="p-cyan"/>
+    <polygon points="17,17 31,17 29,14 19,14" class="p-stone"/>
+    <rect x="16" y="12" width="16" height="2" class="p-gold"/>
+    <circle cx="24" cy="7" r="7" class="p-gold"/>
+    <circle cx="24" cy="7" r="5" class="p-cyan"/>
+    <circle cx="23" cy="6" r="2.5" class="p-white"/>
+    <ellipse cx="24" cy="7" rx="10" ry="3.2" fill="none" stroke="#f1c40f" stroke-width="1.4"/>
+  </g>
+
+  <!-- Frame 7: Hurt/Shimmer 4 [336..384] (Steadfast Defensive Recoil) -->
+  <g transform="translate(336, 0)">
+    <ellipse cx="24" cy="43" rx="13" ry="3.8" class="p-shadow"/>
+    <!-- Titan Armor Gleam -->
+    <rect x="14" y="38" width="20" height="4" rx="1" class="p-stone"/>
+    <rect x="16" y="35" width="16" height="3" class="p-light"/>
+    <rect x="19" y="18" width="10" height="17" class="p-white"/>
+    <rect x="22" y="18" width="4" height="17" class="p-light"/>
+    <polygon points="17,18 31,18 29,15 19,15" class="p-stone"/>
+    <rect x="16" y="13" width="16" height="2" class="p-gold"/>
+    <circle cx="24" cy="8" r="6" class="p-light"/>
+    <circle cx="24" cy="8" r="4" class="p-white"/>
+    <ellipse cx="24" cy="8" rx="8" ry="2.5" fill="none" stroke="#bdc3c7" stroke-width="1.2"/>
+  </g>
+</svg>
