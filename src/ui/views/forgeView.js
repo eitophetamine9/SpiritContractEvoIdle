@@ -15,6 +15,7 @@ import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, createAnimatedWeaponHtml, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
 import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../render/combatAnimator.js';
 import { getGameIcon } from '../icons/gameIcons.js';
+import { renderSlidingCarouselHtml, attachSlidingCarouselEvents } from '../components/slidingCarousel.js';
 
 let isForgeEventsBound = false;
 
@@ -79,39 +80,28 @@ function renderForgeChambersStage(container) {
         </div>
       </div>
 
-      <!-- Forge Chambers Carousel Navigation & Dropdown -->
-      <div class="carousel-nav-bar mb-1">
-        <button id="btn-prev-forge" class="pager-nav-btn" title="Previous Forge Anvil">
-          <span>‹</span>
-          <span class="hidden sm:inline">Prev</span>
-        </button>
-
-        <div class="chamber-dropdown-wrap">
-          <select id="select-forge-chamber" class="chamber-dropdown">
-            ${FORGE_CHAMBERS.map(c => {
-              const isSelected = c.id === selectedForgeChamberId;
-              return `<option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.name} (${c.bossName})</option>`;
-            }).join('')}
-          </select>
-        </div>
-
-        <button id="btn-next-forge" class="pager-nav-btn" title="Next Forge Anvil">
-          <span class="hidden sm:inline">Next</span>
-          <span>›</span>
-        </button>
-      </div>
-
-      <!-- Quick Forge Pills Strip -->
-      <div class="chamber-quick-pills flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 no-scrollbar mb-1">
-        ${FORGE_CHAMBERS.map(c => {
-          const isSelected = c.id === selectedForgeChamberId;
-          return `
-            <button class="chamber-card px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${isSelected ? 'selected bg-orange-500/20 text-orange-300 border-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-slate-900/60 text-slate-400 border-slate-800'}" data-forge-chamber="${c.id}">
-              ${c.name.split(' ')[0]}
-            </button>
-          `;
-        }).join('')}
-      </div>
+      <!-- Divine Forge Weapon Chambers Sliding 3-Card Carousel -->
+      ${renderSlidingCarouselHtml({
+        carouselId: 'forge-chambers-carousel',
+        cards: FORGE_CHAMBERS.map(c => ({
+          id: c.id,
+          name: c.name,
+          subtitle: c.title,
+          color: c.color,
+          accentColor: c.accentColor,
+          sigil: '⚔️',
+          bannerArtHtml: createAnimatedWeaponHtml(c.weaponTypeId || c.id, { extraClasses: 'stage-sigil-sprite-large' }),
+          emblemHtml: getGameIcon('sword', { size: '20px', color: c.accentColor }),
+          metrics: [
+            { label: 'Weapon', value: c.weaponTypeId || 'Arsenal', highlight: true },
+            { label: 'Boss', value: c.bossName ? c.bossName.split(' ')[0] : 'Vulcan' }
+          ],
+          actionLabel: c.id === selectedForgeChamberId ? 'SELECTED' : 'SELECT ANVIL'
+        })),
+        selectedId: selectedForgeChamberId,
+        actionLabel: 'SELECT ANVIL',
+        showCounter: true
+      })}
 
       <!-- Active Selected Chamber Detail Stage (Animated Transition) -->
       <div class="stage-carousel-container">
@@ -185,35 +175,29 @@ function renderForgeChambersStage(container) {
     });
   }
 
-  const btnPrevForge = container.querySelector('#btn-prev-forge');
-  if (btnPrevForge) {
-    btnPrevForge.addEventListener('click', () => {
-      const curIdx = FORGE_CHAMBERS.findIndex(c => c.id === selectedForgeChamberId);
-      const prevIdx = (curIdx - 1 + FORGE_CHAMBERS.length) % FORGE_CHAMBERS.length;
-      selectedForgeChamberId = FORGE_CHAMBERS[prevIdx].id;
-      forgeAnimClass = 'stage-enter-prev';
+  // Attach Sliding Carousel Events for Forge Chambers
+  attachSlidingCarouselEvents({
+    carouselId: 'forge-chambers-carousel',
+    cards: FORGE_CHAMBERS,
+    selectedId: selectedForgeChamberId,
+    container,
+    onSelect: (chamberId) => {
+      if (selectedForgeChamberId !== chamberId) {
+        selectedForgeChamberId = chamberId;
+        forgeAnimClass = 'stage-enter-next';
+        audioManager.playSfx('button_click', 0.5);
+        renderForgeView(container);
+      }
+    },
+    onAction: (chamberId) => {
+      selectedForgeChamberId = chamberId;
+      audioManager.playSfx('button_click', 0.5);
       renderForgeView(container);
-    });
-  }
-
-  const btnNextForge = container.querySelector('#btn-next-forge');
-  if (btnNextForge) {
-    btnNextForge.addEventListener('click', () => {
-      const curIdx = FORGE_CHAMBERS.findIndex(c => c.id === selectedForgeChamberId);
-      const nextIdx = (curIdx + 1) % FORGE_CHAMBERS.length;
-      selectedForgeChamberId = FORGE_CHAMBERS[nextIdx].id;
-      forgeAnimClass = 'stage-enter-next';
-      renderForgeView(container);
-    });
-  }
-
-  // Attach Forge Chamber selection listeners
-  container.querySelectorAll('[data-forge-chamber]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      forgeAnimClass = 'stage-enter-next';
-      selectedForgeChamberId = btn.dataset.forgeChamber;
-      renderForgeView(container);
-    });
+      const tierSelector = container.querySelector('.pantheon-tier-selector');
+      if (tierSelector) {
+        tierSelector.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
   });
 
   // Attach Forge Tier selection listeners

@@ -14,6 +14,7 @@ import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { createAnimatedSpriteHtml, createAnimatedEnemyHtml, getSheetKeyForSpecies, getSheetKeyForEnemy, createAnimatedRelicHtml, createAnimatedWeaponHtml, createAnimatedChestHtml } from '../../render/spriteAnimator.js';
 import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../render/combatAnimator.js';
 import { getGameIcon } from '../icons/gameIcons.js';
+import { renderSlidingCarouselHtml, attachSlidingCarouselEvents } from '../components/slidingCarousel.js';
 
 let isDungeonEventsBound = false;
 
@@ -72,40 +73,31 @@ export function renderDungeonView(container) {
         </div>
       </div>
 
-      <!-- Chamber Selection Carousel Controls -->
-      <div class="carousel-nav-bar mb-1">
-        <button id="btn-prev-chamber" class="pager-nav-btn" title="Previous Chamber">
-          <span>‹</span>
-          <span class="hidden sm:inline">Prev</span>
-        </button>
-
-        <div class="chamber-dropdown-wrap">
-          <select id="select-chamber" class="chamber-dropdown">
-            ${PANTHEON_CHAMBERS.map(c => {
-              const gSet = GREEK_GOD_SETS[c.godId];
-              const isSelected = c.id === selectedChamberId;
-              return `<option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.sigil} ${c.name} (${gSet ? gSet.god : ''} Set)</option>`;
-            }).join('')}
-          </select>
-        </div>
-
-        <button id="btn-next-chamber" class="pager-nav-btn" title="Next Chamber">
-          <span class="hidden sm:inline">Next</span>
-          <span>›</span>
-        </button>
-      </div>
-
-      <!-- Quick Chamber Pills Strip -->
-      <div class="chamber-quick-pills flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 no-scrollbar mb-1">
-        ${PANTHEON_CHAMBERS.map(c => {
-          const isSelected = c.id === selectedChamberId;
-          return `
-            <button class="chamber-card px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all border inline-flex items-center gap-1.5 ${isSelected ? 'selected bg-amber-500/20 text-amber-300 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-slate-900/60 text-slate-400 border-slate-800'}" data-chamber="${c.id}">
-              ${getGameIcon('dungeon', { size: 13, color: isSelected ? '#fbbf24' : '#94a3b8' })} ${c.name.split(' ')[0]}
-            </button>
-          `;
-        }).join('')}
-      </div>
+      <!-- 10 Greek God Chambers Sliding 3-Card Carousel -->
+      ${renderSlidingCarouselHtml({
+        carouselId: 'pantheon-chambers-carousel',
+        cards: PANTHEON_CHAMBERS.map(c => {
+          const gSet = GREEK_GOD_SETS[c.godId];
+          return {
+            id: c.id,
+            name: c.name,
+            subtitle: c.godTitle,
+            color: c.color,
+            accentColor: c.accentColor,
+            sigil: c.sigil,
+            bannerArtHtml: createAnimatedRelicHtml(c.godId, 'headgear', { extraClasses: 'stage-sigil-sprite-large' }),
+            emblemHtml: `<span style="font-size: 22px;">${c.sigil}</span>`,
+            metrics: [
+              { label: 'Set', value: gSet ? gSet.god : c.godId, highlight: true },
+              { label: 'Drops', value: '6-pc Relics' }
+            ],
+            actionLabel: c.id === selectedChamberId ? 'SELECTED' : 'SELECT CHAMBER'
+          };
+        }),
+        selectedId: selectedChamberId,
+        actionLabel: 'SELECT CHAMBER',
+        showCounter: true
+      })}
 
       <!-- Active Selected Chamber Detail Stage (Animated Transition) -->
       <div class="stage-carousel-container">
@@ -181,45 +173,29 @@ export function renderDungeonView(container) {
     </div>
   `;
 
-  // Attach Chamber Dropdown & Pager listeners
-  const selChamber = container.querySelector('#select-chamber');
-  if (selChamber) {
-    selChamber.addEventListener('change', (e) => {
-      chamberAnimClass = 'stage-enter-next';
-      selectedChamberId = e.target.value;
+  // Attach Sliding Carousel Events for Pantheon Chambers
+  attachSlidingCarouselEvents({
+    carouselId: 'pantheon-chambers-carousel',
+    cards: PANTHEON_CHAMBERS,
+    selectedId: selectedChamberId,
+    container,
+    onSelect: (chamberId) => {
+      if (selectedChamberId !== chamberId) {
+        selectedChamberId = chamberId;
+        chamberAnimClass = 'stage-enter-next';
+        audioManager.playSfx('button_click', 0.5);
+        renderDungeonView(container);
+      }
+    },
+    onAction: (chamberId) => {
+      selectedChamberId = chamberId;
+      audioManager.playSfx('button_click', 0.5);
       renderDungeonView(container);
-    });
-  }
-
-  const btnPrevChamber = container.querySelector('#btn-prev-chamber');
-  if (btnPrevChamber) {
-    btnPrevChamber.addEventListener('click', () => {
-      const curIdx = PANTHEON_CHAMBERS.findIndex(c => c.id === selectedChamberId);
-      const prevIdx = (curIdx - 1 + PANTHEON_CHAMBERS.length) % PANTHEON_CHAMBERS.length;
-      selectedChamberId = PANTHEON_CHAMBERS[prevIdx].id;
-      chamberAnimClass = 'stage-enter-prev';
-      renderDungeonView(container);
-    });
-  }
-
-  const btnNextChamber = container.querySelector('#btn-next-chamber');
-  if (btnNextChamber) {
-    btnNextChamber.addEventListener('click', () => {
-      const curIdx = PANTHEON_CHAMBERS.findIndex(c => c.id === selectedChamberId);
-      const nextIdx = (curIdx + 1) % PANTHEON_CHAMBERS.length;
-      selectedChamberId = PANTHEON_CHAMBERS[nextIdx].id;
-      chamberAnimClass = 'stage-enter-next';
-      renderDungeonView(container);
-    });
-  }
-
-  // Attach Chamber Card Selection listeners
-  container.querySelectorAll('.chamber-card').forEach(btn => {
-    btn.addEventListener('click', () => {
-      chamberAnimClass = 'stage-enter-next';
-      selectedChamberId = btn.dataset.chamber;
-      renderDungeonView(container);
-    });
+      const tierSelector = container.querySelector('.pantheon-tier-selector');
+      if (tierSelector) {
+        tierSelector.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
   });
 
   // Attach Tier Selection listeners

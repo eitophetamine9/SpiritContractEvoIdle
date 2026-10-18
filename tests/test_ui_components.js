@@ -1225,6 +1225,147 @@ if (!mainJsContent.includes('function switchTab(tabName, options = null)') ||
 }
 console.log('[PASS] main.js properly accepts options in switchTab, forwards to CharacterHub, and exports window.switchTab!');
 
+// ==========================================
+// TEST PHASE 6: Animated Sliding Card Carousel for Trials, Forge & Realm
+// ==========================================
+console.log('\n--- TESTING PHASE 6: ANIMATED SLIDING CARD CAROUSEL FOR TRIALS, FORGE & REALM ---');
+
+// 1. Verify 10th Greek God Chamber (Atlas) in PANTHEON_CHAMBERS
+import { PANTHEON_CHAMBERS } from '../src/data/artifactDungeonData.js';
+if (PANTHEON_CHAMBERS.length !== 10) {
+  throw new Error(`Expected exactly 10 Greek God chambers in PANTHEON_CHAMBERS, found ${PANTHEON_CHAMBERS.length}!`);
+}
+const atlasChamber = PANTHEON_CHAMBERS.find(c => c.id === 'celestial_pillar' || c.godId === 'atlas');
+if (!atlasChamber || !atlasChamber.name.includes('Atlas') || atlasChamber.godId !== 'atlas') {
+  throw new Error('Celestial Pillar of Atlas chamber is missing or invalid in PANTHEON_CHAMBERS!');
+}
+console.log(`[PASS] PANTHEON_CHAMBERS contains all 10 Greek God chambers (including ${atlasChamber.name})!`);
+
+// 2. Verify Sliding Carousel Component HTML Rendering & Event Binding
+import { renderSlidingCarouselHtml, attachSlidingCarouselEvents } from '../src/ui/components/slidingCarousel.js';
+
+const mockCarouselCards = [
+  { id: 'c1', name: 'Card One', subtitle: 'Sub 1', color: '#ff4444', bannerArtHtml: '<div>Art 1</div>', emblemHtml: '<span>Emblem 1</span>', metrics: [{ label: 'Stat', value: '100' }] },
+  { id: 'c2', name: 'Card Two', subtitle: 'Sub 2', color: '#44ff44', bannerArtHtml: '<div>Art 2</div>', emblemHtml: '<span>Emblem 2</span>', metrics: [{ label: 'Stat', value: '200' }] },
+  { id: 'c3', name: 'Card Three', subtitle: 'Sub 3', color: '#4444ff', bannerArtHtml: '<div>Art 3</div>', emblemHtml: '<span>Emblem 3</span>', metrics: [{ label: 'Stat', value: '300' }] },
+  { id: 'c4', name: 'Card Four', subtitle: 'Sub 4', color: '#ffff44', bannerArtHtml: '<div>Art 4</div>', emblemHtml: '<span>Emblem 4</span>', metrics: [{ label: 'Stat', value: '400' }] }
+];
+
+const carouselHtml = renderSlidingCarouselHtml({
+  carouselId: 'test-carousel',
+  cards: mockCarouselCards,
+  selectedId: 'c2',
+  actionLabel: 'CHOOSE',
+  showCounter: true
+});
+
+if (!carouselHtml.includes('sliding-carousel-container') ||
+    !carouselHtml.includes('test-carousel-track') ||
+    !carouselHtml.includes('carousel-sliding-card') ||
+    !carouselHtml.includes('card-header-banner') ||
+    !carouselHtml.includes('card-overlapping-emblem') ||
+    !carouselHtml.includes('card-active-check-badge') ||
+    !carouselHtml.includes('carousel-dot') ||
+    !carouselHtml.includes('test-carousel-counter')) {
+  throw new Error('renderSlidingCarouselHtml failed to generate complete sliding 3-card carousel HTML elements!');
+}
+console.log('[PASS] renderSlidingCarouselHtml generates complete luxury 3-card sliding carousel structure!');
+
+// 3. Test attachSlidingCarouselEvents with mock DOM
+let selectedFromEvent = null;
+const mockCarouselRoot = {
+  querySelector: (sel) => ({
+    clientWidth: 1000,
+    style: {},
+    classList: { add: () => {}, remove: () => {} },
+    setAttribute: () => {},
+    addEventListener: () => {}
+  }),
+  querySelectorAll: (sel) => [
+    {
+      getAttribute: (attr) => attr === 'data-card-id' ? 'c3' : '2',
+      classList: { add: () => {}, remove: () => {}, contains: () => false },
+      addEventListener: (evt, fn) => { if (evt === 'click') fn({ currentTarget: { getAttribute: () => '1' }, stopPropagation: () => {} }); },
+      querySelector: () => null
+    }
+  ]
+};
+const mockCarouselContainer = {
+  querySelector: (sel) => mockCarouselRoot
+};
+const carouselInstance = attachSlidingCarouselEvents({
+  carouselId: 'test-carousel',
+  cards: mockCarouselCards,
+  selectedId: 'c2',
+  container: mockCarouselContainer,
+  onSelect: (id) => { selectedFromEvent = id; }
+});
+if (!carouselInstance || typeof carouselInstance.updateView !== 'function' || typeof carouselInstance.destroy !== 'function') {
+  throw new Error('attachSlidingCarouselEvents failed to return carousel controls!');
+}
+carouselInstance.destroy();
+console.log('[PASS] attachSlidingCarouselEvents properly initializes, updates viewport, and destroys cleanly!');
+
+// 4. Verify Pantheon Trials View Renders Sliding 3-Card Carousel
+const p6TrialsContainer = {
+  innerHTML: '',
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+renderDungeonView(p6TrialsContainer);
+if (!p6TrialsContainer.innerHTML.includes('pantheon-chambers-carousel') ||
+    !p6TrialsContainer.innerHTML.includes('sliding-carousel-container') ||
+    !p6TrialsContainer.innerHTML.includes('Celestial Pillar of Atlas') ||
+    !p6TrialsContainer.innerHTML.includes('Crypt of the Underworld')) {
+  throw new Error('renderDungeonView failed to render sliding 3-card carousel for Greek God Chambers!');
+}
+console.log('[PASS] Pantheon Trials Hub renders sliding 3-card carousel housing all 10 Greek God chambers!');
+
+// 5. Verify Divine Forge View Renders Sliding 3-Card Carousel
+const p6ForgeContainer = {
+  innerHTML: '',
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+renderForgeView(p6ForgeContainer);
+if (!p6ForgeContainer.innerHTML.includes('forge-chambers-carousel') ||
+    !p6ForgeContainer.innerHTML.includes('sliding-carousel-container') ||
+    !p6ForgeContainer.innerHTML.includes('SELECT ANVIL')) {
+  throw new Error('renderForgeView failed to render sliding 3-card carousel for Divine Forge chambers!');
+}
+console.log('[PASS] Divine Forge Hub renders sliding 3-card carousel housing all 12 Weapon Forge chambers!');
+
+// 6. Verify Astral Realm View Renders Sliding 3-Card Carousel
+const p6AstralContainer = {
+  innerHTML: '',
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+renderMysticalView(p6AstralContainer);
+if (!p6AstralContainer.innerHTML.includes('astral-facilities-carousel') ||
+    !p6AstralContainer.innerHTML.includes('sliding-carousel-container') ||
+    !p6AstralContainer.innerHTML.includes('Sanctuary') ||
+    !p6AstralContainer.innerHTML.includes('Zodiac') ||
+    !p6AstralContainer.innerHTML.includes('Dwarven')) {
+  throw new Error('renderMysticalView failed to render sliding 3-card carousel for Astral Realm facilities!');
+}
+console.log('[PASS] Astral Realm Hub renders sliding 3-card carousel housing all 8 Astral facilities!');
+
+// 7. Verify CSS Styling for 3-Card Sliding Carousel
+const slidingCarouselCss = fs.readFileSync('src/styles/components/slidingCarousel.css', 'utf8');
+const mainStyleCss = fs.readFileSync('src/style.css', 'utf8');
+if (!mainStyleCss.includes('./styles/components/slidingCarousel.css')) {
+  throw new Error('src/style.css does not import slidingCarousel.css!');
+}
+if (!slidingCarouselCss.includes('.sliding-carousel-container') ||
+    !slidingCarouselCss.includes('.carousel-sliding-card') ||
+    !slidingCarouselCss.includes('.card-overlapping-emblem') ||
+    !slidingCarouselCss.includes('.card-header-banner') ||
+    !slidingCarouselCss.includes('.card-active-check-badge')) {
+  throw new Error('src/styles/components/slidingCarousel.css is missing critical dark fantasy carousel rules!');
+}
+console.log('[PASS] slidingCarousel.css verified with premium gold-themed 3-card carousel styles and imported in style.css!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 

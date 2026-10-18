@@ -43,6 +43,10 @@ export const SVG_ICONS = {
   home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="game-svg-icon"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
 
   close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="game-svg-icon"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  
+  chevronLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="game-svg-icon"><polyline points="15 18 9 12 15 6"/></svg>`,
+  
+  chevronRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="game-svg-icon"><polyline points="9 18 15 12 9 6"/></svg>`,
 
   // Currencies & Essences
   energy: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" class="game-svg-icon energy-svg" style="color: #facc15;"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
