@@ -1,5 +1,5 @@
 import { gameState } from '../../state/gameState.js';
-import { BANNER_CONFIGS, RARITIES, getRarityInfo } from '../../data/spiritsData.js';
+import { BANNER_CONFIGS, RARITIES, getRarityInfo, SPIRIT_SPECIES } from '../../data/spiritsData.js';
 import { showSummonRevealModal } from '../components/modals.js';
 import { createAnimatedSpriteHtml, createAnimatedRelicHtml, getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
 import { getGameIcon } from '../icons/gameIcons.js';
@@ -601,12 +601,12 @@ export function renderContractView(container, onNavigateToIndex) {
   });
 
   // Rates Modal
-  const btnRates = container.querySelector('#btn-rates-modal');
-  if (btnRates) {
-    btnRates.addEventListener('click', () => {
+  container.querySelectorAll('#btn-rates-modal, .btn-rates-trigger').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       showRatesModal(activeBanner);
     });
-  }
+  });
 
   // Milestone Chest Modal
   const btnMilestoneChest = container.querySelector('#btn-milestone-chest');
@@ -682,9 +682,9 @@ export function renderContractView(container, onNavigateToIndex) {
   });
 }
 
-function showRatesModal(banner) {
-  const modalRoot = document.getElementById('modal-root');
-  if (!modalRoot) return;
+export function showRatesModal(banner) {
+  const modalRoot = document.getElementById('modal-root') || document.body;
+  if (!modalRoot || !banner) return;
 
   // Extract all featured rate-up spirits from banner config
   const rateUpSpirits = [];

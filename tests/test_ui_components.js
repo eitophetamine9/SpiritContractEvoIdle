@@ -38,8 +38,48 @@ globalThis.document = {
     if (id === 'app') return appRoot;
     return {
       addEventListener: (evt, fn) => { modalRoot._listeners['#' + id] = fn; },
-      click: () => { if (modalRoot._listeners['#' + id]) modalRoot._listeners['#' + id](); }
+      click: () => { if (modalRoot._listeners['#' + id]) modalRoot._listeners['#' + id](); },
+      appendChild: () => {},
+      removeChild: () => {},
+      innerHTML: '',
+      style: {}
     };
+  },
+  createElement: (tag) => {
+    const el = {
+      tagName: tag,
+      className: '',
+      innerHTML: '',
+      style: {},
+      _listeners: {},
+      parentNode: null,
+      getContext: () => ({
+        clearRect: () => {},
+        fillRect: () => {},
+        beginPath: () => {},
+        arc: () => {},
+        fill: () => {},
+        stroke: () => {},
+        save: () => {},
+        restore: () => {},
+        translate: () => {},
+        scale: () => {},
+        rotate: () => {},
+        drawImage: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        createLinearGradient: () => ({ addColorStop: () => {} })
+      }),
+      addEventListener: function(evt, fn) { this._listeners[evt] = fn; },
+      querySelector: function(sel) {
+        const self = this;
+        return {
+          addEventListener: (evt, fn) => { self._listeners[sel] = fn; },
+          click: () => { if (self._listeners[sel]) self._listeners[sel]({ preventDefault: () => {} }); }
+        };
+      },
+      querySelectorAll: () => []
+    };
+    return el;
   },
   querySelector: () => null,
   querySelectorAll: () => []
@@ -47,7 +87,16 @@ globalThis.document = {
 
 const modalRoot = {
   innerHTML: '',
+  children: [],
   _listeners: {},
+  appendChild: function(el) {
+    el.parentNode = this;
+    this.children.push(el);
+  },
+  removeChild: function(el) {
+    this.children = this.children.filter(c => c !== el);
+    el.parentNode = null;
+  },
   querySelectorAll: (selector) => [],
   querySelector: function(selector) {
     const self = this;
@@ -327,7 +376,17 @@ if (partySpirits.length > 0) {
   
   const modalRoot = {
     innerHTML: '',
+    children: [],
     _listeners: {},
+    appendChild: function(el) {
+      el.parentNode = this;
+      this.children.push(el);
+      if (el.innerHTML) this.innerHTML += el.innerHTML;
+    },
+    removeChild: function(el) {
+      this.children = this.children.filter(c => c !== el);
+      el.parentNode = null;
+    },
     querySelector: function(selector) {
       const self = this;
       return {
@@ -392,7 +451,8 @@ if (!heroFormationContainer.innerHTML.includes('tactical-battle-grid') && !heroF
 console.log('[PASS] Hero View 3x3 Formation mode controls validated.');
 
 // 13. Test Summon Banner Overhaul with Animated Hero & Divine Relic Pieces
-import { renderContractView } from '../src/ui/views/contractView.js';
+import { renderContractView, showRatesModal } from '../src/ui/views/contractView.js';
+import { BANNER_CONFIGS } from '../src/data/spiritsData.js';
 const contractContainer = {
   innerHTML: '',
   querySelector: () => ({ addEventListener: () => {} }),
@@ -1563,6 +1623,49 @@ if (!audioManager.masterCompressor || !audioManager.masterGain) {
   throw new Error('Master dynamics compressor node graph missing in audioManager!');
 }
 console.log('[PASS] Audio Engine verified with calibrated gentle volumes (0.18 BGM, 0.20 SFX) and master dynamics compressor!');
+
+// 5. Verify Summon Area Rates Button and showRatesModal
+console.log('\n--- TESTING SUMMON AREA RATES BUTTON & MODAL ---');
+const ratesTestContractContainer = {
+  innerHTML: '',
+  _listeners: {},
+  querySelector: function(sel) {
+    const self = this;
+    return {
+      addEventListener: (evt, fn) => { self._listeners[sel] = fn; },
+      click: () => { if (self._listeners[sel]) self._listeners[sel]({ preventDefault: () => {} }); }
+    };
+  },
+  querySelectorAll: function(sel) {
+    const self = this;
+    return [{
+      addEventListener: (evt, fn) => { self._listeners[sel] = fn; },
+      click: () => { if (self._listeners[sel]) self._listeners[sel]({ preventDefault: () => {} }); }
+    }];
+  }
+};
+
+renderContractView(ratesTestContractContainer);
+if (!ratesTestContractContainer.innerHTML.includes('id="btn-rates-modal"')) {
+  throw new Error('Contract View missing #btn-rates-modal in HTML output!');
+}
+
+const ratesModalRoot = document.getElementById('modal-root');
+BANNER_CONFIGS.forEach(banner => {
+  ratesModalRoot.children = [];
+  showRatesModal(banner);
+  if (ratesModalRoot.children.length === 0) {
+    throw new Error(`showRatesModal failed to append modal for banner ${banner.id}!`);
+  }
+  const modal = ratesModalRoot.children[0];
+  if (!modal.innerHTML.includes('Probability Rates')) {
+    throw new Error(`Rates modal missing Probability Rates title for banner ${banner.id}!`);
+  }
+  if (banner.rateUpBonus && !modal.innerHTML.includes('Featured Rate-Up Spirits')) {
+    throw new Error(`Rates modal missing Featured Rate-Up Spirits section for banner ${banner.id}!`);
+  }
+});
+console.log('[PASS] Summon View #btn-rates-modal and showRatesModal successfully verified across all banners!');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
