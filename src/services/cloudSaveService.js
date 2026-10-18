@@ -133,25 +133,30 @@ class CloudSaveService {
         throw saveError;
       }
 
-      // 2. Upsert Public Leaderboard Entry
-      const profile = authService.getProfile();
-      const partyPower = gameState.calculateTotalPartyPower ? gameState.calculateTotalPartyPower() : 0;
-      const highestStage = rawState.madnessZone?.highestUnlockedStage || 1;
-      const totalSpirits = Array.isArray(rawState.spirits) ? rawState.spirits.length : 1;
+      // 2. Upsert Public Leaderboard Entry (non-blocking)
+      try {
+        const profile = authService.getProfile();
+        const partyPower = gameState.calculateTotalPartyPower ? gameState.calculateTotalPartyPower() : 0;
+        const highestStage = rawState.madnessZone?.highestUnlockedStage || 1;
+        const totalSpirits = Array.isArray(rawState.spirits) ? rawState.spirits.length : 1;
 
-      await supabase.from('leaderboards').upsert({
-        user_id: user.id,
-        username: profile.username || 'Contractor',
-        avatar_emoji: profile.avatarEmoji || 'wizard',
-        contractor_level: profile.contractorLevel || 1,
-        highest_stage: highestStage,
-        total_party_power: partyPower,
-        total_spirits_contracted: totalSpirits,
-        updated_at: nowIso
-      }, { onConflict: 'user_id' }).catch(err => {
-        // Non-blocking leaderboard update error
-        console.warn('[CloudSaveService] Leaderboard update notice:', err);
-      });
+        const { error: lbError } = await supabase.from('leaderboards').upsert({
+          user_id: user.id,
+          username: profile.username || 'Contractor',
+          avatar_emoji: profile.avatarEmoji || 'wizard',
+          contractor_level: profile.contractorLevel || 1,
+          highest_stage: highestStage,
+          total_party_power: partyPower,
+          total_spirits_contracted: totalSpirits,
+          updated_at: nowIso
+        }, { onConflict: 'user_id' });
+
+        if (lbError) {
+          console.warn('[CloudSaveService] Leaderboard update notice:', lbError);
+        }
+      } catch (lbErr) {
+        console.warn('[CloudSaveService] Leaderboard update exception:', lbErr);
+      }
 
       this.isSyncing = false;
       this.syncStatus = 'synced';
