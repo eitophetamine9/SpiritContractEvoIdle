@@ -399,13 +399,12 @@ Purified Soul Essence (✨) serves as the primary currency for contract summonin
 - **Contextual Area Unlock Tutorials**: Automatic guided modals featuring the Cat Spirit Familiar mascot guide triggered the first time a player opens any newly unlocked feature (Formation, Trials, Forge, Bestiary, Astral Realm, Rebirth).
 
 ### 17.6 Developer / Admin Account & Cheat Console
-- **Credentials**:
-  - **Email**: `admin@email.com`
-  - **Password**: `x@DM1N`
+- **Account Security & Access Policy**:
+  - Administrative and developer testing privileges are restricted to authorized accounts provisioned through secure environment authentication or Supabase database migrations. Hardcoded production credentials are strictly excluded from documentation.
 - **Access Gating**:
   - Gated via `authService.isAdmin()` and `devCheatMethods.isDevAuthorized()`. All cheat methods verify authorization before mutating state.
 - **Dev Console Interface**:
-  - Accessible via the glowing **`⚡ DEV`** header button (only visible to `admin@email.com`) or keyboard shortcuts **`~`** (tilde) / **`F2`**.
+  - Accessible via the glowing **`⚡ DEV`** header button (only visible when authenticated with an authorized administrator account) or keyboard shortcuts **`~`** (tilde) / **`F2`**.
   - **Command Bar**:
     - `floor <n>` / `skip <n>`: Jump to any floor.
     - `levelup <n>` / `maxlevel`: Instant contractor level up with feature unlocks.
@@ -417,7 +416,42 @@ Purified Soul Essence (✨) serves as the primary currency for contract summonin
     - `godmode`: Complete god mode activation.
   - **Quick Buttons & Custom Dropdown**: One-click boost buttons for all currencies and customizable amount inputs.
 - **Supabase Account Provisioning**:
-  - Standalone SQL script: `supabase/migrations/20261017_create_dev_admin_account.sql`.
-  - Automated verification script: `scripts/push_dev_account.js`.
+  - Standalone SQL migration: `supabase/migrations/20261017_create_dev_admin_account.sql`.
+  - Automated deployment script: `scripts/push_dev_account.js`.
+
+---
+
+## 18. v0.5 Systems, Luxury UI & Quality-of-Life Architecture
+
+### 18.1 Sliding 3-Card Carousel Engine
+- **Cross-Feature Integration**: Replaces repetitive list containers in **Pantheon Trials** (10 Greek God Chambers), **The Divine Forge** (12 Weapon Dungeons), and **The Astral Realm** (8 Celestial Sanctums).
+- **Smooth Navigation**: Employs an interactive 3-card sliding carousel with peek preview cards on left and right, touch-swipe gestures, and luxury gold-bordered indicators.
+
+### 18.2 Atlas 10th Greek God Firmament Relic Set
+- **Pure Defensive Tank Role**: Distinct from the offensive tanking profile of Hephaestus:
+  - **2-Piece Bonus**: `+25% Max HP` and `+20% DEF`.
+  - **4-Piece Bonus**: *Guardian Interception* — automatically redirects and absorbs critical incoming damage targeted at party allies with lowest current HP.
+- **Dedicated Chamber & Visuals**: Drops in the *Celestial Pillar of Atlas* (Chamber 10) in Pantheon Trials. Features a custom 8-frame animated SVG relic artifact (`relic_atlas_pillar`).
+
+### 18.3 Summon Banner Overhaul & Detailed Probability Rates
+- **Central Dual Showcase Pedestal**: Banners showcase the featured rate-up hero alongside their signature divine relic artifact inside ambient elemental auras.
+- **Enhanced Rates Modal**:
+  - Accessed via the `#btn-rates-modal` button in the Summon View.
+  - Displays live animated sprite previews of featured rate-up spirits with rarity emblems.
+  - Transparently outlines tier-by-tier base rarity odds (Common to Mythical) and exact rate-up guarantee shares (60% to 65% on target tier).
+
+### 18.4 Fluid Creature Breathing & Visual Polish
+- **Vertical Breathing Animation**: Replaced jittery 4-frame horizontal stepping with fluid CSS keyframe bobbing (`@keyframes creatureBreathingBob`) across Summon Banners and Vault Card Collections.
+- **Minimalist Bestiary Index**: Streamlined tile borders for optimal screen density and responsive layout.
+- **Clean Bestiary Sprite Inspection**: Modal displays the high-fidelity animated SVG creature sprite cleanly without intrusive container bounding boxes.
+- **Vault-to-Index Routing**: Instant navigation shortcut button in the Arcane Vault directing contractors straight to the Bestiary Index.
+
+### 18.5 Instant Currency Synchronization & Onboarding Safety
+- **Real-Time Altar Exchange**: Exchanging Spirit Shards for Purified Soul Essence immediately dispatches `resourcesUpdated` events, updating on-screen balances without requiring tab navigation.
+- **Guided Tutorial Safety**: Overlay mask SVG incorporates `pointer-events: none` and automated tab switching to ensure fresh account creations and account resets never suffer UI lockouts.
+
+### 18.6 Balanced Audio Engine & Acoustic Harmonics
+- **Gentle Volume Calibration**: Default BGM calibrated to `0.18` and SFX to `0.20` with user-customizable sliders.
+- **Master Dynamics Compressor**: Web Audio dynamic compressor node prevents clipping during multi-spirit ultimate bursts and high-frequency battle climaxes.
 
 
