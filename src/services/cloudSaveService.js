@@ -156,6 +156,7 @@ class CloudSaveService {
       this.isSyncing = false;
       this.syncStatus = 'synced';
       this.lastSyncTimestamp = Date.now();
+      this.lastErrorMessage = null;
       this.updateSaveStatusUI();
       this.emit('CLOUD_SYNC_SUCCESS', { timestamp: this.lastSyncTimestamp });
       return true;
@@ -164,6 +165,10 @@ class CloudSaveService {
       console.warn('[CloudSaveService] Cloud save failed, local save preserved:', err);
       this.isSyncing = false;
       this.syncStatus = 'error';
+      this.lastErrorMessage = err?.message || 'Failed to sync to cloud.';
+      if (err?.code === '42501') {
+        this.lastErrorMessage = 'Database permissions error (RLS 42501). Run docs/supabase_setup.sql in Supabase SQL Editor.';
+      }
       this.updateSaveStatusUI();
       this.emit('CLOUD_SYNC_ERROR', { error: err });
       return false;
