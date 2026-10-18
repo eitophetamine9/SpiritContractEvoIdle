@@ -883,9 +883,11 @@ export function renderVaultView(container) {
 
   // Navigate to Index from Vault
   container.querySelector('#btn-vault-goto-index')?.addEventListener('click', () => {
-    const navIndex = document.getElementById('nav-index');
-    if (navIndex) {
-      navIndex.click();
+    if (typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+      window.switchTab('index');
+    } else {
+      const drawerItem = document.querySelector('.nav-drawer-item[data-tab="index"]');
+      if (drawerItem) drawerItem.click();
     }
   });
 }

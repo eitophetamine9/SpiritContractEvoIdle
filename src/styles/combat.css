@@ -2256,12 +2256,25 @@
   width: 72px;
   height: 72px;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.8));
+  animation: creatureBreathingBob 2.8s ease-in-out infinite;
+  will-change: transform;
 }
 
 .banner-hero-avatar-wrap .sprite-frame-viewer {
   width: 72px;
   height: 72px;
   background-size: 576px 72px;
+  animation: none !important;
+  background-position: 0px 0px !important;
+}
+
+@keyframes creatureBreathingBob {
+  0%, 100% {
+    transform: translateY(0px) scale(1, 1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.02, 1.05);
+  }
 }
 
 .banner-relic-feature-pill {

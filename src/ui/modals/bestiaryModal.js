@@ -1,4 +1,5 @@
 import { createSpiritPlaceholderBox, createUnknownSpiritPlaceholderBox } from '../components/pixelBox.js';
+import { createAnimatedSpriteHtml } from '../../render/spriteAnimator.js';
 import { SPIRIT_SPECIES, getRarityInfo, getRoleInfo } from '../../data/spiritsData.js';
 import { gameState } from '../../state/gameState.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
@@ -233,8 +234,17 @@ export function showBestiaryInspectModal(species, isDiscovered, bestiaryNum) {
 
           <div class="bestiary-inspect-body">
             <div class="bestiary-sprite-showcase">
-              <div style="width: 84px; height: 84px;">
-                ${createSpiritPlaceholderBox(species)}
+              <div class="bestiary-inspect-sprite-wrap" style="
+                width: 96px; 
+                height: 96px; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+                background: radial-gradient(circle, ${rarity.color}33 0%, rgba(10,15,25,0.7) 75%);
+                border-radius: 50%;
+                box-shadow: 0 0 24px ${rarity.color}44;
+              ">
+                ${createAnimatedSpriteHtml(species.id, { extraClasses: 'bestiary-inspect-pure-sprite scale-125' })}
               </div>
               
               <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">

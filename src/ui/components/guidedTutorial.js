@@ -117,6 +117,17 @@ class GuidedTutorialController {
       this.start();
     });
 
+    gameState.on('gameReset', () => {
+      this.destroy();
+      this.currentStepIdx = 0;
+      setTimeout(() => {
+        const tutState = gameState.getTutorialState();
+        if (tutState && !tutState.completed && tutState.active) {
+          this.start();
+        }
+      }, 500);
+    });
+
     // Auto-advance if event occurs
     gameState.on('spiritsContracted', () => {
       const stepConfig = TUTORIAL_STEPS[this.currentStepIdx];
@@ -146,8 +157,8 @@ class GuidedTutorialController {
     this.overlayEl.style.opacity = '1';
 
     this.overlayEl.innerHTML = `
-      <!-- Dynamic SVG Spotlight Mask Layer -->
-      <svg id="tutorial-svg-mask" class="absolute inset-0 w-full h-full pointer-events-auto" style="overflow: visible;">
+      <!-- Dynamic SVG Spotlight Mask Layer (pointer-events-none so highlighted elements can be tapped seamlessly) -->
+      <svg id="tutorial-svg-mask" class="absolute inset-0 w-full h-full pointer-events-none" style="overflow: visible;">
         <defs>
           <mask id="tutorial-spotlight-cutout-mask">
             <rect width="100%" height="100%" fill="white" />
@@ -241,6 +252,14 @@ class GuidedTutorialController {
 
     safePlaySfx('relic_click', 0.4);
 
+    // Auto-switch to expected tab if specified and not already active
+    if (step.expectedTab && typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+      const activeNavTab = document.querySelector('.nav-tab.active')?.getAttribute('data-tab');
+      if (activeNavTab !== step.expectedTab) {
+        window.switchTab(step.expectedTab);
+      }
+    }
+
     // Update text
     const titleEl = this.overlayEl.querySelector('#tut-title');
     const speechEl = this.overlayEl.querySelector('#tut-speech');
@@ -280,6 +299,8 @@ class GuidedTutorialController {
     }
 
     this.updateSpotlightPosition();
+    // Schedule follow-up alignment in case tab view just rendered
+    setTimeout(() => this.updateSpotlightPosition(), 120);
   }
 
   updateSpotlightPosition() {
@@ -362,6 +383,9 @@ class GuidedTutorialController {
     if (step && step.isFinal) {
       this.complete();
     } else {
+      if (step?.expectedTab && typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+        window.switchTab(step.expectedTab);
+      }
       this.nextStep();
     }
   }
@@ -370,6 +394,10 @@ class GuidedTutorialController {
     if (this.currentStepIdx < TUTORIAL_STEPS.length - 1) {
       this.currentStepIdx += 1;
       gameState.advanceTutorialStep(this.currentStepIdx);
+      const nextStepConfig = TUTORIAL_STEPS[this.currentStepIdx];
+      if (nextStepConfig?.expectedTab && typeof window !== 'undefined' && typeof window.switchTab === 'function') {
+        window.switchTab(nextStepConfig.expectedTab);
+      }
       this.renderCurrentStep();
     } else {
       this.complete();

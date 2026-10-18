@@ -656,7 +656,9 @@ export function renderContractView(container, onNavigateToIndex) {
   container.querySelector('#btn-exchange-1')?.addEventListener('click', () => {
     try {
       const res = gameState.exchangeShardsForPurifiedEssence(1);
-      alert(`Exchanged 500 Shards for 1 Purified Soul Essence!\nRemaining today: ${res.remainingToday}/10`);
+      if (typeof window !== 'undefined' && typeof window.updateResourcesDisplay === 'function') {
+        window.updateResourcesDisplay(true);
+      }
       renderContractView(container, onNavigateToIndex);
     } catch (err) {
       alert(err.message);
@@ -664,11 +666,15 @@ export function renderContractView(container, onNavigateToIndex) {
   });
 
   container.querySelector('#btn-exchange-max')?.addEventListener('click', () => {
-    const maxPossible = Math.min(exchangeStatus.remainingToday, Math.floor(shards / 500));
+    const curStatus = gameState.getDailyPurifiedExchangeStatus ? gameState.getDailyPurifiedExchangeStatus() : { remaining: 10 };
+    const curShards = gameState.state.resources?.spiritShards || 0;
+    const maxPossible = Math.min(curStatus.remaining ?? curStatus.remainingToday ?? 10, Math.floor(curShards / 500));
     if (maxPossible <= 0) return;
     try {
       const res = gameState.exchangeShardsForPurifiedEssence(maxPossible);
-      alert(`Exchanged ${res.shardsSpent.toLocaleString()} Shards for ${res.essenceGained} Purified Soul Essence!\nRemaining today: ${res.remainingToday}/10`);
+      if (typeof window !== 'undefined' && typeof window.updateResourcesDisplay === 'function') {
+        window.updateResourcesDisplay(true);
+      }
       renderContractView(container, onNavigateToIndex);
     } catch (err) {
       alert(err.message);
@@ -680,23 +686,91 @@ function showRatesModal(banner) {
   const modalRoot = document.getElementById('modal-root');
   if (!modalRoot) return;
 
+  // Extract all featured rate-up spirits from banner config
+  const rateUpSpirits = [];
+  if (banner.rateUpBonus) {
+    for (const [tier, speciesVal] of Object.entries(banner.rateUpBonus)) {
+      if (tier === 'rateUpShare') continue;
+      const ids = Array.isArray(speciesVal) ? speciesVal : [speciesVal];
+      ids.forEach(id => {
+        const sp = SPIRIT_SPECIES[id];
+        if (sp) {
+          rateUpSpirits.push({
+            id,
+            name: sp.name,
+            tier,
+            rarity: getRarityInfo(sp.baseRarity || tier),
+            share: Math.round((banner.rateUpBonus.rateUpShare || 0.6) * 100)
+          });
+        }
+      });
+    }
+  }
+  if (rateUpSpirits.length === 0 && banner.featuredSpeciesId) {
+    const sp = SPIRIT_SPECIES[banner.featuredSpeciesId];
+    if (sp) {
+      rateUpSpirits.push({
+        id: banner.featuredSpeciesId,
+        name: sp.name,
+        tier: sp.baseRarity,
+        rarity: getRarityInfo(sp.baseRarity),
+        share: 60
+      });
+    }
+  }
+
   const modalEl = document.createElement('div');
   modalEl.className = 'modal-backdrop';
   modalEl.innerHTML = `
-    <div class="modal-card" style="max-width: 420px; padding: 18px; border: 2px solid ${banner.accentColor}; background: #140d07;">
+    <div class="modal-card" style="max-width: 440px; padding: 18px; border: 2px solid ${banner.accentColor}; background: #140d07; box-shadow: 0 8px 32px rgba(0,0,0,0.85);">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-        <h3 style="margin: 0; font-size: 16px; color: #ffd700; display: flex; align-items: center; gap: 6px;">
+        <h3 style="margin: 0; font-size: 15px; color: #ffd700; display: flex; align-items: center; gap: 6px;">
           <span>${getGameIcon('info', { size: '16px', color: '#ffd700' })}</span>
           <span>${banner.name} Probability Rates</span>
         </h3>
         <button id="btn-close-rates" style="background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center;">${getGameIcon('close', { size: '14px' })}</button>
       </div>
 
-      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+      <!-- Featured Rate-Up Spirits Section -->
+      ${rateUpSpirits.length > 0 ? `
+        <div style="margin-top: 12px; background: rgba(0,0,0,0.55); border: 1.5px solid ${banner.accentColor}; border-radius: 12px; padding: 12px;">
+          <div style="font-size: 11px; font-weight: 900; color: #ffd700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: inline-flex; align-items: center; gap: 4px;">
+              ${getGameIcon('sparkle', { size: '12px', color: '#ffd152' })} Featured Rate-Up Spirits
+            </span>
+            <span style="color: ${banner.accentColor}; font-weight: 800; font-size: 10px;">${rateUpSpirits[0].share}% Rate-Up Share</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${rateUpSpirits.map(s => `
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid ${s.rarity.border || banner.accentColor}44; border-radius: 8px; padding: 6px 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, ${s.rarity.color}33 0%, rgba(0,0,0,0.6) 80%); border-radius: 50%; overflow: hidden; border: 1.5px solid ${s.rarity.color};">
+                    ${createAnimatedSpriteHtml(s.id, { extraClasses: 'scale-90' })}
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #ffffff;">${s.name}</span>
+                    <span style="font-size: 9.5px; font-weight: 800; color: ${s.rarity.color}; text-transform: uppercase; letter-spacing: 0.5px;">${s.rarity.name} • Featured</span>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+                  <span style="font-size: 11px; font-weight: 900; color: #ffd152; display: inline-flex; align-items: center; gap: 2px;">
+                    ${getGameIcon('arrowUp', { size: '10px', color: '#ffd152' })} ${s.share}%
+                  </span>
+                  <span style="font-size: 8.5px; color: #94a3b8;">of ${s.tier} pulls</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Tier Probability Rates -->
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+        <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Base Rarity Odds</div>
         ${banner.odds.map(o => {
           const rInfo = getRarityInfo(o.rarity);
           return `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 8px; border-left: 4px solid ${rInfo.color};">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 6px; border-left: 3.5px solid ${rInfo.color};">
               <span style="font-weight: 800; color: ${rInfo.color};">${rInfo.name}</span>
               <span style="font-weight: 900; color: #fff;">${o.weight.toFixed(1)}%</span>
             </div>
@@ -704,14 +778,7 @@ function showRatesModal(banner) {
         }).join('')}
       </div>
 
-      ${banner.rateUpBonus ? `
-        <div style="margin-top: 12px; background: rgba(243,156,18,0.15); border: 1px solid #f39c12; border-radius: 8px; padding: 10px; font-size: 11px; color: #ffeaa7;">
-          <strong>Rate-Up Guarantee:</strong><br>
-          When pulling the featured highest rarity, there is a <strong>${Math.round((banner.rateUpBonus.rateUpShare || 0.5) * 100)}% chance</strong> to receive the featured banner character!
-        </div>
-      ` : ''}
-
-      <button id="btn-dismiss-rates" style="margin-top: 16px; width: 100%; min-height: 42px; background: #e67e22; border: none; border-radius: 8px; color: #fff; font-weight: 800; cursor: pointer;">
+      <button id="btn-dismiss-rates" style="margin-top: 14px; width: 100%; min-height: 40px; background: ${banner.accentColor}; border: none; border-radius: 8px; color: #fff; font-weight: 800; cursor: pointer; transition: filter 0.15s ease;">
         Close
       </button>
     </div>

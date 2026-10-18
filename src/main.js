@@ -266,7 +266,8 @@ function renderActiveTab(options = activeTabOptions) {
 }
 
 window.switchTab = switchTab;
-export { switchTab };
+window.updateResourcesDisplay = updateResourcesDisplay;
+export { switchTab, updateResourcesDisplay };
 
 // Setup Bottom Navigation listeners (3 main tabs + Drawer items)
 document.querySelectorAll('.nav-tab[data-tab]').forEach(tab => {
@@ -450,7 +451,7 @@ gameState.subscribe((eventType, payload, state) => {
       renderMadnessView(viewContainer);
     }
     updateResourcesDisplay(true);
-  } else if (eventType === 'resourcesChanged') {
+  } else if (eventType === 'resourcesChanged' || eventType === 'resourcesUpdated') {
     updateResourcesDisplay(true);
   } else if (eventType === 'spiritLevelCapped' || eventType === 'partyUpdated') {
     updateResourcesDisplay();
