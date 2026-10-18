@@ -11,6 +11,7 @@ import {
 import { gameState } from '../../state/gameState.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
 import { closeActiveModal } from './modalBase.js';
+import { getGameIcon, getStatIcon, getRoleIcon } from '../icons/gameIcons.js';
 
 export function showSpiritModal(spirit, onUpdate) {
   const modalRoot = document.getElementById('modal-root');
@@ -52,17 +53,17 @@ export function showSpiritModal(spirit, onUpdate) {
         <div class="modal-card modal-card-equipment" style="max-width: 440px;">
           <div class="modal-header">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 20px;">⛩️</span>
+              <span style="display: inline-flex; align-items: center;">${getGameIcon('torii', { size: 20 })}</span>
               <div>
-                <h3 class="modal-title" style="margin: 0; font-size: 16px; color: ${rarity.color};">
-                  ${currentSpirit.customName} ${currentSpirit.favorite ? '⭐' : ''}
+                <h3 class="modal-title" style="margin: 0; font-size: 16px; color: ${rarity.color}; display: flex; align-items: center; gap: 4px;">
+                  ${currentSpirit.customName} ${currentSpirit.favorite ? getGameIcon('star', { size: 13, color: '#ffd152' }) : ''}
                 </h3>
                 <span style="font-size: 11px; color: var(--text-muted);">
                   ${species ? species.name : 'Unknown Species'} • Tier ${currentSpirit.tier || 1}
                 </span>
               </div>
             </div>
-            <button id="btn-close-spirit-modal" class="modal-close-btn">&times;</button>
+            <button id="btn-close-spirit-modal" class="modal-close-btn" style="display: flex; align-items: center; justify-content: center;">${getGameIcon('close', { size: 14 })}</button>
           </div>
 
           <div class="modal-body" style="padding: 14px 16px;">
@@ -76,19 +77,20 @@ export function showSpiritModal(spirit, onUpdate) {
                   <span class="rarity-pill ${rarity.name.toLowerCase()}" style="color: ${rarity.color}; border-color: ${rarity.border}; background: ${rarity.bg};">
                     ${rarity.name.toUpperCase()}
                   </span>
-                  <span style="font-size: 10px; font-weight: 800; color: ${roleInfo.color}; background: ${roleInfo.bg}; border: 1px solid ${roleInfo.border}; padding: 1px 6px; border-radius: 4px;" title="${roleInfo.name}: ${roleInfo.desc}">
-                    ${roleInfo.icon} ${roleInfo.name}
+                  <span style="font-size: 10px; font-weight: 800; color: ${roleInfo.color}; background: ${roleInfo.bg}; border: 1px solid ${roleInfo.border}; padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;" title="${roleInfo.name}: ${roleInfo.desc}">
+                    ${getRoleIcon(roleKey, { size: 11, color: roleInfo.color })} ${roleInfo.name}
                   </span>
                   ${isInParty ? '<span style="font-size: 10px; font-weight: 800; background: #27ae60; color: #fff; padding: 2px 6px; border-radius: 4px;">IN PARTY</span>' : '<span style="font-size: 10px; color: var(--text-muted); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">VAULT RESERVES</span>'}
                 </div>
                 <div style="font-size: 13px; font-weight: 800; color: #fff;">
                   Level ${currentSpirit.level} / ${species ? species.levelCap : 99}
                 </div>
-                <div style="font-size: 12px; font-weight: 800; color: #2ed573; margin-top: 2px;">
-                  ⚡ ${currentSpirit.power.toLocaleString()} Power
+                <div style="font-size: 12px; font-weight: 800; color: #2ed573; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+                  ${getGameIcon('zap', { size: 12, color: '#2ed573' })} ${currentSpirit.power.toLocaleString()} Power
                 </div>
-                <div style="font-size: 11px; font-weight: 900; color: #ffd32a; margin-top: 3px;">
-                  ${'★'.repeat(currentAscLevel)}${'☆'.repeat(7 - currentAscLevel)} (★${currentAscLevel}/7)
+                <div style="font-size: 11px; font-weight: 900; color: #ffd32a; margin-top: 3px; display: flex; align-items: center; gap: 2px;">
+                  ${Array.from({ length: 7 }, (_, i) => i < currentAscLevel ? getGameIcon('star', { size: 11, color: '#ffd32a' }) : getGameIcon('starEmpty', { size: 11, color: 'rgba(255,255,255,0.25)' })).join('')}
+                  <span style="margin-left: 4px; display: inline-flex; align-items: center; gap: 2px;">(${getGameIcon('star', { size: 10, color: '#ffd32a' })}${currentAscLevel}/7)</span>
                 </div>
               </div>
             </div>
@@ -108,8 +110,8 @@ export function showSpiritModal(spirit, onUpdate) {
             <div style="margin-bottom: 14px; padding: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="font-size: 11px; font-weight: 800; color: ${roleInfo.color};">
-                    ${roleInfo.icon} ${roleInfo.name}
+                  <span style="font-size: 11px; font-weight: 800; color: ${roleInfo.color}; display: inline-flex; align-items: center; gap: 3px;">
+                    ${getRoleIcon(roleKey, { size: 12, color: roleInfo.color })} ${roleInfo.name}
                   </span>
                   <span style="font-size: 10px; color: var(--text-muted);">
                     ${slotId ? `Grid [${slotId.toUpperCase()}] • ${combatStats ? combatStats.columnPerk || 'Neutral' : ''}` : 'No Formation Slot'}
@@ -128,45 +130,45 @@ export function showSpiritModal(spirit, onUpdate) {
               <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 11px; font-weight: 800;">
                 <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
                   <div style="font-size: 9px; color: var(--text-muted);">HIT POINTS</div>
-                  <div style="color: #ff6b81;">❤️ ${combatStats ? combatStats.maxHp.toLocaleString() : currentSpirit.maxHp}</div>
+                  <div style="color: #ff6b81; display: flex; align-items: center; gap: 4px;">${getStatIcon('hp', { size: 12 })} ${combatStats ? combatStats.maxHp.toLocaleString() : currentSpirit.maxHp}</div>
                 </div>
                 <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
                   <div style="font-size: 9px; color: var(--text-muted);">ARMOR / DEF</div>
-                  <div style="color: #70a1ff;">🛡️ ${combatStats ? combatStats.def : 20}</div>
+                  <div style="color: #70a1ff; display: flex; align-items: center; gap: 4px;">${getStatIcon('def', { size: 12 })} ${combatStats ? combatStats.def : 20}</div>
                 </div>
                 <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
                   <div style="font-size: 9px; color: var(--text-muted);">ATK POWER</div>
-                  <div style="color: #ffd32a;">⚔️ ${combatStats ? combatStats.atk : currentSpirit.power}</div>
+                  <div style="color: #ffd32a; display: flex; align-items: center; gap: 4px;">${getStatIcon('atk', { size: 12 })} ${combatStats ? combatStats.atk : currentSpirit.power}</div>
                 </div>
                 <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
                   <div style="font-size: 9px; color: var(--text-muted);">CRITICAL RATE</div>
-                  <div style="color: #ff9ff3;">🎯 ${combatStats ? combatStats.critRate : 5}%</div>
+                  <div style="color: #ff9ff3; display: flex; align-items: center; gap: 4px;">${getStatIcon('crit', { size: 12 })} ${combatStats ? combatStats.critRate : 5}%</div>
                 </div>
                 <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
                   <div style="font-size: 9px; color: var(--text-muted);">CRIT DAMAGE</div>
-                  <div style="color: #feca57;">💥 ${combatStats ? combatStats.critDmg : 150}%</div>
+                  <div style="color: #feca57; display: flex; align-items: center; gap: 4px;">${getStatIcon('critDmg', { size: 12 })} ${combatStats ? combatStats.critDmg : 150}%</div>
                 </div>
                 <div style="padding: 4px 6px; background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
                   <div style="font-size: 9px; color: var(--text-muted);">HEAL AMPLIFY</div>
-                  <div style="color: #2ed573;">💚 ${combatStats ? Math.round(combatStats.healAmp * 100) : 100}%</div>
+                  <div style="color: #2ed573; display: flex; align-items: center; gap: 4px;">${getGameIcon('heart', { size: 12, color: '#2ed573' })} ${combatStats ? Math.round(combatStats.healAmp * 100) : 100}%</div>
                 </div>
               </div>
             </div>
 
-            <!-- Ascension (★1 to ★7) Section -->
+            <!-- Ascension Section -->
             <div style="margin-bottom: 14px; padding: 10px; background: rgba(147, 51, 234, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 10px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <span style="font-size: 12px; font-weight: 800; color: #e9d5ff; display: flex; align-items: center; gap: 4px;">
-                  <span>⭐</span> Spirit Ascension
+                  ${getGameIcon('star', { size: 13, color: '#ffd32a' })} Spirit Ascension
                 </span>
-                <span style="font-size: 11px; font-weight: 900; color: #ffd32a;">
-                  ${currentAscLevel >= 7 ? '★7 (MAX)' : `★${currentAscLevel} ➔ ★${nextAscTier}`}
+                <span style="font-size: 11px; font-weight: 900; color: #ffd32a; display: inline-flex; align-items: center; gap: 4px;">
+                  ${currentAscLevel >= 7 ? `Tier 7 (MAX)` : `Tier ${currentAscLevel} ${getGameIcon('arrowRight', { size: 10 })} Tier ${nextAscTier}`}
                 </span>
               </div>
 
               ${currentAscLevel >= 7 ? `
-                <div style="font-size: 11px; color: #d8b4fe; line-height: 1.4;">
-                  🏆 <strong>Ascended Divinity Active:</strong> +84% all stats, +10% Crit Rate, +25% Crit Damage!
+                <div style="font-size: 11px; color: #d8b4fe; line-height: 1.4; display: flex; align-items: center; gap: 6px;">
+                  ${getGameIcon('trophy', { size: 14, color: '#ffd32a' })} <strong>Ascended Divinity Active:</strong> +84% all stats, +10% Crit Rate, +25% Crit Damage!
                 </div>
               ` : `
                 <div style="font-size: 10px; color: #cbd5e1; margin-bottom: 6px; line-height: 1.4;">
@@ -174,10 +176,10 @@ export function showSpiritModal(spirit, onUpdate) {
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
                   <span>Duplicates: <strong style="color: ${eligibleDups.length >= ascConfig.duplicates ? '#4cd137' : '#ff7675'}; font-size: 11px;">${eligibleDups.length}/${ascConfig.duplicates} available</strong></span>
-                  <span>Astral: <strong style="color: ${userAstralEssence >= ascConfig.astralCost ? '#e056fd' : '#ff7675'}; font-size: 11px;">${userAstralEssence}/${ascConfig.astralCost} 🔮</strong></span>
+                  <span style="display: inline-flex; align-items: center; gap: 4px;">Astral: <strong style="color: ${userAstralEssence >= ascConfig.astralCost ? '#e056fd' : '#ff7675'}; font-size: 11px;">${userAstralEssence}/${ascConfig.astralCost}</strong> ${getGameIcon('astralEssence', { size: 12 })}</span>
                 </div>
-                <button id="btn-modal-ascend-spirit" style="width: 100%; min-height: 38px; background: ${canAscend ? 'linear-gradient(135deg, #a855f7, #6366f1)' : 'rgba(255,255,255,0.08)'}; color: ${canAscend ? '#fff' : '#64748b'}; font-weight: 800; font-size: 12px; border: 1px solid ${canAscend ? '#c084fc' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; cursor: ${canAscend ? 'pointer' : 'not-allowed'}; box-shadow: ${canAscend ? '0 0 12px rgba(168,85,247,0.4)' : 'none'};" ${canAscend ? '' : 'disabled'}>
-                  ${canAscend ? `⭐ Ascend to ★${nextAscTier} (+12% Stats)` : (eligibleDups.length < ascConfig.duplicates ? `Need ${ascConfig.duplicates - eligibleDups.length} more duplicate copy(ies)` : `Need ${ascConfig.astralCost} 🔮 Astral Essence`)}
+                <button id="btn-modal-ascend-spirit" style="width: 100%; min-height: 38px; background: ${canAscend ? 'linear-gradient(135deg, #a855f7, #6366f1)' : 'rgba(255,255,255,0.08)'}; color: ${canAscend ? '#fff' : '#64748b'}; font-weight: 800; font-size: 12px; border: 1px solid ${canAscend ? '#c084fc' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; cursor: ${canAscend ? 'pointer' : 'not-allowed'}; box-shadow: ${canAscend ? '0 0 12px rgba(168,85,247,0.4)' : 'none'}; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" ${canAscend ? '' : 'disabled'}>
+                  ${canAscend ? `${getGameIcon('star', { size: 12, color: '#ffd32a' })} Ascend to Tier ${nextAscTier} (+12% Stats)` : (eligibleDups.length < ascConfig.duplicates ? `Need ${ascConfig.duplicates - eligibleDups.length} more duplicate copy(ies)` : `Need ${ascConfig.astralCost} Astral Essence`)}
                 </button>
               `}
             </div>
@@ -193,8 +195,8 @@ export function showSpiritModal(spirit, onUpdate) {
             <!-- Evolve Button (if ready) -->
             ${canEvolve ? `
               <div style="margin-bottom: 14px; text-align: center;">
-                <button id="btn-modal-evolve" style="width: 100%; min-height: 44px; background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900; font-size: 13px; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(241,196,15,0.5);">
-                  ⚡ ASCEND & EVOLVE SPIRIT ⚡
+                <button id="btn-modal-evolve" style="width: 100%; min-height: 44px; background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900; font-size: 13px; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(241,196,15,0.5); display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                  ${getGameIcon('zap', { size: 14, color: '#000' })} ASCEND & EVOLVE SPIRIT ${getGameIcon('zap', { size: 14, color: '#000' })}
                 </button>
               </div>
             ` : ''}
@@ -211,8 +213,8 @@ export function showSpiritModal(spirit, onUpdate) {
                 </button>
               `}
 
-              <button id="btn-toggle-favorite-spirit" class="btn-drawer-action" style="background: rgba(255, 215, 0, 0.15); border-color: #ffd700; color: #ffd700; min-height: 44px;">
-                ${currentSpirit.favorite ? '★ Unfavorite' : '☆ Favorite'}
+              <button id="btn-toggle-favorite-spirit" class="btn-drawer-action" style="background: rgba(255, 215, 0, 0.15); border-color: #ffd700; color: #ffd700; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                ${currentSpirit.favorite ? `${getGameIcon('star', { size: 13, color: '#ffd700' })} Unfavorite` : `${getGameIcon('starEmpty', { size: 13, color: '#ffd700' })} Favorite`}
               </button>
             </div>
 
@@ -249,10 +251,10 @@ export function showSpiritModal(spirit, onUpdate) {
     modalRoot.querySelector('#btn-modal-ascend-spirit')?.addEventListener('click', () => {
       if (!canAscend) return;
       const dupIdsToSacrifice = eligibleDups.slice(0, ascConfig.duplicates).map(d => d.id);
-      if (confirm(`Sacrifice ${ascConfig.duplicates} duplicate copy(ies) of ${currentSpirit.customName} and ${ascConfig.astralCost} 🔮 Astral Essence to ascend to ★${nextAscTier}?`)) {
+      if (confirm(`Sacrifice ${ascConfig.duplicates} duplicate copy(ies) of ${currentSpirit.customName} and ${ascConfig.astralCost} Astral Essence to ascend to Tier ${nextAscTier}?`)) {
         try {
           const res = gameState.ascendSpirit(currentSpirit.id, dupIdsToSacrifice);
-          alert(`🎉 Ascension Complete!\n${res.spirit.customName} attained ★${res.newTier} Ascension!\nBonus: +${res.bonusPercent}% Stats (${res.perk})`);
+          alert(`Ascension Complete!\n${res.spirit.customName} attained Tier ${res.newTier} Ascension!\nBonus: +${res.bonusPercent}% Stats (${res.perk})`);
           render();
         } catch (err) {
           alert(err.message);
@@ -343,26 +345,26 @@ export function showDetailedAttributesModal(spirit) {
       <div class="modal-box detailed-stats-modal" style="max-width: 620px; width: 95%; max-height: 90vh; overflow-y: auto;">
         
         <div class="modal-header">
-          <div class="modal-title-group">
-            <span class="modal-icon">📜</span>
+          <div class="modal-title-group" style="display: flex; align-items: center; gap: 8px;">
+            <span class="modal-icon" style="display: inline-flex; align-items: center;">${getGameIcon('scroll', { size: 20 })}</span>
             <div>
               <h3 style="margin: 0; font-family: var(--font-fantasy); color: #ffd32a;">
                 ${spirit.customName || species.name} — COMBAT ATTRIBUTE DOSSIER
               </h3>
               <span style="font-size: 11px; color: var(--text-muted);">
-                ${rarityInfo.name} • ${species.element} • ${roleInfo.name} • Tier ${rebirthTier > 0 ? `⭐${rebirthTier}` : '⭐0'}
+                ${rarityInfo.name} • ${species.element} • ${roleInfo.name} • Tier ${rebirthTier}
               </span>
             </div>
           </div>
-          <button class="modal-close-btn" id="btn-close-detailed-stats">✕</button>
+          <button class="modal-close-btn" id="btn-close-detailed-stats" style="display: flex; align-items: center; justify-content: center;">${getGameIcon('close', { size: 14 })}</button>
         </div>
 
         <div class="detailed-stats-body" style="display: flex; flex-direction: column; gap: 14px; padding: 12px 0;">
           
           <!-- Category 1: Offensive Parameters -->
           <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,71,87,0.25); border-radius: 8px; padding: 10px 12px;">
-            <div style="font-size: 11.5px; font-weight: 800; color: #ff4757; margin-bottom: 8px;">
-              ⚔️ OFFENSIVE CAPABILITIES & CRITICAL RATINGS
+            <div style="font-size: 11.5px; font-weight: 800; color: #ff4757; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              ${getGameIcon('swords', { size: 13, color: '#ff4757' })} OFFENSIVE CAPABILITIES & CRITICAL RATINGS
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; font-size: 11px;">
               <div style="display: flex; justify-content: space-between;">
@@ -394,8 +396,8 @@ export function showDetailedAttributesModal(spirit) {
 
           <!-- Category 2: Defensive & Survival Parameters -->
           <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(30,144,255,0.25); border-radius: 8px; padding: 10px 12px;">
-            <div style="font-size: 11.5px; font-weight: 800; color: #1e90ff; margin-bottom: 8px;">
-              🛡️ DEFENSIVE MITIGATION & VITALITY
+            <div style="font-size: 11.5px; font-weight: 800; color: #1e90ff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              ${getStatIcon('def', { size: 13, color: '#1e90ff' })} DEFENSIVE MITIGATION & VITALITY
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; font-size: 11px;">
               <div style="display: flex; justify-content: space-between;">
@@ -427,8 +429,8 @@ export function showDetailedAttributesModal(spirit) {
 
           <!-- Category 3: Energy, Cadence & Rebirth -->
           <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(241,196,15,0.25); border-radius: 8px; padding: 10px 12px;">
-            <div style="font-size: 11.5px; font-weight: 800; color: #ffd32a; margin-bottom: 8px;">
-              ⚡ ENERGY REPLENISHMENT & REBIRTH MULTIPLIERS
+            <div style="font-size: 11.5px; font-weight: 800; color: #ffd32a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              ${getGameIcon('zap', { size: 13, color: '#ffd32a' })} ENERGY REPLENISHMENT & REBIRTH MULTIPLIERS
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; font-size: 11px;">
               <div style="display: flex; justify-content: space-between;">
@@ -441,7 +443,7 @@ export function showDetailedAttributesModal(spirit) {
               </div>
               <div style="display: flex; justify-content: space-between;">
                 <span style="color: var(--text-muted);">Current Rebirth Tier:</span>
-                <strong style="color: #ffd32a;">Tier ${rebirthTier > 0 ? `⭐${rebirthTier}` : '⭐0'}</strong>
+                <strong style="color: #ffd32a;">Tier ${rebirthTier}</strong>
               </div>
               <div style="display: flex; justify-content: space-between;">
                 <span style="color: var(--text-muted);">Rebirth All-Stat Multiplier:</span>
@@ -452,8 +454,8 @@ export function showDetailedAttributesModal(spirit) {
 
           <!-- Category 4: Dynamic Archetype Scaling Profile -->
           <div class="detailed-stat-category" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(168,85,247,0.25); border-radius: 8px; padding: 10px 12px;">
-            <div style="font-size: 11.5px; font-weight: 800; color: #a855f7; margin-bottom: 8px;">
-              🔮 54-SPIRIT DYNAMIC SCALING ARCHETYPE
+            <div style="font-size: 11.5px; font-weight: 800; color: #a855f7; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              ${getGameIcon('astralEssence', { size: 13, color: '#a855f7' })} 54-SPIRIT DYNAMIC SCALING ARCHETYPE
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
               <div><strong>Archetype Title:</strong> ${scaling.title} (${roleInfo.name})</div>

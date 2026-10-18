@@ -27,6 +27,7 @@ import { showLevelUpModal } from './ui/components/levelUpModal.js';
 import { FEATURE_UNLOCKS } from './data/contractorData.js';
 import { guidedTutorial, checkAreaTutorialTrigger } from './ui/components/guidedTutorial.js';
 import { showDevConsoleModal } from './ui/components/devConsoleModal.js';
+import { getGameIcon } from './ui/icons/gameIcons.js';
 
 let activeTab = 'madness';
 const viewContainer = document.getElementById('view-container');
@@ -105,7 +106,7 @@ function updateFeatureGatingUI() {
     btnTopIndex.classList.toggle('locked', !isIndexUnlocked);
     btnTopIndex.title = isIndexUnlocked 
       ? 'Spirit Bestiary & Lineages' 
-      : `🔒 Spirit Bestiary (Unlocks at Lv. ${FEATURE_UNLOCKS.BESTIARY_INDEX.level})`;
+      : `Spirit Bestiary (Locked: Lv. ${FEATURE_UNLOCKS.BESTIARY_INDEX.level})`;
   }
 
   // Nav drawer items
@@ -130,7 +131,7 @@ function updateFeatureGatingUI() {
           badge.className = 'drawer-lock-badge';
           item.appendChild(badge);
         }
-        badge.textContent = `🔒 Lv.${lockConfig.lvl}`;
+        badge.innerHTML = `${getGameIcon('lock', { size: 10, className: 'inline mr-0.5' })} Lv.${lockConfig.lvl}`;
       } else if (badge) {
         badge.remove();
       }
@@ -141,19 +142,19 @@ function updateFeatureGatingUI() {
 function switchTab(tabName) {
   // Feature Gating Checks
   if (tabName === 'index' && !gameState.isFeatureUnlocked('BESTIARY_INDEX')) {
-    showGameToast(`🔒 Spirit Bestiary unlocks at Contractor Level ${FEATURE_UNLOCKS.BESTIARY_INDEX.level}! Defeat enemies and summon spirits to gain EXP.`, 'lock');
+    showGameToast(`Spirit Bestiary unlocks at Contractor Level ${FEATURE_UNLOCKS.BESTIARY_INDEX.level}! Defeat enemies and summon spirits to gain EXP.`, 'lock');
     return;
   }
   if (tabName === 'trials' && !gameState.isFeatureUnlocked('PANTHEON_TRIALS')) {
-    showGameToast(`🔒 Pantheon Trials unlock at Contractor Level ${FEATURE_UNLOCKS.PANTHEON_TRIALS.level}! Clear floors in the Madness Zone to ascend.`, 'lock');
+    showGameToast(`Pantheon Trials unlock at Contractor Level ${FEATURE_UNLOCKS.PANTHEON_TRIALS.level}! Clear floors in the Madness Zone to ascend.`, 'lock');
     return;
   }
   if (tabName === 'forge' && !gameState.isFeatureUnlocked('DIVINE_FORGE')) {
-    showGameToast(`🔒 Divine Forge unlocks at Contractor Level ${FEATURE_UNLOCKS.DIVINE_FORGE.level}! Evolve spirits and defeat overlords to gain EXP.`, 'lock');
+    showGameToast(`Divine Forge unlocks at Contractor Level ${FEATURE_UNLOCKS.DIVINE_FORGE.level}! Evolve spirits and defeat overlords to gain EXP.`, 'lock');
     return;
   }
   if (tabName === 'mystical' && !gameState.isFeatureUnlocked('SANCTUARY_ESSENCE')) {
-    showGameToast(`🔒 Sanctuary of the Gods unlocks at Contractor Level ${FEATURE_UNLOCKS.SANCTUARY_ESSENCE.level}! Refine gear and conquer trials to level up.`, 'lock');
+    showGameToast(`Sanctuary of the Gods unlocks at Contractor Level ${FEATURE_UNLOCKS.SANCTUARY_ESSENCE.level}! Refine gear and conquer trials to level up.`, 'lock');
     return;
   }
 
@@ -369,13 +370,13 @@ function updateAuthDisplay() {
   if (btnTopAuth) {
     if (isGuest) {
       btnTopAuth.classList.remove('cloud-active');
-      if (authStatusIcon) authStatusIcon.textContent = '💾';
+      if (authStatusIcon) authStatusIcon.innerHTML = getGameIcon('save', { size: 14, className: 'text-amber-400' });
       if (authStatusText) {
         authStatusText.textContent = profile.username === 'Apprentice Contractor' ? 'Guest' : profile.username;
       }
     } else {
       btnTopAuth.classList.add('cloud-active');
-      if (authStatusIcon) authStatusIcon.textContent = '☁️';
+      if (authStatusIcon) authStatusIcon.innerHTML = getGameIcon('cloud', { size: 14, className: 'text-emerald-400' });
       if (authStatusText) {
         authStatusText.textContent = profile.username || 'Online';
       }
@@ -478,7 +479,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const updateAudioUI = () => {
     if (audioIconSymbol) {
-      audioIconSymbol.textContent = audioManager.isMuted ? '🔇' : '🔊';
+      audioIconSymbol.innerHTML = audioManager.isMuted 
+        ? getGameIcon('audioOff', { size: '15px' }) 
+        : getGameIcon('audioOn', { size: '15px' });
     }
     if (btnTopAudio) {
       btnTopAudio.classList.toggle('muted', audioManager.isMuted);

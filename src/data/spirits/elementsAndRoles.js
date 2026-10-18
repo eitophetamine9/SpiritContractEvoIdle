@@ -1,10 +1,12 @@
+import { getElementIcon, getRoleIcon, getGameIcon } from '../../ui/icons/gameIcons.js';
+
 export const ELEMENTS = {
-  FIRE: { name: 'Fire', color: '#ff4438', bg: '#2b0d0c', border: '#ff6b5c', symbol: '🔥' },
-  WATER: { name: 'Water', color: '#00c3ff', bg: '#081f2f', border: '#42d4ff', symbol: '💧' },
-  EARTH: { name: 'Earth', color: '#2ecc71', bg: '#0b2413', border: '#58d68d', symbol: '🌿' },
-  WIND: { name: 'Wind', color: '#e0c93c', bg: '#29250a', border: '#f7dc6f', symbol: '🌪️' },
-  DARK: { name: 'Void', color: '#b342ff', bg: '#210c30', border: '#c766ff', symbol: '🔮' },
-  LIGHT: { name: 'Solar', color: '#ffb300', bg: '#2f2005', border: '#ffc107', symbol: '✨' },
+  FIRE: { name: 'Fire', color: '#ff4438', bg: '#2b0d0c', border: '#ff6b5c', iconKey: 'elementFire', symbol: getElementIcon('FIRE', { size: '13px' }) },
+  WATER: { name: 'Water', color: '#00c3ff', bg: '#081f2f', border: '#42d4ff', iconKey: 'elementWater', symbol: getElementIcon('WATER', { size: '13px' }) },
+  EARTH: { name: 'Earth', color: '#2ecc71', bg: '#0b2413', border: '#58d68d', iconKey: 'elementEarth', symbol: getElementIcon('EARTH', { size: '13px' }) },
+  WIND: { name: 'Wind', color: '#e0c93c', bg: '#29250a', border: '#f7dc6f', iconKey: 'elementWind', symbol: getElementIcon('WIND', { size: '13px' }) },
+  DARK: { name: 'Void', color: '#b342ff', bg: '#210c30', border: '#c766ff', iconKey: 'elementDark', symbol: getElementIcon('DARK', { size: '13px' }) },
+  LIGHT: { name: 'Solar', color: '#ffb300', bg: '#2f2005', border: '#ffc107', iconKey: 'elementLight', symbol: getElementIcon('LIGHT', { size: '13px' }) },
 };
 
 export const RARITIES = {
@@ -30,7 +32,8 @@ export const ROLES = {
     id: 'MAIN_DPS',
     name: 'Main DPS',
     title: 'Executioner & Frontline Cleaver',
-    icon: '⚔️',
+    iconKey: 'roleMainDps',
+    icon: getRoleIcon('MAIN_DPS', { size: '14px' }),
     color: '#ff4757',
     bg: 'rgba(255, 71, 87, 0.15)',
     border: '#ff4757',
@@ -43,7 +46,8 @@ export const ROLES = {
     id: 'SUB_DPS',
     name: 'Sub-DPS',
     title: 'Elemental Flanker & Cleaver',
-    icon: '🗡️',
+    iconKey: 'roleSubDps',
+    icon: getRoleIcon('SUB_DPS', { size: '14px' }),
     color: '#ffa502',
     bg: 'rgba(255, 165, 2, 0.15)',
     border: '#ffa502',
@@ -56,7 +60,8 @@ export const ROLES = {
     id: 'TANK',
     name: 'Tank (Guardian)',
     title: 'Vanguard Bulwark & Protector',
-    icon: '🛡️',
+    iconKey: 'roleTank',
+    icon: getRoleIcon('TANK', { size: '14px' }),
     color: '#1e90ff',
     bg: 'rgba(30, 144, 255, 0.15)',
     border: '#1e90ff',
@@ -69,7 +74,8 @@ export const ROLES = {
     id: 'SUPPORT',
     name: 'Support',
     title: 'Tactical Buffer & Energy Battery',
-    icon: '🪄',
+    iconKey: 'roleSupport',
+    icon: getRoleIcon('SUPPORT', { size: '14px' }),
     color: '#9b59b6',
     bg: 'rgba(155, 89, 182, 0.15)',
     border: '#9b59b6',
@@ -82,7 +88,8 @@ export const ROLES = {
     id: 'HEALER',
     name: 'Healer',
     title: 'Restorer of Vitality & Life Bloom',
-    icon: '💚',
+    iconKey: 'roleHealer',
+    icon: getRoleIcon('HEALER', { size: '14px' }),
     color: '#2ed573',
     bg: 'rgba(46, 213, 115, 0.15)',
     border: '#2ed573',
@@ -92,6 +99,7 @@ export const ROLES = {
     desc: 'Sustained party regeneration, emergency burst heals, revives, and protective barriers.'
   }
 };
+
 
 /**
  * Normalized stat weighting multipliers per role
@@ -163,33 +171,33 @@ export function calculatePartyResonance(spirits = []) {
 
   if (counts.FIRE >= 2) {
     buffs.atkPercent += 0.12;
-    buffs.activeLabels.push('🔥 Blaze Resonance (+12% ATK)');
+    buffs.activeLabels.push(`${getElementIcon('FIRE', { size: '14px' })} Blaze Resonance (+12% ATK)`);
   }
   if (counts.WATER >= 2) {
     buffs.maxHpPercent += 0.15;
-    buffs.activeLabels.push('💧 Ocean Resonance (+15% HP)');
+    buffs.activeLabels.push(`${getElementIcon('WATER', { size: '14px' })} Ocean Resonance (+15% HP)`);
   }
   if (counts.EARTH >= 2) {
     buffs.shieldPercent += 0.15;
-    buffs.activeLabels.push('🌿 Gaia Resonance (+15% Shield)');
+    buffs.activeLabels.push(`${getElementIcon('EARTH', { size: '14px' })} Gaia Resonance (+15% Shield)`);
   }
   if (counts.WIND >= 2) {
     buffs.evasionFlat += 0.10;
-    buffs.activeLabels.push('🌪️ Zephyr Resonance (+10% Evasion)');
+    buffs.activeLabels.push(`${getElementIcon('WIND', { size: '14px' })} Zephyr Resonance (+10% Evasion)`);
   }
   if (counts.LIGHT >= 2) {
     buffs.critDmgPercent += 0.15;
-    buffs.activeLabels.push('✨ Solar Resonance (+15% Crit DMG)');
+    buffs.activeLabels.push(`${getElementIcon('LIGHT', { size: '14px' })} Solar Resonance (+15% Crit DMG)`);
   }
   if (counts.DARK >= 2) {
     buffs.piercePercent += 0.10;
-    buffs.activeLabels.push('🔮 Nether Resonance (+10% Pierce)');
+    buffs.activeLabels.push(`${getElementIcon('DARK', { size: '14px' })} Nether Resonance (+10% Pierce)`);
   }
 
   const distinctElements = Object.values(counts).filter(c => c > 0).length;
   if (distinctElements >= 5) {
     buffs.allStatsPercent += 0.10;
-    buffs.activeLabels.push('🌈 Prismatic Resonance (+10% All Stats)');
+    buffs.activeLabels.push(`${getGameIcon('sparkle', { size: '14px', color: '#facc15' })} Prismatic Resonance (+10% All Stats)`);
   }
 
   return buffs;

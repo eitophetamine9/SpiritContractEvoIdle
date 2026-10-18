@@ -9,6 +9,7 @@ import {
 import { safePlaySfx } from '../../audio/audioManager.js';
 import { createAnimatedRelicHtml, createAnimatedWeaponHtml } from '../../render/spriteAnimator.js';
 import { closeActiveModal } from './modalBase.js';
+import { getGameIcon, getStatIcon, getSlotIcon, getGodIcon, getSubstatIcon } from '../icons/gameIcons.js';
 
 export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
   const modalRoot = document.getElementById('modal-root');
@@ -24,8 +25,8 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
     const { weapon, relics } = gameState.getSpiritEquippedItems(spirit);
     const currentItem = slotType === 'weapon' ? weapon : (relics ? relics[slotType] : null);
     const slotInfo = slotType === 'weapon' 
-      ? { id: 'weapon', name: 'Weapon', icon: '⚔️', desc: 'Main weapon providing raw ATK Power & offensive multipliers' }
-      : (RELIC_SLOT_TYPES.find(s => s.id === slotType) || { id: slotType, name: slotType, icon: '✨', desc: 'Relic slot' });
+      ? { id: 'weapon', name: 'Weapon', icon: 'sword', desc: 'Main weapon providing raw ATK Power & offensive multipliers' }
+      : (RELIC_SLOT_TYPES.find(s => s.id === slotType) || { id: slotType, name: slotType, icon: 'sparkle', desc: 'Relic slot' });
 
     const allEquipment = (gameState.state.inventory && gameState.state.inventory.equipment) || [];
     const availableItems = allEquipment.filter(item => {
@@ -68,13 +69,13 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
         <div class="modal-card modal-card-equipment">
           <div class="modal-header">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 22px;">${slotInfo.icon}</span>
+              <span style="display: inline-flex; align-items: center;">${getSlotIcon(slotInfo.id, { size: 22 })}</span>
               <div>
                 <h3 class="modal-title" style="margin: 0; font-size: 15px;">Equip ${slotInfo.name}</h3>
                 <span style="font-size: 11px; color: var(--text-muted);">${spirit.customName} • Lv. ${spirit.level}</span>
               </div>
             </div>
-            <button id="btn-close-equip-modal" class="modal-btn-close">✕</button>
+            <button id="btn-close-equip-modal" class="modal-btn-close" style="display: flex; align-items: center; justify-content: center;">${getGameIcon('close', { size: 14 })}</button>
           </div>
 
           <div style="font-size: 11px; color: var(--text-muted); margin: 6px 0 10px 0; line-height: 1.3;">
@@ -95,8 +96,8 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                   <div class="equip-item-name" style="color: ${currentItem.color || '#fff'};">
                     <span>${currentItem.name}</span>
                     ${isRelic ? `
-                      <span style="font-size: 11px; font-weight: 900; color: ${starColor}; letter-spacing: 1px;">
-                        ${'★'.repeat(stars)}
+                      <span style="display: inline-flex; align-items: center; gap: 1px; vertical-align: middle;">
+                        ${Array.from({ length: stars }, () => getGameIcon('star', { size: 11, color: starColor })).join('')}
                       </span>
                       <span style="font-size: 10px; font-weight: 800; color: #ffd32a; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,211,42,0.4);">
                         +${currentItem.level || 0}/15
@@ -108,12 +109,12 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                       </span>
                     `}
                   </div>
-                  <div class="equip-item-stat">
-                    ${currentItem.type === 'weapon' ? `⚡ +${currentItem.atkPower} ATK Power • +${currentItem.critRate}% Crit` : `⚡ +${currentItem.mainStatValue} ${currentItem.mainStatName}`}
+                  <div class="equip-item-stat" style="display: flex; align-items: center; gap: 4px;">
+                    ${currentItem.type === 'weapon' ? `${getGameIcon('zap', { size: 11, color: '#ffd32a' })} +${currentItem.atkPower} ATK Power • +${currentItem.critRate}% Crit` : `${getGameIcon('zap', { size: 11, color: '#ffd32a' })} +${currentItem.mainStatValue} ${currentItem.mainStatName}`}
                   </div>
                   ${currentItem.setId && GREEK_GOD_SETS[currentItem.setId] ? `
-                    <div class="equip-set-tag" style="color: ${GREEK_GOD_SETS[currentItem.setId].accentColor};">
-                      ${GREEK_GOD_SETS[currentItem.setId].icon} ${GREEK_GOD_SETS[currentItem.setId].name} (2pc/4pc Set)
+                    <div class="equip-set-tag" style="color: ${GREEK_GOD_SETS[currentItem.setId].accentColor}; display: flex; align-items: center; gap: 4px;">
+                      ${getGodIcon(currentItem.setId, { size: 11, color: GREEK_GOD_SETS[currentItem.setId].accentColor })} ${GREEK_GOD_SETS[currentItem.setId].name} (2pc/4pc Set)
                     </div>
                   ` : ''}
                   ${isRelic && currentItem.substats && currentItem.substats.length > 0 ? `
@@ -121,7 +122,7 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                       ${currentItem.substats.map(sub => `
                         <span style="font-size: 9px; font-weight: 700; color: #a4b0be; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 3px; padding: 2px 5px; display: inline-flex; align-items: center; gap: 4px;">
                           ${sub.name} <strong style="color: #2ed573;">+${sub.value}${sub.isPercent ? '%' : ''}</strong>
-                          ${sub.rolls && sub.rolls > 1 ? `<span class="substat-roll-badge">[★${sub.rolls} Rolls]</span>` : `<span class="substat-roll-badge-base">[★1 Roll]</span>`}
+                          ${sub.rolls && sub.rolls > 1 ? `<span class="substat-roll-badge">[${sub.rolls}x Rolls]</span>` : `<span class="substat-roll-badge-base">[1x Roll]</span>`}
                         </span>
                       `).join('')}
                     </div>
@@ -134,42 +135,42 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                 ${isRelic ? `
                   ${canEnhance ? `
                     <button class="btn-modal-enhance-slot" id="btn-modal-enhance" data-relic-uid="${currentItem.uid}">
-                      <span>⚡ Enhance (+${nextLevel})</span>
-                      <span class="enhance-cost-sub">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                      <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('zap', { size: 11 })} Enhance (+${nextLevel})</span>
+                      <span class="enhance-cost-sub" style="display: inline-flex; align-items: center; gap: 3px;">${shardCost} ${getGameIcon('crystal', { size: 10, color: '#70a1ff' })}${essenceCost > 0 ? ` • ${essenceCost} ${getGameIcon('sparkle', { size: 10, color: '#ffd152' })}` : ''}</span>
                     </button>
                   ` : `
-                    <div class="badge-max-enhance">
-                      ✓ +15 MAX
+                    <div class="badge-max-enhance" style="display: inline-flex; align-items: center; gap: 3px;">
+                      ${getGameIcon('check', { size: 11, color: '#2ed573' })} +15 MAX
                     </div>
                   `}
                   ${canAscend ? `
                     <button class="btn-modal-ascend-slot" id="btn-modal-ascend" data-relic-uid="${currentItem.uid}">
-                      <span>👑 Ascend to 6★</span>
-                      <span class="enhance-cost-sub">100 ✨ • 10 🔮</span>
+                      <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('crown', { size: 11, color: '#ffd32a' })} Ascend to Tier 6</span>
+                      <span class="enhance-cost-sub" style="display: inline-flex; align-items: center; gap: 3px;">100 ${getGameIcon('sparkle', { size: 10, color: '#ffd152' })} • 10 ${getGameIcon('astralEssence', { size: 10, color: '#c084fc' })}</span>
                     </button>
                   ` : ''}
-                  <button class="btn-modal-reroll-slot" id="btn-modal-reroll" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences">
-                    🔮 Reroll (5 🔮)
+                  <button class="btn-modal-reroll-slot" id="btn-modal-reroll" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences" style="display: inline-flex; align-items: center; gap: 4px;">
+                    ${getGameIcon('astralEssence', { size: 11, color: '#c084fc' })} Reroll (5)
                   </button>
-                  <button class="btn-modal-scripture-slot" id="btn-modal-scripture" data-relic-uid="${currentItem.uid}" title="Use Divine Relic Scripture to guarantee 2 substats">
-                    📜 Scripture (${gameState.state.resources.divineScriptures || 0})
+                  <button class="btn-modal-scripture-slot" id="btn-modal-scripture" data-relic-uid="${currentItem.uid}" title="Use Divine Relic Scripture to guarantee 2 substats" style="display: inline-flex; align-items: center; gap: 4px;">
+                    ${getGameIcon('scroll', { size: 11, color: '#ffd32a' })} Scripture (${gameState.state.resources.divineScriptures || 0})
                   </button>
-                  <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-relic-uid="${currentItem.uid}" title="View Details, Lore & Reassign">
-                    🔍 Details
+                  <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-relic-uid="${currentItem.uid}" title="View Details, Lore & Reassign" style="display: inline-flex; align-items: center; gap: 4px;">
+                    ${getGameIcon('search', { size: 11 })} Details
                   </button>
                 ` : isWeapon ? `
                   ${canEnhance ? `
                     <button class="btn-modal-enhance-slot" id="btn-modal-enhance-weapon" data-weapon-uid="${currentItem.uid}">
-                      <span>⚡ Enhance (+${nextLevel})</span>
-                      <span class="enhance-cost-sub">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                      <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('zap', { size: 11 })} Enhance (+${nextLevel})</span>
+                      <span class="enhance-cost-sub" style="display: inline-flex; align-items: center; gap: 3px;">${shardCost} ${getGameIcon('crystal', { size: 10, color: '#70a1ff' })}${essenceCost > 0 ? ` • ${essenceCost} ${getGameIcon('sparkle', { size: 10, color: '#ffd152' })}` : ''}</span>
                     </button>
                   ` : `
-                    <div class="badge-max-enhance">
-                      ✓ +15 MAX
+                    <div class="badge-max-enhance" style="display: inline-flex; align-items: center; gap: 3px;">
+                      ${getGameIcon('check', { size: 11, color: '#2ed573' })} +15 MAX
                     </div>
                   `}
-                  <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-weapon-uid="${currentItem.uid}" title="View Details, Lore & Reassign">
-                    🔍 Details
+                  <button class="btn-modal-inspect-slot" id="btn-modal-inspect-item" data-weapon-uid="${currentItem.uid}" title="View Details, Lore & Reassign" style="display: inline-flex; align-items: center; gap: 4px;">
+                    ${getGameIcon('search', { size: 11 })} Details
                   </button>
                 ` : ''}
                 <button class="btn-unequip-slot" id="btn-modal-unequip" data-slot="${slotType}">
@@ -192,8 +193,8 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
             ${availableItems.length === 0 ? `
               <div class="empty-bag-notice">
                 <p>No other ${slotInfo.name} items in your equipment inventory.</p>
-                <button id="btn-modal-goto-trials" class="btn-goto-dungeon-action">
-                  🏛️ Challenge Pantheon Trials
+                <button id="btn-modal-goto-trials" class="btn-goto-dungeon-action" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                  ${getGameIcon('temple', { size: 14, color: '#ffd32a' })} Challenge Pantheon Trials
                 </button>
               </div>
             ` : `
@@ -220,12 +221,12 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                             ${item.type === 'relic' ? `<span style="font-size: 10px; font-weight: 800; color: #ffd32a;">+${item.level || 0}</span>` : ''}
                             <span class="equip-rarity-pill" style="border-color: ${item.color}; color: ${item.color}; font-size: 9px;">${item.rarity}</span>
                           </div>
-                          <div class="equip-item-stat">
-                            ${item.type === 'weapon' ? `⚡ +${item.atkPower} ATK Power • +${item.critRate}% Crit` : `⚡ +${item.mainStatValue} ${item.mainStatName}`}
+                          <div class="equip-item-stat" style="display: flex; align-items: center; gap: 4px;">
+                            ${item.type === 'weapon' ? `${getGameIcon('zap', { size: 11, color: '#ffd32a' })} +${item.atkPower} ATK Power • +${item.critRate}% Crit` : `${getGameIcon('zap', { size: 11, color: '#ffd32a' })} +${item.mainStatValue} ${item.mainStatName}`}
                           </div>
                           ${godSet ? `
-                            <div class="equip-set-tag" style="color: ${godSet.accentColor}; font-size: 10px;">
-                              ${godSet.icon} ${godSet.name}
+                            <div class="equip-set-tag" style="color: ${godSet.accentColor}; font-size: 10px; display: flex; align-items: center; gap: 4px;">
+                              ${getGodIcon(item.setId, { size: 11, color: godSet.accentColor })} ${godSet.name}
                             </div>
                           ` : ''}
                           ${equippedToOther ? `
@@ -244,13 +245,13 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                             Equip
                           </button>
                           ${item.type === 'relic' ? `
-                            <button class="btn-action-upgrade" data-inspect-uid="${item.uid}" title="Upgrade Artifact">
-                              ⚡
+                            <button class="btn-action-upgrade" data-inspect-uid="${item.uid}" title="Upgrade Artifact" style="display: flex; align-items: center; justify-content: center;">
+                              ${getGameIcon('zap', { size: 12 })}
                             </button>
                           ` : ''}
                           ${!item.equippedToSpiritId ? `
-                            <button class="btn-action-dismantle" data-dismantle-uid="${item.uid}" title="Dismantle for Spirit Shards">
-                              ♻️
+                            <button class="btn-action-dismantle" data-dismantle-uid="${item.uid}" title="Dismantle for Spirit Shards" style="display: flex; align-items: center; justify-content: center;">
+                              ${getGameIcon('recycle', { size: 12 })}
                             </button>
                           ` : ''}
                         `}
@@ -316,7 +317,7 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
       try {
         const res = gameState.ascendRelic(currentItem.uid);
         try { safePlaySfx('evolution'); } catch {}
-        alert(`🌟 Ascended ${currentItem.name} to 6★! Unlocked 5th Substat slot!`);
+        alert(`Ascended ${currentItem.name} to Tier 6! Unlocked 5th Substat slot!`);
         renderModal();
         if (onUpdate) onUpdate();
       } catch (err) {
@@ -327,10 +328,10 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
     modalRoot.querySelector('#btn-modal-reroll')?.addEventListener('click', () => {
       const currentEssence = gameState.state.resources.soulEssence || 0;
       if (currentEssence < 5) {
-        alert(`Insufficient Soul Essence! Need 5 🔮 (You have ${currentEssence} 🔮).`);
+        alert(`Insufficient Soul Essence! Need 5 Astral Essence (You have ${currentEssence}).`);
         return;
       }
-      if (confirm('Spend 5 Soul Essences (🔮) to reroll all substats on this Relic?')) {
+      if (confirm('Spend 5 Soul Essences to reroll all substats on this Relic?')) {
         try {
           const res = gameState.rerollRelicSubstats(currentItem.uid);
           try { safePlaySfx('evolution'); } catch {}
@@ -444,7 +445,7 @@ export function showItemInspectModal({ item, onUpdate }) {
       5: '#ffd32a',
       6: '#ff4757'
     };
-    const starLabel = isRelic ? '★'.repeat(stars) : '';
+    const starLabel = isRelic ? Array.from({ length: stars }, () => getGameIcon('star', { size: 12, color: starColor })).join('') : '';
     const starColor = starColors[stars] || '#ffd32a';
 
     let nextLevel = 0;
@@ -492,7 +493,7 @@ export function showItemInspectModal({ item, onUpdate }) {
                 </h3>
                 <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
                   ${isRelic ? `
-                    <span style="font-size: 13px; font-weight: 900; color: ${starColor}; letter-spacing: 1px;">
+                    <span style="display: inline-flex; align-items: center; gap: 1px; vertical-align: middle;">
                       ${starLabel}
                     </span>
                     <span style="font-size: 11px; color: var(--text-muted);">
@@ -507,7 +508,7 @@ export function showItemInspectModal({ item, onUpdate }) {
                 </div>
               </div>
             </div>
-            <button id="btn-close-item-inspect" class="modal-close-btn">&times;</button>
+            <button id="btn-close-item-inspect" class="modal-close-btn" style="display: flex; align-items: center; justify-content: center;">${getGameIcon('close', { size: 14 })}</button>
           </div>
 
           <div class="modal-body" style="padding: 14px 16px;">
@@ -539,11 +540,11 @@ export function showItemInspectModal({ item, onUpdate }) {
                     SUBSTATS (${currentItem.substats.length}/${stars === 6 ? 5 : stars === 5 ? 4 : stars === 4 ? 4 : 3})
                   </div>
                   <div style="display: flex; gap: 4px;">
-                    <button id="btn-reroll-inspect-substats" class="btn-reroll-inspect-substats" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences">
-                      🔮 Reroll (5 🔮)
+                    <button id="btn-reroll-inspect-substats" class="btn-reroll-inspect-substats" data-relic-uid="${currentItem.uid}" title="Reroll all substats for 5 Soul Essences" style="display: inline-flex; align-items: center; gap: 4px;">
+                      ${getGameIcon('astralEssence', { size: 11, color: '#c084fc' })} Reroll (5)
                     </button>
-                    <button id="btn-inspect-scripture" class="btn-inspect-scripture" data-relic-uid="${currentItem.uid}" title="Use Divine Relic Scripture to guarantee 2 substats">
-                      📜 Scripture (${gameState.state.resources.divineScriptures || 0})
+                    <button id="btn-inspect-scripture" class="btn-inspect-scripture" data-relic-uid="${currentItem.uid}" title="Use Divine Relic Scripture to guarantee 2 substats" style="display: inline-flex; align-items: center; gap: 4px;">
+                      ${getGameIcon('scroll', { size: 11, color: '#ffd32a' })} Scripture (${gameState.state.resources.divineScriptures || 0})
                     </button>
                   </div>
                 </div>
@@ -552,7 +553,7 @@ export function showItemInspectModal({ item, onUpdate }) {
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 6px; background: rgba(255,255,255,0.04); border-radius: 4px;">
                       <span style="color: #dfe4ea;">• ${sub.name}</span>
                       <div style="display: flex; align-items: center; gap: 5px;">
-                        ${sub.rolls && sub.rolls > 1 ? `<span class="substat-roll-badge">[★${sub.rolls} Rolls]</span>` : `<span class="substat-roll-badge-base">[★1 Roll]</span>`}
+                        ${sub.rolls && sub.rolls > 1 ? `<span class="substat-roll-badge">[${sub.rolls}x Rolls]</span>` : `<span class="substat-roll-badge-base">[1x Roll]</span>`}
                         <span style="font-weight: 800; color: #2ed573;">+${sub.value}${sub.isPercent ? '%' : ''}</span>
                       </div>
                     </div>
@@ -564,8 +565,8 @@ export function showItemInspectModal({ item, onUpdate }) {
             <!-- Set Bonus Details if Relic -->
             ${godSet ? `
               <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 10px; border-left: 3px solid ${godSet.color};">
-                <div style="font-size: 11px; font-weight: 800; color: ${godSet.accentColor}; margin-bottom: 4px;">
-                  ${godSet.name} (${godSet.god})
+                <div style="font-size: 11px; font-weight: 800; color: ${godSet.accentColor}; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                  ${getGodIcon(currentItem.setId, { size: 12, color: godSet.accentColor })} ${godSet.name} (${godSet.god})
                 </div>
                 <div style="font-size: 11px; color: #ccc; margin-bottom: 3px;">
                   <strong>2-pc:</strong> ${godSet.bonus2pc.description}
@@ -581,19 +582,19 @@ export function showItemInspectModal({ item, onUpdate }) {
               <div style="display: flex; gap: 6px; margin-bottom: 12px;">
                 ${canEnhance ? `
                   <button id="btn-enhance-relic" class="btn-drawer-action" style="flex: 1; background: linear-gradient(135deg, #f39c12, #d35400); color: #fff; font-weight: 800; min-height: 42px;">
-                    ⚡ Enhance Relic (+${nextLevel})<br>
-                    <span style="font-size: 10px; opacity: 0.9;">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('zap', { size: 12 })} Enhance Relic (+${nextLevel})</span><br>
+                    <span style="font-size: 10px; opacity: 0.9; display: inline-flex; align-items: center; gap: 3px;">${shardCost} ${getGameIcon('crystal', { size: 10, color: '#70a1ff' })}${essenceCost > 0 ? ` • ${essenceCost} ${getGameIcon('sparkle', { size: 10, color: '#ffd152' })}` : ''}</span>
                   </button>
                 ` : `
-                  <div style="flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: #2ecc71; padding: 10px; background: rgba(46,204,113,0.1); border-radius: 6px;">
-                    ✓ Max Enhancement (+15)
+                  <div style="flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: #2ecc71; padding: 10px; background: rgba(46,204,113,0.1); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                    ${getGameIcon('check', { size: 12, color: '#2ecc71' })} Max Enhancement (+15)
                   </div>
                 `}
 
                 ${canAscend ? `
                   <button id="btn-ascend-relic" class="btn-drawer-action" style="flex: 1; background: linear-gradient(135deg, #e74c3c, #8e44ad); color: #fff; font-weight: 900; min-height: 42px;">
-                    👑 Ascend to 6★<br>
-                    <span style="font-size: 10px; opacity: 0.9;">100 ✨ • 10 🔮</span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('crown', { size: 12, color: '#ffd32a' })} Ascend to Tier 6</span><br>
+                    <span style="font-size: 10px; opacity: 0.9; display: inline-flex; align-items: center; gap: 3px;">100 ${getGameIcon('sparkle', { size: 10, color: '#ffd152' })} • 10 ${getGameIcon('astralEssence', { size: 10, color: '#c084fc' })}</span>
                   </button>
                 ` : ''}
               </div>
@@ -601,12 +602,12 @@ export function showItemInspectModal({ item, onUpdate }) {
               <div style="display: flex; gap: 6px; margin-bottom: 12px;">
                 ${canEnhance ? `
                   <button id="btn-enhance-weapon" class="btn-drawer-action" style="flex: 1; background: linear-gradient(135deg, #f39c12, #d35400); color: #fff; font-weight: 800; min-height: 42px;">
-                    ⚡ Enhance Weapon (+${nextLevel})<br>
-                    <span style="font-size: 10px; opacity: 0.9;">${shardCost} 💎${essenceCost > 0 ? ` • ${essenceCost} ✨` : ''}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px;">${getGameIcon('zap', { size: 12 })} Enhance Weapon (+${nextLevel})</span><br>
+                    <span style="font-size: 10px; opacity: 0.9; display: inline-flex; align-items: center; gap: 3px;">${shardCost} ${getGameIcon('crystal', { size: 10, color: '#70a1ff' })}${essenceCost > 0 ? ` • ${essenceCost} ${getGameIcon('sparkle', { size: 10, color: '#ffd152' })}` : ''}</span>
                   </button>
                 ` : `
-                  <div style="flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: #2ecc71; padding: 10px; background: rgba(46,204,113,0.1); border-radius: 6px;">
-                    ✓ Max Enhancement (+15)
+                  <div style="flex: 1; text-align: center; font-size: 11px; font-weight: 800; color: #2ecc71; padding: 10px; background: rgba(46,204,113,0.1); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                    ${getGameIcon('check', { size: 12, color: '#2ecc71' })} Max Enhancement (+15)
                   </div>
                 `}
               </div>
@@ -624,7 +625,7 @@ export function showItemInspectModal({ item, onUpdate }) {
                   const isEquippedHere = equippedSpirit && equippedSpirit.id === sp.id;
                   return `
                     <button class="btn-preset-sm btn-equip-to-spirit ${isEquippedHere ? 'active' : ''}" data-target-spirit="${sp.id}" style="${isEquippedHere ? 'background: #27ae60; color: #fff;' : ''}">
-                      ${isEquippedHere ? '✓ ' : ''}${sp.customName}
+                      ${isEquippedHere ? `${getGameIcon('check', { size: 10, color: '#fff' })} ` : ''}${sp.customName}
                     </button>
                   `;
                 }).join('')}
@@ -638,8 +639,8 @@ export function showItemInspectModal({ item, onUpdate }) {
                   Unequip
                 </button>
               ` : `
-                <button id="btn-dismantle-item" class="btn-drawer-action" style="flex: 1; background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675;">
-                  Dismantle (+${dismantleShards} 💎${dismantleEssences > 0 ? ` +${dismantleEssences} ✨` : ''})
+                <button id="btn-dismantle-item" class="btn-drawer-action" style="flex: 1; background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; color: #ff7675; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                  Dismantle (+${dismantleShards} ${getGameIcon('crystal', { size: 10, color: '#70a1ff' })}${dismantleEssences > 0 ? ` +${dismantleEssences} ${getGameIcon('sparkle', { size: 10, color: '#ffd152' })}` : ''})
                 </button>
               `}
               <button id="btn-close-item-done" class="btn-drawer-action" style="flex: 1; background: #34495e; color: #fff;">
@@ -688,10 +689,10 @@ export function showItemInspectModal({ item, onUpdate }) {
     modalRoot.querySelector('#btn-reroll-inspect-substats')?.addEventListener('click', () => {
       const currentEssence = gameState.state.resources.soulEssence || 0;
       if (currentEssence < 5) {
-        alert(`Insufficient Soul Essence! Need 5 🔮 (You have ${currentEssence} 🔮).`);
+        alert(`Insufficient Soul Essence! Need 5 Astral Essence (You have ${currentEssence}).`);
         return;
       }
-      if (confirm('Spend 5 Soul Essences (🔮) to reroll all substats on this Relic?')) {
+      if (confirm('Spend 5 Soul Essences to reroll all substats on this Relic?')) {
         try {
           const res = gameState.rerollRelicSubstats(currentItem.uid);
           try { safePlaySfx('evolution'); } catch {}
@@ -719,7 +720,7 @@ export function showItemInspectModal({ item, onUpdate }) {
       try {
         const res = gameState.ascendRelic(currentItem.uid);
         try { safePlaySfx('evolution'); } catch {}
-        alert(`🌟 Ascended ${currentItem.name} to 6★! Unlocked 5th Substat slot!`);
+        alert(`Ascended ${currentItem.name} to Tier 6! Unlocked 5th Substat slot!`);
         renderModal();
         if (onUpdate) onUpdate();
       } catch (err) {
@@ -803,13 +804,13 @@ export function showDivineScriptureModal({ relic, onUpdate }) {
         <div class="modal-card scripture-modal-card" style="max-width: 480px; width: 95%;">
           <div class="modal-header scripture-modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 24px;">📜</span>
+              <span style="display: inline-flex; align-items: center;">${getGameIcon('scroll', { size: 24, color: '#ffd32a' })}</span>
               <div>
                 <h3 style="margin: 0; font-size: 16px; font-weight: 900; color: #ffd32a; letter-spacing: 0.5px;">Divine Relic Scripture</h3>
                 <span style="font-size: 10px; color: var(--text-muted);">Inscribe 2 Guaranteed Substats</span>
               </div>
             </div>
-            <button id="btn-close-scripture-modal" class="modal-btn-close" style="background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer;">✕</button>
+            <button id="btn-close-scripture-modal" class="modal-btn-close" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">${getGameIcon('close', { size: 14 })}</button>
           </div>
 
           <div class="scripture-relic-preview" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(0,0,0,0.4); border: 1px solid ${relic.color || 'rgba(255,255,255,0.1)'}; border-radius: 8px; margin-bottom: 14px;">
@@ -820,9 +821,9 @@ export function showDivineScriptureModal({ relic, onUpdate }) {
               <div style="font-size: 13px; font-weight: 800; color: ${relic.color || '#fff'};">
                 ${relic.name} <span style="font-size: 11px; color: #ffd32a;">+${relic.level || 0}</span>
               </div>
-              <div style="font-size: 10px; color: #a4b0be;">
+              <div style="font-size: 10px; color: #a4b0be; display: flex; align-items: center; gap: 4px;">
                 Main: <strong style="color: #2ed573;">+${relic.mainStatValue} ${relic.mainStatName}</strong>
-                ${godSet ? ` • ${godSet.icon} ${godSet.name}` : ''}
+                ${godSet ? `<span style="display: inline-flex; align-items: center; gap: 3px;">• ${getGodIcon(relic.setId, { size: 11, color: godSet.accentColor })} ${godSet.name}</span>` : ''}
               </div>
             </div>
           </div>
@@ -830,13 +831,13 @@ export function showDivineScriptureModal({ relic, onUpdate }) {
           <!-- Scripture stock & Buy info -->
           <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 211, 42, 0.08); border: 1px solid rgba(255, 211, 42, 0.25); border-radius: 6px; padding: 8px 12px; margin-bottom: 14px;">
             <div>
-              <div style="font-size: 11px; font-weight: 800; color: #ffd32a;">
-                📜 Owned Scriptures: <span style="font-size: 14px; color: #fff;">${scriptureCount}</span>
+              <div style="font-size: 11px; font-weight: 800; color: #ffd32a; display: flex; align-items: center; gap: 4px;">
+                ${getGameIcon('scroll', { size: 12, color: '#ffd32a' })} Owned Scriptures: <span style="font-size: 14px; color: #fff;">${scriptureCount}</span>
               </div>
               <div style="font-size: 9px; color: #ccc;">Consumes 1 Scripture per inscription</div>
             </div>
-            <button id="btn-buy-scripture" class="btn-buy-scripture-action" style="background: linear-gradient(135deg, #8e44ad, #9b59b6); border: 1px solid #be2edd; color: #fff; font-size: 10px; font-weight: 800; padding: 6px 10px; border-radius: 5px; cursor: pointer;">
-              🔮 Buy 1 (15 🔮)
+            <button id="btn-buy-scripture" class="btn-buy-scripture-action" style="background: linear-gradient(135deg, #8e44ad, #9b59b6); border: 1px solid #be2edd; color: #fff; font-size: 10px; font-weight: 800; padding: 6px 10px; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              ${getGameIcon('astralEssence', { size: 11, color: '#fff' })} Buy 1 (15 Astral)
             </button>
           </div>
 
@@ -856,11 +857,11 @@ export function showDivineScriptureModal({ relic, onUpdate }) {
                 return `
                   <div class="scripture-sub-choice ${isSelected ? 'selected' : ''}" data-sub-id="${sub.id}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: ${isSelected ? 'rgba(46, 213, 115, 0.2)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${isSelected ? '#2ed573' : 'rgba(255,255,255,0.08)'}; border-radius: 6px; cursor: pointer; transition: all 0.15s ease;">
                     <div style="display: flex; align-items: center; gap: 6px;">
-                      <span style="font-size: 14px;">${sub.icon}</span>
+                      <span style="display: inline-flex; align-items: center;">${getSubstatIcon(sub.id, { size: 13 })}</span>
                       <span style="font-size: 11px; font-weight: 700; color: ${isSelected ? '#fff' : '#dfe4ea'};">${sub.name}</span>
                     </div>
-                    <span style="font-size: 11px; font-weight: 900; color: ${isSelected ? '#2ed573' : '#666'};">
-                      ${isSelected ? '✓' : '+'}
+                    <span style="font-size: 11px; font-weight: 900; color: ${isSelected ? '#2ed573' : '#666'}; display: inline-flex; align-items: center;">
+                      ${isSelected ? getGameIcon('check', { size: 11, color: '#2ed573' }) : '+'}
                     </span>
                   </div>
                 `;
@@ -869,12 +870,12 @@ export function showDivineScriptureModal({ relic, onUpdate }) {
           </div>
 
           <div style="font-size: 10px; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 6px;">
-            ℹ️ The 2 selected substats will be guaranteed on this relic. Remaining slots roll randomly, and all enhancement milestones will be redistributed across them!
+            <span style="display: inline-flex; align-items: center; gap: 4px; vertical-align: middle;">${getGameIcon('bulb', { size: 12, color: '#70a1ff' })}</span> The 2 selected substats will be guaranteed on this relic. Remaining slots roll randomly, and all enhancement milestones will be redistributed across them!
           </div>
 
           <div style="display: flex; gap: 8px;">
-            <button id="btn-apply-scripture" class="modal-btn-confirm" ${selectedSubTypes.length !== 2 || scriptureCount < 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed; flex: 1;"' : 'style="flex: 1; background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900;"'}>
-              📜 Inscribe Relic (Use 1 Scripture)
+            <button id="btn-apply-scripture" class="modal-btn-confirm" ${selectedSubTypes.length !== 2 || scriptureCount < 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed; flex: 1;"' : 'style="flex: 1; background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; gap: 6px;"'}>
+              ${getGameIcon('scroll', { size: 13, color: '#000' })} Inscribe Relic (Use 1 Scripture)
             </button>
             <button id="btn-cancel-scripture" class="btn-drawer-action" style="background: #34495e; color: #fff; padding: 8px 16px;">
               Cancel
@@ -929,7 +930,7 @@ export function showDivineScriptureModal({ relic, onUpdate }) {
       try {
         const res = gameState.applyDivineScripture(relic.uid, selectedSubTypes[0], selectedSubTypes[1]);
         try { safePlaySfx('evolution'); } catch {}
-        alert(`📜 Successfully inscribed ${relic.name}! Guaranteed: ${selectedSubTypes.map(id => RELIC_SUBSTAT_TYPES.find(s => s.id === id)?.name).join(' & ')}!`);
+        alert(`Successfully inscribed ${relic.name}! Guaranteed: ${selectedSubTypes.map(id => RELIC_SUBSTAT_TYPES.find(s => s.id === id)?.name).join(' & ')}!`);
         modalRoot.innerHTML = '';
         if (onUpdate) onUpdate();
       } catch (err) {

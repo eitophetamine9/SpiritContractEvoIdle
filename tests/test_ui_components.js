@@ -1100,7 +1100,7 @@ if (!modalRootEl.innerHTML.includes('Dev & Admin Cheat Console') ||
     !modalRootEl.innerHTML.includes('dev-cheat-input') ||
     !modalRootEl.innerHTML.includes('Floor Skip Controls') ||
     !modalRootEl.innerHTML.includes('Boost Any Currency') ||
-    !modalRootEl.innerHTML.includes('Purified Soul ✨:')) {
+    !modalRootEl.innerHTML.includes('Purified Soul')) {
   throw new Error('showDevConsoleModal failed to render console with all currency cheat controls and admin email!');
 }
 

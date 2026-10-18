@@ -6,6 +6,7 @@
 import { gameState } from '../../state/gameState.js';
 import { ESSENCE_CHAMBERS, ESSENCE_DIFFICULTY_TIERS } from '../../data/essenceDungeonData.js';
 import { createAnimatedSpriteHtml } from '../../render/spriteAnimator.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 import {
   renderEnergySectionHtml,
@@ -35,14 +36,14 @@ let isCosmicBoonsOpen = false;
 let realmAnimClass = '';
 
 export const REALM_SECTIONS = [
-  { id: 'dungeon', name: 'Sanctuary (Essence)', icon: '🏛️' },
-  { id: 'zodiac', name: 'Zodiac (Constellations)', icon: '🌌' },
-  { id: 'expeditions', name: 'Astral Expeditions', icon: '🧭' },
-  { id: 'dwarven', name: "Dwarven's Forge", icon: '⚒️' },
-  { id: 'transmute', name: 'Daily Transmute', icon: '⚗️' },
-  { id: 'energy', name: 'Energy Vault', icon: '⚡' },
-  { id: 'potions', name: 'EXP Elixirs', icon: '🧪' },
-  { id: 'blessings', name: 'Passive Blessings', icon: '✨' },
+  { id: 'dungeon', name: 'Sanctuary (Essence)', iconKey: 'temple' },
+  { id: 'zodiac', name: 'Zodiac (Constellations)', iconKey: 'realm' },
+  { id: 'expeditions', name: 'Astral Expeditions', iconKey: 'compass' },
+  { id: 'dwarven', name: "Dwarven's Forge", iconKey: 'hammer' },
+  { id: 'transmute', name: 'Daily Transmute', iconKey: 'alembic' },
+  { id: 'energy', name: 'Energy Vault', iconKey: 'energy' },
+  { id: 'potions', name: 'EXP Elixirs', iconKey: 'potion' },
+  { id: 'blessings', name: 'Passive Blessings', iconKey: 'sparkle' },
 ];
 
 export function setActiveRealmSection(tab) {
@@ -102,21 +103,21 @@ function renderMysticalSanctumScreen(container) {
           <div class="flex flex-col gap-2 flex-1 min-w-0">
             <div class="flex items-center justify-between gap-2 flex-wrap">
               <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-                ✨ SANCTUM OF THE DIVINE
+                ${getGameIcon('sparkle', { size: 10 })} SANCTUM OF THE DIVINE
               </div>
 
               <!-- Currency Badges -->
               <div class="flex items-center gap-1.5 flex-wrap">
-                <div class="mystical-stat-chip" title="Essences of the Gods">
-                  <span class="text-cyan-400 font-bold">💠 Gods:</span>
+                <div class="mystical-stat-chip inline-flex items-center gap-1" title="Essences of the Gods">
+                  <span class="text-cyan-400 font-bold inline-flex items-center gap-1">${getGameIcon('godsEssence', { size: 12 })} Gods:</span>
                   <strong class="text-cyan-200 font-black">${(res.essencesOfTheGods || 0).toLocaleString()}</strong>
                 </div>
-                <div class="mystical-stat-chip" title="Astral Essence">
-                  <span class="text-purple-400 font-bold">🔮 Astral:</span>
+                <div class="mystical-stat-chip inline-flex items-center gap-1" title="Astral Essence">
+                  <span class="text-purple-400 font-bold inline-flex items-center gap-1">${getGameIcon('astralEssence', { size: 12 })} Astral:</span>
                   <strong class="text-purple-200 font-black">${(res.soulEssence || 0).toLocaleString()}</strong>
                 </div>
-                <div class="mystical-stat-chip" title="Energy Capacity">
-                  <span class="text-amber-400 font-bold">⚡</span>
+                <div class="mystical-stat-chip inline-flex items-center gap-1" title="Energy Capacity">
+                  ${getGameIcon('energy', { size: 12, color: '#facc15' })}
                   <strong class="text-amber-300 font-black">${res.energy}/${currentMaxEnergy}</strong>
                 </div>
               </div>
@@ -124,7 +125,7 @@ function renderMysticalSanctumScreen(container) {
 
             <div>
               <h2 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-                <span>🌌</span> The Astral Realm
+                ${getGameIcon('realm', { size: 16, color: '#38bdf8' })} The Astral Realm
               </h2>
               <p class="text-[11px] text-slate-400 leading-snug mt-0.5">
                 Harness Astral Essences & Essences of the Gods to brew elixirs, ascend spirits, forge divine scriptures, and awaken cosmic constellations.
@@ -150,7 +151,7 @@ function renderMysticalSanctumScreen(container) {
           <select id="select-realm-area" class="chamber-dropdown">
             ${REALM_SECTIONS.map(s => {
               const isSelected = s.id === activeRealmSection;
-              return `<option value="${s.id}" ${isSelected ? 'selected' : ''}>${s.icon} ${s.name}</option>`;
+              return `<option value="${s.id}" ${isSelected ? 'selected' : ''}>${s.name}</option>`;
             }).join('')}
           </select>
         </div>
@@ -164,35 +165,35 @@ function renderMysticalSanctumScreen(container) {
       <!-- Realm Navigation Section Tabs: 8-Tab Responsive Modern Dock -->
       <div class="realm-tab-grid">
         <button class="realm-tab-btn ${activeRealmSection === 'dungeon' ? 'active' : ''}" data-realm-tab="dungeon">
-          <span class="text-sm pointer-events-none">🏛️</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('temple', { size: 15 })}</span>
           <span class="truncate pointer-events-none">Sanctuary</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'zodiac' ? 'active' : ''}" data-realm-tab="zodiac">
-          <span class="text-sm pointer-events-none">🌌</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('realm', { size: 15 })}</span>
           <span class="truncate pointer-events-none">Zodiac</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'expeditions' ? 'active' : ''}" data-realm-tab="expeditions">
-          <span class="text-sm pointer-events-none">🧭</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('compass', { size: 15 })}</span>
           <span class="truncate pointer-events-none">Expeditions</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'dwarven' ? 'active' : ''}" data-realm-tab="dwarven">
-          <span class="text-sm pointer-events-none">⚒️</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('hammer', { size: 15 })}</span>
           <span class="truncate pointer-events-none">Dwarven's Forge</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'transmute' ? 'active' : ''}" data-realm-tab="transmute">
-          <span class="text-sm pointer-events-none">⚗️</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('alembic', { size: 15 })}</span>
           <span class="truncate pointer-events-none">Transmute</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'energy' ? 'active' : ''}" data-realm-tab="energy">
-          <span class="text-sm pointer-events-none">⚡</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('energy', { size: 15 })}</span>
           <span class="truncate pointer-events-none">Vault (${currentMaxEnergy})</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'potions' ? 'active' : ''}" data-realm-tab="potions">
-          <span class="text-sm pointer-events-none">🧪</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('potion', { size: 15 })}</span>
           <span class="truncate pointer-events-none">EXP Pots</span>
         </button>
         <button class="realm-tab-btn ${activeRealmSection === 'blessings' ? 'active' : ''}" data-realm-tab="blessings">
-          <span class="text-sm pointer-events-none">✨</span>
+          <span class="tab-icon-wrap pointer-events-none">${getGameIcon('sparkle', { size: 15 })}</span>
           <span class="truncate pointer-events-none">Blessings</span>
         </button>
       </div>

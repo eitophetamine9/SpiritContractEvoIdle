@@ -3,6 +3,7 @@ import { getRarityInfo } from '../../data/spiritsData.js';
 import { createAnimatedRelicHtml } from '../../render/spriteAnimator.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
 import { closeActiveModal } from './modalBase.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 export function showEvolutionCeremonyModal(evoResult, onDone) {
   const modalRoot = document.getElementById('modal-root');
@@ -13,7 +14,9 @@ export function showEvolutionCeremonyModal(evoResult, onDone) {
   modalRoot.innerHTML = `
     <div class="modal-backdrop">
       <div class="modal-card" style="border-color: ${isRare ? '#ffd700' : '#70a1ff'};">
-        <h2 class="modal-title">⚡ SPIRIT EVOLUTION!</h2>
+        <h2 class="modal-title" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+          ${getGameIcon('zap', { size: 18, color: isRare ? '#ffd700' : '#70a1ff' })} SPIRIT EVOLUTION!
+        </h2>
 
         <div class="evolution-display-box">
           <div class="evolution-cards-comparison">
@@ -21,15 +24,15 @@ export function showEvolutionCeremonyModal(evoResult, onDone) {
               ${createSpiritPlaceholderBox(evoResult.oldSpecies)}
             </div>
 
-            <div class="evolution-arrow">➔</div>
+            <div class="evolution-arrow">${getGameIcon('arrowRight', { size: 16 })}</div>
 
             <div class="evolution-card-frame">
               ${createSpiritPlaceholderBox(evoResult.spirit, { isCapped: false })}
             </div>
           </div>
 
-          <div class="variant-announcement ${isRare ? 'rare' : 'common'}">
-            ${isRare ? '🎉 ' + evoResult.variantName.toUpperCase() + ' (LUCKY ROLL!)' : '✨ ' + evoResult.variantName.toUpperCase()}
+          <div class="variant-announcement ${isRare ? 'rare' : 'common'}" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+            ${isRare ? `${getGameIcon('sparkle', { size: 12, color: '#facc15' })} ` + evoResult.variantName.toUpperCase() + ' (LUCKY ROLL!)' : `${getGameIcon('sparkle', { size: 12, color: '#38bdf8' })} ` + evoResult.variantName.toUpperCase()}
           </div>
 
           <div style="font-size: 16px; font-weight: 800; color: #ffffff;">
@@ -40,8 +43,8 @@ export function showEvolutionCeremonyModal(evoResult, onDone) {
             ${evoResult.newSpecies.description}
           </p>
 
-          <div class="evo-power-surge">
-            Power: ${evoResult.oldPower} ➔ ${evoResult.newPower} 
+          <div class="evo-power-surge" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+            Power: ${evoResult.oldPower} ${getGameIcon('arrowRight', { size: 11 })} ${evoResult.newPower} 
             (+${Math.round((evoResult.newPower / Math.max(1, evoResult.oldPower) - 1) * 100)}%)
           </div>
 
@@ -77,7 +80,9 @@ export function showSummonRevealModal(spirits, options = {}) {
     modalRoot.innerHTML = `
       <div class="modal-backdrop">
         <div class="modal-card" style="max-width: 460px;">
-          <h2 class="modal-title">📜 Spirit Contract Complete!</h2>
+          <h2 class="modal-title" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            ${getGameIcon('scroll', { size: 18, color: '#f59e0b' })} Spirit Contract Complete!
+          </h2>
           
           <div style="font-size: 12px; color: var(--text-muted); text-align: center;">
             ${count === 1 ? '1 Spirit summoned from the astral realm:' : `${count} Spirits bound by ancient contract:`}
@@ -92,8 +97,8 @@ export function showSummonRevealModal(spirits, options = {}) {
                 <div style="font-size: 11px; font-weight: 800; text-align: center; color: #fff;">
                   ${s.customName}
                 </div>
-                <div style="font-size: 10px; font-family: var(--font-mono); color: #2ed573;">
-                  ⚡ ${s.power} PWR
+                <div style="font-size: 10px; font-family: var(--font-mono); color: #2ed573; display: inline-flex; align-items: center; gap: 3px;">
+                  ${getGameIcon('zap', { size: 10, color: '#2ed573' })} ${s.power} PWR
                 </div>
               </div>
             `).join('')}
@@ -124,7 +129,7 @@ export function showSummonRevealModal(spirits, options = {}) {
   modalRoot.innerHTML = `
     <div class="summon-vortex-screen">
       <button id="btn-skip-summon-now" class="summon-skip-btn">
-        <span>⚡</span>
+        <span>${getGameIcon('zap', { size: 12, color: '#facc15' })}</span>
         <span>Skip Animation</span>
       </button>
 

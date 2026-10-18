@@ -4,12 +4,12 @@
  */
 
 export const RELIC_SLOT_TYPES = [
-  { id: 'headgear', name: 'Headgear', icon: '👑', desc: 'Divine crown granting massive life force (Bonus Max HP)' },
-  { id: 'totem', name: 'Totem', icon: '🗿', desc: 'Ancestral idol granting barrier wards (Shield Strength)' },
-  { id: 'ring', name: 'Ring', icon: '💍', desc: 'Band of celestial dominance (Bonus ATK Power)' },
-  { id: 'necklace', name: 'Necklace', icon: '📿', desc: 'Spiritual choker accelerating mana flow (Mana Replenish)' },
-  { id: 'orb', name: 'Orb', icon: '🔮', desc: 'Arcane sphere magnifying skill power (Ultimate Amplification)' },
-  { id: 'charm', name: 'Charm', icon: '🧿', desc: 'Lucky talisman granting agile evasion (Evasion Rating)' }
+  { id: 'headgear', name: 'Headgear', icon: 'headgear', desc: 'Divine crown granting massive life force (Bonus Max HP)' },
+  { id: 'totem', name: 'Totem', icon: 'totem', desc: 'Ancestral idol granting barrier wards (Shield Strength)' },
+  { id: 'ring', name: 'Ring', icon: 'ring', desc: 'Band of celestial dominance (Bonus ATK Power)' },
+  { id: 'necklace', name: 'Necklace', icon: 'necklace', desc: 'Spiritual choker accelerating mana flow (Mana Replenish)' },
+  { id: 'orb', name: 'Orb', icon: 'orb', desc: 'Arcane sphere magnifying skill power (Ultimate Amplification)' },
+  { id: 'charm', name: 'Charm', icon: 'charm', desc: 'Lucky talisman granting agile evasion (Evasion Rating)' }
 ];
 
 export const WEAPON_TYPES = [
@@ -18,7 +18,7 @@ export const WEAPON_TYPES = [
     name: 'Spectral Blade',
     archetype: 'Greatsword',
     role: 'MAIN_DPS',
-    icon: '⚔️',
+    icon: 'sword',
     primaryStat: 'atkPower',
     primaryStatName: 'Bonus ATK Power',
     abilityName: 'Starfall Cleave',
@@ -34,7 +34,7 @@ export const WEAPON_TYPES = [
     name: 'Celestial Bow',
     archetype: 'Longbow',
     role: 'SUB_DPS',
-    icon: '🏹',
+    icon: 'bow',
     primaryStat: 'critRate',
     primaryStatName: 'Crit Rate %',
     abilityName: 'Piercing Nova',
@@ -50,7 +50,7 @@ export const WEAPON_TYPES = [
     name: 'Astral Scepter',
     archetype: 'Staff',
     role: 'SUPPORT',
-    icon: '🪄',
+    icon: 'staff',
     primaryStat: 'manaReplenish',
     primaryStatName: 'Mana Replenish %',
     abilityName: 'Aura of Dawn',
@@ -66,7 +66,7 @@ export const WEAPON_TYPES = [
     name: 'Primordial Claws',
     archetype: 'Claws',
     role: 'MAIN_DPS',
-    icon: '🐾',
+    icon: 'claw',
     primaryStat: 'atkPower',
     primaryStatName: 'Bonus ATK Power',
     abilityName: 'Feral Frenzy',
@@ -82,7 +82,7 @@ export const WEAPON_TYPES = [
     name: 'Shadow Dagger',
     archetype: 'Daggers',
     role: 'SUB_DPS',
-    icon: '🗡️',
+    icon: 'dagger',
     primaryStat: 'evasion',
     primaryStatName: 'Evasion %',
     abilityName: 'Temporal Riposte',
@@ -98,7 +98,7 @@ export const WEAPON_TYPES = [
     name: 'Titan Mallet',
     archetype: 'Mallet',
     role: 'TANK',
-    icon: '🔨',
+    icon: 'hammer',
     primaryStat: 'armorPierce',
     primaryStatName: 'Armor Shred %',
     abilityName: 'Ground Slam',
@@ -115,7 +115,7 @@ export const WEAPON_TYPES = [
     name: 'Void Scythe',
     archetype: 'Scythe',
     role: 'MAIN_DPS',
-    icon: '🌾',
+    icon: 'scythe',
     primaryStat: 'critDmg',
     primaryStatName: 'Crit DMG %',
     abilityName: "Reaper's Harvest",
@@ -131,7 +131,7 @@ export const WEAPON_TYPES = [
     name: 'Aegis Tower Shield',
     archetype: 'Shield',
     role: 'TANK',
-    icon: '🛡️',
+    icon: 'shield',
     primaryStat: 'def',
     primaryStatName: 'Shield & DEF',
     abilityName: 'Bulwark of Dawn',
@@ -149,7 +149,7 @@ export const WEAPON_TYPES = [
     name: 'Abyssal Grimoire',
     archetype: 'Spellbook',
     role: 'SUPPORT',
-    icon: '📖',
+    icon: 'grimoire',
     primaryStat: 'ultAmp',
     primaryStatName: 'Ult Amp %',
     abilityName: 'Abyssal Chant',
@@ -165,7 +165,7 @@ export const WEAPON_TYPES = [
     name: 'Volcanic Warhammer',
     archetype: 'Warhammer',
     role: 'TANK',
-    icon: '🌋',
+    icon: 'warhammer',
     primaryStat: 'defToAtk',
     primaryStatName: 'DEF & Splash ATK',
     abilityName: 'Shatter Quake',
@@ -182,7 +182,7 @@ export const WEAPON_TYPES = [
     name: 'Frostfang Halberd',
     archetype: 'Halberd',
     role: 'SUB_DPS',
-    icon: '❄️',
+    icon: 'halberd',
     primaryStat: 'critRate',
     primaryStatName: 'Crit Rate & Chill',
     abilityName: 'Glacial Frost',
@@ -198,7 +198,7 @@ export const WEAPON_TYPES = [
     name: 'Verdant Tome',
     archetype: 'Nature Tome',
     role: 'HEALER',
-    icon: '🌿',
+    icon: 'tome',
     primaryStat: 'hp',
     primaryStatName: 'Max HP & Healing',
     abilityName: 'Living Bloom',
@@ -220,7 +220,7 @@ export const GREEK_GOD_SETS = {
     title: 'Lord of the Underworld',
     color: '#8e44ad',
     accentColor: '#9b59b6',
-    icon: '🔱',
+    icon: 'hades',
     bonus2pc: {
       name: 'Underworld Vigor',
       description: '+10% DMG & +5% Mana Replenish',
@@ -244,7 +244,7 @@ export const GREEK_GOD_SETS = {
     title: 'King of the Heavens',
     color: '#f1c40f',
     accentColor: '#ffd32a',
-    icon: '⚡',
+    icon: 'zeus',
     bonus2pc: {
       name: 'Heavenly Conduit',
       description: '+20% Mana Replenish Rate',
@@ -266,7 +266,7 @@ export const GREEK_GOD_SETS = {
     title: 'Ruler of the Abyssal Seas',
     color: '#3498db',
     accentColor: '#00d2d3',
-    icon: '🌊',
+    icon: 'poseidon',
     bonus2pc: {
       name: 'Abyssal Might',
       description: '+10% DMG & +5% Ult Amp',
@@ -290,7 +290,7 @@ export const GREEK_GOD_SETS = {
     title: 'The Winged Messenger',
     color: '#1abc9c',
     accentColor: '#2ecc71',
-    icon: '🪽',
+    icon: 'hermes',
     bonus2pc: {
       name: 'Zephyr Stride',
       description: '+15% Atk Spd & +10% Evasion',
@@ -315,7 +315,7 @@ export const GREEK_GOD_SETS = {
     title: 'God of Brutal War',
     color: '#e74c3c',
     accentColor: '#ff4757',
-    icon: '⚔️',
+    icon: 'ares',
     bonus2pc: {
       name: 'Bloodlust Edge',
       description: '+15% DMG',
@@ -340,7 +340,7 @@ export const GREEK_GOD_SETS = {
     title: 'Bearer of the Solar Chariot',
     color: '#e67e22',
     accentColor: '#ffa801',
-    icon: '☀️',
+    icon: 'apollo',
     bonus2pc: {
       name: 'Solar Focus',
       description: '+12% Crit Rate & +5% Mana Replenish',
@@ -364,7 +364,7 @@ export const GREEK_GOD_SETS = {
     title: 'Goddess of Strategic Aegis',
     color: '#95a5a6',
     accentColor: '#dfe4ea',
-    icon: '🛡️',
+    icon: 'athena',
     bonus2pc: {
       name: 'Parthenon Phalanx',
       description: '+15% Team Shield & +12% DEF',
@@ -391,7 +391,7 @@ export const GREEK_GOD_SETS = {
     title: 'Huntress of the Silver Moon',
     color: '#2ed573',
     accentColor: '#7bed9f',
-    icon: '🏹',
+    icon: 'artemis',
     bonus2pc: {
       name: 'Silver Artemis Focus',
       description: '+12% Crit Rate & +15% Crit DMG',
@@ -414,7 +414,7 @@ export const GREEK_GOD_SETS = {
     title: 'Master of the Divine Forge (Offensive Tank)',
     color: '#e67e22',
     accentColor: '#d35400',
-    icon: '🌋',
+    icon: 'hephaestus',
     bonus2pc: {
       name: 'Molten Carapace',
       description: '+15% DEF & converts 25% of DEF into bonus ATK Power',
@@ -440,7 +440,7 @@ export const GREEK_GOD_SETS = {
     title: 'Titan of the Celestial Heavens (Defensive Tank)',
     color: '#7f8c8d',
     accentColor: '#bdc3c7',
-    icon: '🏛️',
+    icon: 'atlas',
     bonus2pc: {
       name: 'Celestial Pillar',
       description: '+25% Max HP & +20% DEF',
@@ -471,7 +471,7 @@ export const EQUIPMENT_RARITIES = {
 };
 
 /**
- * 3★ to 6★ Relic Star Tiers
+ * Tier 3 to Tier 6 Relic Star Tiers
  */
 export const RELIC_STAR_TIERS = {
   3: {
@@ -528,17 +528,17 @@ export const RELIC_STAR_TIERS = {
  * Relic Substat Catalog (Rebalanced)
  */
 export const RELIC_SUBSTAT_TYPES = [
-  { id: 'flat_atk', name: 'Bonus ATK', isPercent: false, min: 6, max: 16, icon: '⚔️' },
-  { id: 'flat_hp', name: 'Bonus Max HP', isPercent: false, min: 25, max: 65, icon: '❤️' },
-  { id: 'flat_shield', name: 'Shield Strength', isPercent: false, min: 20, max: 50, icon: '🛡️' },
-  { id: 'percent_atk', name: 'ATK %', isPercent: true, min: 2.0, max: 4.5, icon: '💥' },
-  { id: 'percent_hp', name: 'HP %', isPercent: true, min: 2.0, max: 4.5, icon: '💚' },
-  { id: 'crit_rate', name: 'Crit Rate %', isPercent: true, min: 1.0, max: 2.5, icon: '🎯' },
-  { id: 'crit_dmg', name: 'Crit DMG %', isPercent: true, min: 4.0, max: 8.0, icon: '⚡' },
-  { id: 'mana_regen', name: 'Mana Replenish %', isPercent: true, min: 2.0, max: 5.0, icon: '🔮' },
-  { id: 'ult_amp', name: 'Ult Amp %', isPercent: true, min: 2.5, max: 6.0, icon: '✨' },
-  { id: 'evasion', name: 'Evasion %', isPercent: true, min: 1.5, max: 3.5, icon: '💨' },
-  { id: 'pierce', name: 'Armor Pierce %', isPercent: true, min: 2.0, max: 4.5, icon: '🗡️' }
+  { id: 'flat_atk', name: 'Bonus ATK', isPercent: false, min: 6, max: 16, icon: 'flat_atk' },
+  { id: 'flat_hp', name: 'Bonus Max HP', isPercent: false, min: 25, max: 65, icon: 'flat_hp' },
+  { id: 'flat_shield', name: 'Shield Strength', isPercent: false, min: 20, max: 50, icon: 'flat_shield' },
+  { id: 'percent_atk', name: 'ATK %', isPercent: true, min: 2.0, max: 4.5, icon: 'percent_atk' },
+  { id: 'percent_hp', name: 'HP %', isPercent: true, min: 2.0, max: 4.5, icon: 'percent_hp' },
+  { id: 'crit_rate', name: 'Crit Rate %', isPercent: true, min: 1.0, max: 2.5, icon: 'crit_rate' },
+  { id: 'crit_dmg', name: 'Crit DMG %', isPercent: true, min: 4.0, max: 8.0, icon: 'crit_dmg' },
+  { id: 'mana_regen', name: 'Mana Replenish %', isPercent: true, min: 2.0, max: 5.0, icon: 'mana_regen' },
+  { id: 'ult_amp', name: 'Ult Amp %', isPercent: true, min: 2.5, max: 6.0, icon: 'ult_amp' },
+  { id: 'evasion', name: 'Evasion %', isPercent: true, min: 1.5, max: 3.5, icon: 'evasion' },
+  { id: 'pierce', name: 'Armor Pierce %', isPercent: true, min: 2.0, max: 4.5, icon: 'pierce' }
 ];
 
 /**
@@ -558,7 +558,7 @@ function rollSingleSubstat(subType) {
 }
 
 /**
- * Generates initial substats based on star tier (3★ to 6★)
+ * Generates initial substats based on star tier (Tier 3 to Tier 6)
  */
 export function generateRelicSubstats({ stars = 3, mainStatName = '' } = {}) {
   const tier = RELIC_STAR_TIERS[stars] || RELIC_STAR_TIERS[3];
@@ -714,11 +714,11 @@ export function calculateRelicMainStat(slotTypeId, stars = 3, level = 1) {
 }
 
 /**
- * Ascends a 5★ Relic to 6★
+ * Ascends a Tier 5 Relic to Tier 6
  */
 export function ascendRelicData(relic) {
   if (relic.stars !== 5) {
-    throw new Error('Only 5★ Relics can be ascended to 6★!');
+    throw new Error('Only Tier 5 Relics can be ascended to Tier 6!');
   }
   if (relic.level < 15) {
     throw new Error('Relic must be enhanced to +15 before ascending!');
@@ -737,19 +737,19 @@ export function ascendRelicData(relic) {
     relic.substats.push(rollSingleSubstat(picked));
   }
 
-  // Recalculate main stat with 6★ multiplier
+  // Recalculate main stat with Tier 6 multiplier
   relic.mainStatValue = calculateRelicMainStat(relic.slotTypeId, 6, relic.level);
   return relic;
 }
 
 /**
- * Generates a unique Relic instance (3★ to 6★)
+ * Generates a unique Relic instance (Tier 3 to Tier 6)
  */
 export function createRelicInstance({ setId, slotTypeId, rarity = 'COMMON', stars, level = 1 }) {
   const godSet = GREEK_GOD_SETS[setId] || GREEK_GOD_SETS.hades;
   const slotType = RELIC_SLOT_TYPES.find(s => s.id === slotTypeId) || RELIC_SLOT_TYPES[0];
 
-  // Resolve star rating (3★ base, up to 6★)
+  // Resolve star rating (Tier 3 base, up to Tier 6)
   let resolvedStars = stars;
   if (!resolvedStars) {
     const rUpper = (rarity || 'COMMON').toUpperCase();

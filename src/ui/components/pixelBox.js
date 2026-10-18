@@ -1,5 +1,6 @@
 import { RARITIES, getRarityInfo, SPIRIT_SPECIES, ELEMENTS } from '../../data/spiritsData.js';
 import { getSheetKeyForSpecies } from '../../render/spriteAnimator.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 /**
  * Creates a distinctly styled CSS placeholder box for a Spirit.
@@ -14,7 +15,7 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
   if (!species) return `<div class="pixel-box">Unknown</div>`;
 
   const tier = species.tier || 1;
-  const stars = '★'.repeat(tier);
+  const stars = Array.from({ length: tier }, () => getGameIcon('star', { size: 9, color: '#ffd152' })).join('');
   const rarityName = (spiritOrSpecies.rarity || species.baseRarity || 'COMMON').toUpperCase();
   const rarityInfo = getRarityInfo(rarityName);
   const rarityLower = rarityName.toLowerCase();
@@ -23,7 +24,6 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
 
   const elemKey = (spiritOrSpecies.element || species.element || 'EARTH').toUpperCase();
   const elemObj = ELEMENTS[elemKey] || ELEMENTS.EARTH;
-  const glyph = species.avatarEmoji || '✨';
   const sheetKey = getSheetKeyForSpecies(species.id);
 
   return `
@@ -34,7 +34,7 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
          data-element="${elemKey.toLowerCase()}"
          title="${species.name} [${rarityInfo.name}] • ${elemObj.name} Element">
       
-      <div class="tier-tag">${stars} T${tier}</div>
+      <div class="tier-tag" style="display: inline-flex; align-items: center; gap: 1px;">${stars} <span style="margin-left: 2px;">T${tier}</span></div>
       <div class="rarity-badge-mini" style="color: ${rarityInfo.color}; border-color: ${rarityInfo.border};">
         ${rarityInfo.name[0]}
       </div>
@@ -46,7 +46,6 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
         <!-- Animated Pixel Creature Sprite -->
         <div class="animated-pixel-sprite sprite-${sheetKey}" style="--sprite-sheet: url('/assets/sprites/creatures/${sheetKey}.svg');">
           <div class="sprite-frame-viewer"></div>
-          <span class="core-glyph-fallback" style="display: none;">${glyph}</span>
         </div>
       </div>
 
@@ -60,17 +59,17 @@ export function createSpiritPlaceholderBox(spiritOrSpecies, options = {}) {
  */
 export function createUnknownSpiritPlaceholderBox(species, options = {}) {
   const tier = species ? species.tier || 1 : 1;
-  const stars = '★'.repeat(tier);
+  const stars = Array.from({ length: tier }, () => getGameIcon('star', { size: 9, color: '#ffd152' })).join('');
   const boxClass = options.boxClass || '';
 
   return `
     <div class="pixel-box rarity-unknown ${boxClass}" title="Unknown Spirit (Undiscovered)">
-      <div class="tier-tag">${stars} T${tier}</div>
+      <div class="tier-tag" style="display: inline-flex; align-items: center; gap: 1px;">${stars} <span style="margin-left: 2px;">T${tier}</span></div>
       <div class="rarity-badge-mini" style="color: #636e72; border-color: #636e72;">?</div>
 
       <div class="pixel-art-slot">
         <div class="placeholder-creature-sprite unknown-silhouette">
-          <span class="core-glyph" style="filter: brightness(0) opacity(0.35);">❓</span>
+          <span class="core-glyph" style="filter: brightness(0) opacity(0.35);">${getGameIcon('question', { size: '28px', color: '#636e72' })}</span>
         </div>
       </div>
 
@@ -94,12 +93,12 @@ export function createEnemyPlaceholderBox(enemy) {
          title="${enemyName}">
       
       <div class="tier-tag" style="color: #ff4757; border-color: #ff4757;">
-        ${isBoss ? '☠️ BOSS' : '👾 FOE'}
+        ${isBoss ? `${getGameIcon('skull', { size: '10px', color: '#ff4757' })} BOSS` : `${getGameIcon('sword', { size: '10px', color: '#ff4757' })} FOE`}
       </div>
 
       <div class="pixel-art-slot" data-art-target="enemy-${enemyName.toLowerCase().replace(/\s+/g, '-')}">
         <div class="placeholder-creature-sprite">
-          <span class="core-glyph">${isBoss ? '👹' : '👿'}</span>
+          <span class="core-glyph">${isBoss ? getGameIcon('skull', { size: '36px', color: '#ff4757' }) : getGameIcon('madness', { size: '36px', color: '#ff4757' })}</span>
         </div>
       </div>
 
@@ -109,3 +108,4 @@ export function createEnemyPlaceholderBox(enemy) {
     </div>
   `;
 }
+

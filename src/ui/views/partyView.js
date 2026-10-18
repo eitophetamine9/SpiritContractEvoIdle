@@ -15,6 +15,7 @@ import { showEvolutionCeremonyModal, showEquipmentSlotModal, showItemInspectModa
 import { audioManager } from '../../audio/audioManager.js';
 import { createAnimatedRelicHtml, createAnimatedWeaponHtml, createAnimatedSpriteHtml } from '../../render/spriteAnimator.js';
 import { showGameToast } from '../components/toast.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 let activeViewMode = 'showcase'; // 'showcase', 'formation', or 'roster'
 let selectedPartyIndex = 0;
@@ -47,7 +48,7 @@ export function renderPartyView(container) {
       <div class="afk-training-banner">
         <div class="afk-banner-left">
           <div class="afk-title">
-            <span>⛩️ AFK Training Chamber</span>
+            <span>${getGameIcon('torii', { size: '15px' })} AFK Training Chamber</span>
           </div>
           <div class="afk-subtitle">
             Equipped Spirits continuously gain XP (even while offline)
@@ -63,23 +64,23 @@ export function renderPartyView(container) {
       <div class="party-top-controls-bar">
         <div class="party-mode-pills">
           <button id="btn-mode-formation" class="party-mode-pill ${activeViewMode === 'formation' ? 'active' : ''} ${!isFormationUnlocked ? 'feature-locked' : ''}">
-            ${isFormationUnlocked ? '⚔️ 3×3 Formation' : '🔒 3×3 Grid (Lv. 3)'}
+            ${isFormationUnlocked ? `${getGameIcon('sword', { size: '13px' })} 3×3 Formation` : `${getGameIcon('lock', { size: '13px' })} 3×3 Grid (Lv. 3)`}
           </button>
           <button id="btn-mode-showcase" class="party-mode-pill ${activeViewMode === 'showcase' ? 'active' : ''}">
-            👑 Hero Pedestal
+            ${getGameIcon('crown', { size: '13px', color: '#ffd152' })} Hero Pedestal
           </button>
           <button id="btn-mode-roster" class="party-mode-pill ${activeViewMode === 'roster' ? 'active' : ''}">
-            📜 Party Roster
+            ${getGameIcon('scroll', { size: '13px' })} Party Roster
           </button>
         </div>
 
         <div style="display: flex; gap: 8px; align-items: center;">
-          <span class="bag-count-pill" title="Total weapons & relics in your equipment inventory">🎒 ${bagCount} Relics</span>
+          <span class="bag-count-pill" title="Total weapons & relics in your equipment inventory">${getGameIcon('vault', { size: '12px' })} ${bagCount} Relics</span>
           <button id="btn-party-sanctum-link" class="trials-link-pill sanctum-link-pill" title="Open Dedicated Spirit Sanctum Hub">
-            🌟 Sanctum
+            ${getGameIcon('sanctum', { size: '12px', color: '#ffd152' })} Sanctum
           </button>
           <button id="btn-party-trials-link" class="trials-link-pill" title="Jump to Pantheon Trials">
-            🏛️ Trials
+            ${getGameIcon('trials', { size: '12px', color: '#38bdf8' })} Trials
           </button>
         </div>
       </div>
@@ -110,9 +111,9 @@ function renderFormationModeHtml(partySpirits) {
       <div class="formation-header-card">
         <div class="formation-title-group">
           <div class="formation-main-title">
-            <span class="text-glow">⚔️ 3×3 Tactical Squad Formation</span>
+            <span class="text-glow">${getGameIcon('sword', { size: '15px' })} 3×3 Tactical Squad Formation</span>
             <span class="formation-validity-badge ${isValid ? 'valid' : 'invalid'}">
-              ${isValid ? '✅ Valid Formation' : `⚠️ ${validationError}`}
+              ${isValid ? `${getGameIcon('check', { size: '12px', color: '#2ecc71' })} Valid Formation` : `${getGameIcon('alert', { size: '12px', color: '#ff4757' })} ${validationError}`}
             </span>
           </div>
           <div class="formation-subtitle">
@@ -123,21 +124,21 @@ function renderFormationModeHtml(partySpirits) {
         <div class="formation-actions-row">
           <div class="formation-quota-chips">
             <span class="quota-chip ${counts.back === 1 ? 'met' : ''}" title="Backline: Exactly 1 spirit">
-              🎯 Back: ${counts.back}/1
+              ${getGameIcon('target', { size: '11px' })} Back: ${counts.back}/1
             </span>
             <span class="quota-chip ${counts.mid >= 2 && counts.mid <= 3 ? 'met' : ''}" title="Midline: 2 or 3 spirits">
-              ⚡ Mid: ${counts.mid}/3
+              ${getGameIcon('statPower', { size: '11px', color: '#ffd152' })} Mid: ${counts.mid}/3
             </span>
             <span class="quota-chip ${counts.front >= 1 && counts.front <= 2 ? 'met' : ''}" title="Frontline: 1 or 2 spirits">
-              🛡️ Front: ${counts.front}/2
+              ${getGameIcon('roleTank', { size: '11px', color: '#1e90ff' })} Front: ${counts.front}/2
             </span>
             <span class="quota-chip ${counts.total === 5 ? 'met' : ''}" title="Total active squad size">
-              ⛩️ Squad: ${counts.total}/5
+              ${getGameIcon('torii', { size: '11px', color: '#ff4757' })} Squad: ${counts.total}/5
             </span>
           </div>
 
           <button id="btn-auto-align-formation" class="btn-auto-align" title="Automatically arrange squad into optimal role positions">
-            ⚡ Auto-Align Formation
+            ${getGameIcon('sparkle', { size: '12px' })} Auto-Align Formation
           </button>
         </div>
       </div>
@@ -149,11 +150,11 @@ function renderFormationModeHtml(partySpirits) {
         <div class="grid-column backline-column">
           <div class="column-header">
             <div class="column-title">
-              <span>🎯 BACKLINE</span>
+              <span>${getGameIcon('target', { size: '13px' })} BACKLINE</span>
               <span class="col-count-pill">${counts.back}/1</span>
             </div>
             <div class="column-perk-tag" title="Perk: +15% ATK & Heal potency, -50% threat footprint">
-              ✨ Sanctuary (+15% ATK/Heal, -50% Aggro)
+              ${getGameIcon('sparkle', { size: '11px', color: '#ffd152' })} Sanctuary (+15% ATK/Heal, -50% Aggro)
             </div>
           </div>
 
@@ -166,11 +167,11 @@ function renderFormationModeHtml(partySpirits) {
         <div class="grid-column midline-column">
           <div class="column-header">
             <div class="column-title">
-              <span>⚡ MIDLINE</span>
+              <span>${getGameIcon('statPower', { size: '13px', color: '#ffd152' })} MIDLINE</span>
               <span class="col-count-pill">${counts.mid}/3</span>
             </div>
             <div class="column-perk-tag" title="Perk: Balanced attack cadence & flexible synergy">
-              ⚔️ Flank Cadence (1.0x Threat)
+              ${getGameIcon('sword', { size: '11px' })} Flank Cadence (1.0x Threat)
             </div>
           </div>
 
@@ -183,11 +184,11 @@ function renderFormationModeHtml(partySpirits) {
         <div class="grid-column frontline-column">
           <div class="column-header">
             <div class="column-title">
-              <span>🛡️ FRONTLINE</span>
+              <span>${getGameIcon('roleTank', { size: '13px', color: '#1e90ff' })} FRONTLINE</span>
               <span class="col-count-pill">${counts.front}/2</span>
             </div>
             <div class="column-perk-tag" title="Perk: +15% Armor/DEF, 2.0x innate threat aggro draw">
-              🛡️ Vanguard (+15% DEF, 2.0x Taunt/Aggro)
+              ${getGameIcon('roleTank', { size: '11px', color: '#1e90ff' })} Vanguard (+15% DEF, 2.0x Taunt/Aggro)
             </div>
           </div>
 
@@ -200,7 +201,7 @@ function renderFormationModeHtml(partySpirits) {
 
       <!-- Tactical Interaction Hint -->
       <div class="formation-instruction-bar">
-        <span>💡 ${selectedSlotForSwap ? `Selected [${selectedSlotForSwap.toUpperCase()}]. Tap another tile to swap positions, or tap again to cancel.` : 'Tap any hero or tile to select and swap positions. Tanks naturally draw enemy focus to shield back/midline allies!'}</span>
+        <span>${getGameIcon('info', { size: '13px', color: '#ffd152' })} ${selectedSlotForSwap ? `Selected [${selectedSlotForSwap.toUpperCase()}]. Tap another tile to swap positions, or tap again to cancel.` : 'Tap any hero or tile to select and swap positions. Tanks naturally draw enemy focus to shield back/midline allies!'}</span>
       </div>
 
     </div>
@@ -264,16 +265,16 @@ function renderTileSlotHtml(slotData, slotId) {
         <div class="tile-spirit-info">
           <div class="tile-spirit-name" title="${spirit.customName}">${spirit.customName}</div>
           <div class="tile-level-tag">Lv.${spirit.level} • <span style="color: ${rarity.color}; font-weight: 700;">${rarity.name}</span></div>
-          <div class="tile-pwr-tag">⚡ ${compactNumber(totalPower)} PWR</div>
+          <div class="tile-pwr-tag">${getGameIcon('statPower', { size: '10px', color: '#ffd152' })} ${compactNumber(totalPower)} PWR</div>
         </div>
       </div>
 
       <!-- Tactical Combat Attributes Matrix -->
       <div class="tile-stat-strip">
-        <span title="Hit Points (Max HP): ${(stats.maxHp || spirit.maxHp).toLocaleString()}">❤️ ${compactNumber(stats.maxHp || spirit.maxHp)}</span>
-        <span title="Armor / DEF: ${(stats.def || 10).toLocaleString()}">🛡️ ${compactNumber(stats.def || 10)}</span>
-        <span title="Attack Power: ${(stats.atk || spirit.power).toLocaleString()}">⚔️ ${compactNumber(stats.atk || spirit.power)}</span>
-        <span title="Threat / Aggro Score: ${stats.threat || roleInfo.baseThreat}">🧲 ${stats.threat || roleInfo.baseThreat}</span>
+        <span title="Hit Points (Max HP): ${(stats.maxHp || spirit.maxHp).toLocaleString()}">${getGameIcon('statHp', { size: '10px', color: '#2ed573' })} ${compactNumber(stats.maxHp || spirit.maxHp)}</span>
+        <span title="Armor / DEF: ${(stats.def || 10).toLocaleString()}">${getGameIcon('statDef', { size: '10px', color: '#1e90ff' })} ${compactNumber(stats.def || 10)}</span>
+        <span title="Attack Power: ${(stats.atk || spirit.power).toLocaleString()}">${getGameIcon('statAtk', { size: '10px', color: '#ff4757' })} ${compactNumber(stats.atk || spirit.power)}</span>
+        <span title="Threat / Aggro Score: ${stats.threat || roleInfo.baseThreat}">${getGameIcon('target', { size: '10px', color: '#ffd152' })} ${stats.threat || roleInfo.baseThreat}</span>
       </div>
     </div>
   `;
@@ -288,7 +289,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
       <div class="empty-showcase-card">
         <p style="font-size: 14px; color: var(--text-muted);">No spirits equipped in your party.</p>
         <button id="btn-go-vault-empty" class="btn-goto-dungeon-action">
-          ⛩️ Go to Vault & Equip Spirits
+          ${getGameIcon('vault', { size: '14px' })} Go to Vault & Equip Spirits
         </button>
       </div>
     `;
@@ -353,7 +354,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                   ${createAnimatedSpriteHtml(member, { extraClasses: 'token-hero-animated-sprite' })}
                 </span>
                 <span class="token-level-tag">Lv.${member.level}</span>
-                ${member.canEvolve ? '<span class="token-evo-pip">⚡</span>' : ''}
+                ${member.canEvolve ? `<span class="token-evo-pip">${getGameIcon('sparkle', { size: '10px', color: '#ffd152' })}</span>` : ''}
               </button>
             `;
           }).join('')}
@@ -395,7 +396,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
               ${species ? species.name : 'Unknown Species'} • Lv. ${spirit.level}/${species ? species.levelCap : '??'} ${isCapped ? '[CAP]' : ''}
             </div>
             <div class="hero-formation-pos-banner">
-              📍 <strong>${slotDef ? slotDef.label : 'Midline Center (M2)'}</strong> • <span style="color: #00d2d3;">${colDef ? colDef.perkName : 'Flank Perk'}</span> (${colDef ? colDef.perkDesc : 'Balanced cadence'})
+              ${getGameIcon('target', { size: '12px', color: '#00d2d3' })} <strong>${slotDef ? slotDef.label : 'Midline Center (M2)'}</strong> • <span style="color: #00d2d3;">${colDef ? colDef.perkName : 'Flank Perk'}</span> (${colDef ? colDef.perkDesc : 'Balanced cadence'})
             </div>
           </div>
 
@@ -403,7 +404,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
           <div class="hero-power-card">
             <span class="hero-power-title">TOTAL POWER</span>
             <div class="hero-power-num">
-              ⚡ ${totalSpiritPower.toLocaleString()} <span style="font-size: 11px; color: var(--text-muted);">PWR</span>
+              ${getGameIcon('statPower', { size: '13px', color: '#ffd152' })} ${totalSpiritPower.toLocaleString()} <span style="font-size: 11px; color: var(--text-muted);">PWR</span>
             </div>
             ${bonusPower > 0 ? `
               <div class="hero-power-breakdown">
@@ -417,7 +418,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
             <!-- ATK Power -->
             <div class="attribute-row">
               <div class="attr-label-row">
-                <span>⚔️ ATK Power</span>
+                <span>${getGameIcon('statAtk', { size: '13px', color: '#ff4757' })} ATK Power</span>
                 <span class="attr-val">${detailedStats.atk || (spirit.power + (weapon ? weapon.atkPower : 0))}</span>
               </div>
               <div class="segmented-gauge">
@@ -428,7 +429,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
             <!-- Armor / DEF -->
             <div class="attribute-row">
               <div class="attr-label-row">
-                <span>🛡️ Armor (DEF)</span>
+                <span>${getGameIcon('statDef', { size: '13px', color: '#1e90ff' })} Armor (DEF)</span>
                 <span class="attr-val">${detailedStats.def || 10}</span>
               </div>
               <div class="segmented-gauge def-gauge">
@@ -439,7 +440,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
             <!-- Health Points -->
             <div class="attribute-row">
               <div class="attr-label-row">
-                <span>❤️ Health (HP)</span>
+                <span>${getGameIcon('statHp', { size: '13px', color: '#2ed573' })} Health (HP)</span>
                 <span class="attr-val">${spiritHp} HP</span>
               </div>
               <div class="segmented-gauge hp-gauge">
@@ -449,15 +450,15 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
 
             <!-- Speed & Crit & Threat Row -->
             <div class="hero-tactical-stats-strip">
-              <div class="sub-stat-pill" title="Action Cadence">⚡ SPD: ${detailedStats.spd || 1.0}s</div>
-              <div class="sub-stat-pill" title="Critical Chance">🎯 Crit: ${detailedStats.critRate || 5}% (${detailedStats.critDmg || 150}%)</div>
-              <div class="sub-stat-pill" title="Innate Aggro / Threat Weight">🧲 Threat: ${detailedStats.threat || roleInfo.baseThreat}</div>
+              <div class="sub-stat-pill" title="Action Cadence">${getGameIcon('statSpd', { size: '11px', color: '#eccc68' })} SPD: ${detailedStats.spd || 1.0}s</div>
+              <div class="sub-stat-pill" title="Critical Chance">${getGameIcon('statCrit', { size: '11px', color: '#ff6b81' })} Crit: ${detailedStats.critRate || 5}% (${detailedStats.critDmg || 150}%)</div>
+              <div class="sub-stat-pill" title="Innate Aggro / Threat Weight">${getGameIcon('target', { size: '11px', color: '#ffd152' })} Threat: ${detailedStats.threat || roleInfo.baseThreat}</div>
             </div>
 
             <!-- Mana / Ult Readiness -->
             <div class="attribute-row">
               <div class="attr-label-row">
-                <span>💧 Mana (MP)</span>
+                <span>${getGameIcon('statMana', { size: '13px', color: '#00d2ff' })} Mana (MP)</span>
                 <span class="attr-val">${spiritMp} / 100 MP</span>
               </div>
               <div class="segmented-gauge mp-gauge">
@@ -470,7 +471,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
           <div class="hero-primary-action">
             ${spirit.canEvolve ? `
               <button class="btn-hero-evolve" data-action="evolve" data-id="${spirit.id}">
-                ⚡ EVOLVE (RNG CEREMONY)
+                ${getGameIcon('sparkle', { size: '13px', color: '#ffd152' })} EVOLVE (RNG CEREMONY)
               </button>
             ` : `
               <button class="btn-hero-unequip" data-action="unequip" data-id="${spirit.id}">
@@ -487,11 +488,11 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
       <div class="pedestal-equipment-rack">
         <div class="equipment-section-header">
           <div>
-            <span class="equip-rack-title">⚔️ Divine Arsenal & 6 Relics</span>
+            <span class="equip-rack-title">${getGameIcon('sword', { size: '14px' })} Divine Arsenal & 6 Relics</span>
             <span class="equip-rack-sub">Tap any socket to upgrade artifacts (+1 to +15) or swap gear</span>
           </div>
           <button class="btn-quick-equip" data-action="quick-equip" data-spirit-id="${spirit.id}" title="Equip highest-stat available weapon & relics">
-            ⚡ Quick Equip Best
+            ${getGameIcon('sparkle', { size: '12px' })} Quick Equip Best
           </button>
         </div>
 
@@ -505,7 +506,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                   title="${weapon ? `${weapon.name} (+${weapon.level || 1}) (${weapon.rarity})\n+${weapon.atkPower} ATK Power\nTap to Upgrade or Swap` : 'Weapon Socket (Tap to equip)'}">
             ${weapon 
               ? createAnimatedWeaponHtml(weapon, { extraClasses: 'socket-animated-sprite' }) 
-              : '<span class="socket-icon">⚔️</span>'}
+              : `<span class="socket-icon">${getGameIcon('sword', { size: '16px' })}</span>`}
             <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? `WPN +${weapon.level || 1}` : '+WPN'}</span>
             ${weapon ? `
               <span class="socket-level-pill ${weapon.level >= 15 ? 'pill-max' : ''}">
@@ -561,7 +562,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
       <div class="rapid-equipment-drawer">
         <div class="drawer-header-row">
           <div class="drawer-title">
-            <span>🎒 Equipment Inventory (${allEquipment.length})</span>
+            <span>${getGameIcon('vault', { size: '13px' })} Equipment Inventory (${allEquipment.length})</span>
           </div>
           <div class="drawer-filters">
             <button class="drawer-filter-btn ${equipmentDrawerFilter === 'all' ? 'active' : ''}" data-filter="all">All</button>
@@ -602,7 +603,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
 
                     <div class="drawer-card-actions">
                       <button class="btn-drawer-action upgrade-action" data-drawer-upgrade="${item.uid}" title="Upgrade this ${item.type === 'weapon' ? 'weapon' : 'artifact'} (+${(item.level || (item.type === 'weapon' ? 1 : 0)) + 1})">
-                        ⚡ Upgrade
+                        ${getGameIcon('sparkle', { size: '12px' })} Upgrade
                       </button>
                       ${isEquippedToCurrent ? `
                         <button class="btn-drawer-action unequip-action" data-drawer-unequip data-slot="${item.type === 'weapon' ? 'weapon' : item.slotTypeId}">
@@ -614,7 +615,7 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
                         </button>
                         ${!item.equippedToSpiritId ? `
                           <button class="btn-drawer-dismantle" data-drawer-dismantle="${item.uid}" title="Dismantle for Shards">
-                            ♻️
+                            ${getGameIcon('refresh', { size: '12px' })}
                           </button>
                         ` : ''}
                       `}
@@ -677,7 +678,7 @@ function renderRosterModeHtml(partySpirits) {
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
                   <span style="color: ${rarity.color}; font-weight: 800; font-size: 11px;">[${rarity.name.toUpperCase()}]</span>
                   <span class="party-card-power" title="Base: ${spirit.power.toLocaleString()} | Relics: +${equipBonusPower.toLocaleString()}">
-                    ⚡ ${totalSpiritPower.toLocaleString()} PWR ${equipBonusPower > 0 ? `<span style="font-size: 10px; color: #7bed9f;">(+${equipBonusPower})</span>` : ''}
+                    ${getGameIcon('statPower', { size: '11px', color: '#ffd152' })} ${totalSpiritPower.toLocaleString()} PWR ${equipBonusPower > 0 ? `<span style="font-size: 10px; color: #7bed9f;">(+${equipBonusPower})</span>` : ''}
                   </span>
                 </div>
 
@@ -691,11 +692,11 @@ function renderRosterModeHtml(partySpirits) {
 
               <div class="party-card-actions">
                 <button class="btn-quick-equip-card" data-action="quick-equip" data-spirit-id="${spirit.id}" title="Equip highest-stat gear">
-                  ⚡ Auto Equip
+                  ${getGameIcon('sparkle', { size: '12px' })} Auto Equip
                 </button>
                 ${spirit.canEvolve ? `
                   <button class="btn-evolve" data-action="evolve" data-id="${spirit.id}">
-                    ⚡ EVOLVE (RNG)
+                    ${getGameIcon('sparkle', { size: '12px', color: '#ffd152' })} EVOLVE (RNG)
                   </button>
                 ` : `
                   <button class="btn-unequip" data-action="unequip" data-id="${spirit.id}">
@@ -708,7 +709,7 @@ function renderRosterModeHtml(partySpirits) {
             <!-- Lower Row: 1 Weapon + 6 Greek God Relics Rack -->
             <div class="spirit-equipment-section">
               <div class="equipment-section-header">
-                <span class="equip-rack-title">⚔️ Divine Arsenal & 6 Relics</span>
+                <span class="equip-rack-title">${getGameIcon('sword', { size: '14px' })} Divine Arsenal & 6 Relics</span>
                 <span class="equip-rack-sub">Tap any socket to upgrade artifacts (+1 to +15) or swap gear</span>
               </div>
 
@@ -721,7 +722,13 @@ function renderRosterModeHtml(partySpirits) {
                         title="${weapon ? `${weapon.name} (+${weapon.level || 1}) (${weapon.rarity})\n+${weapon.atkPower} ATK Power\nTap to Upgrade or Swap` : 'Weapon Socket'}">
                   ${weapon 
                     ? createAnimatedWeaponHtml(weapon, { extraClasses: 'socket-animated-sprite' }) 
-                    : '<span class="socket-icon">⚔️</span>'}
+                    : `<span class="socket-icon">${getGameIcon('sword', { size: '16px' })}</span>`}
+                  <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? `WPN +${weapon.level || 1}` : '+WPN'}</span>
+                  ${weapon ? `
+                    <span class="socket-level-pill ${weapon.level >= 15 ? 'pill-max' : ''}">
+                      +${weapon.level || 1}
+                    </span>
+                  ` : ''}
                   <span class="socket-tag" style="${weapon ? `color: ${weapon.color};` : ''}">${weapon ? `WPN +${weapon.level || 1}` : '+WPN'}</span>
                   ${weapon ? `
                     <span class="socket-level-pill ${weapon.level >= 15 ? 'pill-max' : ''}">
@@ -788,7 +795,7 @@ function attachEventListeners(container) {
   // Mode switcher
   document.getElementById('btn-mode-formation')?.addEventListener('click', () => {
     if (!gameState.isFeatureUnlocked('FORMATION_3X3')) {
-      showGameToast('🔒 3×3 Tactical Grid unlocks at Contractor Level 2! Advance in the Madness Zone to level up.', 'lock');
+      showGameToast('3×3 Tactical Grid unlocks at Contractor Level 2! Advance in the Madness Zone to level up.', 'lock');
       return;
     }
     activeViewMode = 'formation';

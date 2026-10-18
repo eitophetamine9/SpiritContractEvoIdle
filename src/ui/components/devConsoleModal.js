@@ -1,6 +1,7 @@
 import { gameState } from '../../state/gameState.js';
 import { authService, DEV_ADMIN_EMAIL } from '../../services/authService.js';
 import { safePlaySfx } from '../../audio/audioManager.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 let activeFeedbackTimer = null;
 
@@ -34,7 +35,7 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
         <!-- Header & Admin Tag -->
         <div class="flex items-center justify-between border-b border-amber-500/30 pb-3">
           <div class="flex items-center gap-2.5">
-            <span class="text-2xl animate-pulse">⚡</span>
+            <span class="text-amber-400 animate-pulse">${getGameIcon('zap', { size: 24, className: 'text-amber-400' })}</span>
             <div>
               <div class="flex items-center gap-2">
                 <h3 class="text-base sm:text-lg font-black tracking-wide text-amber-400 uppercase">
@@ -50,21 +51,22 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
             </div>
           </div>
           <button id="btn-close-dev-console" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-all">
-            ✕
+            ${getGameIcon('close', { size: 14 })}
           </button>
         </div>
 
         <!-- Cheat Code Command Input Bar -->
         <div class="flex flex-col gap-1.5">
           <label class="text-[11px] font-black uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
-            <span>⌨️ Command Bar Cheat Code</span>
+            <span>${getGameIcon('device', { size: 14, className: 'inline mr-1 text-cyan-300' })} Command Bar Cheat Code</span>
             <span class="text-[10px] font-normal text-slate-400 lowercase">(floor &lt;n&gt;, levelup &lt;n&gt;, rich, godmode, unlockall, shards &lt;n&gt;)</span>
           </label>
           <div class="flex items-center gap-2">
             <input type="text" id="dev-cheat-input" placeholder="Type cheat command e.g. 'floor 50' or 'rich'..." 
                    class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-200 font-mono text-xs focus:outline-none focus:border-amber-400 transition-all placeholder:text-slate-600" />
-            <button id="btn-run-cheat-cmd" class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 active:scale-95 text-slate-950 font-black text-xs uppercase tracking-wider cursor-pointer shadow-md transition-all">
-              Execute ⚡
+            <button id="btn-run-cheat-cmd" class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 active:scale-95 text-slate-950 font-black text-xs uppercase tracking-wider cursor-pointer shadow-md transition-all flex items-center gap-1">
+              <span>Execute</span>
+              ${getGameIcon('zap', { size: 13, className: 'inline' })}
             </button>
           </div>
         </div>
@@ -87,15 +89,15 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
             <div class="text-xs sm:text-sm font-black text-amber-300" id="dev-metric-level">Lv.${contractorLvl}</div>
           </div>
           <div>
-            <div class="text-[9px] uppercase font-bold text-slate-400">Purified ✨</div>
+            <div class="text-[9px] uppercase font-bold text-slate-400 flex items-center justify-center gap-0.5">Purified ${getGameIcon('sparkle', { size: 10, className: 'text-yellow-300' })}</div>
             <div class="text-xs sm:text-sm font-black text-yellow-300" id="dev-metric-soul">${purified.toLocaleString()}</div>
           </div>
           <div>
-            <div class="text-[9px] uppercase font-bold text-slate-400">Shards 💎</div>
+            <div class="text-[9px] uppercase font-bold text-slate-400 flex items-center justify-center gap-0.5">Shards ${getGameIcon('crystal', { size: 10, className: 'text-cyan-300' })}</div>
             <div class="text-xs sm:text-sm font-black text-cyan-300" id="dev-metric-shards">${shards.toLocaleString()}</div>
           </div>
           <div>
-            <div class="text-[9px] uppercase font-bold text-slate-400">Energy ⚡</div>
+            <div class="text-[9px] uppercase font-bold text-slate-400 flex items-center justify-center gap-0.5">Energy ${getGameIcon('zap', { size: 10, className: 'text-emerald-300' })}</div>
             <div class="text-xs sm:text-sm font-black text-emerald-300" id="dev-metric-energy">${energy}/999</div>
           </div>
         </div>
@@ -107,13 +109,14 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
           <div class="p-3 rounded-2xl bg-slate-950/60 border border-rose-500/30 flex flex-col gap-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-black uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
-                <span>🏰 Floor Skip Controls</span>
+                <span>${getGameIcon('temple', { size: 14, className: 'text-rose-400 inline mr-1' })} Floor Skip Controls</span>
               </span>
               <div class="flex items-center gap-1.5">
                 <input type="number" id="input-custom-floor" min="1" max="999" value="${currentFloor + 5}" 
                        class="w-16 px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-rose-200 text-center text-xs font-bold" />
-                <button id="btn-jump-custom-floor" class="py-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-black text-[11px] cursor-pointer">
-                  Jump ➔
+                <button id="btn-jump-custom-floor" class="py-1 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-black text-[11px] cursor-pointer flex items-center gap-0.5">
+                  <span>Jump</span>
+                  ${getGameIcon('chevronRight', { size: 11, className: 'inline' })}
                 </button>
               </div>
             </div>
@@ -136,7 +139,7 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
           <!-- 2. Instant Level Up Section -->
           <div class="p-3 rounded-2xl bg-slate-950/60 border border-amber-500/30 flex flex-col gap-2">
             <span class="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-              <span>👑 Instant Level Up (Contractor & Spirits)</span>
+              <span>${getGameIcon('crown', { size: 14, className: 'text-amber-300 inline mr-1' })} Instant Level Up (Contractor & Spirits)</span>
             </span>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-200 cursor-pointer" data-action="level_up" data-val="1">
@@ -148,8 +151,8 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
               <button class="btn-dev-action py-2 px-2 rounded-xl bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-bold text-amber-300 cursor-pointer" data-action="level_up_to" data-val="20">
                 Set Lv. 20 (All Feats)
               </button>
-              <button class="btn-dev-action py-2 px-2 rounded-xl bg-purple-500/20 border border-purple-500/40 hover:bg-purple-500/30 text-xs font-bold text-purple-300 cursor-pointer" data-action="max_spirits">
-                Max Spirits (Lv 100 ★5)
+              <button class="btn-dev-action py-2 px-2 rounded-xl bg-purple-500/20 border border-purple-500/40 hover:bg-purple-500/30 text-xs font-bold text-purple-300 cursor-pointer flex items-center justify-center gap-1" data-action="max_spirits">
+                <span>Max Spirits (Lv 100 5-Star)</span>
               </button>
             </div>
           </div>
@@ -158,72 +161,82 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
           <div class="p-3.5 rounded-2xl bg-slate-950/60 border border-yellow-500/40 flex flex-col gap-2.5">
             <div class="flex items-center justify-between">
               <span class="text-xs font-black uppercase tracking-wider text-yellow-300 flex items-center gap-1.5">
-                <span>✨ Boost Any Currency (Purified Soul, Shards, Energy & More)</span>
+                <span>${getGameIcon('sparkle', { size: 14, className: 'text-yellow-300 inline mr-1' })} Boost Any Currency (Purified Soul, Shards, Energy & More)</span>
               </span>
-              <button class="btn-dev-action py-1 px-3 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:brightness-110 active:scale-95 text-slate-950 font-black text-[11px] cursor-pointer shadow-md" data-action="boost_all_currencies">
-                💰 Boost ALL Max
+              <button class="btn-dev-action py-1 px-3 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:brightness-110 active:scale-95 text-slate-950 font-black text-[11px] cursor-pointer shadow-md flex items-center gap-1" data-action="boost_all_currencies">
+                ${getGameIcon('coins', { size: 13, className: 'inline' })}
+                <span>Boost ALL Max</span>
               </button>
             </div>
 
             <!-- Purified Soul Essence Quick Row -->
             <div class="flex items-center gap-2">
-              <span class="text-[11px] font-bold text-yellow-300 w-28 shrink-0">Purified Soul ✨:</span>
+              <span class="text-[11px] font-bold text-yellow-300 w-28 shrink-0 flex items-center gap-1">Purified Soul ${getGameIcon('sparkle', { size: 11, className: 'inline text-yellow-300' })}:</span>
               <div class="grid grid-cols-3 gap-1.5 flex-1">
-                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-yellow-500/20 border border-yellow-500/50 hover:bg-yellow-500/30 text-xs font-bold text-yellow-200 cursor-pointer" data-action="add_currency" data-type="purified" data-val="100">
-                  +100 ✨
+                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-yellow-500/20 border border-yellow-500/50 hover:bg-yellow-500/30 text-xs font-bold text-yellow-200 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="purified" data-val="100">
+                  <span>+100</span>
+                  ${getGameIcon('sparkle', { size: 11, className: 'inline text-yellow-300' })}
                 </button>
-                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-yellow-500/25 border border-yellow-500/60 hover:bg-yellow-500/35 text-xs font-black text-yellow-300 cursor-pointer" data-action="add_currency" data-type="purified" data-val="1000">
-                  +1,000 ✨
+                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-yellow-500/25 border border-yellow-500/60 hover:bg-yellow-500/35 text-xs font-black text-yellow-300 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="purified" data-val="1000">
+                  <span>+1,000</span>
+                  ${getGameIcon('sparkle', { size: 11, className: 'inline text-yellow-300' })}
                 </button>
-                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-yellow-500/30 border border-yellow-500/80 hover:bg-yellow-500/40 text-xs font-black text-amber-200 cursor-pointer" data-action="add_currency" data-type="purified" data-val="10000">
-                  +10,000 ✨
+                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-yellow-500/30 border border-yellow-500/80 hover:bg-yellow-500/40 text-xs font-black text-amber-200 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="purified" data-val="10000">
+                  <span>+10,000</span>
+                  ${getGameIcon('sparkle', { size: 11, className: 'inline text-yellow-300' })}
                 </button>
               </div>
             </div>
 
             <!-- Spirit Shards Quick Row -->
             <div class="flex items-center gap-2">
-              <span class="text-[11px] font-bold text-cyan-300 w-28 shrink-0">Spirit Shards 💎:</span>
+              <span class="text-[11px] font-bold text-cyan-300 w-28 shrink-0 flex items-center gap-1">Spirit Shards ${getGameIcon('crystal', { size: 11, className: 'inline text-cyan-300' })}:</span>
               <div class="grid grid-cols-3 gap-1.5 flex-1">
-                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500/30 text-xs font-bold text-cyan-200 cursor-pointer" data-action="add_currency" data-type="shards" data-val="100000">
-                  +100k 💎
+                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500/30 text-xs font-bold text-cyan-200 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="shards" data-val="100000">
+                  <span>+100k</span>
+                  ${getGameIcon('crystal', { size: 11, className: 'inline text-cyan-300' })}
                 </button>
-                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-cyan-500/25 border border-cyan-500/60 hover:bg-cyan-500/35 text-xs font-black text-cyan-300 cursor-pointer" data-action="add_currency" data-type="shards" data-val="1000000">
-                  +1M 💎
+                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-cyan-500/25 border border-cyan-500/60 hover:bg-cyan-500/35 text-xs font-black text-cyan-300 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="shards" data-val="1000000">
+                  <span>+1M</span>
+                  ${getGameIcon('crystal', { size: 11, className: 'inline text-cyan-300' })}
                 </button>
-                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-cyan-500/30 border border-cyan-500/80 hover:bg-cyan-500/40 text-xs font-black text-cyan-100 cursor-pointer" data-action="add_currency" data-type="shards" data-val="10000000">
-                  +10M 💎
+                <button class="btn-dev-action py-1.5 px-2 rounded-xl bg-cyan-500/30 border border-cyan-500/80 hover:bg-cyan-500/40 text-xs font-black text-cyan-100 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="shards" data-val="10000000">
+                  <span>+10M</span>
+                  ${getGameIcon('crystal', { size: 11, className: 'inline text-cyan-300' })}
                 </button>
               </div>
             </div>
 
             <!-- Other Currencies (Energy, Soul Essence, Gods, Scriptures, Reshapers) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 border-t border-slate-800/80">
-              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-purple-300 cursor-pointer" data-action="add_currency" data-type="soul_essence" data-val="2000">
-                +2,000 Soul 🔮
+              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-purple-300 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="soul_essence" data-val="2000">
+                <span>+2,000 Soul</span>
+                ${getGameIcon('vortex', { size: 11, className: 'inline text-purple-400' })}
               </button>
-              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-orange-300 cursor-pointer" data-action="add_currency" data-type="gods" data-val="5000">
-                +5,000 Gods 🏺
+              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-orange-300 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="gods" data-val="5000">
+                <span>+5,000 Gods</span>
+                ${getGameIcon('alembic', { size: 11, className: 'inline text-amber-400' })}
               </button>
-              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 cursor-pointer" data-action="add_currency" data-type="energy" data-val="999">
-                Refill 999 ⚡
+              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="energy" data-val="999">
+                <span>Refill 999</span>
+                ${getGameIcon('zap', { size: 11, className: 'inline text-emerald-400' })}
               </button>
-              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-teal-300 cursor-pointer" data-action="add_currency" data-type="mats" data-val="100">
-                +100 Scrip & Reshaper 📜🔨
+              <button class="btn-dev-action py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-teal-300 cursor-pointer flex items-center justify-center gap-1" data-action="add_currency" data-type="mats" data-val="100">
+                <span>+100 Scrip & Reshaper</span>
               </button>
             </div>
 
             <!-- Custom Currency Selector & Input -->
             <div class="flex items-center gap-2 pt-1 border-t border-slate-800/80">
               <select id="select-custom-currency" class="flex-1 py-1.5 px-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-yellow-400">
-                <option value="purified">Purified Soul Essence ✨</option>
-                <option value="shards">Spirit Shards 💎</option>
-                <option value="soul_essence">Soul Essence 🔮</option>
-                <option value="gods">Essences of the Gods 🏺</option>
-                <option value="energy">Madness Energy ⚡</option>
-                <option value="astral">Astral Essence 🌌</option>
-                <option value="scriptures">Divine Scriptures 📜</option>
-                <option value="reshapers">Relic Reshapers 🔨</option>
+                <option value="purified">Purified Soul Essence</option>
+                <option value="shards">Spirit Shards</option>
+                <option value="soul_essence">Soul Essence</option>
+                <option value="gods">Essences of the Gods</option>
+                <option value="energy">Madness Energy</option>
+                <option value="astral">Astral Essence</option>
+                <option value="scriptures">Divine Scriptures</option>
+                <option value="reshapers">Relic Reshapers</option>
               </select>
               <input type="number" id="input-custom-currency-amt" placeholder="Amount" value="5000" min="1" max="10000000"
                      class="w-24 py-1.5 px-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-mono text-center focus:outline-none focus:border-yellow-400" />
@@ -236,10 +249,10 @@ function renderDevConsoleContent(modalRoot, onClose, lastMessage = '', isError =
           <!-- 4. Master All-In-One Cheats -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <button class="btn-dev-action py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 active:scale-98 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-500/20" data-action="unlock_all">
-              <span>🔓 Unlock All Systems & Bestiary</span>
+              <span>${getGameIcon('unlock', { size: 14, className: 'inline mr-1' })} Unlock All Systems & Bestiary</span>
             </button>
             <button class="btn-dev-action py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 hover:brightness-110 active:scale-98 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-amber-500/30" data-action="godmode">
-              <span>⚡ ACTIVATE GOD MODE</span>
+              <span>${getGameIcon('zap', { size: 14, className: 'inline mr-1' })} ACTIVATE GOD MODE</span>
             </button>
           </div>
 

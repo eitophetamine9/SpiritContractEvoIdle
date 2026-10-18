@@ -25,6 +25,7 @@ import {
 } from '../../render/spriteAnimator.js';
 import { audioManager } from '../../audio/audioManager.js';
 import { showEvolutionCeremonyModal, showDetailedAttributesModal } from '../components/modals.js';
+import { getGameIcon, getStatIcon, getRoleIcon, getElementIcon } from '../icons/gameIcons.js';
 
 let currentSelectedSpiritId = null;
 let activeSubHub = 'attributes'; // 'attributes', 'weapons', 'relics', 'rebirths', 'talents'
@@ -47,7 +48,7 @@ export function renderCharacterHubView(container, options = {}) {
   if (allSpirits.length === 0) {
     container.innerHTML = `
       <div class="sanctum-empty-state">
-        <div class="empty-icon">⛩️</div>
+        <div class="empty-icon">${getGameIcon('torii', { size: '36px', color: '#c084fc' })}</div>
         <h3>No Spirits Contracted Yet</h3>
         <p>Visit the Altar to summon and forge contracts with mystical spirits.</p>
       </div>
@@ -91,7 +92,7 @@ export function renderCharacterHubView(container, options = {}) {
       <!-- Top Header & Currencies Pill -->
       <div class="sanctum-header-bar">
         <div class="sanctum-title-group">
-          <span class="sanctum-main-icon">🌟</span>
+          <span class="sanctum-main-icon">${getGameIcon('sanctum', { size: '20px', color: '#ffd152' })}</span>
           <div>
             <h2 class="sanctum-title">SPIRIT SANCTUM HUB</h2>
             <span class="sanctum-subtitle">Hero Attributes & Rebirth Nexus</span>
@@ -100,15 +101,15 @@ export function renderCharacterHubView(container, options = {}) {
 
         <div class="sanctum-currencies-bar">
           <div class="sanctum-currency-pill" title="Soul Essence">
-            <span class="curr-icon">🔮</span>
+            <span class="curr-icon">${getGameIcon('astralEssence', { size: '14px' })}</span>
             <span class="curr-val">${(gameState.state.resources.soulEssence || 0).toLocaleString()}</span>
           </div>
           <div class="sanctum-currency-pill" title="Spirit Shards">
-            <span class="curr-icon">💎</span>
+            <span class="curr-icon">${getGameIcon('spiritShards', { size: '14px' })}</span>
             <span class="curr-val">${(gameState.state.resources.spiritShards || 0).toLocaleString()}</span>
           </div>
           <div class="sanctum-currency-pill" title="God Essences">
-            <span class="curr-icon">⚡</span>
+            <span class="curr-icon">${getGameIcon('godsEssence', { size: '14px' })}</span>
             <span class="curr-val">${(gameState.state.resources.essencesOfTheGods || 0).toLocaleString()}</span>
           </div>
         </div>
@@ -119,23 +120,23 @@ export function renderCharacterHubView(container, options = {}) {
         <div class="strip-controls-row">
           <span class="strip-count-label">Contracted Spirits (${filteredSpirits.length})</span>
           <button class="btn-toggle-filters ${isFiltersExpanded ? 'active' : ''}" id="btn-toggle-filters">
-            ${isFiltersExpanded ? '✕ Hide Filters' : '🔍 Filter & Search'}
+            ${isFiltersExpanded ? 'Hide Filters' : 'Filter & Search'}
           </button>
         </div>
 
         ${isFiltersExpanded ? `
           <div class="strip-filters-panel" id="strip-filters-panel">
             <div class="sanctum-search-box">
-              <span class="search-icon">🔍</span>
+              <span class="search-icon">${getGameIcon('filter', { size: '13px' })}</span>
               <input type="text" id="sanctum-search-input" placeholder="Search spirit..." value="${heroSearchQuery}">
             </div>
             <div class="sanctum-role-filter-chips">
               <button class="role-chip ${selectedRoleFilter === 'all' ? 'active' : ''}" data-role="all">All</button>
-              <button class="role-chip ${selectedRoleFilter === 'MAIN_DPS' ? 'active' : ''}" data-role="MAIN_DPS">⚔️ DPS</button>
-              <button class="role-chip ${selectedRoleFilter === 'SUB_DPS' ? 'active' : ''}" data-role="SUB_DPS">🗡️ Sub</button>
-              <button class="role-chip ${selectedRoleFilter === 'TANK' ? 'active' : ''}" data-role="TANK">🛡️ Tank</button>
-              <button class="role-chip ${selectedRoleFilter === 'SUPPORT' ? 'active' : ''}" data-role="SUPPORT">🪄 Sup</button>
-              <button class="role-chip ${selectedRoleFilter === 'HEALER' ? 'active' : ''}" data-role="HEALER">💚 Heal</button>
+              <button class="role-chip ${selectedRoleFilter === 'MAIN_DPS' ? 'active' : ''}" data-role="MAIN_DPS">${getRoleIcon('MAIN_DPS', { size: '12px' })} DPS</button>
+              <button class="role-chip ${selectedRoleFilter === 'SUB_DPS' ? 'active' : ''}" data-role="SUB_DPS">${getRoleIcon('SUB_DPS', { size: '12px' })} Sub</button>
+              <button class="role-chip ${selectedRoleFilter === 'TANK' ? 'active' : ''}" data-role="TANK">${getRoleIcon('TANK', { size: '12px' })} Tank</button>
+              <button class="role-chip ${selectedRoleFilter === 'SUPPORT' ? 'active' : ''}" data-role="SUPPORT">${getRoleIcon('SUPPORT', { size: '12px' })} Sup</button>
+              <button class="role-chip ${selectedRoleFilter === 'HEALER' ? 'active' : ''}" data-role="HEALER">${getRoleIcon('HEALER', { size: '12px' })} Heal</button>
             </div>
           </div>
         ` : ''}
@@ -195,8 +196,8 @@ export function renderCharacterHubView(container, options = {}) {
             <div class="pedestal-rune-circle"></div>
           </div>
           <div class="stage-animation-controls">
-            <button class="anim-btn" id="btn-anim-attack" title="Trigger Attack">⚔️ Strike</button>
-            <button class="anim-btn" id="btn-anim-hurt" title="Trigger Hit Reaction">🛡️ Flinch</button>
+            <button class="anim-btn" id="btn-anim-attack" title="Trigger Attack">${getGameIcon('sword', { size: '12px' })} Strike</button>
+            <button class="anim-btn" id="btn-anim-hurt" title="Trigger Hit Reaction">${getGameIcon('shield', { size: '12px' })} Flinch</button>
           </div>
         </div>
 
@@ -204,15 +205,15 @@ export function renderCharacterHubView(container, options = {}) {
         <div class="stage-stats-strip">
           <div class="stage-stat-pill">
             <span class="stat-lbl">Combat Power</span>
-            <span class="stat-val cp-val">⚡ ${(combatStats?.power || selectedSpirit.power || 0).toLocaleString()}</span>
+            <span class="stat-val cp-val flex items-center gap-1">${getGameIcon('statPower', { size: '12px', color: '#facc15' })} ${(combatStats?.power || selectedSpirit.power || 0).toLocaleString()}</span>
           </div>
           <div class="stage-stat-pill">
             <span class="stat-lbl">Rebirth Tier</span>
-            <span class="stat-val rebirth-val">${rebirthTier > 0 ? `⭐ Tier ${rebirthTier} (+${REBIRTH_CONFIG[rebirthTier - 1]?.bonusPercent || 0}%)` : '⭐0'}</span>
+            <span class="stat-val rebirth-val flex items-center gap-1">${rebirthTier > 0 ? `${getGameIcon('star', { size: '11px', color: '#ffd152' })} Tier ${rebirthTier} (+${REBIRTH_CONFIG[rebirthTier - 1]?.bonusPercent || 0}%)` : 'Tier 0'}</span>
           </div>
           <div class="stage-stat-pill">
             <span class="stat-lbl">Threat Footprint</span>
-            <span class="stat-val threat-val">🎯 ${combatStats?.threat || roleInfo.baseThreat}</span>
+            <span class="stat-val threat-val flex items-center gap-1">${getGameIcon('target', { size: '12px', color: '#ff6b81' })} ${combatStats?.threat || roleInfo.baseThreat}</span>
           </div>
         </div>
       </section>
@@ -221,23 +222,23 @@ export function renderCharacterHubView(container, options = {}) {
       <main class="sanctum-panel portrait-panel">
         <nav class="sanctum-subhub-nav">
           <button class="subhub-tab-btn ${activeSubHub === 'attributes' ? 'active' : ''}" data-subhub="attributes">
-            <span class="subhub-icon">📊</span>
+            <span class="subhub-icon">${getGameIcon('balance', { size: '16px' })}</span>
             <span class="subhub-text">Attributes</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'weapons' ? 'active' : ''}" data-subhub="weapons">
-            <span class="subhub-icon">⚔️</span>
+            <span class="subhub-icon">${getGameIcon('sword', { size: '16px' })}</span>
             <span class="subhub-text">Weapon</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'relics' ? 'active' : ''}" data-subhub="relics">
-            <span class="subhub-icon">🏛️</span>
+            <span class="subhub-icon">${getGameIcon('relic', { size: '16px' })}</span>
             <span class="subhub-text">Relics</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'rebirths' ? 'active' : ''}" data-subhub="rebirths">
-            <span class="subhub-icon">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? '🌟' : '🔒'}</span>
+            <span class="subhub-icon">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? getGameIcon('sparkle', { size: '16px', color: '#ffd152' }) : getGameIcon('lock', { size: '16px' })}</span>
             <span class="subhub-text">${gameState.isFeatureUnlocked('SPIRIT_REBIRTH') ? 'Rebirths' : 'Rebirths (Lv.16)'}</span>
           </button>
           <button class="subhub-tab-btn ${activeSubHub === 'talents' ? 'active' : ''}" data-subhub="talents">
-            <span class="subhub-icon">📜</span>
+            <span class="subhub-icon">${getGameIcon('scroll', { size: '16px' })}</span>
             <span class="subhub-text">Talents</span>
           </button>
         </nav>
@@ -317,7 +318,7 @@ function renderAttributesSubHub(spirit) {
       <div class="concise-stats-grid">
         <div class="concise-stat-card">
           <div class="cstat-head">
-            <span class="cstat-icon">💚</span>
+            <span class="cstat-icon">${getStatIcon('hp', { size: '14px' })}</span>
             <span class="cstat-label">Max HP</span>
           </div>
           <div class="cstat-val">${(attrs.hp?.total || combatStats.maxHp).toLocaleString()}</div>
@@ -326,7 +327,7 @@ function renderAttributesSubHub(spirit) {
 
         <div class="concise-stat-card">
           <div class="cstat-head">
-            <span class="cstat-icon">⚔️</span>
+            <span class="cstat-icon">${getStatIcon('atk', { size: '14px' })}</span>
             <span class="cstat-label">Attack (ATK)</span>
           </div>
           <div class="cstat-val">${(attrs.atk?.total || combatStats.atk).toLocaleString()}</div>
@@ -335,7 +336,7 @@ function renderAttributesSubHub(spirit) {
 
         <div class="concise-stat-card">
           <div class="cstat-head">
-            <span class="cstat-icon">🛡️</span>
+            <span class="cstat-icon">${getStatIcon('def', { size: '14px' })}</span>
             <span class="cstat-label">Defense (DEF)</span>
           </div>
           <div class="cstat-val">${(attrs.def?.total || combatStats.def).toLocaleString()}</div>
@@ -344,7 +345,7 @@ function renderAttributesSubHub(spirit) {
 
         <div class="concise-stat-card">
           <div class="cstat-head">
-            <span class="cstat-icon">🎯</span>
+            <span class="cstat-icon">${getStatIcon('crit', { size: '14px' })}</span>
             <span class="cstat-label">CRIT Rate / DMG</span>
           </div>
           <div class="cstat-val">${(attrs.critRate?.total || combatStats.critRate || 5).toFixed(1)}%</div>
@@ -363,11 +364,11 @@ function renderAttributesSubHub(spirit) {
         </div>
         <div class="level-action-buttons">
           <button class="btn-sanctum-action" id="btn-sanctum-levelup" ${isMaxLevel ? 'disabled' : ''}>
-            ⏫ Level Up (+1)
+            Level Up (+1)
           </button>
           ${spirit.canEvolve ? `
-            <button class="btn-sanctum-action accent" id="btn-sanctum-ascend">
-              🌟 Ascend Evolution
+            <button class="btn-sanctum-action accent flex items-center justify-center gap-1" id="btn-sanctum-ascend">
+              ${getGameIcon('sparkle', { size: '13px', color: '#ffd152' })} Ascend Evolution
             </button>
           ` : ''}
         </div>
@@ -376,10 +377,10 @@ function renderAttributesSubHub(spirit) {
       <!-- More Info Toggle & Detailed Dossier Trigger -->
       <div class="more-info-control-bar">
         <button class="btn-toggle-more-info ${isMoreInfoExpanded ? 'active' : ''}" id="btn-toggle-more-info">
-          ${isMoreInfoExpanded ? '▼ Hide Detailed Attributes' : '▶ 📜 More Info (Expand All 7 Attributes & Matrix)'}
+          ${isMoreInfoExpanded ? 'Hide Detailed Attributes' : 'More Info (Expand All 7 Attributes & Matrix)'}
         </button>
-        <button class="btn-open-dossier-pill" id="btn-open-detailed-dossier" title="Open 16-parameter categorized dossier modal">
-          📋 16-Param Dossier
+        <button class="btn-open-dossier-pill flex items-center gap-1" id="btn-open-detailed-dossier" title="Open 16-parameter categorized dossier modal">
+          ${getGameIcon('scroll', { size: '12px' })} 16-Param Dossier
         </button>
       </div>
 
@@ -394,7 +395,7 @@ function renderAttributesSubHub(spirit) {
         <div class="dual-attributes-grid">
           <!-- 1. HP -->
           <div class="attribute-row-card">
-            <div class="attr-icon-box hp">💚</div>
+            <div class="attr-icon-box hp">${getStatIcon('hp', { size: '16px' })}</div>
             <div class="attr-details">
               <div class="attr-label-line">
                 <span class="attr-name">Max HP</span>
@@ -409,7 +410,7 @@ function renderAttributesSubHub(spirit) {
 
           <!-- 2. ATK -->
           <div class="attribute-row-card">
-            <div class="attr-icon-box atk">⚔️</div>
+            <div class="attr-icon-box atk">${getStatIcon('atk', { size: '16px' })}</div>
             <div class="attr-details">
               <div class="attr-label-line">
                 <span class="attr-name">Attack (ATK)</span>
@@ -424,7 +425,7 @@ function renderAttributesSubHub(spirit) {
 
           <!-- 3. DEF -->
           <div class="attribute-row-card">
-            <div class="attr-icon-box def">🛡️</div>
+            <div class="attr-icon-box def">${getStatIcon('def', { size: '16px' })}</div>
             <div class="attr-details">
               <div class="attr-label-line">
                 <span class="attr-name">Defense (DEF)</span>
@@ -439,7 +440,7 @@ function renderAttributesSubHub(spirit) {
 
           <!-- 4. CRIT RATE -->
           <div class="attribute-row-card">
-            <div class="attr-icon-box crit">🎯</div>
+            <div class="attr-icon-box crit">${getStatIcon('crit', { size: '16px' })}</div>
             <div class="attr-details">
               <div class="attr-label-line">
                 <span class="attr-name">CRIT Rate</span>
@@ -454,7 +455,7 @@ function renderAttributesSubHub(spirit) {
 
           <!-- 5. CRIT DMG -->
           <div class="attribute-row-card">
-            <div class="attr-icon-box critdmg">💥</div>
+            <div class="attr-icon-box critdmg">${getGameIcon('sparkle', { size: '16px', color: '#ff4757' })}</div>
             <div class="attr-details">
               <div class="attr-label-line">
                 <span class="attr-name">CRIT Damage</span>
@@ -469,7 +470,7 @@ function renderAttributesSubHub(spirit) {
 
           <!-- 6. ULT AMP -->
           <div class="attribute-row-card">
-            <div class="attr-icon-box ult">🔮</div>
+            <div class="attr-icon-box ult">${getGameIcon('astralEssence', { size: '16px' })}</div>
             <div class="attr-details">
               <div class="attr-label-line">
                 <span class="attr-name">Ultimate Amplification</span>
@@ -484,7 +485,7 @@ function renderAttributesSubHub(spirit) {
 
           <!-- 7. MANA REPLENISH -->
           <div class="attribute-row-card">
-            <div class="attr-icon-box mana">⚡</div>
+            <div class="attr-icon-box mana">${getStatIcon('mana', { size: '16px' })}</div>
             <div class="attr-details">
               <div class="attr-label-line">
                 <span class="attr-name">Mana Replenish Rate</span>
@@ -501,7 +502,7 @@ function renderAttributesSubHub(spirit) {
         <!-- Dynamic Scaling Profile Breakdown Card -->
         <div class="scaling-profile-card">
           <div class="profile-card-header">
-            <span class="profile-icon">📜</span>
+            <span class="profile-icon">${getGameIcon('scroll', { size: '16px' })}</span>
             <div class="profile-info">
               <div class="profile-title">${scaling.title} (${role.name})</div>
               <div class="profile-formula">${scaling.formulaDesc}</div>
@@ -532,7 +533,7 @@ function renderWeaponsSubHub(spirit) {
     return `
       <div class="subhub-pane weapons-pane">
         <div class="empty-subhub-box">
-          <div class="empty-icon">⚔️</div>
+          <div class="empty-icon">${getGameIcon('sword', { size: '36px', color: '#64748b' })}</div>
           <h3>No Weapon Equipped</h3>
           <p>Equip a divine blade, bow, staff, claws, or mallet to bolster attack potency.</p>
         </div>
@@ -562,7 +563,7 @@ function renderWeaponsSubHub(spirit) {
           <div class="weapon-headline">
             <div class="weapon-name">${weapon.name}</div>
             <div class="weapon-type-pill">${(weapon.type || weapon.weaponTypeId || 'Weapon').toUpperCase()} • ${weapon.rarity || 'RARE'}</div>
-            <div class="weapon-atk-badge">⚔️ +${weapon.atkPower || 0} ATK Power</div>
+            <div class="weapon-atk-badge flex items-center gap-1">${getGameIcon('sword', { size: '12px' })} +${weapon.atkPower || 0} ATK Power</div>
           </div>
         </div>
 
@@ -597,7 +598,7 @@ function renderWeaponsSubHub(spirit) {
           ` : ''}
           ${weapon.abilityName ? `
             <div class="weapon-passive-box" style="margin-top: 8px; padding: 8px 10px; background: rgba(255,255,255,0.04); border-left: 2px solid #e1b12c; border-radius: 4px; text-align: left;">
-              <div style="font-size: 11px; font-weight: 700; color: #f1c40f; display: flex; align-items: center; gap: 4px;">✦ ${weapon.abilityName}</div>
+              <div style="font-size: 11px; font-weight: 700; color: #f1c40f; display: flex; align-items: center; gap: 4px;">${getGameIcon('sparkle', { size: '11px', color: '#f1c40f' })} ${weapon.abilityName}</div>
               <div style="font-size: 10px; color: #a4b0be; line-height: 1.35; margin-top: 2px;">${weapon.abilityDesc || ''}</div>
             </div>
           ` : ''}
@@ -605,12 +606,12 @@ function renderWeaponsSubHub(spirit) {
 
         <div class="weapon-enhance-bar">
           <div class="enhance-cost-line">
-            <span>Cost: 💎 ${shardCost.toLocaleString()} Shards</span>
-            ${essenceCost > 0 ? `<span>• ⚡ ${essenceCost} Gods Essences</span>` : ''}
+            <span style="display: inline-flex; align-items: center; gap: 4px;">Cost: ${getGameIcon('spiritShards', { size: '12px' })} ${shardCost.toLocaleString()} Shards</span>
+            ${essenceCost > 0 ? `<span style="display: inline-flex; align-items: center; gap: 4px;">• ${getGameIcon('godsEssence', { size: '12px' })} ${essenceCost} Gods Essences</span>` : ''}
           </div>
           <div class="enhance-buttons-row">
             <button class="btn-sanctum-action" id="btn-sanctum-enhance-weapon" ${canEnhance ? '' : 'disabled'}>
-              ${isMaxLvl ? 'MAX LEVEL (+15)' : `🔨 Enhance (+${nextLvl})`}
+              ${isMaxLvl ? 'MAX LEVEL (+15)' : `Enhance (+${nextLvl})`}
             </button>
           </div>
         </div>
@@ -625,10 +626,10 @@ function renderWeaponsSubHub(spirit) {
 function renderRelicsSubHub(spirit) {
   const equippedRelics = spirit.equippedRelics || {};
   const slots = [
-    { key: 'headgear', name: 'Headgear (Crown)', icon: '👑' },
-    { key: 'weapon', name: 'Consecrated Relic (Blade)', icon: '🗡️' },
-    { key: 'necklace', name: 'Necklace (Trident/Amulet)', icon: '📿' },
-    { key: 'totem', name: 'Totem / Charm (Bulwark/Orb)', icon: '🛡️' }
+    { key: 'headgear', name: 'Headgear (Crown)', icon: getGameIcon('crown', { size: '20px', color: '#facc15' }) },
+    { key: 'weapon', name: 'Consecrated Relic (Blade)', icon: getGameIcon('sword', { size: '20px', color: '#f97316' }) },
+    { key: 'necklace', name: 'Necklace (Trident/Amulet)', icon: getGameIcon('relic', { size: '20px', color: '#38bdf8' }) },
+    { key: 'totem', name: 'Totem / Charm (Bulwark/Orb)', icon: getGameIcon('shield', { size: '20px', color: '#a855f7' }) }
   ];
 
   const godCounts = {};
@@ -682,7 +683,7 @@ function renderRelicsSubHub(spirit) {
                 </div>
                 <div class="relic-info">
                   <div class="relic-name">${relic.name || s.name}</div>
-                  <div class="relic-stars">⭐ ${relic.stars || 3} Stars • +${relic.level || 1}</div>
+                  <div class="relic-stars flex items-center gap-1">${getGameIcon('star', { size: '10px', color: '#facc15' })} ${relic.stars || 3} Stars • +${relic.level || 1}</div>
                 </div>
               </div>
 
@@ -712,12 +713,12 @@ function renderRebirthsSubHub(spirit) {
     <div class="subhub-pane rebirths-pane">
       <div class="pane-section-header">
         <span class="sec-title">CELESTIAL REBIRTH NEXUS (REBIRTH I TO VII)</span>
-        <span class="sec-tag">${isRebirthUnlocked ? `Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%` : '🔒 Requires Contractor Lv. 16'}</span>
+        <span class="sec-tag">${isRebirthUnlocked ? `Active Boost: +${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}%` : 'Requires Contractor Lv. 16'}</span>
       </div>
 
       ${!isRebirthUnlocked ? `
         <div class="empty-subhub-box" style="padding: 16px 14px; border: 1px dashed rgba(245, 158, 11, 0.4); background: rgba(15, 23, 42, 0.85); border-radius: 16px; text-align: center; margin-bottom: 12px;">
-          <div style="font-size: 26px; margin-bottom: 4px;">🔒</div>
+          <div style="margin-bottom: 4px;">${getGameIcon('lock', { size: '28px', color: '#f59e0b' })}</div>
           <h4 style="color: #ffd152; font-weight: 900; font-size: 13px; margin-bottom: 2px;">Spirit Rebirth Chamber Locked</h4>
           <p style="color: #cbd5e1; font-size: 11px; line-height: 1.35; max-width: 320px; margin: 0 auto;">
             Requires <strong>Contractor Level 16</strong> to transcend maximum level limits and ignite 7-star constellation affinities.
@@ -729,7 +730,7 @@ function renderRebirthsSubHub(spirit) {
 
       <div class="rebirth-current-card">
         <div class="rcard-header">
-          <span class="rcard-star-badge">${currentTier > 0 ? `⭐ Tier ${currentTier}` : '⭐0 Dormant'}</span>
+          <span class="rcard-star-badge flex items-center gap-1">${currentTier > 0 ? `${getGameIcon('star', { size: '12px', color: '#ffd152' })} Tier ${currentTier}` : 'Tier 0 Dormant'}</span>
           <span class="rcard-bonus">+${currentTier > 0 ? (REBIRTH_CONFIG[currentTier - 1]?.bonusPercent || 0) : 0}% All Base Stats</span>
         </div>
         <div class="rcard-desc">
@@ -741,18 +742,18 @@ function renderRebirthsSubHub(spirit) {
       <div class="rebirth-forge-chamber">
         <div class="forge-info-line">
           <span>Copies Available: <strong>${duplicateSpirits.length}</strong> (Requires 1 copy)</span>
-          <span>Cost: <strong>${(gameState.state.resources.soulEssence || 0).toLocaleString()} / ${nextTier <= 7 ? nextTier * 5 : 0} 🔮</strong></span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">Cost: <strong>${(gameState.state.resources.soulEssence || 0).toLocaleString()} / ${nextTier <= 7 ? nextTier * 5 : 0} ${getGameIcon('astralEssence', { size: '13px' })}</strong></span>
         </div>
 
-        <button class="btn-sanctum-action accent" id="btn-sanctum-rebirth-ascend" ${canAscendRebirth ? '' : 'disabled'}>
-          ${nextTier > 7 ? '⭐ MAXIMUM REBIRTH VII ACHIEVED' : `🌟 Ascend to Rebirth ${nextTier} (+${REBIRTH_CONFIG[nextTier - 1]?.bonusPercent || (nextTier * 12)}%)`}
+        <button class="btn-sanctum-action accent flex items-center justify-center gap-1" id="btn-sanctum-rebirth-ascend" ${canAscendRebirth ? '' : 'disabled'}>
+          ${nextTier > 7 ? 'MAXIMUM REBIRTH VII ACHIEVED' : `${getGameIcon('sparkle', { size: '13px', color: '#ffd152' })} Ascend to Rebirth ${nextTier} (+${REBIRTH_CONFIG[nextTier - 1]?.bonusPercent || (nextTier * 12)}%)`}
         </button>
       </div>
 
       <!-- Collapsible All 7 Tiers Track -->
       <div class="rebirth-expand-toggle-bar">
         <button class="btn-toggle-rebirth-list" id="btn-toggle-rebirth-list">
-          ${isRebirthListExpanded ? '▼ Hide Rebirth Progression Track' : '▶ 📜 View All 7 Rebirth Tiers'}
+          ${isRebirthListExpanded ? 'Hide Rebirth Progression Track' : 'View All 7 Rebirth Tiers'}
         </button>
       </div>
 
@@ -765,7 +766,7 @@ function renderRebirthsSubHub(spirit) {
           return `
             <div class="rebirth-node-item ${isUnlocked ? 'unlocked' : isNext ? 'next' : 'locked'}">
               <div class="node-star-pillar">
-                <span class="node-star-badge">${isUnlocked ? '⭐' : isNext ? '🔓' : '🔒'}</span>
+                <span class="node-star-badge">${isUnlocked ? getGameIcon('star', { size: '12px', color: '#facc15' }) : (isNext ? getGameIcon('unlock', { size: '12px', color: '#38bdf8' }) : getGameIcon('lock', { size: '12px', color: '#64748b' }))}</span>
                 <span class="node-num">Tier ${tier}</span>
               </div>
               <div class="node-content">
@@ -773,8 +774,8 @@ function renderRebirthsSubHub(spirit) {
                   <span class="node-title">${cfg.name || `Rebirth ${tier}`}</span>
                   <span class="node-stat-mult">+${cfg.bonusPercent || (tier * 12)}% Stats</span>
                 </div>
-                <div class="node-passive-desc">
-                  ✨ ${cfg.uniqueAddition || 'Ascended attributes resonance.'}
+                <div class="node-passive-desc flex items-center gap-1">
+                  ${getGameIcon('sparkle', { size: '11px', color: '#c084fc' })} ${cfg.uniqueAddition || 'Ascended attributes resonance.'}
                 </div>
               </div>
             </div>
@@ -803,7 +804,7 @@ function renderTalentsSubHub(spirit) {
 
       <div class="talent-card">
         <div class="talent-header">
-          <span class="talent-icon">⚔️</span>
+          <span class="talent-icon">${getGameIcon('sword', { size: '16px' })}</span>
           <div>
             <div class="talent-title">Basic Attack: Spirit Cadence</div>
             <div class="talent-type">Combat Basic • Restores 10 MP per strike</div>
@@ -824,7 +825,7 @@ function renderTalentsSubHub(spirit) {
 
       <div class="talent-card ultimate">
         <div class="talent-header">
-          <span class="talent-icon">🔮</span>
+          <span class="talent-icon">${getGameIcon('astralEssence', { size: '16px' })}</span>
           <div>
             <div class="talent-title">Ultimate Art: ${species.ultimate?.name || 'Cosmic Awakening'}</div>
             <div class="talent-type">100 Mana • ${scaling.title}</div>
@@ -948,12 +949,12 @@ function attachSubHubListeners(container, selectedSpirit) {
           detailsBox.classList.remove('collapsed');
           detailsBox.classList.add('expanded');
           btnMoreInfo.classList.add('active');
-          btnMoreInfo.textContent = '▼ Hide Detailed Attributes';
+          btnMoreInfo.textContent = 'Hide Detailed Attributes';
         } else {
           detailsBox.classList.remove('expanded');
           detailsBox.classList.add('collapsed');
           btnMoreInfo.classList.remove('active');
-          btnMoreInfo.textContent = '▶ 📜 More Info (Expand All 7 Attributes & Matrix)';
+          btnMoreInfo.textContent = 'More Info (Expand All 7 Attributes & Matrix)';
         }
       }
     });
@@ -969,11 +970,11 @@ function attachSubHubListeners(container, selectedSpirit) {
         if (isRebirthListExpanded) {
           track.classList.remove('collapsed');
           track.classList.add('expanded');
-          btnToggleRebirth.textContent = '▼ Hide Rebirth Progression Track';
+          btnToggleRebirth.textContent = 'Hide Rebirth Progression Track';
         } else {
           track.classList.remove('expanded');
           track.classList.add('collapsed');
-          btnToggleRebirth.textContent = '▶ 📜 View All 7 Rebirth Tiers';
+          btnToggleRebirth.textContent = 'View All 7 Rebirth Tiers';
         }
       }
     });

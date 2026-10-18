@@ -4,6 +4,8 @@
  * and canvas rendering for modular 2D creature spritesheets.
  */
 
+import { getGameIcon } from '../ui/icons/gameIcons.js';
+
 // Embedded Manifest for instantaneous, offline-ready operation
 export const ALL_54_SPIRIT_SPECIES = [
   'cat_spirit', 'dog_spirit', 'chicken_spirit', 'caterpillar_spirit', 'bull_spirit',
@@ -667,7 +669,7 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
 /**
  * Generates HTML string for an animated creature/hero sprite
  */
-export function createAnimatedSpriteHtml(speciesOrSheetKey, { isFlipped = false, extraClasses = '', glyph = '✨' } = {}) {
+export function createAnimatedSpriteHtml(speciesOrSheetKey, { isFlipped = false, extraClasses = '', glyph = '' } = {}) {
   let sheetKey = 'feline_shadow';
   if (typeof speciesOrSheetKey === 'string' && SPRITE_MANIFEST.sheets[speciesOrSheetKey]) {
     sheetKey = speciesOrSheetKey;
@@ -693,7 +695,7 @@ export function createAnimatedEnemyHtml(enemy, { extraClasses = '' } = {}) {
   return `
     <div class="animated-pixel-sprite sprite-enemy sprite-${sheetKey} ${isBoss ? 'boss-animated-sprite' : ''} ${extraClasses}" style="--sprite-sheet: url('${path}');">
       <div class="sprite-frame-viewer"></div>
-      <span class="core-glyph-fallback" style="display: none;">👾</span>
+      <span class="core-glyph-fallback" style="display: none;"></span>
     </div>
   `;
 }
@@ -757,7 +759,7 @@ export function createAnimatedChestHtml({ extraClasses = '' } = {}) {
   return `
     <div class="animated-treasure-chest ${extraClasses}" style="--sprite-sheet: url('${path}');">
       <div class="chest-frame-viewer"></div>
-      <div class="chest-sparkles">✨</div>
+      <div class="chest-sparkles">${getGameIcon('sparkle', { size: 14, className: 'text-amber-300 animate-spin' })}</div>
     </div>
   `;
 }

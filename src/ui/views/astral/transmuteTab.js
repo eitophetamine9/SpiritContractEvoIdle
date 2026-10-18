@@ -1,6 +1,7 @@
 import { gameState } from '../../../state/gameState.js';
 import { audioManager } from '../../../audio/audioManager.js';
 import { TRANSMUTATION_CONFIG } from '../../../data/astralRealmData.js';
+import { getGameIcon } from '../../icons/gameIcons.js';
 
 export function renderTransmutationSectionHtml(res, state) {
   const currentCount = state.transmutationsToday || 0;
@@ -16,8 +17,8 @@ export function renderTransmutationSectionHtml(res, state) {
       <div class="rounded-xl border border-fuchsia-500/30 p-3.5 bg-gradient-to-b from-fuchsia-950/25 via-slate-900/90 to-slate-950 shadow-md flex flex-col gap-2">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <div class="w-10 h-10 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/40 flex items-center justify-center text-2xl shrink-0">
-              ⚗️
+            <div class="w-10 h-10 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/40 flex items-center justify-center shrink-0">
+              ${getGameIcon('alembic', { size: 24, color: '#f43f5e' })}
             </div>
             <div>
               <h3 class="text-xs sm:text-sm font-extrabold text-white">Astral Transmutation Circle</h3>
@@ -31,8 +32,8 @@ export function renderTransmutationSectionHtml(res, state) {
           </div>
         </div>
 
-        <div class="text-[10px] text-fuchsia-300 bg-fuchsia-950/40 border border-fuchsia-500/30 rounded-lg px-2.5 py-1 mt-1">
-          🛡️ <strong>Anti-Oversaturation Economy Protocol:</strong> Hard limit of <strong>${maxQuota} transmutations per day</strong>. Base rate is 1,000 💎 + 10 💠. Each transmutation completed today increases shard stabilization cost by <strong>+250 💎</strong> (resets daily at midnight).
+        <div class="text-[10px] text-fuchsia-300 bg-fuchsia-950/40 border border-fuchsia-500/30 rounded-lg px-2.5 py-1 mt-1 flex items-center gap-1.5 flex-wrap">
+          ${getGameIcon('shield', { size: 12 })} <strong>Anti-Oversaturation Economy Protocol:</strong> Hard limit of <strong>${maxQuota} transmutations per day</strong>. Base rate is 1,000 ${getGameIcon('spiritShards', { size: 10 })} + 10 ${getGameIcon('godsEssence', { size: 10 })}. Each transmutation completed today increases shard stabilization cost by <strong>+250 ${getGameIcon('spiritShards', { size: 10 })}</strong> (resets daily at midnight).
         </div>
       </div>
 
@@ -45,11 +46,11 @@ export function renderTransmutationSectionHtml(res, state) {
             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Required Reagents</div>
             <div class="flex flex-col gap-1.5">
               <div class="flex items-center justify-between text-xs px-2 py-1 rounded bg-slate-900 border ${(res.spiritShards || 0) >= shardCost ? 'border-emerald-500/40 text-emerald-300' : 'border-red-500/40 text-red-300'}">
-                <span>💎 Shards:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('spiritShards', { size: 11 })} Shards:</span>
                 <strong>${shardCost.toLocaleString()} (${(res.spiritShards || 0).toLocaleString()})</strong>
               </div>
               <div class="flex items-center justify-between text-xs px-2 py-1 rounded bg-slate-900 border ${(res.essencesOfTheGods || 0) >= godCost ? 'border-emerald-500/40 text-emerald-300' : 'border-red-500/40 text-red-300'}">
-                <span>💠 Gods:</span>
+                <span class="inline-flex items-center gap-1">${getGameIcon('godsEssence', { size: 11 })} Gods:</span>
                 <strong>${godCost} (${(res.essencesOfTheGods || 0)})</strong>
               </div>
             </div>
@@ -57,23 +58,23 @@ export function renderTransmutationSectionHtml(res, state) {
 
           <!-- Conversion Catalyst Flow Arrow -->
           <div class="flex flex-col items-center justify-center gap-1">
-            <span class="text-3xl text-fuchsia-400 animate-pulse">➔</span>
+            <span class="text-3xl text-fuchsia-400 animate-pulse">${getGameIcon('arrowRight', { size: 28, color: '#e879f9' })}</span>
             <span class="text-[10px] font-black text-fuchsia-300 uppercase tracking-widest">Crystallize</span>
           </div>
 
           <!-- Output Catalyst -->
           <div class="rounded-xl bg-gradient-to-b from-purple-950/30 to-slate-950/80 border border-purple-500/40 p-3 flex flex-col items-center justify-center gap-1">
             <div class="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Product</div>
-            <div class="text-2xl">🔮</div>
+            <div class="text-2xl">${getGameIcon('astralEssence', { size: 28 })}</div>
             <div class="text-sm font-black text-white">+1 Astral Essence</div>
-            <div class="text-[10px] text-slate-400">Current Stock: ${(res.soulEssence || 0).toLocaleString()} 🔮</div>
+            <div class="text-[10px] text-slate-400 inline-flex items-center gap-1">Current Stock: ${(res.soulEssence || 0).toLocaleString()} ${getGameIcon('astralEssence', { size: 10 })}</div>
           </div>
         </div>
 
         <!-- Action Button -->
         <button id="btn-transmute-shards" class="min-h-[44px] w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-lg disabled:opacity-50 ${isCapped ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed' : 'bg-gradient-to-r from-fuchsia-400 via-purple-300 to-indigo-400 hover:brightness-110'} flex items-center justify-center gap-1.5" ${canTransmute ? '' : 'disabled'}>
-          <span>⚗️</span>
-          <span>${isCapped ? `Daily Limit Reached (${maxQuota}/${maxQuota}) — Resets Tomorrow` : canTransmute ? `Perform Transmutation (Cost: ${shardCost.toLocaleString()} 💎 + ${godCost} 💠)` : `Insufficient Reagents (Need ${shardCost.toLocaleString()} 💎 + ${godCost} 💠)`}</span>
+          <span>${getGameIcon('alembic', { size: 14 })}</span>
+          <span>${isCapped ? `Daily Limit Reached (${maxQuota}/${maxQuota}) — Resets Tomorrow` : canTransmute ? `Perform Transmutation (Cost: ${shardCost.toLocaleString()} Shards + ${godCost} Gods)` : `Insufficient Reagents (Need ${shardCost.toLocaleString()} Shards + ${godCost} Gods)`}</span>
         </button>
 
       </div>

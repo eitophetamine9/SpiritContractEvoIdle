@@ -7,6 +7,7 @@ import { arenaRenderer } from '../../render/arenaRenderer.js';
 import { showSpiritModal } from '../components/modals.js';
 import { getSheetKeyForSpecies, createAnimatedEnemyHtml, getSheetKeyForEnemy } from '../../render/spriteAnimator.js';
 import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../render/combatAnimator.js';
+import { getGameIcon, getRoleIcon } from '../icons/gameIcons.js';
 
 let isPaused = false;
 let battleSpeed = 1; // 1 or 2
@@ -33,13 +34,13 @@ export function renderMadnessView(container) {
   // Power comparison ratio
   const powerRatio = partyPower / Math.max(1, enemyPower);
   let powerStatusClass = 'matched';
-  let powerStatusText = '⚖️ EVEN MATCH';
+  let powerStatusText = `${getGameIcon('balance', { size: '13px' })} EVEN MATCH`;
   if (powerRatio >= 1.25) {
     powerStatusClass = 'crushing';
-    powerStatusText = `⚡ DOMINATING (+${Math.round((powerRatio - 1) * 100)}% Advantage)`;
+    powerStatusText = `${getGameIcon('statPower', { size: '13px', color: '#ffd152' })} DOMINATING (+${Math.round((powerRatio - 1) * 100)}% Advantage)`;
   } else if (powerRatio < 0.85) {
     powerStatusClass = 'underpowered';
-    powerStatusText = `⚠️ UNDERPOWERED (-${Math.round((1 - powerRatio) * 100)}% Deficit)`;
+    powerStatusText = `${getGameIcon('alert', { size: '13px', color: '#ff4757' })} UNDERPOWERED (-${Math.round((1 - powerRatio) * 100)}% Deficit)`;
   }
 
   const nextStageNum = mz.highestStageUnlocked + 1;
@@ -57,10 +58,10 @@ export function renderMadnessView(container) {
       <div class="combat-top-hud">
         <div class="combat-hud-left">
           <button id="btn-combat-pause" class="hud-icon-btn" title="Pause Combat">
-            ${isPaused ? '▶️' : '⏸️'}
+            ${isPaused ? getGameIcon('play', { size: '14px' }) : getGameIcon('pause', { size: '14px' })}
           </button>
           <button id="btn-combat-sound" class="hud-icon-btn" title="Toggle Sound">
-            ${audioManager.isMuted ? '🔇' : '🔊'}
+            ${audioManager.isMuted ? getGameIcon('audioOff', { size: '14px' }) : getGameIcon('audioOn', { size: '14px' })}
           </button>
         </div>
 
@@ -72,7 +73,7 @@ export function renderMadnessView(container) {
 
         <div class="combat-hud-right">
           <button id="btn-combat-speed" class="hud-speed-btn ${battleSpeed === 2 ? 'speed-2x' : ''} ${!((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? 'speed-locked' : ''}" style="${!((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? 'opacity: 0.65;' : ''}" title="${((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? 'Battle Speed (1X / 2X)' : '2X Battle Speed unlocks at Madness Floor 10'}">
-            ${((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? `${battleSpeed}X` : '🔒 2X'}
+            ${((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10) ? `${battleSpeed}X` : `${getGameIcon('lock', { size: '11px' })} 2X`}
           </button>
         </div>
       </div>
@@ -95,12 +96,12 @@ export function renderMadnessView(container) {
             <button id="btn-next-stage" class="zone-btn-sm">Next ▶</button>
           ` : (hasClearedHighestUnlocked ? `
             <button id="btn-unlock-next-floor" class="zone-btn-sm" style="background: linear-gradient(135deg, #f1c40f, #e67e22); color: #000; font-weight: 900;" ${canAffordNext ? '' : 'disabled'}>
-              Unlock F${nextStageNum} (10 ⚡)
+              Unlock F${nextStageNum} (10 ${getGameIcon('energy', { size: '10px' })})
             </button>
           ` : `
             <button id="btn-next-stage" class="zone-btn-sm" disabled title="Defeat Boss on Floor ${mz.stage} first">Next ▶</button>
           `)}
-          <button id="btn-trials-shortcut" class="zone-btn-sm" style="background: rgba(241, 196, 15, 0.18); border-color: #f1c40f; color: #ffd32a; font-weight: 800;" title="Challenge Pantheon Trials to farm Greek God Relics">🏛️ Trials</button>
+          <button id="btn-trials-shortcut" class="zone-btn-sm" style="background: rgba(241, 196, 15, 0.18); border-color: #f1c40f; color: #ffd32a; font-weight: 800;" title="Challenge Pantheon Trials to farm Greek God Relics">${getGameIcon('trials', { size: '13px', color: '#ffd32a' })} Trials</button>
         </div>
       </div>
 
@@ -109,11 +110,11 @@ export function renderMadnessView(container) {
         <div class="floor-unlock-banner">
           <div style="display: flex; flex-direction: column;">
             <span style="font-size: 13px; font-weight: 800; color: #fff;">Floor ${nextStageNum} (Locked)</span>
-            <span style="font-size: 10px; color: var(--text-muted);">Entry Cost: 10 ⚡ (Unlocks permanent free farming)</span>
+            <span style="font-size: 10px; color: var(--text-muted);">Entry Cost: 10 ${getGameIcon('energy', { size: '10px' })} (Unlocks permanent free farming)</span>
           </div>
 
           <button id="btn-unlock-next-floor" class="btn-unlock-stage" ${canAffordNext ? '' : 'disabled'}>
-            Unlock Floor ${nextStageNum} (10 ⚡)
+            Unlock Floor ${nextStageNum} (10 ${getGameIcon('energy', { size: '10px' })})
           </button>
         </div>
       ` : ''}
@@ -135,7 +136,7 @@ export function renderMadnessView(container) {
           
           <div class="formation-header-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <span>ALLIED SQUAD</span>
-            <button id="btn-madness-auto-align" class="btn-madness-quick-action" title="Auto-align squad into optimal role positions">⚡ Auto-Align</button>
+            <button id="btn-madness-auto-align" class="btn-madness-quick-action" title="Auto-align squad into optimal role positions">${getGameIcon('sparkle', { size: '12px' })} Auto-Align</button>
           </div>
 
           <!-- Seamless 3x3 Battlefield Grid: Characters directly in environment -->
@@ -162,13 +163,13 @@ export function renderMadnessView(container) {
 
         <!-- Center Combat Clash Point (Animations / Particles) -->
         <div class="combat-clash-divider">
-          <div class="clash-sparks-icon">⚔️</div>
+          <div class="clash-sparks-icon">${getGameIcon('sword', { size: '16px', color: '#ffd152' })}</div>
         </div>
 
         <!-- Right Side: Corrupted Swarm Formation (Seamless, No Borders, Animated Sprites) -->
         <div class="enemy-formation-column seamless-enemy-column">
           <div class="formation-header-label" style="color: #ff6b81;">
-            ${swarm.some(e => e.isBoss) ? '⚠️ OVERLORD SWARM' : `CORRUPTED SWARM (${livingEnemiesCount}/${swarm.length})`}
+            ${swarm.some(e => e.isBoss) ? `${getGameIcon('alert', { size: '13px', color: '#ff4757' })} OVERLORD SWARM` : `CORRUPTED SWARM (${livingEnemiesCount}/${swarm.length})`}
           </div>
 
           <div class="enemy-swarm-wrapper ${swarm.length >= 4 ? 'large-swarm' : ''}" id="enemy-swarm-wrapper" style="${swarm.length >= 4 ? 'display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 12px; align-items: center;' : 'display: flex; flex-direction: column; gap: 8px; align-items: flex-end;'}">
@@ -181,10 +182,10 @@ export function renderMadnessView(container) {
                   <!-- Enemy Details & Floating Health Bar (Overhead, Borderless) -->
                   <div class="seamless-enemy-overhead">
                     <div class="seamless-enemy-name">
-                      ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
+                      ${em.isBoss ? `<span class="boss-crown-badge">${getGameIcon('crown', { size: '12px', color: '#ffd152' })}</span>` : ''}
                       <span>${em.name}</span>
                     </div>
-                    <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
+                    <div class="seamless-enemy-pwr">${getGameIcon('statPower', { size: '11px', color: '#ffd152' })} ${em.power.toLocaleString()} PWR</div>
 
                     <div class="seamless-enemy-hp-track">
                       <div id="enemy-hp-fill-${sIdx}" class="seamless-enemy-hp-fill" style="width: ${emHpPct}%;"></div>
@@ -210,8 +211,8 @@ export function renderMadnessView(container) {
         
         <!-- Active Attack Button -->
         <button id="btn-fight-enemy" class="btn-main-attack">
-          <span>⚔️ Attack Foe (Party Strike • Charges +10 MP)</span>
-          <span class="btn-subtext">Party Power: ⚡ ${partyPower.toLocaleString()} PWR • DPS: ${Math.round(partyPower * 0.45 * battleSpeed)}/s</span>
+          <span>${getGameIcon('sword', { size: '14px' })} Attack Foe (Party Strike • Charges +10 MP)</span>
+          <span class="btn-subtext">Party Power: ${getGameIcon('statPower', { size: '11px', color: '#ffd152' })} ${partyPower.toLocaleString()} PWR • DPS: ${Math.round(partyPower * 0.45 * battleSpeed)}/s</span>
         </button>
 
         <!-- Power Assessment Badge -->
@@ -222,15 +223,15 @@ export function renderMadnessView(container) {
         <!-- Combat Engagement Control -->
         <div class="combat-toggle-row" style="grid-template-columns: 1fr;">
           <button id="btn-toggle-engage" class="zone-toggle-btn ${mz.isEngaged !== false ? 'active' : 'standby'}" title="Toggle between active combat and standby resting mode">
-            ${mz.isEngaged !== false ? '⚔️ Combat: ENGAGED' : '⏸️ Combat: STANDBY'}
+            ${mz.isEngaged !== false ? `${getGameIcon('sword', { size: '12px' })} Combat: ENGAGED` : `${getGameIcon('pause', { size: '12px' })} Combat: STANDBY`}
           </button>
         </div>
 
         <!-- Loot Yield Strip -->
         <div class="combat-yield-summary">
           <span style="color: var(--text-muted);">Victory Spoils:</span>
-          <span style="color: #ffd152; font-weight: 800;">
-            +${swarm.reduce((sum, e) => sum + (e.shardReward || 0), 0)} 💎 Shards ${swarm.some(e => e.essenceReward > 0) ? `• +${swarm.reduce((sum, e) => sum + (e.essenceReward || 0), 0)} 🔮 Essence` : ''}
+          <span style="color: #ffd152; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+            +${swarm.reduce((sum, e) => sum + (e.shardReward || 0), 0)} ${getGameIcon('spiritShards', { size: '12px' })} Shards ${swarm.some(e => e.essenceReward > 0) ? `• +${swarm.reduce((sum, e) => sum + (e.essenceReward || 0), 0)} ${getGameIcon('astralEssence', { size: '12px' })} Essence` : ''}
           </span>
         </div>
 
@@ -314,7 +315,7 @@ export function renderMadnessView(container) {
     btnSpeed.addEventListener('click', () => {
       const isUnlocked = ((gameState.state?.madnessZone?.highestStageCleared || 1) >= 10 || (gameState.state?.madnessZone?.stage || 1) >= 10);
       if (!isUnlocked) {
-        alert('🔒 2X Battle Speed unlocks after reaching Madness Floor 10!');
+        alert('2X Battle Speed unlocks after reaching Madness Floor 10!');
         return;
       }
       battleSpeed = battleSpeed === 1 ? 2 : 1;
@@ -330,7 +331,7 @@ export function renderMadnessView(container) {
   // Combat Sound Toggle
   const btnCombatSound = container.querySelector('#btn-combat-sound');
   if (btnCombatSound) {
-    btnCombatSound.textContent = audioManager.isMuted ? '🔇' : '🔊';
+    btnCombatSound.innerHTML = audioManager.isMuted ? getGameIcon('audioOff', { size: '14px' }) : getGameIcon('audioOn', { size: '14px' });
     btnCombatSound.addEventListener('click', () => {
       audioManager.toggleMute();
     });
@@ -380,7 +381,7 @@ export function renderMadnessView(container) {
       gameState.autoFormatParty();
       selectedMadnessSlot = null;
       safePlaySfx('upgrade');
-      showCombatBanner(container, '⚡ Squad auto-aligned to optimal formation!', 'victory');
+      showCombatBanner(container, `${getGameIcon('sparkle', { size: '14px', color: '#ffd152' })} Squad auto-aligned to optimal formation!`, 'victory');
       renderMadnessView(container);
     });
   }
@@ -408,7 +409,7 @@ export function renderMadnessView(container) {
           safePlaySfx('click');
           renderMadnessView(container);
         } catch (err) {
-          showCombatBanner(container, `⚠️ ${err.message}`, 'wipe');
+          showCombatBanner(container, `${getGameIcon('alert', { size: '14px', color: '#ff4757' })} ${err.message}`, 'wipe');
           selectedMadnessSlot = null;
           renderMadnessView(container);
         }
@@ -471,7 +472,7 @@ export function renderMadnessView(container) {
 
         const role = payload.spirit?.role;
         const bannerType = role === 'TANK' ? 'wipe' : 'ult';
-        const roleIcon = role === 'TANK' ? '🛡️' : (role === 'HEALER' ? '💚' : '✨');
+        const roleIcon = role === 'TANK' ? getGameIcon('roleTank', { size: '14px' }) : (role === 'HEALER' ? getGameIcon('roleHealer', { size: '14px' }) : getGameIcon('sparkle', { size: '14px' }));
         showCombatBanner(currentContainer, `${roleIcon} ${payload.spirit.customName} casts ${payload.ult.name}!`, bannerType);
         arenaRenderer.triggerUltimatePulse('#ffd700');
         if (payload.totalDamageDealt > 0) {
@@ -504,14 +505,14 @@ export function renderMadnessView(container) {
       } else if (eventType === 'spiritEvaded') {
         spawnCombatNumber(currentContainer, `DODGE!`, 'heal');
       } else if (eventType === 'partyWiped') {
-        showCombatBanner(currentContainer, '💀 PARTY WIPED! Regrouping at Wave 1 with 100% HP restored...', 'wipe');
+        showCombatBanner(currentContainer, `${getGameIcon('skull', { size: '16px', color: '#ff4757' })} PARTY WIPED! Regrouping at Wave 1 with 100% HP restored...`, 'wipe');
         setTimeout(() => {
           if (typeof document !== 'undefined' && document.querySelector && document.querySelector('.madness-container')) {
             renderMadnessView(currentContainer);
           }
         }, 800);
       } else if (eventType === 'floorCleared') {
-        showCombatBanner(currentContainer, `🏆 FLOOR ${payload.stage} CLEARED! Party fully restored!`, 'victory');
+        showCombatBanner(currentContainer, `${getGameIcon('trophy', { size: '16px', color: '#ffd152' })} FLOOR ${payload.stage} CLEARED! Party fully restored!`, 'victory');
         setTimeout(() => {
           if (typeof document !== 'undefined' && document.querySelector && document.querySelector('.madness-container')) {
             renderMadnessView(currentContainer);
@@ -667,7 +668,6 @@ function renderSeamlessMadnessSpirit(slotId, slotData, partySpirits) {
   const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
   const isTaunting = (spirit.tauntTimer || 0) > 0;
   const sheetKey = getSheetKeyForSpecies(species ? species.id : null);
-  const glyph = species ? (species.avatarEmoji || '✨') : '✨';
   const isSelected = selectedMadnessSlot === slotId;
 
   return `
@@ -686,12 +686,11 @@ function renderSeamlessMadnessSpirit(slotId, slotData, partySpirits) {
 
       <!-- Animated Creature Asset Only (No Card Box, No Border) -->
       <div class="spirit-sprite-container seamless-sprite-container">
-        <div class="taunt-active-tag" style="display: ${isTaunting ? 'block' : 'none'};">🛡️ TAUNT</div>
+        <div class="taunt-active-tag" style="display: ${isTaunting ? 'flex' : 'none'}; align-items: center; gap: 3px;">${getGameIcon('roleTank', { size: '10px' })} TAUNT</div>
         <div class="animated-pixel-sprite sprite-${sheetKey}" style="--sprite-sheet: url('/assets/sprites/creatures/${sheetKey}.svg');">
           <div class="sprite-frame-viewer"></div>
-          <span class="core-glyph-fallback" style="display: none;">${glyph}</span>
         </div>
-        ${isUltReady ? `<div class="ult-ready-tag" id="ult-ready-tag-${idx}">✨ ULT</div>` : ''}
+        ${isUltReady ? `<div class="ult-ready-tag" id="ult-ready-tag-${idx}" style="display: flex; align-items: center; gap: 3px;">${getGameIcon('sparkle', { size: '10px' })} ULT</div>` : ''}
         ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
         <div class="combat-ground-shadow"></div>
       </div>

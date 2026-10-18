@@ -4,8 +4,9 @@ import { ESSENCE_CHAMBERS, ESSENCE_DIFFICULTY_TIERS } from '../../../data/essenc
 import { SPIRIT_SPECIES } from '../../../data/spiritsData.js';
 import { createSpiritPlaceholderBox, createEnemyPlaceholderBox } from '../../components/pixelBox.js';
 import { arenaRenderer } from '../../../render/arenaRenderer.js';
-import { createAnimatedEnemyHtml, createAnimatedChestHtml, createAnimatedRelicHtml } from '../../../render/spriteAnimator.js';
+import { createAnimatedEnemyHtml, createAnimatedChestHtml, createAnimatedRelicHtml, createAnimatedSpriteHtml } from '../../../render/spriteAnimator.js';
 import { triggerSpiritAttack, triggerEnemyFlinch, triggerEnemyAttack, triggerSpiritFlinch, triggerPartyStrikeExchange } from '../../../render/combatAnimator.js';
+import { getGameIcon } from '../../icons/gameIcons.js';
 
 let isEssenceEventsBound = false;
 
@@ -21,8 +22,8 @@ export function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower, s
             <button class="essence-chamber-card ${isSelected ? 'active' : ''}" 
                     data-chamber-id="${c.id}"
                     style="--ch-color: ${c.color};">
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0 shadow-sm" style="background: ${c.color}22; border: 1px solid ${c.color};">
-                ${c.icon}
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm" style="background: ${c.color}22; border: 1px solid ${c.color};">
+                ${getGameIcon('dungeon', { size: 18, color: c.accentColor })}
               </div>
               <div class="min-w-0 flex-1">
                 <div class="text-xs font-bold text-white truncate">${c.name}</div>
@@ -36,8 +37,8 @@ export function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower, s
       <!-- Active Selected Chamber Detail Stage -->
       <div class="essence-chamber-stage" style="border-color: ${chamber.color}66;">
         <div class="flex items-center gap-3 mb-3">
-          <div class="w-11 h-11 rounded-xl flex items-center justify-center text-2xl shadow-md shrink-0" style="background: ${chamber.color}25; border: 1.5px solid ${chamber.color};">
-            ${chamber.icon}
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center shadow-md shrink-0" style="background: ${chamber.color}25; border: 1.5px solid ${chamber.color};">
+            ${getGameIcon('temple', { size: 22, color: chamber.accentColor })}
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 flex-wrap">
@@ -59,7 +60,7 @@ export function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower, s
               return `
                 <button class="essence-tier-btn ${isActive ? 'active' : ''}" data-tier="${t.tier}">
                   <span class="text-[11px] font-extrabold text-white">Tier ${t.tier}</span>
-                  <span class="text-[9px] font-bold text-amber-400 mt-0.5">⚡ ${t.energyCost}</span>
+                  <span class="text-[9px] font-bold text-amber-400 mt-0.5 inline-flex items-center gap-0.5">${getGameIcon('zap', { size: 10, color: '#facc15' })} ${t.energyCost}</span>
                 </button>
               `;
             }).join('')}
@@ -69,12 +70,12 @@ export function renderDungeonSectionHtml(chamber, tier, canAfford, partyPower, s
         <!-- Power & Launch Strip -->
         <div class="flex flex-col gap-2 pt-2.5 border-t border-slate-800">
           <div class="text-[11px] flex justify-between items-center text-slate-300">
-            <span>Rec: <strong class="text-white">⚡ ${tier.recommendedPower.toLocaleString()}</strong></span>
-            <span>Yield: <strong class="text-cyan-300">💠 ${tier.minGodEssences}–${tier.maxGodEssences}</strong></span>
+            <span class="inline-flex items-center gap-1">Rec: <strong class="text-white inline-flex items-center gap-0.5">${getGameIcon('zap', { size: 11, color: '#facc15' })} ${tier.recommendedPower.toLocaleString()}</strong></span>
+            <span class="inline-flex items-center gap-1">Yield: <strong class="text-cyan-300 inline-flex items-center gap-0.5">${getGameIcon('godsEssence', { size: 11 })} ${tier.minGodEssences}–${tier.maxGodEssences}</strong></span>
           </div>
 
-          <button id="btn-start-essence-trial" class="min-h-[44px] w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50" style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});" ${canAfford ? '' : 'disabled'}>
-            ${canAfford ? `⚔️ Challenge 3-Wave Trial (⚡ ${tier.energyCost})` : `⚠️ Need ⚡ ${tier.energyCost} Energy`}
+          <button id="btn-start-essence-trial" class="min-h-[44px] w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-md disabled:opacity-50 inline-flex items-center justify-center gap-1.5" style="background: linear-gradient(135deg, ${chamber.color}, ${chamber.accentColor});" ${canAfford ? '' : 'disabled'}>
+            ${canAfford ? `<span class="inline-flex items-center gap-1.5">${getGameIcon('swords', { size: 14 })} Challenge 3-Wave Trial (${getGameIcon('zap', { size: 11, color: '#0f172a' })} ${tier.energyCost})</span>` : `<span class="inline-flex items-center gap-1.5">${getGameIcon('alert', { size: 13, color: '#f87171' })} Need ${getGameIcon('zap', { size: 11, color: '#facc15' })} ${tier.energyCost} Energy</span>`}
           </button>
         </div>
       </div>
@@ -124,15 +125,15 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
       <!-- Top Combat HUD Header -->
       <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/90 border border-cyan-500/30 shadow-md backdrop-blur-md" style="border-color: ${chamber.color}66;">
         <div class="flex items-center gap-2">
-          <span class="text-xl">${chamber.icon}</span>
+          ${getGameIcon('temple', { size: 18, color: chamber.accentColor })}
           <div>
             <div class="text-[9px] font-black uppercase tracking-wider" style="color: ${chamber.accentColor};">${chamber.name}</div>
             <div class="text-xs font-black text-white">${tierObj.name} • Wave ${battle.currentWave}/3</div>
           </div>
         </div>
 
-        <button id="btn-leave-essence-battle" class="min-h-[36px] px-3 py-1 rounded-lg bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 text-[11px] font-bold transition-all cursor-pointer" title="Forfeit Battle">
-          ✕ Forfeit
+        <button id="btn-leave-essence-battle" class="min-h-[36px] px-3 py-1 rounded-lg bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1" title="Forfeit Battle">
+          ${getGameIcon('close', { size: 12 })} Forfeit
         </button>
       </div>
 
@@ -155,8 +156,8 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
               const isUltReady = mpPct >= 100;
               const isFallen = spirit.isFallen || curHp <= 0;
               const shieldPct = spirit.shieldHp > 0 ? Math.min(100, Math.round((spirit.shieldHp / maxHp) * 100)) : 0;
-              const sheetKey = getSheetKeyForSpecies(species ? species.id : null);
-              const glyph = species ? (species.avatarEmoji || '✨') : '✨';
+              const sheetKey = species ? species.id : null;
+              const glyph = '';
 
               return `
                 <div class="seamless-battle-spirit ${isUltReady ? 'ult-ready' : ''} ${isFallen ? 'spirit-fallen' : ''}" id="essence-allied-slot-${idx}" style="--stagger-offset: ${idx % 2 === 1 ? '12px' : '0px'};">
@@ -169,7 +170,7 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
                   <!-- Animated Creature Sprite (No Box, No Border) -->
                   <div class="spirit-sprite-container seamless-sprite-container">
                     ${createAnimatedSpriteHtml(sheetKey, { glyph })}
-                    ${isUltReady ? `<div class="ult-ready-tag" id="essence-ult-ready-${idx}">✨ ULT</div>` : ''}
+                    ${isUltReady ? `<div class="ult-ready-tag" id="essence-ult-ready-${idx}">${getGameIcon('sparkle', { size: 10 })} ULT</div>` : ''}
                     ${isFallen ? '<div class="fallen-badge">KO</div>' : ''}
                     <div class="combat-ground-shadow"></div>
                   </div>
@@ -192,13 +193,13 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
 
         <!-- Center Combat Clash Point -->
         <div class="combat-clash-divider relative z-10 text-2xl animate-pulse">
-          <div class="clash-sparks-icon">⚔️</div>
+          <div class="clash-sparks-icon">${getGameIcon('swords', { size: 28, color: '#ef4444' })}</div>
         </div>
 
         <!-- Right Side: Wave Enemies (Seamless, Uncluttered) -->
         <div class="enemy-formation-column seamless-enemy-column relative z-10 flex flex-col gap-2 items-end">
-          <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-red-400">
-            ${battle.currentWave === 3 ? '👑 BOSS AVATAR' : `GUARDIANS (${livingEnemies.length}/${swarm.length})`}
+          <div class="formation-header-label text-[10px] font-black uppercase tracking-widest text-red-400 inline-flex items-center gap-1">
+            ${battle.currentWave === 3 ? `${getGameIcon('crown', { size: 12, color: '#fbbf24' })} BOSS AVATAR` : `GUARDIANS (${livingEnemies.length}/${swarm.length})`}
           </div>
           <div class="enemy-swarm-wrapper flex flex-col gap-3 items-end" id="essence-enemy-swarm-wrapper">
             ${swarm.map((em, sIdx) => {
@@ -212,13 +213,13 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
                   <!-- Enemy Details & Floating Health Bar (Overhead, Borderless) -->
                   <div class="seamless-enemy-overhead">
                     <div class="seamless-enemy-name">
-                      ${em.isBoss ? '<span class="boss-crown-badge">👑</span>' : ''}
+                      ${em.isBoss ? `<span class="boss-crown-badge">${getGameIcon('crown', { size: 12, color: '#fbbf24' })}</span>` : ''}
                       <span>${em.name}</span>
                     </div>
                     <div class="flex items-center gap-1.5 flex-wrap">
-                      <div class="seamless-enemy-pwr">⚡ ${em.power.toLocaleString()} PWR</div>
-                      ${em.shieldHp > 0 ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">🛡️ BARRIER</span>' : ''}
-                      ${em.isEnraged ? '<span class="px-1 py-0.2 rounded text-[8px] font-black bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse">🔥 ENRAGED</span>' : ''}
+                      <div class="seamless-enemy-pwr inline-flex items-center gap-1">${getGameIcon('zap', { size: 10, color: '#facc15' })} ${em.power.toLocaleString()} PWR</div>
+                      ${em.shieldHp > 0 ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 inline-flex items-center gap-1">${getGameIcon('shield', { size: 9 })} BARRIER</span>` : ''}
+                      ${em.isEnraged ? `<span class="px-1 py-0.2 rounded text-[8px] font-black bg-red-600/30 text-red-300 border border-red-500/50 animate-pulse inline-flex items-center gap-1">${getGameIcon('flame', { size: 9 })} ENRAGED</span>` : ''}
                     </div>
 
                     <div class="seamless-enemy-hp-track">
@@ -244,10 +245,10 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
       ${battle.status === 'victory' && battle.loot ? `
         <div class="rounded-xl border border-amber-400/60 bg-slate-900 p-3 shadow-xl flex items-center justify-between gap-3">
           <div class="flex flex-col text-left gap-1">
-            <div class="text-xs font-black text-amber-300">🏆 SANCTUM TRIAL CLEARED!</div>
+            <div class="text-xs font-black text-amber-300 inline-flex items-center gap-1">${getGameIcon('trophy', { size: 13, color: '#fbbf24' })} SANCTUM TRIAL CLEARED!</div>
             <div class="text-[11px] text-slate-300">
-              Earned: <strong class="text-cyan-300">+${battle.loot.godEssencesGained} Essences</strong>, 
-              <strong class="text-emerald-300">+${battle.loot.shardsGained} Shards</strong>
+              Earned: <strong class="text-cyan-300 inline-flex items-center gap-0.5">${getGameIcon('godsEssence', { size: 11 })} +${battle.loot.godEssencesGained} Essences</strong>, 
+              <strong class="text-emerald-300 inline-flex items-center gap-0.5">${getGameIcon('spiritShards', { size: 11 })} +${battle.loot.shardsGained} Shards</strong>
             </div>
             <button id="btn-collect-essence-loot" class="min-h-[34px] px-4 py-1.5 rounded-lg font-bold text-xs text-slate-950 cursor-pointer shadow bg-gradient-to-r from-cyan-400 to-emerald-300 mt-1">
               Collect Spoils to Sanctum
@@ -261,7 +262,7 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
 
       ${battle.status === 'defeat' ? `
         <div class="rounded-xl border border-red-500/40 bg-slate-900 p-3 flex flex-col items-center text-center gap-1.5">
-          <div class="text-xs font-black text-red-400">☠️ TRIAL FAILED</div>
+          <div class="text-xs font-black text-red-400 inline-flex items-center gap-1">${getGameIcon('skull', { size: 13, color: '#ef4444' })} TRIAL FAILED</div>
           <button id="btn-leave-essence-battle" class="min-h-[38px] w-full py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer">
             Return to Sanctum
           </button>
@@ -272,8 +273,8 @@ export function renderEssenceBattleArena(container, battle, callbacks = {}) {
       ${battle.status === 'active' ? `
         <div class="combat-action-footer">
           <button id="btn-essence-strike" class="btn-main-attack min-h-[44px] w-full py-2.5 rounded-xl font-extrabold text-xs text-slate-950 transition-all cursor-pointer shadow-lg bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 flex flex-col items-center justify-center">
-            <span>⚔️ Divine Strike (Party Attack • Charges +10 MP)</span>
-            <span class="text-[9px] font-bold opacity-80">Wave ${battle.currentWave}/3 • ⚡ ${partyPower.toLocaleString()} PWR</span>
+            <span class="inline-flex items-center gap-1.5">${getGameIcon('swords', { size: 14 })} Divine Strike (Party Attack • Charges +10 MP)</span>
+            <span class="text-[9px] font-bold opacity-80 inline-flex items-center gap-1">Wave ${battle.currentWave}/3 • ${getGameIcon('zap', { size: 10, color: '#0f172a' })} ${partyPower.toLocaleString()} PWR</span>
           </button>
         </div>
       ` : ''}

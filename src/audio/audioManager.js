@@ -2,8 +2,10 @@
  * Spirit Contract Evo | Idle - Audio Engine
  * Supports HTML5 Audio & Web Audio API for zero-latency BGM crossfading and SFX triggers.
  */
+import { getGameIcon } from '../ui/icons/gameIcons.js';
 
 class AudioManager {
+
   constructor() {
     this.audioContext = null;
     this.isMuted = false;
@@ -76,16 +78,18 @@ class AudioManager {
   updateAllAudioButtons() {
     if (typeof document === 'undefined') return;
     const isMuted = this.isMuted;
-    const icon = isMuted ? '🔇' : '🔊';
+    const iconHtml = isMuted 
+      ? getGameIcon('audioOff', { size: '15px' }) 
+      : getGameIcon('audioOn', { size: '15px' });
 
     const topSymbol = document.getElementById('audio-icon-symbol');
-    if (topSymbol) topSymbol.textContent = icon;
+    if (topSymbol) topSymbol.innerHTML = iconHtml;
 
     const topBtn = document.getElementById('btn-top-audio');
     if (topBtn) topBtn.classList.toggle('muted', isMuted);
 
     const combatBtn = document.getElementById('btn-combat-sound');
-    if (combatBtn) combatBtn.textContent = icon;
+    if (combatBtn) combatBtn.innerHTML = iconHtml;
   }
 
   toggleMute() {

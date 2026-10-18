@@ -1,4 +1,5 @@
 import { closeActiveModal } from './modals.js';
+import { getGameIcon } from '../icons/gameIcons.js';
 
 /**
  * Renders an interactive modal comparing Local vs Cloud save states.
@@ -39,7 +40,7 @@ export function showConflictModal({ localSummary, cloudSummary, onChooseLocal, o
         <!-- Header -->
         <div class="flex flex-col items-center text-center gap-1 border-b border-slate-800 pb-3">
           <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-600 to-orange-600 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20 border border-amber-400/40">
-            ⚖️
+            ${getGameIcon('scale', { size: '24px', color: '#fff' })}
           </div>
           <h3 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2 mt-1">
             <span>Cloud Save Conflict Detected</span>
@@ -62,7 +63,7 @@ export function showConflictModal({ localSummary, cloudSummary, onChooseLocal, o
 
             <div class="flex flex-col gap-2">
               <div class="flex items-center gap-2">
-                <span class="text-lg">📱</span>
+                <span class="inline-flex items-center text-amber-400">${getGameIcon('device', { size: '18px', color: '#f59e0b' })}</span>
                 <div>
                   <h4 class="text-xs font-black text-amber-300">Local Device Save</h4>
                   <span class="text-[10px] text-slate-400 font-mono">${formatDate(localSummary?.timestamp)}</span>
@@ -76,15 +77,15 @@ export function showConflictModal({ localSummary, cloudSummary, onChooseLocal, o
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">Party Power:</span>
-                  <strong class="text-amber-300 font-bold">⚡ ${(localSummary?.partyPower || 0).toLocaleString()}</strong>
+                  <strong class="text-amber-300 font-bold inline-flex items-center gap-1">${getGameIcon('zap', { size: '11px', color: '#facc15' })} ${(localSummary?.partyPower || 0).toLocaleString()}</strong>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">Spirit Shards:</span>
-                  <strong class="text-cyan-300 font-bold">💎 ${(localSummary?.shards || 0).toLocaleString()}</strong>
+                  <strong class="text-cyan-300 font-bold inline-flex items-center gap-1">${getGameIcon('crystal', { size: '11px', color: '#38bdf8' })} ${(localSummary?.shards || 0).toLocaleString()}</strong>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">Total Spirits:</span>
-                  <strong class="text-emerald-300 font-bold">🎴 ${localSummary?.spiritsCount || 1}</strong>
+                  <strong class="text-emerald-300 font-bold inline-flex items-center gap-1">${getGameIcon('sparkle', { size: '11px', color: '#34d399' })} ${localSummary?.spiritsCount || 1}</strong>
                 </div>
               </div>
             </div>
@@ -104,7 +105,7 @@ export function showConflictModal({ localSummary, cloudSummary, onChooseLocal, o
 
             <div class="flex flex-col gap-2">
               <div class="flex items-center gap-2">
-                <span class="text-lg">☁️</span>
+                <span class="inline-flex items-center text-cyan-400">${getGameIcon('cloud', { size: '18px', color: '#38bdf8' })}</span>
                 <div>
                   <h4 class="text-xs font-black text-cyan-300">Supabase Cloud Save</h4>
                   <span class="text-[10px] text-slate-400 font-mono">${formatDate(cloudSummary?.timestamp)}</span>
@@ -118,15 +119,15 @@ export function showConflictModal({ localSummary, cloudSummary, onChooseLocal, o
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">Party Power:</span>
-                  <strong class="text-amber-300 font-bold">⚡ ${(cloudSummary?.partyPower || 0).toLocaleString()}</strong>
+                  <strong class="text-amber-300 font-bold inline-flex items-center gap-1">${getGameIcon('zap', { size: '11px', color: '#facc15' })} ${(cloudSummary?.partyPower || 0).toLocaleString()}</strong>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">Spirit Shards:</span>
-                  <strong class="text-cyan-300 font-bold">💎 ${(cloudSummary?.shards || 0).toLocaleString()}</strong>
+                  <strong class="text-cyan-300 font-bold inline-flex items-center gap-1">${getGameIcon('crystal', { size: '11px', color: '#38bdf8' })} ${(cloudSummary?.shards || 0).toLocaleString()}</strong>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">Total Spirits:</span>
-                  <strong class="text-emerald-300 font-bold">🎴 ${cloudSummary?.spiritsCount || 1}</strong>
+                  <strong class="text-emerald-300 font-bold inline-flex items-center gap-1">${getGameIcon('sparkle', { size: '11px', color: '#34d399' })} ${cloudSummary?.spiritsCount || 1}</strong>
                 </div>
               </div>
             </div>
@@ -139,8 +140,9 @@ export function showConflictModal({ localSummary, cloudSummary, onChooseLocal, o
         </div>
 
         <!-- Footer Warning Note -->
-        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[10px] text-slate-400 text-center">
-          ⚠️ Choosing an option will synchronize and overwrite the other timeline.
+        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[10px] text-slate-400 text-center flex items-center justify-center gap-1.5">
+          ${getGameIcon('alert', { size: '12px', color: '#fbbf24' })}
+          <span>Choosing an option will synchronize and overwrite the other timeline.</span>
         </div>
 
       </div>

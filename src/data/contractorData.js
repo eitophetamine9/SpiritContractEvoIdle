@@ -1,3 +1,5 @@
+import { getGameIcon } from '../ui/icons/gameIcons.js';
+
 /**
  * Contractor Leveling & Feature Pacing Configuration
  * Controls progressive system unlocks from Contractor Lv. 1 to 25.
@@ -8,49 +10,49 @@ export const FEATURE_UNLOCKS = {
     id: 'FORMATION_3X3',
     level: 2,
     name: '3x3 Tactical Grid & Formation Alignment',
-    icon: '♟️',
+    icon: getGameIcon('sword', { size: '14px' }),
     desc: 'Deploy spirits strategically across Frontline, Midline, and Backline.'
   },
   PANTHEON_TRIALS: {
     id: 'PANTHEON_TRIALS',
     level: 3,
     name: 'Pantheon Trials (Artifact Dungeon)',
-    icon: '🏛️',
+    icon: getGameIcon('trials', { size: '14px', color: '#38bdf8' }),
     desc: 'Conquer the Olympian Gods to earn 6-piece Greek God Relic sets.'
   },
   DIVINE_FORGE: {
     id: 'DIVINE_FORGE',
     level: 3,
     name: 'Divine Forge (Weapon Armory)',
-    icon: '🔨',
+    icon: getGameIcon('forge', { size: '14px', color: '#fb923c' }),
     desc: 'Forge and upgrade 12 diverse weapon archetypes with unique active passives.'
   },
   BESTIARY_INDEX: {
     id: 'BESTIARY_INDEX',
     level: 4,
     name: 'Spirit Bestiary & Hall of Fame',
-    icon: '📖',
+    icon: getGameIcon('index', { size: '14px', color: '#34d399' }),
     desc: 'Catalog discovered spirits and honor your greatest warriors in the Hall of Fame.'
   },
   SANCTUARY_ESSENCE: {
     id: 'SANCTUARY_ESSENCE',
     level: 8,
     name: 'Sanctuary of the Gods',
-    icon: '✨',
+    icon: getGameIcon('godsEssence', { size: '14px', color: '#fb923c' }),
     desc: 'Battle God Avatars to harness Essences of the Gods and Energy Vault enhancements.'
   },
   ASTRAL_REALM: {
     id: 'ASTRAL_REALM',
     level: 12,
     name: 'Astral Realm & Dwarven Forge',
-    icon: '🌌',
+    icon: getGameIcon('realm', { size: '14px', color: '#c084fc' }),
     desc: 'Unlock 8 Zodiac Constellations, Dwarven Smelting, and Astral Expeditions.'
   },
   SPIRIT_REBIRTH: {
     id: 'SPIRIT_REBIRTH',
     level: 16,
     name: 'Spirit Rebirth System (⭐1–7)',
-    icon: '🔥',
+    icon: getGameIcon('sanctum', { size: '14px', color: '#facc15' }),
     desc: 'Transcend maximum level limits and ignite 7-star constellation affinities.'
   }
 };

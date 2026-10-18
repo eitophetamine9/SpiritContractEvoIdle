@@ -84,7 +84,7 @@ class AuthService {
       username: 'AdminDev [DEV]',
       contractorLevel: 99,
       contractorXp: 999999,
-      avatarEmoji: '⚡',
+      avatarEmoji: 'zap',
       role: 'admin',
       isAdmin: true,
       isDev: true
@@ -150,7 +150,7 @@ class AuthService {
     const defaultGuest = {
       id: 'guest_' + Math.random().toString(36).substring(2, 9),
       username: 'Apprentice Contractor',
-      avatarEmoji: '🧙‍♂️',
+      avatarEmoji: 'wizard',
       contractorLevel: 1,
       isGuest: true,
       createdAt: Date.now()
@@ -213,7 +213,7 @@ class AuthService {
           username: data.username,
           contractorLevel: data.contractor_level || 1,
           contractorXp: data.contractor_xp || 0,
-          avatarEmoji: data.avatar_emoji || '🧙‍♂️',
+          avatarEmoji: data.avatar_emoji || 'wizard',
           createdAt: data.created_at,
           lastLogin: data.last_login
         };
@@ -224,7 +224,7 @@ class AuthService {
           username: this.currentUser?.user_metadata?.username || this.currentUser?.email?.split('@')[0] || 'Contractor',
           contractorLevel: 1,
           contractorXp: 0,
-          avatarEmoji: '🧙‍♂️'
+          avatarEmoji: 'wizard'
         };
       }
       return this.currentProfile;

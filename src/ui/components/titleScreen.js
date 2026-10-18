@@ -237,8 +237,8 @@ function renderTitleScreen() {
                 </button>
               `}
 
-              <div class="text-[11px] text-center text-slate-400 mt-1">
-                💾 Instant local play • Link to cloud anytime without losing data
+              <div class="text-[11px] text-center text-slate-400 mt-1 flex items-center justify-center gap-1.5">
+                ${getGameIcon('save', { size: '12px' })} <span>Instant local play • Link to cloud anytime without losing data</span>
               </div>
             </div>
           ` : ''}
