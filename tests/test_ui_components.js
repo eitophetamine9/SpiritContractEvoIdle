@@ -1437,6 +1437,97 @@ if (!equipModalJs.includes('Defensive Tank') || !equipModalJs.includes('Offensiv
 }
 console.log('[PASS] Pantheon Trials Hub and Equipment Modal include dual-tank badges and banners distinguishing Atlas and Hephaestus!');
 
+// ==========================================
+// TEST PHASE 8: Audio & Music Overhaul (Balanced Volumes & Royalty-Free Acoustics)
+// ==========================================
+console.log('\n--- TESTING PHASE 8: AUDIO & MUSIC OVERHAUL (BALANCED VOLUMES & HARMONIC ACOUSTICS) ---');
+
+import { audioManager } from '../src/audio/audioManager.js';
+
+// 1. Verify default gentle calibrated volumes
+if (audioManager.bgmVolume > 0.30 || audioManager.sfxVolume > 0.30) {
+  throw new Error(`Expected gentle default audio volumes (<= 0.30), got BGM: ${audioManager.bgmVolume}, SFX: ${audioManager.sfxVolume}`);
+}
+console.log(`[PASS] Verified calibrated gentle baseline volumes (BGM: ${audioManager.bgmVolume}, SFX: ${audioManager.sfxVolume})!`);
+
+// 2. Verify volume setting and bounds
+audioManager.setBgmVolume(0.18);
+audioManager.setSfxVolume(0.20);
+if (audioManager.bgmVolume !== 0.18 || audioManager.sfxVolume !== 0.20) {
+  throw new Error('setBgmVolume or setSfxVolume failed to apply exact values!');
+}
+audioManager.setBgmVolume(1.5);
+if (audioManager.bgmVolume > 1.0) throw new Error('setBgmVolume exceeded 1.0 max bound!');
+audioManager.setBgmVolume(0.18);
+console.log('[PASS] BGM and SFX volume clamping and state setters verified!');
+
+// 3. Verify Web Audio Master Dynamics Compressor & Gain setup
+if (!audioManager.audioContext) {
+  audioManager.audioInitialized = false;
+  const mockNode = {
+    setValueAtTime: () => {},
+    connect: () => {},
+    start: () => {},
+    stop: () => {},
+    exponentialRampToValueAtTime: () => {},
+    linearRampToValueAtTime: () => {}
+  };
+  globalThis.window.AudioContext = class MockAudioContext {
+    constructor() {
+      this.currentTime = 0;
+      this.destination = mockNode;
+    }
+    createDynamicsCompressor() {
+      return {
+        threshold: mockNode,
+        knee: mockNode,
+        ratio: mockNode,
+        attack: mockNode,
+        release: mockNode,
+        connect: () => {}
+      };
+    }
+    createGain() {
+      return {
+        gain: mockNode,
+        connect: () => {}
+      };
+    }
+    createOscillator() {
+      return {
+        frequency: mockNode,
+        connect: () => {},
+        start: () => {},
+        stop: () => {}
+      };
+    }
+  };
+  audioManager.init();
+}
+
+if (!audioManager.masterCompressor || !audioManager.masterGain) {
+  throw new Error('audioManager failed to initialize master dynamics compressor and gain staging nodes!');
+}
+console.log('[PASS] Master Dynamics Compressor and Gain Staging nodes initialized successfully!');
+
+// 4. Verify harmonic sound generation functions
+if (typeof audioManager.playWarmTap !== 'function' ||
+    typeof audioManager.playHarmonicChime !== 'function' ||
+    typeof audioManager.playHarpStrum !== 'function' ||
+    typeof audioManager.playEtherealBell !== 'function') {
+  throw new Error('audioManager is missing harmonic acoustic synthesizer methods!');
+}
+
+audioManager.playWarmTap();
+audioManager.playHarmonicChime(880, 0.5);
+audioManager.playHarpStrum([523.25, 659.25]);
+audioManager.playEtherealBell(432);
+audioManager.playSfx('tap');
+audioManager.playSfx('chime');
+audioManager.playSfx('harp');
+audioManager.playSfx('bell');
+console.log('[PASS] Web Audio harmonic acoustics (temple chimes, soft harps, warm taps, ethereal bells) execute cleanly!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 
