@@ -287,7 +287,7 @@ function bindAuthModalEvents(modalRoot, onClose) {
     if (success) {
       authSuccessMessage = 'Cloud save synchronized with Supabase!';
     } else {
-      authErrorMessage = 'Failed to sync to cloud. Local save preserved.';
+      authErrorMessage = cloudSaveService.lastErrorMessage || 'Failed to sync to cloud. Local save preserved.';
     }
     renderAuthModalContent(modalRoot, onClose);
   });

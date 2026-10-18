@@ -259,6 +259,19 @@ class AuthService {
 
     if (error) throw error;
 
+    // If session was not immediately returned (e.g. pending email confirmation or trigger), attempt automatic sign in
+    if (!data.session && email && password) {
+      try {
+        const signInRes = await supabase.auth.signInWithPassword({ email, password });
+        if (signInRes.data?.session) {
+          data.session = signInRes.data.session;
+          data.user = signInRes.data.user || data.user;
+        }
+      } catch (signInErr) {
+        console.warn('[AuthService] Post-signup sign-in attempt notice:', signInErr?.message);
+      }
+    }
+
     if (data.user) {
       this.currentUser = data.user;
       // Upsert profile in case trigger takes a moment
