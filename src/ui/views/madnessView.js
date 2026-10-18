@@ -554,7 +554,7 @@ function showCombatBanner(container, text, type = 'ult') {
 
   const banner = document.createElement('div');
   banner.className = `combat-alert-banner ${type}-banner`;
-  banner.textContent = text;
+  banner.innerHTML = text;
 
   layer.appendChild(banner);
 

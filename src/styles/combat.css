@@ -952,6 +952,10 @@
 }
 
 .combat-alert-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 5px 12px;
   border-radius: 6px;
   font-size: 10px;

@@ -7,6 +7,9 @@
 import { getGameIcon } from '../icons/gameIcons.js';
 import gsap from 'gsap';
 
+// Persistent registry to retain scroll position across re-renders per carousel ID
+const carouselSlidePositions = new Map();
+
 export function renderSlidingCarouselHtml({
   carouselId = 'sliding-carousel',
   cards = [],
@@ -16,16 +19,27 @@ export function renderSlidingCarouselHtml({
 }) {
   const selectedIndex = Math.max(0, cards.findIndex(c => c.id === selectedId));
   const activeCount = cards.length;
+  const perView = 3;
+  const maxIdx = Math.max(0, activeCount - perView);
+
+  let displayIndex = 0;
+  if (carouselSlidePositions.has(carouselId)) {
+    displayIndex = Math.max(0, Math.min(carouselSlidePositions.get(carouselId), maxIdx));
+  } else if (selectedIndex < perView) {
+    displayIndex = 0;
+  } else {
+    displayIndex = Math.min(selectedIndex - perView + 1, maxIdx);
+  }
 
   return `
-    <div id="${carouselId}" class="sliding-carousel-container" data-cards-count="${cards.length}" data-current-index="${selectedIndex}">
+    <div id="${carouselId}" class="sliding-carousel-container" data-cards-count="${cards.length}" data-current-index="${displayIndex}">
       
       <!-- Top Carousel Navigation Controls & Counter -->
       <div class="carousel-controls-bar">
         ${showCounter ? `
           <div class="carousel-counter-badge" id="${carouselId}-counter">
             ${getGameIcon('sparkle', { size: '11px', color: '#ffd152' })}
-            <span class="counter-text"><span class="curr-num">${selectedIndex + 1}</span> / <span class="total-num">${activeCount}</span></span>
+            <span class="counter-text"><span class="curr-num">${displayIndex + 1}</span> / <span class="total-num">${activeCount}</span></span>
           </div>
         ` : '<div></div>'}
 
@@ -113,7 +127,7 @@ export function renderSlidingCarouselHtml({
       <!-- Pagination Dots Bar -->
       <div class="carousel-pagination-row" id="${carouselId}-pagination">
         ${cards.map((card, idx) => `
-          <button class="carousel-dot ${idx === selectedIndex ? 'active' : ''}" 
+          <button class="carousel-dot ${idx === displayIndex ? 'active' : ''}" 
                   data-dot-index="${idx}" 
                   title="${card.name || card.title}" 
                   aria-label="Go to slide ${idx + 1}">
@@ -144,7 +158,6 @@ export function attachSlidingCarouselEvents({
   const counterEl = root.querySelector(`#${carouselId}-counter`);
   const dots = Array.from(root.querySelectorAll('.carousel-dot') || []);
 
-  let currentIndex = Math.max(0, cards.findIndex(c => c.id === selectedId));
   const totalCards = cards.length;
 
   function getCardsPerView() {
@@ -160,9 +173,36 @@ export function attachSlidingCarouselEvents({
     return Math.max(0, totalCards - perView);
   }
 
+  const selectedIndex = cards.findIndex(c => c.id === selectedId);
+  const perView = getCardsPerView();
+  const maxIdx = getMaxIndex();
+
+  let currentIndex = 0;
+  if (carouselSlidePositions.has(carouselId)) {
+    currentIndex = Math.max(0, Math.min(carouselSlidePositions.get(carouselId), maxIdx));
+    // If the selected card is outside visible viewport [currentIndex, currentIndex + perView - 1],
+    // gently adjust position so it is in view
+    if (selectedIndex >= 0) {
+      if (selectedIndex < currentIndex) {
+        currentIndex = selectedIndex;
+      } else if (selectedIndex >= currentIndex + perView) {
+        currentIndex = Math.min(selectedIndex - perView + 1, maxIdx);
+      }
+    }
+  } else if (selectedIndex >= 0) {
+    if (selectedIndex < perView) {
+      currentIndex = 0;
+    } else {
+      currentIndex = Math.min(selectedIndex - perView + 1, maxIdx);
+    }
+  }
+
+  carouselSlidePositions.set(carouselId, currentIndex);
+
   function updateCarouselView(animate = true) {
-    const maxIdx = getMaxIndex();
-    currentIndex = Math.max(0, Math.min(currentIndex, maxIdx));
+    const curMax = getMaxIndex();
+    currentIndex = Math.max(0, Math.min(currentIndex, curMax));
+    carouselSlidePositions.set(carouselId, currentIndex);
 
     // Update Counter
     if (counterEl && typeof counterEl.querySelector === 'function') {
@@ -179,24 +219,44 @@ export function attachSlidingCarouselEvents({
 
     // Update Prev / Next Buttons state
     if (prevBtn) prevBtn.disabled = currentIndex <= 0;
-    if (nextBtn) nextBtn.disabled = currentIndex >= maxIdx;
+    if (nextBtn) nextBtn.disabled = currentIndex >= curMax;
 
     // Calculate translation offset
     const cardEl = track?.firstElementChild;
     if (!cardEl || !track) return;
 
-    const cardWidth = typeof cardEl.getBoundingClientRect === 'function' ? cardEl.getBoundingClientRect().width : 320;
+    let cardWidth = 0;
+    if (typeof cardEl.getBoundingClientRect === 'function') {
+      const rect = cardEl.getBoundingClientRect();
+      cardWidth = rect.width;
+    }
     const gap = 16;
-    const offset = currentIndex * (cardWidth + gap);
+    if (!cardWidth || cardWidth <= 0) {
+      const curPerView = getCardsPerView();
+      const vpWidth = viewport?.clientWidth || 960;
+      cardWidth = (vpWidth - (curPerView - 1) * gap) / curPerView;
+    }
+    const offset = Math.round(currentIndex * (cardWidth + gap));
+
+    if (track.style) {
+      track.style.transition = 'none';
+    }
 
     if (animate && typeof gsap !== 'undefined' && gsap.to) {
       gsap.to(track, {
         x: -offset,
-        duration: 0.38,
+        duration: 0.32,
         ease: 'power2.out',
         overwrite: 'auto'
       });
+    } else if (typeof gsap !== 'undefined' && gsap.set) {
+      gsap.set(track, { x: -offset });
     } else if (track && track.style) {
+      if (animate) {
+        track.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.8, 0.25, 1)';
+      } else {
+        track.style.transition = 'none';
+      }
       track.style.transform = `translateX(-${offset}px)`;
     }
   }
@@ -207,6 +267,7 @@ export function attachSlidingCarouselEvents({
       if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
       if (currentIndex > 0) {
         currentIndex -= 1;
+        carouselSlidePositions.set(carouselId, currentIndex);
         updateCarouselView(true);
       }
     });
@@ -217,6 +278,7 @@ export function attachSlidingCarouselEvents({
       if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
       if (currentIndex < getMaxIndex()) {
         currentIndex += 1;
+        carouselSlidePositions.set(carouselId, currentIndex);
         updateCarouselView(true);
       }
     });
@@ -229,7 +291,8 @@ export function attachSlidingCarouselEvents({
       const dotTarget = e && e.currentTarget ? e.currentTarget : dot;
       const dotIdx = parseInt(dotTarget.getAttribute ? dotTarget.getAttribute('data-dot-index') : '0', 10);
       if (!isNaN(dotIdx)) {
-        currentIndex = dotIdx;
+        currentIndex = Math.max(0, Math.min(dotIdx, getMaxIndex()));
+        carouselSlidePositions.set(carouselId, currentIndex);
         updateCarouselView(true);
       }
     });
@@ -243,13 +306,19 @@ export function attachSlidingCarouselEvents({
       
       // Auto-slide to bring clicked card into view if needed
       if (!isNaN(cardIdx)) {
-        const perView = getCardsPerView();
+        const curPerView = getCardsPerView();
+        const curMax = getMaxIndex();
         if (cardIdx < currentIndex) {
           currentIndex = cardIdx;
+          carouselSlidePositions.set(carouselId, currentIndex);
           updateCarouselView(true);
-        } else if (cardIdx >= currentIndex + perView) {
-          currentIndex = Math.min(cardIdx - perView + 1, getMaxIndex());
+        } else if (cardIdx >= currentIndex + curPerView) {
+          currentIndex = Math.min(cardIdx - curPerView + 1, curMax);
+          carouselSlidePositions.set(carouselId, currentIndex);
           updateCarouselView(true);
+        } else {
+          // Card is ALREADY in visible viewport: keep currentIndex unchanged!
+          carouselSlidePositions.set(carouselId, currentIndex);
         }
       }
 
@@ -296,9 +365,11 @@ export function attachSlidingCarouselEvents({
       if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
         if (diffX < 0 && currentIndex < getMaxIndex()) {
           currentIndex += 1;
+          carouselSlidePositions.set(carouselId, currentIndex);
           updateCarouselView(true);
         } else if (diffX > 0 && currentIndex > 0) {
           currentIndex -= 1;
+          carouselSlidePositions.set(carouselId, currentIndex);
           updateCarouselView(true);
         }
       }
@@ -311,8 +382,11 @@ export function attachSlidingCarouselEvents({
     window.addEventListener('resize', resizeHandler);
   }
 
-  // Initial alignment (immediate)
-  setTimeout(() => updateCarouselView(false), 20);
+  // Initial alignment: instantly position without blitzing or animation
+  updateCarouselView(false);
+  if (typeof requestAnimationFrame !== 'undefined') {
+    requestAnimationFrame(() => updateCarouselView(false));
+  }
 
   return {
     updateView: updateCarouselView,

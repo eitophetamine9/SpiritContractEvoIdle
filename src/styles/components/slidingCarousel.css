@@ -88,7 +88,6 @@
 .carousel-track {
   display: flex;
   gap: 16px;
-  transition: transform 0.38s cubic-bezier(0.25, 1, 0.5, 1);
   will-change: transform;
 }
 
