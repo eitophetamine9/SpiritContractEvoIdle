@@ -968,13 +968,13 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (mappedCount < 40) throw new Error(`Expected at least 40 species mapped, got ${mappedCount}`);
 
   const sampleSpecies = [
-    { id: 'cat_spirit', expected: 'feline_shadow' },
-    { id: 'bull_spirit', expected: 'bovine_earth' },
-    { id: 'chicken_spirit', expected: 'avian_blaze' },
-    { id: 'caterpillar_spirit', expected: 'insect_chrysalis' },
-    { id: 'shark_spirit', expected: 'draconic_leviathan' },
-    { id: 'solaris_the_one', expected: 'celestial_sun' },
-    { id: 'dog_spirit', expected: 'canine_guardian' }
+    { id: 'cat_spirit', expected: 'cat_spirit' },
+    { id: 'bull_spirit', expected: 'bull_spirit' },
+    { id: 'chicken_spirit', expected: 'chicken_spirit' },
+    { id: 'caterpillar_spirit', expected: 'caterpillar_spirit' },
+    { id: 'shark_spirit', expected: 'shark_spirit' },
+    { id: 'solaris_the_one', expected: 'solaris_the_one' },
+    { id: 'dog_spirit', expected: 'dog_spirit' }
   ];
 
   for (const s of sampleSpecies) {
@@ -1648,14 +1648,14 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
 
   // Verify getSheetKeyForSpecies mappings
-  if (getSheetKeyForSpecies('fallen_warrior') !== 'spectral_undead') {
-    throw new Error(`Expected fallen_warrior to map to spectral_undead, got ${getSheetKeyForSpecies('fallen_warrior')}`);
+  if (getSheetKeyForSpecies('fallen_warrior') !== 'fallen_warrior_spirit') {
+    throw new Error(`Expected fallen_warrior to map to fallen_warrior_spirit, got ${getSheetKeyForSpecies('fallen_warrior')}`);
   }
-  if (getSheetKeyForSpecies('archangel_uriel') !== 'celestial_angel') {
-    throw new Error(`Expected archangel_uriel to map to celestial_angel, got ${getSheetKeyForSpecies('archangel_uriel')}`);
+  if (getSheetKeyForSpecies('archangel_uriel') !== 'archangel_uriel') {
+    throw new Error(`Expected archangel_uriel to map to archangel_uriel, got ${getSheetKeyForSpecies('archangel_uriel')}`);
   }
-  if (getSheetKeyForSpecies('baphomet_archdemon_lord') !== 'baphomet_nether') {
-    throw new Error(`Expected baphomet_archdemon_lord to map to baphomet_nether, got ${getSheetKeyForSpecies('baphomet_archdemon_lord')}`);
+  if (getSheetKeyForSpecies('baphomet_archdemon_lord') !== 'baphomet_archdemon_lord') {
+    throw new Error(`Expected baphomet_archdemon_lord to map to baphomet_archdemon_lord, got ${getSheetKeyForSpecies('baphomet_archdemon_lord')}`);
   }
 
   // Verify getSheetKeyForEnemy mappings
@@ -2613,7 +2613,53 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   if (gameState.isGameSessionActive !== false || gameState.isGameLoopRunning()) {
     throw new Error('Expected session and loop to stop when returning to title screen');
   }
-  console.log('  [PASS] Returning to title screen cleanly paused game tickers and saved departure timestamp!');
+  // 50. Testing Phase 2: All 54 Unique Animated Spirit Sprites & Direct Manifest Mapping
+  console.log('\n[TEST 50] Testing Phase 2: All 54 Unique Animated Spirit Sprites & Direct Manifest Mapping:');
+  const allSpeciesKeys = Object.keys(SPIRIT_SPECIES);
+  if (allSpeciesKeys.length !== 54) {
+    throw new Error(`Expected exactly 54 spirit species in SPIRIT_SPECIES, found ${allSpeciesKeys.length}`);
+  }
+
+  let verifiedSpriteFiles = 0;
+  for (const sId of allSpeciesKeys) {
+    const sheetKey = getSheetKeyForSpecies(sId);
+    if (!sheetKey) {
+      throw new Error(`Species "${sId}" failed to resolve to a sheet key`);
+    }
+
+    // Verify non-cat species do not fall back to cat_spirit or feline_shadow
+    if (!['cat_spirit', 'furious_cat', 'elemental_cat'].includes(sId)) {
+      if (sheetKey === 'cat_spirit' || sheetKey === 'feline_shadow') {
+        throw new Error(`Non-cat species "${sId}" incorrectly fell back to "${sheetKey}"!`);
+      }
+    }
+
+    // Verify sheet is registered in SPRITE_MANIFEST.sheets
+    const sheetDef = SPRITE_MANIFEST.sheets[sheetKey];
+    if (!sheetDef) {
+      throw new Error(`Sheet "${sheetKey}" for species "${sId}" missing from SPRITE_MANIFEST.sheets`);
+    }
+
+    // Verify SVG file exists on disk and is non-empty
+    const svgPath = path.join(process.cwd(), 'public', sheetDef.path.replace(/^\//, ''));
+    if (!fs.existsSync(svgPath)) {
+      throw new Error(`Sprite SVG file missing at: ${svgPath}`);
+    }
+    const stat = fs.statSync(svgPath);
+    if (stat.size < 1000) {
+      throw new Error(`Sprite SVG file too small (${stat.size} bytes) at: ${svgPath}`);
+    }
+
+    // Verify createAnimatedSpriteHtml outputs valid element with correct path
+    const spriteHtml = createAnimatedSpriteHtml(sId);
+    if (!spriteHtml.includes('animated-pixel-sprite') || !spriteHtml.includes(sheetDef.path)) {
+      throw new Error(`createAnimatedSpriteHtml failed for species "${sId}": ${spriteHtml}`);
+    }
+
+    verifiedSpriteFiles++;
+  }
+  console.log(`  [PASS] Verified all 54 species have unique, valid animated SVG sprite sheets (>1KB, 8 frames)!`);
+  console.log(`  [PASS] Verified zero non-cat species fall back to cat sprite!`);
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>.bg{fill:transparent;}</style>
+  </defs>
+
+  <!-- Frame 0: Idle [x: 0..48] -->
+  <g transform="translate(0, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 24) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#fde047"/>
+      </g>
+  </g>
+  <!-- Frame 1: Idle [x: 48..96] -->
+  <g transform="translate(48, 0)">
+<ellipse cx="24" cy="42" rx="14.56" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 25.5) rotate(0) scale(1.04, 0.96) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#fde047"/>
+      </g>
+  </g>
+  <!-- Frame 2: Idle [x: 96..144] -->
+  <g transform="translate(96, 0)">
+<ellipse cx="24" cy="42" rx="13.44" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 22.5) rotate(0) scale(0.96, 1.04) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#fde047"/>
+      </g>
+  </g>
+  <!-- Frame 3: Idle [x: 144..192] -->
+  <g transform="translate(144, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 23.5) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#fde047"/>
+      </g>
+  </g>
+  <!-- Frame 4: Attack [x: 192..240] -->
+  <g transform="translate(192, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(21, 25) rotate(-6) scale(1, 1) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#fde047"/>
+      </g>
+  </g>
+  <!-- Frame 5: Attack [x: 240..288] -->
+  <g transform="translate(240, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(30, 22) rotate(8) scale(1, 1) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#fde047"/>
+      
+        <!-- Attack Flash Slash -->
+        <path d="M34 10 L46 22 L36 34" stroke="#a7f3d0" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="44" cy="22" r="4" fill="#ffd700"/>
+      </g>
+  </g>
+  <!-- Frame 6: Attack [x: 288..336] -->
+  <g transform="translate(288, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(27, 24) rotate(3) scale(1, 1) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#fde047"/>
+      
+        <!-- Impact Spark Burst -->
+        <polygon points="42,16 46,22 42,28 40,22" fill="#a7f3d0"/>
+        <circle cx="43" cy="22" r="2" fill="#ffffff"/>
+      </g>
+  </g>
+  <!-- Frame 7: Hurt [x: 336..384] -->
+  <g transform="translate(336, 0)">
+<ellipse cx="24" cy="42" rx="12.6" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(19, 27) rotate(-14) scale(0.9, 1) translate(-24, -24)">
+
+        <!-- Cape / Aura -->
+        <path d="M18 20 C14 30, 16 38, 20 40 L28 40 C32 38, 34 30, 30 20 Z" fill="#064e3b"/>
+        <!-- Legs -->
+        <rect x="18" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <rect x="26" y="33" width="4" height="8" rx="1" fill="#064e3b"/>
+        <!-- Torso & Armor -->
+        <rect x="17" y="18" width="14" height="16" rx="3" fill="#047857"/>
+        <polygon points="24,19 19,25 29,25" fill="#10b981"/>
+        <!-- Head / Helm -->
+        <circle cx="24" cy="13" r="6" fill="#047857"/>
+        <circle cx="24" cy="13" r="4" fill="#10b981"/>
+        <rect x="23" y="12" width="4" height="2" fill="#ef4444"/>
+      </g>
+  </g>
+</svg>

@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 48" width="384" height="48" shape-rendering="crispEdges">
+  <defs>
+    <style>.bg{fill:transparent;}</style>
+  </defs>
+
+  <!-- Frame 0: Idle [x: 0..48] -->
+  <g transform="translate(0, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 24) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="15" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="15" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="15" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="15" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="27" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="27" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      </g>
+  </g>
+  <!-- Frame 1: Idle [x: 48..96] -->
+  <g transform="translate(48, 0)">
+<ellipse cx="24" cy="42" rx="14.56" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 25.5) rotate(0) scale(1.04, 0.96) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="17" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="17" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="17" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="17" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="29" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="29" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      </g>
+  </g>
+  <!-- Frame 2: Idle [x: 96..144] -->
+  <g transform="translate(96, 0)">
+<ellipse cx="24" cy="42" rx="13.44" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 22.5) rotate(0) scale(0.96, 1.04) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="15" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="15" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="15" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="15" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="27" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="27" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      </g>
+  </g>
+  <!-- Frame 3: Idle [x: 144..192] -->
+  <g transform="translate(144, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(24, 23.5) rotate(0) scale(1, 1) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="17" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="17" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="17" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="17" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="29" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="29" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      </g>
+  </g>
+  <!-- Frame 4: Attack [x: 192..240] -->
+  <g transform="translate(192, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(21, 25) rotate(-6) scale(1, 1) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="28" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="28" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      </g>
+  </g>
+  <!-- Frame 5: Attack [x: 240..288] -->
+  <g transform="translate(240, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(30, 22) rotate(8) scale(1, 1) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="28" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="28" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      
+        <!-- Attack Flash Slash -->
+        <path d="M34 10 L46 22 L36 34" stroke="#00ffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="44" cy="22" r="4" fill="#38bdf8"/>
+      </g>
+  </g>
+  <!-- Frame 6: Attack [x: 288..336] -->
+  <g transform="translate(288, 0)">
+<ellipse cx="24" cy="42" rx="14" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(27, 24) rotate(3) scale(1, 1) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="28" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="28" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      
+        <!-- Impact Spark Burst -->
+        <polygon points="42,16 46,22 42,28 40,22" fill="#00ffff"/>
+        <circle cx="43" cy="22" r="2" fill="#ffffff"/>
+      </g>
+  </g>
+  <!-- Frame 7: Hurt [x: 336..384] -->
+  <g transform="translate(336, 0)">
+<ellipse cx="24" cy="42" rx="12.6" ry="4" fill="rgba(0,0,0,0.3)"/>
+<g transform="translate(19, 27) rotate(-14) scale(0.9, 1) translate(-24, -24)">
+
+        <!-- Wings Top -->
+        <ellipse cx="16" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(-20 16 16)"/>
+        <ellipse cx="16" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(-20 16 16)"/>
+        <ellipse cx="32" cy="16" rx="9" ry="12" fill="#2563eb" transform="rotate(20 32 16)"/>
+        <ellipse cx="32" cy="16" rx="6" ry="8" fill="#60a5fa" transform="rotate(20 32 16)"/>
+        <!-- Wings Bottom -->
+        <circle cx="17" cy="28" r="6" fill="#60a5fa"/>
+        <circle cx="31" cy="28" r="6" fill="#60a5fa"/>
+        <!-- Body -->
+        <rect x="22" y="14" width="4" height="18" rx="2" fill="#172554"/>
+        <line x1="23" y1="14" x2="20" y2="8" stroke="#172554" stroke-width="1.5"/>
+        <line x1="25" y1="14" x2="28" y2="8" stroke="#172554" stroke-width="1.5"/>
+      </g>
+  </g>
+</svg>
