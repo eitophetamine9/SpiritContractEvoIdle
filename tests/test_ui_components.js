@@ -2,6 +2,9 @@ import { SPIRIT_SPECIES, RARITIES, getRarityInfo } from '../src/data/spiritsData
 import { gameState } from '../src/state/gameState.js';
 import { showHallOfFamePickerModal, showBestiaryInspectModal } from '../src/ui/components/modals.js';
 import { renderIndexView } from '../src/ui/views/indexView.js';
+import { renderCharacterHubView } from '../src/ui/views/characterHubView.js';
+import { showSpiritModal } from '../src/ui/modals/spiritModal.js';
+
 
 // Setup Mock DOM environment
 globalThis.requestAnimationFrame = (fn) => setTimeout(fn, 16);
@@ -1155,6 +1158,72 @@ if (!profileContainer.innerHTML.includes('slider-bgm-volume') ||
   throw new Error('renderProfileView failed to render audio controls with themed range sliders!');
 }
 console.log('[PASS] Profile View renders Audio & Sound Controls with interactive BGM and SFX volume sliders!');
+
+// ==========================================
+// TEST PHASE 5: "View in Character Sanctum" Quick Navigation
+// ==========================================
+console.log('\n--- TESTING PHASE 5: "VIEW IN CHARACTER SANCTUM" QUICK NAVIGATION ---');
+
+// 1. Verify partyView renders View in Character Sanctum buttons
+const p5PartyContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {} }),
+  querySelectorAll: () => []
+};
+renderPartyView(p5PartyContainer);
+if (!p5PartyContainer.innerHTML.includes('btn-hero-view-sanctum') || 
+    !p5PartyContainer.innerHTML.includes('View in Character Sanctum') ||
+    !p5PartyContainer.innerHTML.includes('btn-party-sanctum-link')) {
+  throw new Error('Party View Showcase is missing "View in Character Sanctum" button or sanctum link pill!');
+}
+console.log('[PASS] Party View Showcase mode renders prominent "View in Character Sanctum" button!');
+
+// 2. Verify renderCharacterHubView handles options.spiritId and subHub
+const sanctumContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {}, scrollIntoView: () => {} }),
+  querySelectorAll: () => []
+};
+const testPartySpirit = gameState.getPartySpirits()[0];
+if (testPartySpirit) {
+  renderCharacterHubView(sanctumContainer, { spiritId: testPartySpirit.id, subHub: 'weapons' });
+  if (!sanctumContainer.innerHTML.includes(testPartySpirit.customName) || 
+      !sanctumContainer.innerHTML.includes('SPIRIT SANCTUM HUB')) {
+    throw new Error('renderCharacterHubView failed to select specified spiritId from options!');
+  }
+  console.log('[PASS] Character Sanctum Hub successfully processes options.spiritId and options.subHub!');
+}
+
+// 3. Verify showEquipmentSlotModal renders Sanctum quick navigation button
+if (testPartySpirit) {
+  showEquipmentSlotModal({ spiritId: testPartySpirit.id, slotType: 'weapon', onUpdate: () => {} });
+  const modalEl = document.getElementById('modal-root');
+  if (!modalEl.innerHTML.includes('btn-slot-view-sanctum') || 
+      !modalEl.innerHTML.includes('modal-header-sanctum-btn')) {
+    throw new Error('showEquipmentSlotModal is missing btn-slot-view-sanctum in header!');
+  }
+  console.log('[PASS] Equipment Slot Inspect Modal renders header Sanctum quick navigation button!');
+}
+
+// 4. Verify showSpiritModal renders View in Character Sanctum button
+if (testPartySpirit) {
+  showSpiritModal(testPartySpirit, () => {});
+  const modalEl = document.getElementById('modal-root');
+  if (!modalEl.innerHTML.includes('btn-modal-view-sanctum') || 
+      !modalEl.innerHTML.includes('View in Character Sanctum')) {
+    throw new Error('showSpiritModal is missing btn-modal-view-sanctum button!');
+  }
+  console.log('[PASS] Spirit Inspect Modal renders "View in Character Sanctum" action button!');
+}
+
+// 5. Verify main.js exports switchTab with options support
+const mainJsContent = fs.readFileSync('src/main.js', 'utf8');
+if (!mainJsContent.includes('function switchTab(tabName, options = null)') || 
+    !mainJsContent.includes('renderCharacterHubView(viewContainer, options || {})') ||
+    !mainJsContent.includes('window.switchTab = switchTab;')) {
+  throw new Error('src/main.js is missing switchTab options parameter, window export, or CharacterHubView forwarding!');
+}
+console.log('[PASS] main.js properly accepts options in switchTab, forwards to CharacterHub, and exports window.switchTab!');
 
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);

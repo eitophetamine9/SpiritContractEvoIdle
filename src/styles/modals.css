@@ -1336,4 +1336,26 @@
   border-radius: 14px !important;
   box-sizing: border-box !important;
 }
+
+.modal-header-sanctum-btn {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(234, 179, 8, 0.18) 100%);
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  color: #ffd152;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.modal-header-sanctum-btn:hover {
+  border-color: #ffd152;
+  box-shadow: 0 0 10px rgba(255, 209, 82, 0.4);
+  transform: translateY(-1px);
+}
+
 

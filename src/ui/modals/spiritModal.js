@@ -201,6 +201,11 @@ export function showSpiritModal(spirit, onUpdate) {
               </div>
             ` : ''}
 
+            <!-- View in Character Sanctum Quick Button -->
+            <button id="btn-modal-view-sanctum" class="btn-drawer-action" style="width: 100%; min-height: 42px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(234, 179, 8, 0.2) 100%); border: 1px solid rgba(250, 204, 21, 0.5); color: #ffd152; font-weight: 800; font-size: 12px; margin-bottom: 8px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; cursor: pointer;">
+              ${getGameIcon('sanctum', { size: 14, color: '#ffd152' })} View in Character Sanctum
+            </button>
+
             <!-- Quick Action Grid: Equip / Unequip, Favorite -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
               ${isInParty ? `
@@ -237,6 +242,16 @@ export function showSpiritModal(spirit, onUpdate) {
     };
 
     modalRoot.querySelector('#btn-close-spirit-modal')?.addEventListener('click', closeModal);
+
+    // View in Character Sanctum
+    modalRoot.querySelector('#btn-modal-view-sanctum')?.addEventListener('click', () => {
+      closeModal();
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('sanctum', { spiritId: currentSpirit.id });
+      } else {
+        document.querySelector('[data-tab="sanctum"]')?.click();
+      }
+    });
 
     // Save rename
     modalRoot.querySelector('#btn-save-rename')?.addEventListener('click', () => {

@@ -252,9 +252,14 @@ function renderTileSlotHtml(slotData, slotId) {
       <!-- Tile Header -->
       <div class="tile-card-header">
         <span class="tile-code">[${slotId.toUpperCase()}]</span>
-        <span class="tile-role-badge" style="background: ${roleInfo.bg}; color: ${roleInfo.color}; border: 1px solid ${roleInfo.border};">
-          ${roleInfo.icon} ${roleInfo.name}
-        </span>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <button class="tile-sanctum-btn" data-action="view-sanctum" data-spirit-id="${spirit.id}" title="View ${spirit.customName} in Character Sanctum">
+            ${getGameIcon('sanctum', { size: '11px', color: '#ffd152' })}
+          </button>
+          <span class="tile-role-badge" style="background: ${roleInfo.bg}; color: ${roleInfo.color}; border: 1px solid ${roleInfo.border};">
+            ${roleInfo.icon} ${roleInfo.name}
+          </span>
+        </div>
       </div>
 
       <!-- Tile Avatar & Identity -->
@@ -467,17 +472,21 @@ function renderShowcaseModeHtml(partySpirits, spirit, allEquipment) {
             </div>
           </div>
 
-          <!-- Action Button: Evolve or Unequip -->
+          <!-- Action Buttons: View in Character Sanctum & Evolve / Unequip -->
           <div class="hero-primary-action">
-            ${spirit.canEvolve ? `
-              <button class="btn-hero-evolve" data-action="evolve" data-id="${spirit.id}">
-                ${getGameIcon('sparkle', { size: '13px', color: '#ffd152' })} EVOLVE (RNG CEREMONY)
-              </button>
-            ` : `
-              <button class="btn-hero-unequip" data-action="unequip" data-id="${spirit.id}">
+            <button class="btn-hero-view-sanctum" data-action="view-sanctum" data-spirit-id="${spirit.id}" title="Jump to Character Sanctum with full 7-Core scaling, equipment & rebirths">
+              ${getGameIcon('sanctum', { size: '14px', color: '#ffd152' })} View in Character Sanctum
+            </button>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              ${spirit.canEvolve ? `
+                <button class="btn-hero-evolve" data-action="evolve" data-id="${spirit.id}" style="flex: 1;">
+                  ${getGameIcon('sparkle', { size: '13px', color: '#ffd152' })} EVOLVE (RNG CEREMONY)
+                </button>
+              ` : ''}
+              <button class="btn-hero-unequip" data-action="unequip" data-id="${spirit.id}" style="flex: 1;">
                 Unequip from Party
               </button>
-            `}
+            </div>
           </div>
 
         </div>
@@ -691,6 +700,9 @@ function renderRosterModeHtml(partySpirits) {
               </div>
 
               <div class="party-card-actions">
+                <button class="btn-roster-view-sanctum" data-action="view-sanctum" data-spirit-id="${spirit.id}" title="View ${spirit.customName} in Character Sanctum">
+                  ${getGameIcon('sanctum', { size: '12px', color: '#ffd152' })} Sanctum
+                </button>
                 <button class="btn-quick-equip-card" data-action="quick-equip" data-spirit-id="${spirit.id}" title="Equip highest-stat gear">
                   ${getGameIcon('sparkle', { size: '12px' })} Auto Equip
                 </button>
@@ -997,6 +1009,20 @@ function attachEventListeners(container) {
     });
   });
 
+  // View in Character Sanctum quick navigation
+  container.querySelectorAll('[data-action="view-sanctum"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const spiritId = e.currentTarget.getAttribute('data-spirit-id');
+      audioManager.playSfx('button_click', 0.6);
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('sanctum', { spiritId });
+      } else {
+        document.querySelector('[data-tab="sanctum"]')?.click();
+      }
+    });
+  });
+
   // Jump to Trials tab button
   document.getElementById('btn-party-trials-link')?.addEventListener('click', () => {
     document.querySelector('[data-tab="trials"]')?.click();
@@ -1004,6 +1030,13 @@ function attachEventListeners(container) {
 
   // Jump to Sanctum Hub button
   document.getElementById('btn-party-sanctum-link')?.addEventListener('click', () => {
-    document.querySelector('[data-tab="sanctum"]')?.click();
+    const partySpirits = gameState.getPartySpirits();
+    const currentSpirit = partySpirits[selectedPartyIndex] || partySpirits[0];
+    audioManager.playSfx('button_click', 0.6);
+    if (typeof window.switchTab === 'function') {
+      window.switchTab('sanctum', { spiritId: currentSpirit?.id });
+    } else {
+      document.querySelector('[data-tab="sanctum"]')?.click();
+    }
   });
 }

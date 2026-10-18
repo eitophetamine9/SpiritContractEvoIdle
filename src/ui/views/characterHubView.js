@@ -1052,4 +1052,13 @@ function attachSubHubListeners(container, selectedSpirit) {
       }
     });
   }
+
+  // Smooth scroll selected hero chip into view
+  const selectedChip = container.querySelector('.strip-hero-chip.selected');
+  if (selectedChip && typeof selectedChip.scrollIntoView === 'function') {
+    try {
+      selectedChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    } catch (_) {}
+  }
 }
+

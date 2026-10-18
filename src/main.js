@@ -30,6 +30,7 @@ import { showDevConsoleModal } from './ui/components/devConsoleModal.js';
 import { getGameIcon } from './ui/icons/gameIcons.js';
 
 let activeTab = 'madness';
+let activeTabOptions = null;
 const viewContainer = document.getElementById('view-container');
 const resShardsEl = document.getElementById('res-shards');
 const resPurifiedEl = document.getElementById('res-purified');
@@ -139,7 +140,7 @@ function updateFeatureGatingUI() {
   });
 }
 
-function switchTab(tabName) {
+function switchTab(tabName, options = null) {
   // Feature Gating Checks
   if (tabName === 'index' && !gameState.isFeatureUnlocked('BESTIARY_INDEX')) {
     showGameToast(`Spirit Bestiary unlocks at Contractor Level ${FEATURE_UNLOCKS.BESTIARY_INDEX.level}! Defeat enemies and summon spirits to gain EXP.`, 'lock');
@@ -158,11 +159,18 @@ function switchTab(tabName) {
     return;
   }
 
+  // Auto-close nav drawer if open
+  const navDrawerBackdrop = document.getElementById('nav-drawer-backdrop');
+  if (navDrawerBackdrop && navDrawerBackdrop.style.display === 'flex') {
+    navDrawerBackdrop.style.display = 'none';
+  }
+
   if (activeTab !== tabName) {
     // Cleanly unmount any active canvas renderer before switching views
     arenaRenderer.destroy();
   }
   activeTab = tabName;
+  activeTabOptions = options;
   audioManager.handleTabChange(tabName);
 
   const btnTopProfile = document.getElementById('btn-top-profile');
@@ -210,14 +218,14 @@ function switchTab(tabName) {
     }
   });
 
-  renderActiveTab();
+  renderActiveTab(options);
   setTimeout(() => {
     guidedTutorial.updateSpotlightPosition();
     checkAreaTutorialTrigger(tabName);
   }, 150);
 }
 
-function renderActiveTab() {
+function renderActiveTab(options = activeTabOptions) {
   if (!viewContainer) return;
 
   switch (activeTab) {
@@ -243,7 +251,7 @@ function renderActiveTab() {
       renderVaultView(viewContainer);
       break;
     case 'sanctum':
-      renderCharacterHubView(viewContainer);
+      renderCharacterHubView(viewContainer, options || {});
       break;
     case 'index':
       renderIndexView(viewContainer);
@@ -256,6 +264,9 @@ function renderActiveTab() {
 
   updateResourcesDisplay();
 }
+
+window.switchTab = switchTab;
+export { switchTab };
 
 // Setup Bottom Navigation listeners (3 main tabs + Drawer items)
 document.querySelectorAll('.nav-tab[data-tab]').forEach(tab => {

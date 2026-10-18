@@ -75,7 +75,12 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                 <span style="font-size: 11px; color: var(--text-muted);">${spirit.customName} • Lv. ${spirit.level}</span>
               </div>
             </div>
-            <button id="btn-close-equip-modal" class="modal-btn-close" style="display: flex; align-items: center; justify-content: center;">${getGameIcon('close', { size: 14 })}</button>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button id="btn-slot-view-sanctum" class="modal-header-sanctum-btn" title="View ${spirit.customName} in Character Sanctum">
+                ${getGameIcon('sanctum', { size: '12px', color: '#ffd152' })} Sanctum
+              </button>
+              <button id="btn-close-equip-modal" class="modal-btn-close" style="display: flex; align-items: center; justify-content: center;">${getGameIcon('close', { size: 14 })}</button>
+            </div>
           </div>
 
           <div style="font-size: 11px; color: var(--text-muted); margin: 6px 0 10px 0; line-height: 1.3;">
@@ -274,6 +279,15 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
     document.getElementById('btn-close-equip-modal')?.addEventListener('click', () => {
       modalRoot.innerHTML = '';
       if (onUpdate) onUpdate();
+    });
+
+    document.getElementById('btn-slot-view-sanctum')?.addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('sanctum', { spiritId, subHub: slotType === 'weapon' ? 'weapons' : 'relics' });
+      } else {
+        document.querySelector('[data-tab="sanctum"]')?.click();
+      }
     });
 
     document.getElementById('btn-modal-done')?.addEventListener('click', () => {
@@ -615,8 +629,15 @@ export function showItemInspectModal({ item, onUpdate }) {
 
             <!-- Equipped Status & Reassign to Spirit -->
             <div style="margin-bottom: 12px;">
-              <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 6px;">
-                ${equippedSpirit ? `Equipped To: <span style="color: #2ecc71;">${equippedSpirit.customName}</span>` : 'Status: <span style="color: var(--text-muted);">In Vault (Unequipped)</span>'}
+              <div style="font-size: 12px; font-weight: 800; color: #fff; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  ${equippedSpirit ? `Equipped To: <span style="color: #2ecc71;">${equippedSpirit.customName}</span>` : 'Status: <span style="color: var(--text-muted);">In Vault (Unequipped)</span>'}
+                </div>
+                ${equippedSpirit ? `
+                  <button id="btn-inspect-view-sanctum" class="btn-preset-sm" style="background: rgba(168, 85, 247, 0.2); border: 1px solid #c084fc; color: #ffd152; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 10px; cursor: pointer;">
+                    ${getGameIcon('sanctum', { size: '10px', color: '#ffd152' })} Sanctum
+                  </button>
+                ` : ''}
               </div>
 
               <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Quick Equip to Active Party Spirit:</div>
@@ -660,6 +681,15 @@ export function showItemInspectModal({ item, onUpdate }) {
 
     modalRoot.querySelector('#btn-close-item-inspect')?.addEventListener('click', closeModal);
     modalRoot.querySelector('#btn-close-item-done')?.addEventListener('click', closeModal);
+
+    modalRoot.querySelector('#btn-inspect-view-sanctum')?.addEventListener('click', () => {
+      closeModal();
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('sanctum', { spiritId: equippedSpirit.id, subHub: isWeapon ? 'weapons' : 'relics' });
+      } else {
+        document.querySelector('[data-tab="sanctum"]')?.click();
+      }
+    });
 
     // Enhance Weapon
     modalRoot.querySelector('#btn-enhance-weapon')?.addEventListener('click', () => {
