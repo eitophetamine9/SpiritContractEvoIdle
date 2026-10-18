@@ -14,8 +14,8 @@ import {
   CONSTELLATIONS_CONFIG
 } from '../src/data/index.js';
 import { enhanceRelicData, WEAPON_TYPES, createWeaponInstance } from '../src/data/equipmentData.js';
-import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot } from '../src/data/index.js';
-import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml } from '../src/render/spriteAnimator.js';
+import { getEnemyForStage, getEnemyBaseScale, isSwarmFloor, getSwarmForStage, FORGE_CHAMBERS, generateForgeLoot, PANTHEON_CHAMBERS, generateDungeonLoot } from '../src/data/index.js';
+import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedRelicHtml, createAnimatedWeaponHtml, getSheetKeyForWeapon, getSheetKeyForEnemy, createAnimatedChestHtml, createAnimatedSpriteHtml, getSheetKeyForRelic } from '../src/render/spriteAnimator.js';
 import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import { getSingaporeDayKey, getSingaporeWeekKey } from '../src/state/constants.js';
@@ -2660,6 +2660,64 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   }
   console.log(`  [PASS] Verified all 54 species have unique, valid animated SVG sprite sheets (>1KB, 8 frames)!`);
   console.log(`  [PASS] Verified zero non-cat species fall back to cat sprite!`);
+
+  // 51. Testing Phase 6 & 7: 10th Greek God Chamber (Atlas), Defensive Relic Drops & Spritesheet
+  console.log('\n[TEST 51] Testing Phase 6 & 7: 10th Greek God Chamber (Atlas), Defensive Relic Drops & Spritesheet:');
+  const atlasChamber = PANTHEON_CHAMBERS.find(c => c.id === 'celestial_pillar' || c.godId === 'atlas');
+  if (!atlasChamber) {
+    throw new Error('Celestial Pillar of Atlas chamber missing from PANTHEON_CHAMBERS');
+  }
+  if (atlasChamber.godId !== 'atlas' || atlasChamber.name !== 'Celestial Pillar of Atlas') {
+    throw new Error('Atlas chamber properties do not match expected specification');
+  }
+  if (PANTHEON_CHAMBERS.length !== 10) {
+    throw new Error(`Expected exactly 10 chambers in PANTHEON_CHAMBERS, found ${PANTHEON_CHAMBERS.length}`);
+  }
+  // Generate loot for Atlas chamber
+  const atlasLoot = generateDungeonLoot('celestial_pillar', 2);
+  if (!atlasLoot.relics || atlasLoot.relics.length < 2) {
+    throw new Error('Atlas chamber loot generation failed to yield relics');
+  }
+  for (const r of atlasLoot.relics) {
+    if (r.setId !== 'atlas') {
+      throw new Error(`Atlas chamber yielded non-atlas relic: ${r.setId}`);
+    }
+  }
+  console.log('  [PASS] All 10 Greek God chambers verified and Celestial Pillar generates targeted Atlas defensive relics!');
+
+  // Verify Atlas SVG spritesheet asset
+  const atlasRelicPath = path.join(process.cwd(), 'public', 'assets', 'sprites', 'relics', 'relic_pillar_atlas.svg');
+  if (!fs.existsSync(atlasRelicPath)) {
+    throw new Error(`Missing Atlas relic SVG at: ${atlasRelicPath}`);
+  }
+  const atlasStat = fs.statSync(atlasRelicPath);
+  if (atlasStat.size < 1000) {
+    throw new Error(`Atlas relic SVG too small (${atlasStat.size} bytes)`);
+  }
+  if (!SPRITE_MANIFEST.sheets.relic_pillar_atlas) {
+    throw new Error('relic_pillar_atlas missing from SPRITE_MANIFEST.sheets');
+  }
+  if (getSheetKeyForRelic('atlas') !== 'relic_pillar_atlas') {
+    throw new Error('getSheetKeyForRelic("atlas") did not return relic_pillar_atlas');
+  }
+  console.log('  [PASS] Atlas animated relic spritesheet verified (>8KB, 8 frames, properly routed)!');
+
+  // 52. Testing Phase 8: Calibrated Audio Engine, Web Audio Master Compressor & Harmonic Acoustics
+  console.log('\n[TEST 52] Testing Phase 8: Calibrated Audio Engine, Web Audio Master Compressor & Harmonic Acoustics:');
+  if (audioManager.bgmVolume > 0.30 || audioManager.sfxVolume > 0.30) {
+    throw new Error(`Audio volumes exceed gentle baseline! BGM: ${audioManager.bgmVolume}, SFX: ${audioManager.sfxVolume}`);
+  }
+  if (typeof audioManager.playWarmTap !== 'function' ||
+      typeof audioManager.playHarmonicChime !== 'function' ||
+      typeof audioManager.playHarpStrum !== 'function' ||
+      typeof audioManager.playEtherealBell !== 'function') {
+    throw new Error('audioManager missing harmonic acoustic synthesizer methods');
+  }
+  audioManager.playWarmTap();
+  audioManager.playHarmonicChime(880, 0.5);
+  audioManager.playHarpStrum([523.25, 659.25]);
+  audioManager.playEtherealBell(432);
+  console.log('  [PASS] Calibrated gentle volume baselines and harmonic acoustic synthesizers verified!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

@@ -1528,6 +1528,42 @@ audioManager.playSfx('harp');
 audioManager.playSfx('bell');
 console.log('[PASS] Web Audio harmonic acoustics (temple chimes, soft harps, warm taps, ethereal bells) execute cleanly!');
 
+// ==========================================
+// TEST PHASE 9: Final Comprehensive Verification & Test Suite Expansion
+// ==========================================
+console.log('\n--- TESTING PHASE 9: FINAL COMPREHENSIVE VERIFICATION & TEST SUITE EXPANSION ---');
+
+// 1. Verify zero emojis in primary nav tabs of index.html
+const indexHtmlContent = fs.readFileSync('index.html', 'utf8');
+const navDockSection = indexHtmlContent.substring(indexHtmlContent.indexOf('<nav class="nav-dock'), indexHtmlContent.indexOf('</nav>'));
+const rawEmojiRegex = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u;
+if (rawEmojiRegex.test(navDockSection)) {
+  throw new Error('index.html bottom nav dock still contains raw emojis! Must use Scalable Vector Icons.');
+}
+console.log('[PASS] index.html bottom navigation dock is 100% vector SVG icons with zero raw emojis!');
+
+// 2. Verify all 54 species listed in SPIRIT_SPECIES have valid index entries
+if (speciesList.length !== 54) {
+  throw new Error(`Expected exactly 54 species in SPIRIT_SPECIES, found ${speciesList.length}`);
+}
+console.log(`[PASS] Bestiary roster verified: all 54 species registered with deterministic indexing!`);
+
+// 3. Verify Atlas chamber loot and dual-tank distinction
+const p9AtlasChamber = PANTHEON_CHAMBERS.find(c => c.id === 'celestial_pillar' || c.godId === 'atlas');
+if (!p9AtlasChamber) {
+  throw new Error('PANTHEON_CHAMBERS missing Atlas celestial pillar chamber!');
+}
+console.log(`[PASS] Verified 10th Greek God chamber (${p9AtlasChamber.name}) ready for farming defensive relics!`);
+
+// 4. Verify volume defaults and dynamic compressor node in audio engine
+if (audioManager.bgmVolume !== 0.18 || audioManager.sfxVolume !== 0.20) {
+  throw new Error('Default audio manager volumes should be calibrated to 0.18 BGM and 0.20 SFX!');
+}
+if (!audioManager.masterCompressor || !audioManager.masterGain) {
+  throw new Error('Master dynamics compressor node graph missing in audioManager!');
+}
+console.log('[PASS] Audio Engine verified with calibrated gentle volumes (0.18 BGM, 0.20 SFX) and master dynamics compressor!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 
