@@ -468,7 +468,7 @@ gameState.subscribe((eventType, payload, state) => {
 
 // App Initialization
 window.addEventListener('DOMContentLoaded', () => {
-  const offlineReport = gameState.init();
+  gameState.init();
   cloudSaveService.init();
 
   // Audio setup
@@ -495,6 +495,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   const enterGame = () => {
+    const offlineReport = gameState.enterGameSession();
     audioManager.init();
     audioManager.handleTabChange(activeTab);
     updateResourcesDisplay(true);

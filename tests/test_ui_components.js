@@ -609,6 +609,15 @@ if (!titleScreenRoot.innerHTML.includes('Spirit Contract Evo') ||
 }
 console.log('[PASS] Title / Home Screen Gateway renders correctly with Guest, Sign In, and Register choices!');
 
+// Verify game loop and ticks are dormant while Title Screen is active
+if (gameState.isGameSessionActive !== false) {
+  throw new Error('Game session should be inactive while Title Screen is displayed!');
+}
+if (gameState.isGameLoopRunning()) {
+  throw new Error('Game loop should NOT be running while Title Screen is displayed!');
+}
+console.log('[PASS] Verified game tickers and combat loop are strictly dormant on Title Screen!');
+
 // 23. Test Step 2 Cloud Save & Sync Engine with Conflict Resolution
 import { cloudSaveService } from '../src/services/cloudSaveService.js';
 import { showConflictModal } from '../src/ui/components/conflictModal.js';

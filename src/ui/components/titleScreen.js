@@ -42,6 +42,7 @@ export function isTitleScreenActive() {
 }
 
 export function showTitleScreen() {
+  gameState.exitToTitleSession();
   const root = document.getElementById('title-screen-root');
   const app = document.getElementById('app');
   if (!root) return;

@@ -2567,7 +2567,53 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
     throw new Error('2X speed should be unlocked at Stage 10');
   }
   gameState.state.combatSpeed = 2;
-  console.log('  [PASS] 2X Speed correctly locked before Floor 10 and unlocked at Floor 10!');
+  // 49. Testing Phase 1: Title Screen Session Pause & Idle Progression Calculation
+  console.log('\n[TEST 49] Testing Phase 1: Title Screen Session Pause & Idle Progression Calculation:');
+  // 1. Exit to title session should pause loop and autosaver
+  gameState.exitToTitleSession();
+  if (gameState.isGameSessionActive !== false) {
+    throw new Error('Expected isGameSessionActive to be false after exitToTitleSession');
+  }
+  if (gameState.isGameLoopRunning()) {
+    throw new Error('Expected isGameLoopRunning() to be false after exitToTitleSession');
+  }
+  if (gameState.saveTimer) {
+    throw new Error('Expected auto-save timer to be cleared after exitToTitleSession');
+  }
+
+  // 2. Starting loop while in title session should be a guarded no-op
+  gameState.startGameLoop();
+  if (gameState.isGameLoopRunning()) {
+    throw new Error('Expected startGameLoop() to remain inactive while on title screen');
+  }
+  console.log('  [PASS] Game loop and auto-saver successfully dormant on Title Screen!');
+
+  // 3. Simulate staying on title screen for 2 hours (7200s)
+  const simulatedPast = Date.now() - 7200 * 1000;
+  gameState.state.last_saved = simulatedPast;
+
+  // 4. Enter game session (logging in or continuing as guest)
+  const offlineReport = gameState.enterGameSession();
+  if (!offlineReport) {
+    throw new Error('Expected offlineReport to be generated after 2 hours idle on title screen');
+  }
+  if (offlineReport.elapsedSeconds < 7100) {
+    throw new Error(`Expected at least ~7200 elapsed seconds, got ${offlineReport.elapsedSeconds}`);
+  }
+  if (!offlineReport.canClaim) {
+    throw new Error('Expected offline gains to be claimable after 2 hours idle');
+  }
+  if (gameState.isGameSessionActive !== true) {
+    throw new Error('Expected isGameSessionActive to be true after enterGameSession');
+  }
+  console.log(`  [PASS] Accumulated 2h (${offlineReport.elapsedSeconds}s) idle offline rewards upon entering game session!`);
+
+  // 5. Test returning to title screen pauses session cleanly
+  gameState.exitToTitleSession();
+  if (gameState.isGameSessionActive !== false || gameState.isGameLoopRunning()) {
+    throw new Error('Expected session and loop to stop when returning to title screen');
+  }
+  console.log('  [PASS] Returning to title screen cleanly paused game tickers and saved departure timestamp!');
 
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);

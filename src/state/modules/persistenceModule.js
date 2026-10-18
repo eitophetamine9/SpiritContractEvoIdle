@@ -499,14 +499,32 @@ export const persistenceMethods = {
   startAutoSaver() {
     if (this.saveTimer) clearInterval(this.saveTimer);
     this.saveTimer = setInterval(() => {
-      // Do not auto-save while tab is hidden to prevent overwriting last_saved departure time
-      if (this._isTabHidden || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
+      // Do not auto-save if session is paused (e.g. on Title Screen) or tab is hidden
+      if (this.isGameSessionActive === false || this._isTabHidden || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
         return;
       }
       if (this.isDirty) {
         this.save(true);
       }
     }, AUTO_SAVE_INTERVAL_MS);
+  },
+
+  stopAutoSaver() {
+    if (this.saveTimer) {
+      clearInterval(this.saveTimer);
+      this.saveTimer = null;
+    }
+  },
+
+  stopGameLoop() {
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+  },
+
+  isGameLoopRunning() {
+    return !!this.rafId && this.isGameSessionActive !== false;
   },
 
   /**
@@ -516,12 +534,23 @@ export const persistenceMethods = {
   startGameLoop() {
     if (this.rafId) {
       cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+
+    if (this.isGameSessionActive === false) {
+      return;
     }
 
     let lastSecondTime = performance.now();
     let lastFrameTime = performance.now();
 
     const loop = (timestamp) => {
+      // If session is paused (Title Screen active), terminate frame ticker immediately
+      if (this.isGameSessionActive === false) {
+        this.rafId = null;
+        return;
+      }
+
       // If tab is hidden or backgrounded, freeze loop delta updates to prevent time-warp jumps
       if (this._isTabHidden || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) {
         lastSecondTime = timestamp;
