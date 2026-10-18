@@ -161,40 +161,40 @@ class GuidedTutorialController {
       </svg>
 
       <!-- Floating Cat Spirit Guidance Card -->
-      <div id="tutorial-card" class="absolute pointer-events-auto flex flex-col gap-3 p-4 rounded-3xl bg-slate-900/95 border border-amber-400/40 text-white shadow-2xl backdrop-blur-md max-w-[340px] sm:max-w-[380px] transition-all duration-300"
-           style="box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(245, 158, 11, 0.15); left: 50%; transform: translateX(-50%);">
+      <div id="tutorial-card" class="guide-modal-box guide-tutorial-card animate-fadeIn"
+           style="left: 50%; transform: translateX(-50%);">
         
         <!-- Header: Mascot & Controls -->
-        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-amber-200 shadow-md shadow-amber-500/30 border border-white/50">
+        <div class="guide-modal-header">
+          <div class="guide-header-mascot-wrap">
+            <div class="guide-mascot-avatar-small">
               ${getGameIcon('cat', { size: 22, className: 'text-amber-200' })}
             </div>
-            <div class="flex flex-col text-left">
-              <span class="text-[10px] font-black uppercase tracking-wider text-amber-300">Cat Spirit Guide</span>
-              <span class="text-[10px] text-slate-400">Step <span id="tut-step-num">1</span> of ${TUTORIAL_STEPS.length}</span>
+            <div class="guide-header-titles">
+              <span class="guide-badge-subtitle">Cat Spirit Guide</span>
+              <span class="guide-step-counter">Step <span id="tut-step-num">1</span> of ${TUTORIAL_STEPS.length}</span>
             </div>
           </div>
 
-          <button id="btn-skip-tutorial" class="text-[11px] font-bold text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 cursor-pointer transition-colors flex items-center gap-1" title="Skip tutorial and proceed with game">
+          <button id="btn-skip-tutorial" class="guide-btn-skip" title="Skip tutorial and proceed with game">
             <span>Skip</span>
             ${getGameIcon('close', { size: 10, className: 'inline text-slate-400' })}
           </button>
         </div>
 
-        <!-- Body Content -->
-        <div class="flex flex-col text-left gap-1.5">
-          <h3 id="tut-title" class="text-sm font-black text-amber-100 tracking-tight"></h3>
-          <p id="tut-speech" class="text-xs text-slate-300 leading-relaxed"></p>
+        <!-- Body Content (Generous Speech Bubble) -->
+        <div class="guide-speech-bubble guide-speech-bubble-compact">
+          <h3 id="tut-title" class="guide-speech-title"></h3>
+          <p id="tut-speech" class="guide-speech-text"></p>
         </div>
 
         <!-- Action Footer -->
-        <div class="flex items-center justify-between pt-1">
-          <div class="flex gap-1" id="tut-pills">
-            ${TUTORIAL_STEPS.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-amber-400' : 'bg-slate-700'}"></span>`).join('')}
+        <div class="guide-modal-footer">
+          <div class="guide-step-pills" id="tut-pills">
+            ${TUTORIAL_STEPS.map((_, i) => `<span class="guide-pill ${i === 0 ? 'active' : ''}"></span>`).join('')}
           </div>
 
-          <button id="btn-tut-action" class="py-2 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-slate-950 font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-amber-500/30 flex items-center gap-1">
+          <button id="btn-tut-action" class="guide-action-btn guide-action-btn-small">
             <span>Next</span>
             ${getGameIcon('chevronRight', { size: 12, className: 'inline' })}
           </button>
@@ -478,32 +478,31 @@ export function showAreaUnlockTutorial(areaKey, onDone) {
     .replace(/• /g, '• ');
 
   modalRoot.innerHTML = `
-    <div class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn select-none">
-      <div class="relative w-full max-w-md bg-slate-900 border-2 border-amber-400/60 rounded-3xl p-6 sm:p-7 shadow-2xl text-white flex flex-col items-center text-center gap-4 overflow-hidden"
-           style="box-shadow: 0 0 50px rgba(245, 158, 11, 0.35), inset 0 0 20px rgba(93, 63, 211, 0.3);">
+    <div class="guide-backdrop animate-fadeIn select-none">
+      <div class="guide-modal-box animate-scaleUp">
         
         <!-- Mascot Avatar with Floating Animation -->
-        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-300 flex items-center justify-center text-amber-200 shadow-lg border-2 border-white/60 ambient-float">
+        <div class="guide-mascot-avatar ambient-float">
           ${getGameIcon('cat', { size: 36, className: 'text-amber-200' })}
         </div>
 
-        <div class="flex flex-col items-center gap-1">
-          <span class="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+        <div class="guide-header-block">
+          <span class="guide-badge-pill">
             Cat Spirit Familiar • System Guide
           </span>
-          <h3 class="text-lg sm:text-xl font-black text-white tracking-tight flex items-center justify-center gap-2">
+          <h3 class="guide-modal-title">
             ${info.icon ? getGameIcon(info.icon, { size: 20, className: 'inline text-amber-300' }) : ''}
             <span>${info.title}</span>
           </h3>
         </div>
 
-        <!-- Speech Bubble -->
-        <div class="w-full p-4 rounded-2xl bg-slate-950/80 border border-slate-700/80 text-xs sm:text-sm text-slate-200 text-left leading-relaxed shadow-inner">
+        <!-- Speech Bubble with Generous Spacing -->
+        <div class="guide-speech-bubble">
           ${formattedSpeech}
         </div>
 
         <!-- Action Dismiss Button -->
-        <button id="btn-dismiss-area-tut" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-amber-500/30 flex items-center justify-center gap-1.5">
+        <button id="btn-dismiss-area-tut" class="guide-action-btn">
           <span>${info.buttonText || 'Understood'}</span>
           ${getGameIcon('chevronRight', { size: 14, className: 'inline' })}
         </button>

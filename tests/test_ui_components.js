@@ -1106,6 +1106,56 @@ if (!modalRootEl.innerHTML.includes('Dev & Admin Cheat Console') ||
 
 console.log('[PASS] Dev Admin Account Authentication, Cheat Code System & Access Gating validated!');
 
+// ==========================================
+// TEST PHASE 4: Themed Range Sliders & Guide Modal Spacing Overhaul
+// ==========================================
+console.log('\n--- TESTING PHASE 4: THEMED SLIDERS & GUIDE MODAL SPACING OVERHAUL ---');
+
+// 1. Verify base.css range slider definitions
+const baseCssContent = fs.readFileSync('src/styles/base.css', 'utf8');
+if (!baseCssContent.includes('input[type="range"]') || 
+    !baseCssContent.includes('::-webkit-slider-thumb') || 
+    !baseCssContent.includes('::-moz-range-thumb') || 
+    !baseCssContent.includes('box-shadow: 0 0 10px rgba(255, 215, 0, 0.7)')) {
+  throw new Error('base.css is missing fantasy themed range slider styles or golden orb thumb shadow!');
+}
+console.log('[PASS] Themed fantasy gold range slider CSS rules verified in base.css!');
+
+// 2. Verify modals.css guide-modal-box & guide-speech-bubble definitions
+const modalsCssContent = fs.readFileSync('src/styles/modals.css', 'utf8');
+if (!modalsCssContent.includes('.guide-modal-box') || 
+    !modalsCssContent.includes('.guide-speech-bubble') || 
+    !modalsCssContent.includes('padding: 18px 22px !important') || 
+    !modalsCssContent.includes('line-height: 1.65')) {
+  throw new Error('modals.css is missing .guide-modal-box or .guide-speech-bubble with generous padding and line-height!');
+}
+console.log('[PASS] Explicit Vanilla CSS .guide-modal-box and .guide-speech-bubble verified with generous padding in modals.css!');
+
+// 3. Verify showAreaUnlockTutorial rendering
+showAreaUnlockTutorial('astral');
+if (!modalRootEl.innerHTML.includes('guide-modal-box') || 
+    !modalRootEl.innerHTML.includes('guide-speech-bubble') || 
+    !modalRootEl.innerHTML.includes('The Astral Realm & Sacred Sanctum')) {
+  throw new Error('showAreaUnlockTutorial failed to render using .guide-modal-box and .guide-speech-bubble!');
+}
+console.log('[PASS] showAreaUnlockTutorial correctly renders with .guide-modal-box and generous .guide-speech-bubble!');
+
+// 4. Verify Profile View Audio & Volume Sliders
+const profileContainer = {
+  innerHTML: '',
+  querySelector: (sel) => ({
+    addEventListener: () => {}
+  }),
+  querySelectorAll: () => []
+};
+renderProfileView(profileContainer);
+if (!profileContainer.innerHTML.includes('slider-bgm-volume') || 
+    !profileContainer.innerHTML.includes('slider-sfx-volume') || 
+    !profileContainer.innerHTML.includes('Audio & Sound Controls')) {
+  throw new Error('renderProfileView failed to render audio controls with themed range sliders!');
+}
+console.log('[PASS] Profile View renders Audio & Sound Controls with interactive BGM and SFX volume sliders!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 

@@ -7,6 +7,7 @@ import { getNextFeatureUnlock, getAllFeatureMilestones } from '../../data/contra
 import { authService } from '../../services/authService.js';
 import { cloudSaveService } from '../../services/cloudSaveService.js';
 import { getGameIcon } from '../icons/gameIcons.js';
+import { audioManager } from '../../audio/audioManager.js';
 
 export function renderProfileView(container) {
   const state = gameState.state;
@@ -208,6 +209,46 @@ export function renderProfileView(container) {
         </div>
       </div>
 
+      <!-- Audio & Sound Settings (Themed Range Sliders) -->
+      <div class="profile-actions-card audio-settings-card">
+        <div class="stats-section-title">
+          ${getGameIcon('audioOn', { size: '14px', color: '#ffd152' })} Audio & Sound Controls
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 4px 2px;">
+          
+          <!-- BGM Volume Slider -->
+          <div class="fantasy-slider-row">
+            <div class="fantasy-slider-header">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                ${getGameIcon('audioOn', { size: '13px', color: '#38bdf8' })} Background Music (BGM)
+              </span>
+              <span id="label-bgm-val" class="fantasy-slider-badge">${Math.round(audioManager.bgmVolume * 100)}%</span>
+            </div>
+            <input type="range" id="slider-bgm-volume" min="0" max="1" step="0.05" value="${audioManager.bgmVolume}" aria-label="BGM Volume" />
+          </div>
+
+          <!-- SFX Volume Slider -->
+          <div class="fantasy-slider-row">
+            <div class="fantasy-slider-header">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                ${getGameIcon('zap', { size: '13px', color: '#facc15' })} Sound Effects (SFX)
+              </span>
+              <span id="label-sfx-val" class="fantasy-slider-badge">${Math.round(audioManager.sfxVolume * 100)}%</span>
+            </div>
+            <input type="range" id="slider-sfx-volume" min="0" max="1" step="0.05" value="${audioManager.sfxVolume}" aria-label="SFX Volume" />
+          </div>
+
+          <!-- Quick Audio Mute Toggle -->
+          <button id="btn-profile-toggle-mute" class="zone-toggle-btn" style="min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 2px;">
+            ${audioManager.isMuted 
+              ? `${getGameIcon('audioOff', { size: '14px', color: '#ef4444' })} Unmute Sound` 
+              : `${getGameIcon('audioOn', { size: '14px', color: '#10b981' })} Sound Enabled (Tap to Mute)`}
+          </button>
+
+        </div>
+      </div>
+
       <!-- System Controls & Save Data -->
       <div class="profile-actions-card">
         <div class="stats-section-title">${getGameIcon('save', { size: '14px' })} Save & Account Data</div>
@@ -222,7 +263,7 @@ export function renderProfileView(container) {
               ${getGameIcon('cloud', { size: '14px' })} Export Backup
             </button>
             <button id="btn-import-save" class="zone-toggle-btn" style="min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-              ${getGameIcon('refresh', { size: '14px' })} Import Backup
+              ${getGameIcon('recycle', { size: '14px' })} Import Backup
             </button>
           </div>
 
@@ -239,6 +280,48 @@ export function renderProfileView(container) {
 
     </div>
   `;
+
+  // Audio Slider Bindings
+  const sliderBgm = container.querySelector('#slider-bgm-volume');
+  const labelBgm = container.querySelector('#label-bgm-val');
+  if (sliderBgm) {
+    sliderBgm.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      audioManager.setBgmVolume(val);
+      if (labelBgm) labelBgm.textContent = `${Math.round(val * 100)}%`;
+    });
+  }
+
+  const sliderSfx = container.querySelector('#slider-sfx-volume');
+  const labelSfx = container.querySelector('#label-sfx-val');
+  if (sliderSfx) {
+    sliderSfx.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      audioManager.setSfxVolume(val);
+      if (labelSfx) labelSfx.textContent = `${Math.round(val * 100)}%`;
+    });
+    sliderSfx.addEventListener('change', () => {
+      audioManager.playSfx('button_click', 0.5);
+    });
+  }
+
+  const btnProfileMute = container.querySelector('#btn-profile-toggle-mute');
+  if (btnProfileMute) {
+    btnProfileMute.addEventListener('click', () => {
+      audioManager.toggleMute();
+      renderProfileView(container);
+      const topBtn = document.getElementById('btn-top-audio');
+      if (topBtn) {
+        topBtn.classList.toggle('muted', audioManager.isMuted);
+        const iconSym = document.getElementById('audio-icon-symbol');
+        if (iconSym) {
+          iconSym.innerHTML = audioManager.isMuted 
+            ? getGameIcon('audioOff', { size: '15px' }) 
+            : getGameIcon('audioOn', { size: '15px' });
+        }
+      }
+    });
+  }
 
   // Replay Tutorial
   const btnReplay = container.querySelector('#btn-replay-tutorial');
