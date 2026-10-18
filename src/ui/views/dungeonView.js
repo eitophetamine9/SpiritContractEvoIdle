@@ -117,6 +117,15 @@ export function renderDungeonView(container) {
           <!-- Relic Set Bonus Preview Pill -->
           ${godSet ? `
             <div class="god-bonuses-preview-box grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+              ${selectedChamber.godId === 'atlas' ? `
+                <div class="tank-role-banner sm:col-span-2 mb-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider bg-slate-800/80 text-slate-200 border border-slate-600/50 shadow-sm">
+                  ${getGameIcon('shield', { size: 12, color: '#bdc3c7' })} Pure Defensive Tank Set: Interception, Damage Mitigation & Celestial Firmament Shield
+                </div>
+              ` : selectedChamber.godId === 'hephaestus' ? `
+                <div class="tank-role-banner sm:col-span-2 mb-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider bg-orange-950/50 text-orange-300 border border-orange-500/40 shadow-sm">
+                  ${getGameIcon('fire', { size: 12, color: '#e67e22' })} Offensive Tank Set: DEF-to-ATK Scaling, Taunt & Molten Volcanic Shockwave
+                </div>
+              ` : ''}
               <div class="bonus-preview-pill flex flex-col gap-0.5">
                 <span class="bonus-tag text-[10px] font-black uppercase text-amber-400">2-PC SET BONUS</span>
                 <span class="bonus-desc text-xs text-slate-300"><strong>${godSet.bonus2pc.name}:</strong> ${godSet.bonus2pc.description}</span>

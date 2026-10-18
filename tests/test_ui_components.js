@@ -1366,6 +1366,77 @@ if (!slidingCarouselCss.includes('.sliding-carousel-container') ||
 }
 console.log('[PASS] slidingCarousel.css verified with premium gold-themed 3-card carousel styles and imported in style.css!');
 
+// ==========================================
+// TEST PHASE 7: Missing Defensive Relic Set (Atlas Firmament Chamber & Relic Sprites)
+// ==========================================
+console.log('\n--- TESTING PHASE 7: MISSING DEFENSIVE RELIC SET (ATLAS FIRMAMENT CHAMBER & RELIC SPRITES) ---');
+
+// 1. Verify relic_pillar_atlas.svg asset
+const atlasRelicPath = 'public/assets/sprites/relics/relic_pillar_atlas.svg';
+if (!fs.existsSync(atlasRelicPath)) {
+  throw new Error(`Missing relic SVG asset: ${atlasRelicPath}`);
+}
+const atlasRelicSvg = fs.readFileSync(atlasRelicPath, 'utf8');
+if (atlasRelicSvg.length < 1000 || !atlasRelicSvg.includes('viewBox="0 0 384 48"') || !atlasRelicSvg.includes('p-stone')) {
+  throw new Error('relic_pillar_atlas.svg is invalid or has insufficient content!');
+}
+console.log(`[PASS] Verified Atlas Relic SVG asset (${atlasRelicSvg.length} bytes, 8 animated frames)!`);
+
+// 2. Verify SPRITE_MANIFEST registration and sheet routing
+import { SPRITE_MANIFEST, getSheetKeyForRelic, createAnimatedRelicHtml } from '../src/render/spriteAnimator.js';
+if (!SPRITE_MANIFEST.sheets.relic_pillar_atlas) {
+  throw new Error('relic_pillar_atlas is not registered in SPRITE_MANIFEST.sheets!');
+}
+if (SPRITE_MANIFEST.sheets.relic_pillar_atlas.frameCount !== 8 || SPRITE_MANIFEST.sheets.relic_pillar_atlas.path !== '/assets/sprites/relics/relic_pillar_atlas.svg') {
+  throw new Error('relic_pillar_atlas manifest properties do not match 8-frame specification!');
+}
+if (getSheetKeyForRelic('atlas') !== 'relic_pillar_atlas' || getSheetKeyForRelic('celestial_pillar') !== 'relic_pillar_atlas') {
+  throw new Error('getSheetKeyForRelic failed to route atlas / celestial_pillar to relic_pillar_atlas!');
+}
+const atlasRelicHtml = createAnimatedRelicHtml('atlas', 'headgear');
+if (!atlasRelicHtml.includes('sprite-relic_pillar_atlas') || !atlasRelicHtml.includes('/assets/sprites/relics/relic_pillar_atlas.svg')) {
+  throw new Error('createAnimatedRelicHtml failed to output animated sprite for Atlas relic!');
+}
+console.log('[PASS] Atlas relic spritesheet registered in SPRITE_MANIFEST and HTML animator outputs valid sprite element!');
+
+// 3. Verify Atlas Set in GREEK_GOD_SETS
+const atlasRelicSet = GREEK_GOD_SETS.atlas;
+if (!atlasRelicSet || !atlasRelicSet.bonus2pc || !atlasRelicSet.bonus4pc) {
+  throw new Error('Atlas relic set missing from GREEK_GOD_SETS!');
+}
+if (atlasRelicSet.bonus2pc.hpBonus !== 0.25 || atlasRelicSet.bonus2pc.defBonus !== 0.20) {
+  throw new Error('Atlas 2pc bonus values mismatch (+25% HP & +20% DEF expected)!');
+}
+if (atlasRelicSet.bonus4pc.teamDamageReduction !== 0.12 || atlasRelicSet.bonus4pc.shieldPercentMaxHp !== 0.30) {
+  throw new Error('Atlas 4pc bonus values mismatch (-12% damage taken & 30% Max HP shield expected)!');
+}
+console.log('[PASS] Atlas pure defensive tank set validated with +25% HP / +20% DEF (2pc) and Guardian Interception (4pc)!');
+
+// 4. Verify Dual-Tank Tooltips and Badges in Views
+const hubContainer = {
+  innerHTML: '',
+  querySelector: () => ({ addEventListener: () => {}, scrollIntoView: () => {} }),
+  querySelectorAll: () => []
+};
+renderCharacterHubView(hubContainer, { subHub: 'relics' });
+if (!hubContainer.innerHTML.includes('DEF TANK') || 
+    !hubContainer.innerHTML.includes('OFF TANK') ||
+    !hubContainer.innerHTML.includes('Pure Defensive Tank Set') ||
+    !hubContainer.innerHTML.includes('Offensive Tank Set')) {
+  throw new Error('renderCharacterHubView is missing dual-tank role badges or tooltips in relic set tracker!');
+}
+console.log('[PASS] Character Sanctum Hub renders dual-tank distinction badges and tooltips (Atlas DEF TANK vs Hephaestus OFF TANK)!');
+
+const dungeonJs = fs.readFileSync('src/ui/views/dungeonView.js', 'utf8');
+if (!dungeonJs.includes('Pure Defensive Tank Set') || !dungeonJs.includes('Offensive Tank Set')) {
+  throw new Error('dungeonView.js is missing dual-tank distinction banner for Atlas / Hephaestus!');
+}
+const equipModalJs = fs.readFileSync('src/ui/modals/equipmentModal.js', 'utf8');
+if (!equipModalJs.includes('Defensive Tank') || !equipModalJs.includes('Offensive Tank')) {
+  throw new Error('equipmentModal.js is missing dual-tank role badges!');
+}
+console.log('[PASS] Pantheon Trials Hub and Equipment Modal include dual-tank badges and banners distinguishing Atlas and Hephaestus!');
+
 console.log('\n--- ALL UI LOGIC TESTS PASSED! ---');
 process.exit(0);
 

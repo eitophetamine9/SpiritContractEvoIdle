@@ -118,8 +118,9 @@ export function showEquipmentSlotModal({ spiritId, slotType, onUpdate }) {
                     ${currentItem.type === 'weapon' ? `${getGameIcon('zap', { size: 11, color: '#ffd32a' })} +${currentItem.atkPower} ATK Power • +${currentItem.critRate}% Crit` : `${getGameIcon('zap', { size: 11, color: '#ffd32a' })} +${currentItem.mainStatValue} ${currentItem.mainStatName}`}
                   </div>
                   ${currentItem.setId && GREEK_GOD_SETS[currentItem.setId] ? `
-                    <div class="equip-set-tag" style="color: ${GREEK_GOD_SETS[currentItem.setId].accentColor}; display: flex; align-items: center; gap: 4px;">
+                    <div class="equip-set-tag" style="color: ${GREEK_GOD_SETS[currentItem.setId].accentColor}; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
                       ${getGodIcon(currentItem.setId, { size: 11, color: GREEK_GOD_SETS[currentItem.setId].accentColor })} ${GREEK_GOD_SETS[currentItem.setId].name} (2pc/4pc Set)
+                      ${currentItem.setId === 'atlas' ? `<span class="tank-role-tag" style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(189,195,199,0.18); border: 1px solid rgba(189,195,199,0.4); color: #bdc3c7;">Defensive Tank</span>` : currentItem.setId === 'hephaestus' ? `<span class="tank-role-tag" style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(230,126,34,0.18); border: 1px solid rgba(230,126,34,0.4); color: #e67e22;">Offensive Tank</span>` : ''}
                     </div>
                   ` : ''}
                   ${isRelic && currentItem.substats && currentItem.substats.length > 0 ? `

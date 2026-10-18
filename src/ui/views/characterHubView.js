@@ -653,10 +653,26 @@ function renderRelicsSubHub(spirit) {
           const has2pc = count >= 2;
           const has4pc = count >= 4;
 
+          const bonusDesc = has4pc 
+            ? (setInfo.bonus4pc?.description || setInfo.fourPieceBonus || '')
+            : has2pc 
+              ? (setInfo.bonus2pc?.description || setInfo.twoPieceBonus || '')
+              : (setInfo.bonus2pc?.description || '');
+          const tankBadge = godId === 'atlas' 
+            ? '<span class="set-role-badge def-tank" style="font-size: 8px; padding: 1px 4px; border-radius: 3px; background: rgba(189,195,199,0.25); color: #bdc3c7; border: 1px solid rgba(189,195,199,0.4); margin-left: 4px;">DEF TANK</span>'
+            : godId === 'hephaestus'
+              ? '<span class="set-role-badge off-tank" style="font-size: 8px; padding: 1px 4px; border-radius: 3px; background: rgba(230,126,34,0.25); color: #e67e22; border: 1px solid rgba(230,126,34,0.4); margin-left: 4px;">OFF TANK</span>'
+              : '';
+          const tankTooltip = godId === 'atlas'
+            ? 'Pure Defensive Tank Set: +25% HP, +20% DEF, and Intercepts fatal blows'
+            : godId === 'hephaestus'
+              ? 'Offensive Tank Set: +15% DEF, DEF-to-ATK conversion, and Magma Shockwave taunt'
+              : `${setInfo.name} Set`;
+
           return `
-            <div class="god-set-pill ${has4pc ? 'active-4' : has2pc ? 'active-2' : ''}">
-              <span class="set-name">${setInfo.name}: (${count}/4)</span>
-              <span class="set-perk-summary">${has4pc ? setInfo.fourPieceBonus : setInfo.twoPieceBonus}</span>
+            <div class="god-set-pill ${has4pc ? 'active-4' : has2pc ? 'active-2' : ''}" title="${tankTooltip}">
+              <span class="set-name">${setInfo.name}: (${count}/4) ${tankBadge}</span>
+              <span class="set-perk-summary">${bonusDesc}</span>
             </div>
           `;
         }).join('')}

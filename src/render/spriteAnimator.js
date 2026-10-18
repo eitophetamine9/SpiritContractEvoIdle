@@ -451,6 +451,17 @@ export const SPRITE_MANIFEST = {
         hurt: { frames: [7], fps: 6, loop: false }
       }
     },
+    relic_pillar_atlas: {
+      path: '/assets/sprites/relics/relic_pillar_atlas.svg',
+      frameCount: 8,
+      frameWidth: 48,
+      frameHeight: 48,
+      animations: {
+        idle: { frames: [0, 1, 2, 3], fps: 5, loop: true },
+        attack: { frames: [4, 5, 6, 4], fps: 10, loop: false },
+        hurt: { frames: [7], fps: 6, loop: false }
+      }
+    },
     divine_relic_scripture: {
       path: '/assets/sprites/relics/divine_relic_scripture.svg',
       frameCount: 8,
@@ -647,6 +658,9 @@ export function getSheetKeyForRelic(relicOrSetId, slotType) {
   }
   if (godId === 'hephaestus' || slot === 'anvil' || slot === 'hammer') {
     return 'relic_anvil_hephaestus';
+  }
+  if (godId === 'atlas' || godId === 'celestial_pillar' || slot === 'pillar') {
+    return 'relic_pillar_atlas';
   }
   if (godId === 'divine_scripture' || godId === 'scripture' || slot === 'scripture') {
     return 'divine_relic_scripture';
