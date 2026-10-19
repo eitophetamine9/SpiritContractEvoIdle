@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/spirit_core",
+    "crates/spirit_wasm",
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+authors = ["SpiritContractEvoIdle Team"]
+license = "MIT"

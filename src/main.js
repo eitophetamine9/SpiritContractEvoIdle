@@ -24,10 +24,12 @@ import { initTitleScreen, showTitleScreen } from './ui/components/titleScreen.js
 import { cloudSaveService } from './services/cloudSaveService.js';
 import { showGameToast } from './ui/components/toast.js';
 import { showLevelUpModal } from './ui/components/levelUpModal.js';
+import { showPvPArenaModal } from './ui/modals/pvpArenaModal.js';
 import { FEATURE_UNLOCKS } from './data/contractorData.js';
 import { guidedTutorial, checkAreaTutorialTrigger } from './ui/components/guidedTutorial.js';
 import { showDevConsoleModal } from './ui/components/devConsoleModal.js';
 import { getGameIcon } from './ui/icons/gameIcons.js';
+import { wasmCombatBridge } from './engine/wasmCombatBridge.js';
 
 let activeTab = 'madness';
 let activeTabOptions = null;
@@ -369,6 +371,15 @@ if (btnDrawerAuth) {
   });
 }
 
+// Setup Drawer Arena button
+const btnDrawerArena = document.getElementById('btn-drawer-arena');
+if (btnDrawerArena) {
+  btnDrawerArena.addEventListener('click', () => {
+    closeNavDrawer();
+    showPvPArenaModal();
+  });
+}
+
 // Setup Header Auth / Cloud Account button (if present)
 function updateAuthDisplay() {
   const isGuest = authService.isGuest();
@@ -483,6 +494,7 @@ gameState.subscribe((eventType, payload, state) => {
 window.addEventListener('DOMContentLoaded', () => {
   gameState.init();
   cloudSaveService.init();
+  wasmCombatBridge.init();
 
   // Audio setup
   audioManager.bindGameStateEvents(gameState);

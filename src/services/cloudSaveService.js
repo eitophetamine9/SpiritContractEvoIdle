@@ -3,6 +3,7 @@ import { authService } from './authService.js';
 import { gameState } from '../state/gameState.js';
 import { showConflictModal } from '../ui/components/conflictModal.js';
 import { getGameIcon } from '../ui/icons/gameIcons.js';
+import { pvpArenaService } from './pvpArenaService.js';
 
 class CloudSaveService {
   constructor() {
@@ -148,6 +149,8 @@ class CloudSaveService {
           highest_stage: highestStage,
           total_party_power: partyPower,
           total_spirits_contracted: totalSpirits,
+          elo_rating: rawState.contractor?.eloRating || 1000,
+          defense_roster: pvpArenaService.generateDefenseSnapshot(rawState),
           updated_at: nowIso
         }, { onConflict: 'user_id' });
 

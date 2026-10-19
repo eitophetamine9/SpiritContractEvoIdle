@@ -19,6 +19,8 @@ import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedR
 import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import { getSingaporeDayKey, getSingaporeWeekKey } from '../src/state/constants.js';
+import { antiCheatService } from '../src/services/antiCheatService.js';
+import { pvpArenaService, getEloTier } from '../src/services/pvpArenaService.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -2719,11 +2721,81 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   audioManager.playEtherealBell(432);
   console.log('  [PASS] Calibrated gentle volume baselines and harmonic acoustic synthesizers verified!');
 
+  // 53. Testing Phase 4: Anti-Cheat Replay Verification, Proof-of-Play & Deterministic State Hashing
+  console.log('\n[TEST 53] Testing Phase 4: Anti-Cheat Replay Verification, Proof-of-Play & Deterministic State Hashing:');
+  const ticket = await antiCheatService.requestBattleTicket(10);
+  if (!ticket || !ticket.ticketId || !ticket.seed) {
+    throw new Error('Failed to generate valid battle session ticket');
+  }
+  const hash1 = await antiCheatService.computeStateHash(ticket.seed, true, 1500, 420);
+  const hash2 = await antiCheatService.computeStateHash(ticket.seed, true, 1500, 420);
+  const tamperedHash = await antiCheatService.computeStateHash(ticket.seed, true, 999999, 420);
+
+  if (hash1 !== hash2) {
+    throw new Error('State hash must be 100% deterministic given identical inputs');
+  }
+  if (hash1 === tamperedHash) {
+    throw new Error('State hash must change when combat damage is altered');
+  }
+
+  const verifyResult = await antiCheatService.verifyMatchProof({
+    party: [{ id: 1, currentHp: 420, atk: 100, def: 20 }],
+    enemies: [{ id: 101, hp: 0, atk: 10, def: 0 }],
+    claimedResult: {
+      isVictory: true,
+      totalDamageDealt: 1500,
+      finalPartyHp: 420
+    }
+  });
+
+  if (!verifyResult || !verifyResult.verified) {
+    throw new Error('Verification failed for authentic match proof');
+  }
+  console.log('  [PASS] Cryptographic battle ticket, deterministic state hashing, and anti-cheat proof-of-play verified!');
+
+  // 54. Testing Phase 5: Asynchronous PvP Arena ("Phantom Duels"), Defense Rosters & Elo Progression
+  console.log('\n[TEST 54] Testing Phase 5: Asynchronous PvP Arena ("Phantom Duels"), Defense Rosters & Elo Progression:');
+  const defenseSnapshot = pvpArenaService.generateDefenseSnapshot(gameState.state);
+  if (!Array.isArray(defenseSnapshot) || defenseSnapshot.length === 0) {
+    throw new Error('Expected defense snapshot to capture active party formation');
+  }
+  const slotted = defenseSnapshot[0];
+  if (!slotted.slot || !slotted.speciesId || !slotted.maxHp || !slotted.atk || !slotted.def) {
+    throw new Error('Defense snapshot unit missing required combat attributes');
+  }
+
+  // Verify Elo calculations & Tier progression
+  const winEloGain = pvpArenaService.calculateEloChange(1000, 1050, true);
+  const lossEloLoss = pvpArenaService.calculateEloChange(1000, 1050, false);
+  if (winEloGain <= 0) throw new Error('Expected positive Elo gain on victory');
+  if (lossEloLoss >= 0) throw new Error('Expected negative Elo adjustment on defeat');
+
+  const bronzeTier = getEloTier(1000);
+  const goldTier = getEloTier(1350);
+  const gmTier = getEloTier(2000);
+  if (bronzeTier.name !== 'Bronze Contractor' || goldTier.name !== 'Gold Champion' || gmTier.name !== 'Astral Grandmaster') {
+    throw new Error('Elo tier thresholds mapping mismatch');
+  }
+
+  // Verify duel resolution and state commit
+  const mockOpponent = {
+    user_id: 'test_rival_42',
+    username: 'Rival Champion',
+    elo_rating: 1040,
+    total_party_power: 300
+  };
+  const duelRes = await pvpArenaService.commitDuelResult(mockOpponent, true);
+  if (!duelRes.isVictory || duelRes.newElo <= 1000 || !duelRes.spoils) {
+    throw new Error('Duel commit failed to update contractor Elo and spoils');
+  }
+  console.log(`  [PASS] Defense snapshot (${defenseSnapshot.length} units), Elo delta (+${duelRes.eloDelta}), and tier rankings verified!`);
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
   console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
 });
+
 
 
 

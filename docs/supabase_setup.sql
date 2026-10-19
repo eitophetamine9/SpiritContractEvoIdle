@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.game_saves (
 -- Index for save timestamps
 CREATE INDEX IF NOT EXISTS idx_game_saves_updated_at ON public.game_saves(updated_at DESC);
 
--- 3. Public Leaderboards Table
+-- 3. Public Leaderboards & Asynchronous PvP Table
 CREATE TABLE IF NOT EXISTS public.leaderboards (
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE PRIMARY KEY,
   username TEXT NOT NULL,
@@ -39,12 +39,19 @@ CREATE TABLE IF NOT EXISTS public.leaderboards (
   highest_stage INTEGER DEFAULT 0 NOT NULL,
   total_party_power INTEGER DEFAULT 0 NOT NULL,
   total_spirits_contracted INTEGER DEFAULT 0 NOT NULL,
+  elo_rating INTEGER DEFAULT 1000 NOT NULL,
+  defense_roster JSONB DEFAULT '[]'::jsonb,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
--- Indexes for ranking queries
+-- Idempotent migrations for existing deployments
+ALTER TABLE public.leaderboards ADD COLUMN IF NOT EXISTS elo_rating INTEGER DEFAULT 1000 NOT NULL;
+ALTER TABLE public.leaderboards ADD COLUMN IF NOT EXISTS defense_roster JSONB DEFAULT '[]'::jsonb;
+
+-- Indexes for ranking & arena matchmaking queries
 CREATE INDEX IF NOT EXISTS idx_leaderboards_highest_stage ON public.leaderboards(highest_stage DESC, total_party_power DESC);
 CREATE INDEX IF NOT EXISTS idx_leaderboards_party_power ON public.leaderboards(total_party_power DESC);
+CREATE INDEX IF NOT EXISTS idx_leaderboards_elo ON public.leaderboards(elo_rating DESC);
 
 -- =========================================================================
 -- 4. Enable Row Level Security (RLS) & Clean Drop/Recreate Policies
