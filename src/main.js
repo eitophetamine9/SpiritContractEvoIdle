@@ -24,6 +24,7 @@ import { initTitleScreen, showTitleScreen } from './ui/components/titleScreen.js
 import { cloudSaveService } from './services/cloudSaveService.js';
 import { showGameToast } from './ui/components/toast.js';
 import { showLevelUpModal } from './ui/components/levelUpModal.js';
+import { showPvPArenaModal } from './ui/modals/pvpArenaModal.js';
 import { FEATURE_UNLOCKS } from './data/contractorData.js';
 import { guidedTutorial, checkAreaTutorialTrigger } from './ui/components/guidedTutorial.js';
 import { showDevConsoleModal } from './ui/components/devConsoleModal.js';
@@ -367,6 +368,15 @@ if (btnDrawerAuth) {
   btnDrawerAuth.addEventListener('click', () => {
     closeNavDrawer();
     showAuthModal(updateAuthDisplay);
+  });
+}
+
+// Setup Drawer Arena button
+const btnDrawerArena = document.getElementById('btn-drawer-arena');
+if (btnDrawerArena) {
+  btnDrawerArena.addEventListener('click', () => {
+    closeNavDrawer();
+    showPvPArenaModal();
   });
 }
 

@@ -4,3 +4,4 @@ export { showEvolutionCeremonyModal, showSummonRevealModal } from './ceremonyMod
 export { showHallOfFamePickerModal, showBestiaryInspectModal } from './bestiaryModal.js';
 export { showEquipmentSlotModal, showItemInspectModal, showDivineScriptureModal } from './equipmentModal.js';
 export { showSpiritModal, showDetailedAttributesModal } from './spiritModal.js';
+export { showPvPArenaModal } from './pvpArenaModal.js';
