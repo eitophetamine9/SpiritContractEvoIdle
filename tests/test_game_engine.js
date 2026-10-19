@@ -19,6 +19,7 @@ import { SPRITE_MANIFEST, SpriteAnimator, getSheetKeyForSpecies, createAnimatedR
 import { arenaRenderer } from '../src/render/arenaRenderer.js';
 import { audioManager } from '../src/audio/audioManager.js';
 import { getSingaporeDayKey, getSingaporeWeekKey } from '../src/state/constants.js';
+import { antiCheatService } from '../src/services/antiCheatService.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -2719,11 +2720,44 @@ import('../src/data/biomesData.js').then(async ({ getBiomeForStage }) => {
   audioManager.playEtherealBell(432);
   console.log('  [PASS] Calibrated gentle volume baselines and harmonic acoustic synthesizers verified!');
 
+  // 53. Testing Phase 4: Anti-Cheat Replay Verification, Proof-of-Play & Deterministic State Hashing
+  console.log('\n[TEST 53] Testing Phase 4: Anti-Cheat Replay Verification, Proof-of-Play & Deterministic State Hashing:');
+  const ticket = await antiCheatService.requestBattleTicket(10);
+  if (!ticket || !ticket.ticketId || !ticket.seed) {
+    throw new Error('Failed to generate valid battle session ticket');
+  }
+  const hash1 = await antiCheatService.computeStateHash(ticket.seed, true, 1500, 420);
+  const hash2 = await antiCheatService.computeStateHash(ticket.seed, true, 1500, 420);
+  const tamperedHash = await antiCheatService.computeStateHash(ticket.seed, true, 999999, 420);
+
+  if (hash1 !== hash2) {
+    throw new Error('State hash must be 100% deterministic given identical inputs');
+  }
+  if (hash1 === tamperedHash) {
+    throw new Error('State hash must change when combat damage is altered');
+  }
+
+  const verifyResult = await antiCheatService.verifyMatchProof({
+    party: [{ id: 1, currentHp: 420, atk: 100, def: 20 }],
+    enemies: [{ id: 101, hp: 0, atk: 10, def: 0 }],
+    claimedResult: {
+      isVictory: true,
+      totalDamageDealt: 1500,
+      finalPartyHp: 420
+    }
+  });
+
+  if (!verifyResult || !verifyResult.verified) {
+    throw new Error('Verification failed for authentic match proof');
+  }
+  console.log('  [PASS] Cryptographic battle ticket, deterministic state hashing, and anti-cheat proof-of-play verified!');
+
   if (gameState.saveTimer) clearInterval(gameState.saveTimer);
   if (gameState.rafId && global.cancelAnimationFrame) global.cancelAnimationFrame(gameState.rafId);
 
   console.log('\nALL TESTS PASSED SUCCESSFULLY! ✅');
 });
+
 
 
 
