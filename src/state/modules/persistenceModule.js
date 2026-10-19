@@ -424,11 +424,15 @@ export const persistenceMethods = {
 
   /**
    * LocalStorage saving (supports dirty checking to avoid redundant JSON serialization)
+   * @param {boolean} force - Force save even if isDirty is false
+   * @param {boolean} preserveTimestamp - If true, keeps existing last_saved timestamp (essential for loading external saves)
    */
-  save(force = false) {
+  save(force = false, preserveTimestamp = false) {
     if (!this.state) return;
     if (!force && this.isDirty === false) return;
-    this.state.last_saved = Date.now();
+    if (!preserveTimestamp || !this.state.last_saved) {
+      this.state.last_saved = Date.now();
+    }
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(this.state));
       this.isDirty = false;
@@ -446,13 +450,18 @@ export const persistenceMethods = {
   loadCustomState(savedState) {
     if (!savedState || typeof savedState !== 'object') return false;
     try {
+      const originalLastSaved = savedState.last_saved;
       this.state = this.sanitizeLoadedState(savedState);
+      if (originalLastSaved) {
+        this.state.last_saved = originalLastSaved;
+      }
       this.invalidateCaches();
       const mz = this.state.madnessZone;
       if (!mz.currentEnemy || !mz.currentSwarm || mz.currentSwarm.length === 0 || mz.currentSwarm.every(e => e.isDefeated || e.hp <= 0)) {
         this.spawnMadnessEnemy();
       }
-      this.save(true);
+      // Preserve originalLastSaved so enterGameSession or applyOfflineGains can calculate the true offline elapsed duration
+      this.save(true, true);
       this.emit('stateLoaded', this.state);
       this.emit('partyUpdated', this.state.party);
       return true;

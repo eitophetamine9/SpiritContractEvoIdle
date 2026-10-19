@@ -223,6 +223,27 @@ export const devCheatMethods = {
   },
 
   /**
+   * Simulates offline progression for N hours and triggers the offline spoils modal
+   * @param {number} hours - Number of hours to simulate (default 24)
+   */
+  devSimulateOffline(hours = 24) {
+    if (!this.isDevAuthorized()) {
+      return { success: false, error: 'Unauthorized: Dev Admin account required.' };
+    }
+    const seconds = Math.min(86400, Math.max(3600, Math.floor(hours * 3600)));
+    const report = this.applyOfflineGains(seconds, true);
+    if (report) {
+      this.emit('offlineGains', report);
+    }
+    this.save(true);
+    return {
+      success: true,
+      message: `[Dev] Successfully simulated ${hours} hour(s) (${seconds}s) of offline idle progression!`,
+      report
+    };
+  },
+
+  /**
    * Unified Cheat Code parser for text command bar or console
    */
   executeCheatCode(inputCommand) {
@@ -236,6 +257,11 @@ export const devCheatMethods = {
     const parts = trimmed.split(/\s+/);
     const cmd = parts[0];
     const arg = parts[1];
+
+    if (cmd === 'offline' || cmd === 'afk' || cmd === 'idle' || cmd === 'fastforward') {
+      const num = arg ? parseFloat(arg) : 24;
+      return this.devSimulateOffline(isNaN(num) ? 24 : num);
+    }
 
     if (cmd === 'skip' || cmd === 'floor') {
       const fl = parseInt(arg, 10);
