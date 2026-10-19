@@ -1,0 +1,19 @@
+{
+  "name": "spirit_wasm",
+  "type": "module",
+  "collaborators": [
+    "SpiritContractEvoIdle Team"
+  ],
+  "version": "0.2.0",
+  "license": "MIT",
+  "files": [
+    "spirit_wasm_bg.wasm",
+    "spirit_wasm.js",
+    "spirit_wasm.d.ts"
+  ],
+  "main": "spirit_wasm.js",
+  "types": "spirit_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

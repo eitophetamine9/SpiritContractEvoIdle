@@ -29,6 +29,5 @@ INSTRUCTIONS.txt
 PROJECT_CONTEXT.txt
 GAME_COMPENDIUM.md
 
-# Rust & WebAssembly
+# Rust build artifacts (keep src/wasm/pkg committed for cloud builds like Vercel)
 /target/
-/src/wasm/pkg/
