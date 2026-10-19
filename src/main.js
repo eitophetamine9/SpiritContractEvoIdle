@@ -28,6 +28,7 @@ import { FEATURE_UNLOCKS } from './data/contractorData.js';
 import { guidedTutorial, checkAreaTutorialTrigger } from './ui/components/guidedTutorial.js';
 import { showDevConsoleModal } from './ui/components/devConsoleModal.js';
 import { getGameIcon } from './ui/icons/gameIcons.js';
+import { wasmCombatBridge } from './engine/wasmCombatBridge.js';
 
 let activeTab = 'madness';
 let activeTabOptions = null;
@@ -483,6 +484,7 @@ gameState.subscribe((eventType, payload, state) => {
 window.addEventListener('DOMContentLoaded', () => {
   gameState.init();
   cloudSaveService.init();
+  wasmCombatBridge.init();
 
   // Audio setup
   audioManager.bindGameStateEvents(gameState);
