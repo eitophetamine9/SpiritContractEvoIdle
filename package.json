@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node tests/test_game_engine.js && node tests/test_ui_components.js",
-    "test:prob": "node tests/run_probability_tests.js"
+    "test:prob": "node tests/run_probability_tests.js",
+    "build:wasm": "wasm-pack build crates/spirit_wasm --target web --out-dir ../../src/wasm/pkg"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
